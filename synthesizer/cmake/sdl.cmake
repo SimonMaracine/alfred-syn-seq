@@ -1,0 +1,8 @@
+set(SDL_SHARED OFF)
+set(SDL_STATIC ON)
+set(SDL_TEST_LIBRARY OFF)
+
+set(SDL_X11_XSCRNSAVER OFF)
+set(SDL_X11_XTEST OFF)
+
+add_subdirectory(extern/SDL)

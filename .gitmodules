@@ -1,0 +1,3 @@
+[submodule "synthesizer/extern/SDL"]
+	path = synthesizer/extern/SDL
+	url = https://github.com/libsdl-org/SDL
