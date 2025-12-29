@@ -12,7 +12,7 @@ public:
     void resume() const;
 
     virtual double make_noise(double time) const = 0;
-private:
+protected:
     static double clamp(double value);
     static void audio_stream_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int total_amount);
 

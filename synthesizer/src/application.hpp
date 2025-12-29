@@ -16,7 +16,7 @@ public:
     virtual void on_event(const SDL_Event&) {}
 
     void run();
-private:
+protected:
     SDL_Window* m_window {};
     SDL_Renderer* m_renderer {};
     bool m_running {true};
