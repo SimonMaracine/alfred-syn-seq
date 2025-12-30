@@ -8,6 +8,7 @@ add_executable(synthesizer
     "src/audio.cpp"
     "src/audio.hpp"
     "src/main.cpp"
+    "src/math.hpp"
 )
 
 target_include_directories(synthesizer PRIVATE "src")

@@ -1,23 +1,18 @@
 #include <iostream>
-#include <numbers>
 #include <cmath>
 
 #include "application.hpp"
 #include "audio.hpp"
-
-consteval double operator""_hz(long double angular_velocity) {
-    return double(angular_velocity) * 2.0 * std::numbers::pi;
-}
-
-double hz(double angular_velocity) {
-    return angular_velocity * 2.0 * std::numbers::pi;
-}
+#include "math.hpp"
 
 class SynthesizerStream : public AudioStream {
 public:
     enum class Wave {
         Sine,
-        Square
+        Square,
+        Triangle,
+        Saw1,
+        Saw2
     };
 
     volatile Wave wave {Wave::Square};
@@ -28,24 +23,48 @@ private:
             case Wave::Sine:
                 return sine_wave(time, frequency, 0.1);
             case Wave::Square:
-                return square_wave(time, frequency, 0.07);
+                return square_wave(time, frequency, 0.06);
+            case Wave::Triangle:
+                return triangle_wave(time, frequency, 0.08);
+            case Wave::Saw1:
+                return saw1_wave(time, frequency, 0.06);
+            case Wave::Saw2:
+                return saw2_wave(time, frequency, 0.06);
         }
 
         return 0.0;
     }
 
     static double sine_wave(double time, double frequency, double amplitude) {
-        return amplitude * std::sin(hz(frequency) * time) + amplitude * std::sin(hz(frequency + 40.0) * time);
+        return amplitude * std::sin(w(frequency) * time);
     }
 
     static double square_wave(double time, double frequency, double amplitude) {
-        const double value {std::sin(hz(frequency) * time)};
+        const double value {std::sin(w(frequency) * time)};
 
         if (value >= 0.0) {
             return amplitude;
         } else {
             return -amplitude;
         }
+    }
+
+    static double triangle_wave(double time, double frequency, double amplitude) {
+        return amplitude * std::asin(std::sin(w(frequency) * time)) * (2.0 / PI);
+    }
+
+    static double saw1_wave(double time, double frequency, double amplitude) {
+        double result {};
+
+        for (double n {1.0}; n < 10.0; n++) {
+            result += std::sin(n * w(frequency) * time) / n;
+        }
+
+        return amplitude * result * (2.0 / PI);
+    }
+
+    static double saw2_wave(double time, double frequency, double amplitude) {
+        return amplitude * (frequency * PI * std::fmod(time, 1.0 / frequency) - PI / 2.0) * (2.0 / PI);
     }
 };
 
@@ -64,6 +83,12 @@ public:
                     m_audio_stream.wave = SynthesizerStream::Wave::Sine;
                 } else if (event.key.key == SDLK_Q) {
                     m_audio_stream.wave = SynthesizerStream::Wave::Square;
+                } else if (event.key.key == SDLK_R) {
+                    m_audio_stream.wave = SynthesizerStream::Wave::Triangle;
+                } else if (event.key.key == SDLK_1) {
+                    m_audio_stream.wave = SynthesizerStream::Wave::Saw1;
+                } else if (event.key.key == SDLK_2) {
+                    m_audio_stream.wave = SynthesizerStream::Wave::Saw2;
                 }
 
                 break;
