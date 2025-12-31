@@ -36,6 +36,12 @@ void AudioStream::resume() const {
     }
 }
 
+double AudioStream::make_noise() const {
+    const double output {envelope(m_time) * oscillator(m_time)};
+
+    return output * master_volume();
+}
+
 double AudioStream::clamp(double value) {
     if (value >= 0.0) {
         return std::min(value, 1.0);
@@ -49,8 +55,8 @@ void AudioStream::audio_stream_callback(void* userdata, SDL_AudioStream* stream,
 
     const auto buffer {std::make_unique<short[]>(additional_amount / sizeof(short))};
 
-    for (std::size_t i {}; i < additional_amount / sizeof(short); i++) {
-        const double noise {clamp(self.make_noise(self.m_time))};
+    for (int i {}; i < additional_amount / sizeof(short); i++) {
+        const double noise {clamp(self.make_noise())};
 
         buffer[i] = short(noise * double(std::numeric_limits<short>::max()));
 

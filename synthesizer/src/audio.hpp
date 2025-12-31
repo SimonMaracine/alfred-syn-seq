@@ -10,9 +10,13 @@ public:
     virtual ~AudioStream();
 
     void resume() const;
+    double get_time() const { return m_time; }
 
-    virtual double make_noise(double time) const = 0;
+    virtual double oscillator(double time) const = 0;
+    virtual double envelope(double time) const = 0;
+    virtual double master_volume() const = 0;
 protected:
+    double make_noise() const;
     static double clamp(double value);
     static void audio_stream_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int total_amount);
 
