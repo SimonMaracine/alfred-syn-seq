@@ -9,9 +9,9 @@
 class SynthesizerStream : public AudioStream {
 public:
     double frequency {};
-    std::unique_ptr<Instrument> instrument {std::make_unique<instruments::Harmonica>()};
+    std::unique_ptr<Instrument> instrument {std::make_unique<instruments::Bell>()};
 private:
-    double oscillator(double time) const override {
+    double sound(double time) const override {
         return instrument->sound(time, frequency);
     }
 
@@ -19,7 +19,7 @@ private:
         return instrument->get_envelope().get_amplitude(time);
     }
 
-    double master_volume() const override {
+    double volume() const override {
         return 0.1;
     }
 };
@@ -36,17 +36,6 @@ public:
                 if (event.key.key == SDLK_ESCAPE) {
                     m_running = false;
                 }
-                // else if (event.key.key == SDLK_I) {
-                //     m_audio_stream.wave = SynthesizerStream::Wave::Sine;
-                // } else if (event.key.key == SDLK_Q) {
-                //     m_audio_stream.wave = SynthesizerStream::Wave::Square;
-                // } else if (event.key.key == SDLK_R) {
-                //     m_audio_stream.wave = SynthesizerStream::Wave::Triangle;
-                // } else if (event.key.key == SDLK_A) {
-                //     m_audio_stream.wave = SynthesizerStream::Wave::Saw;
-                // } else if (event.key.key == SDLK_O) {
-                //     m_audio_stream.wave = SynthesizerStream::Wave::Noise;
-                // }
 
                 break;
         }
@@ -54,7 +43,7 @@ public:
 
     void on_update() override {
         static constexpr double base_frequency {110.0};  // La
-        const double step_frequency {std::pow(2.0, 1.0 / 12.0)};
+        static constexpr double step_frequency {1.059463094};  // 2.0 ** (1.0 / 12.0)
 
         const bool* keyboard {SDL_GetKeyboardState(nullptr)};
 

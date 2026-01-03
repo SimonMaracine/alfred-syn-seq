@@ -6,13 +6,6 @@
 #include "math.hpp"
 
 namespace oscillators {
-    enum class Wave {
-        Sine,
-        Square,
-        Triangle,
-        Saw
-    };
-
     struct LowFrequencyOscillator {
         double frequency {};
         double amplitude {};
@@ -84,11 +77,7 @@ double EnvelopeAdsr::get_amplitude(double time) const {
         result = ((time - m_trigger_off_time) / m_description.release_time) * -m_description.sustain_amplitude + m_description.sustain_amplitude;
     }
 
-    if (result <= 0.0001) {
-        result = 0.0;
-    }
-
-    return result;
+    return zero_if_less_than(result);
 }
 
 void EnvelopeAdsr::trigger_on(double time) {
@@ -116,11 +105,7 @@ double EnvelopeAd::get_amplitude(double time) const {
         result = (-(life_time - m_description.attack_time) / m_description.decay_time) + 1.0;
     }
 
-    if (result <= 0.0001) {
-        result = 0.0;
-    }
-
-    return result;
+    return zero_if_less_than(result);
 }
 
 void EnvelopeAd::trigger_on(double time) {

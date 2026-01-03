@@ -11,3 +11,11 @@ constexpr double w(double hertz) {
 consteval double operator""_hz(long double hertz) {
     return w(double(hertz));
 }
+
+constexpr double zero_if_less_than(double x, double epsilon = 0.0001) {
+    if (x <= epsilon) {
+        return 0.0;
+    } else {
+        return x;
+    }
+}
