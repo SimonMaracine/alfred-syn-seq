@@ -55,7 +55,7 @@ void AudioStream::audio_stream_callback(void* userdata, SDL_AudioStream* stream,
 
     const auto buffer {std::make_unique<short[]>(additional_amount / sizeof(short))};
 
-    for (int i {}; i < additional_amount / sizeof(short); i++) {
+    for (int i {}; i < additional_amount / int(sizeof(short)); i++) {
         const double noise {clamp(self.make_noise())};
 
         buffer[i] = short(noise * double(std::numeric_limits<short>::max()));
