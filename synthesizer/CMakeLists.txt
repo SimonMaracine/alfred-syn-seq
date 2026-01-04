@@ -17,7 +17,7 @@ target_include_directories(synthesizer PRIVATE "src")
 
 target_link_libraries(synthesizer PRIVATE SDL3::SDL3)
 
-target_compile_features(synthesizer PRIVATE cxx_std_20)
+target_compile_features(synthesizer PRIVATE cxx_std_23)
 set_target_properties(synthesizer PROPERTIES CXX_EXTENSIONS OFF)
 
 if(UNIX)

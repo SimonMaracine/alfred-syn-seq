@@ -3,6 +3,7 @@
 #include <format>
 #include <memory>
 #include <limits>
+#include <exception>
 #include <cmath>
 
 AudioStream::AudioStream() {

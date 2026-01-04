@@ -106,15 +106,33 @@ double EnvelopeAdsr::ads(double life_time) const {
 
 double EnvelopeAdsr::r(double time, double time_note_on, double time_note_off) const {
     // Release
-    const double release_amplitude {ads(time_note_off - time_note_on)};
+    const double amplitude {ads(time_note_off - time_note_on)};
 
-    return ((time - time_note_off) / m_description.time_release) * -release_amplitude + release_amplitude;
+    return ((time - time_note_off) / m_description.time_release) * -amplitude + amplitude;
 }
 
-double EnvelopeAd::get_amplitude(double time, double time_note_on, double time_note_off) const {
+double EnvelopeAdr::get_amplitude(double time, double time_note_on, double time_note_off) const {
     double amplitude {};
 
-    const double life_time {time - time_note_on};
+    if (time_note_on > time_note_off) {
+        amplitude = ad(time - time_note_on);
+    } else {
+        amplitude = r(time, time_note_on, time_note_off);
+    }
+
+    return zero_if_less_than_eps(amplitude);
+}
+
+bool EnvelopeAdr::is_done(double time, double time_note_on, double time_note_off) const {
+    if (time_note_on > time_note_off) {
+        return false;
+    } else {
+        return less_than_eps(r(time, time_note_on, time_note_off));
+    }
+}
+
+double EnvelopeAdr::ad(double life_time) const {
+    double amplitude {};
 
     // Attack
     if (life_time <= m_description.time_attack) {
@@ -123,24 +141,17 @@ double EnvelopeAd::get_amplitude(double time, double time_note_on, double time_n
 
     // Decay
     if (life_time > m_description.time_attack && life_time <= m_description.time_attack + m_description.time_decay) {
-        amplitude = (-(life_time - m_description.time_attack) / m_description.time_decay) + 1.0;
+        amplitude = -(life_time - m_description.time_attack) / m_description.time_decay + 1.0;
     }
 
-    return zero_if_less_than_eps(amplitude);
+    return amplitude;
 }
 
-bool EnvelopeAd::is_done(double time, double time_note_on, double time_note_off) const {  // FIXME
-    double amplitude {};
+double EnvelopeAdr::r(double time, double time_note_on, double time_note_off) const {
+    // Release
+    const double amplitude {ad(time_note_off - time_note_on)};
 
-    const double life_time {time - time_note_on};
-
-    if (life_time > m_description.time_attack && life_time <= m_description.time_attack + m_description.time_decay) {
-        amplitude = (-(life_time - m_description.time_attack) / m_description.time_decay) + 1.0;
-    } else {
-        return false;
-    }
-
-    return less_than_eps(amplitude);
+    return ((time - time_note_off) / m_description.time_release) * -amplitude + amplitude;
 }
 
 namespace instruments {

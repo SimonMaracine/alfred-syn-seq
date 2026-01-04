@@ -9,14 +9,14 @@ struct Envelope {
 
 struct EnvelopeAdsrDescription {
     double time_attack {0.1};
-    double time_decay {0.01};
+    double time_decay {0.02};
     double time_release {0.2};
 
     double amplitude_start {1.0};
     double amplitude_sustain {0.8};
 };
 
-class EnvelopeAdsr : public Envelope {  // TODO figure out the logic by making a sketch
+class EnvelopeAdsr : public Envelope {
 public:
     EnvelopeAdsr(const EnvelopeAdsrDescription& description)
         : m_description(description) {}
@@ -30,37 +30,41 @@ private:
     EnvelopeAdsrDescription m_description;
 };
 
-struct EnvelopeAdDescription {
+struct EnvelopeAdrDescription {
     double time_attack {0.01};
     double time_decay {1.0};
+    double time_release {0.1};
 };
 
-class EnvelopeAd : public Envelope {  // TODO turn into ADR
+class EnvelopeAdr : public Envelope {
 public:
-    EnvelopeAd(const EnvelopeAdDescription& description)
+    EnvelopeAdr(const EnvelopeAdrDescription& description)
         : m_description(description) {}
 
     double get_amplitude(double time, double time_note_on, double time_note_off) const override;
     bool is_done(double time, double time_note_on, double time_note_off) const override;
 private:
-    EnvelopeAdDescription m_description;
+    double ad(double life_time) const;
+    double r(double time, double time_note_on, double time_note_off) const;
+
+    EnvelopeAdrDescription m_description;
 };
 
 enum Note : unsigned int {
     A,
-    AS,
+    As,
     B,
     C,
-    CS,
+    Cs,
     D,
-    DS,
+    Ds,
     E,
     F,
-    FS,
+    Fs,
     G,
-    GS,
+    Gs,
     A2,
-    AS2,
+    As2,
     B2,
     C2
 };
@@ -87,12 +91,13 @@ namespace instruments {
 
         double sound(double time, const Sound& sound) const override;
     private:
-        static constexpr EnvelopeAdDescription ENVELOPE {
+        static constexpr EnvelopeAdrDescription ENVELOPE {
             0.01,
-            1.2
+            1.2,
+            0.2
         };
 
-        EnvelopeAd m_envelope {ENVELOPE};
+        EnvelopeAdr m_envelope {ENVELOPE};
     };
 
     class Harmonica : public Instrument {
@@ -103,7 +108,7 @@ namespace instruments {
     private:
         static constexpr EnvelopeAdsrDescription ENVELOPE {
             0.1,
-            0.01,
+            0.02,
             0.2,
             1.0,
             0.8

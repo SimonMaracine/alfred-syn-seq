@@ -2,19 +2,30 @@
 #include <memory>
 #include <vector>
 #include <algorithm>
+#include <tuple>
+#include <utility>
 #include <cmath>
 
 #include "application.hpp"
 #include "audio.hpp"
 #include "synthesis.hpp"
 
+struct Voices : private std::tuple<
+    instruments::Bell,
+    instruments::Harmonica
+> {
+    const Instrument& operator[](std::size_t index) const {
+        switch (index) {
+            case 0: return std::get<0>(*this);
+            case 1: return std::get<1>(*this);
+        }
+
+        std::unreachable();
+    }
+};
+
 class Synthesizer : public AudioStream {
 public:
-    template<typename T>
-    void add_voice() {
-        m_voices.push_back(std::make_unique<T>());
-    }
-
     void note_on(Note note, unsigned int octave, unsigned int voice) {
         StreamLockGuard guard {this};
 
@@ -49,7 +60,7 @@ public:
         StreamLockGuard guard {this};
 
         m_sounds.erase(std::remove_if(m_sounds.begin(), m_sounds.end(), [this](const Sound& sound) {
-            return m_voices.at(sound.voice)->get_envelope().is_done(get_time(), sound.time_on, sound.time_off);
+            return m_voices[sound.voice].get_envelope().is_done(get_time(), sound.time_on, sound.time_off);
         }), m_sounds.end());
     }
 private:
@@ -57,7 +68,7 @@ private:
         double result {};
 
         for (const Sound& sound : m_sounds) {
-            result += m_voices.at(sound.voice)->sound(time, sound);
+            result += m_voices[sound.voice].sound(time, sound);
         }
 
         return result;
@@ -67,15 +78,13 @@ private:
         return 0.1;
     }
 
-    std::vector<std::unique_ptr<Instrument>> m_voices;
+    Voices m_voices;
     std::vector<Sound> m_sounds;
 };
 
 class SynthesizerApplication : public Application {
 public:
     void on_start() override {
-        m_synthesizer.add_voice<instruments::Harmonica>();
-        m_synthesizer.add_voice<instruments::Bell>();
         m_synthesizer.resume();
     }
 
