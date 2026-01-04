@@ -1,9 +1,9 @@
-#include "synthesis.hpp"
+#include "alfred/synthesis.hpp"
 
 #include <cmath>
 #include <random>
 
-#include "math.hpp"
+#include "alfred/math.hpp"
 
 namespace syn {
     namespace oscillators {

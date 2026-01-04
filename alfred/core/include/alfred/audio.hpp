@@ -2,12 +2,12 @@
 
 #include <stdexcept>
 
-#include <SDL3/SDL.h>
+struct SDL_AudioStream;
 
-class AudioStream {
+class Audio {
 public:
-    AudioStream();
-    virtual ~AudioStream();
+    Audio();
+    virtual ~Audio();
 
     void resume() const;
     void lock() const;
@@ -24,22 +24,21 @@ protected:
 
     SDL_AudioStream* m_stream {};
     double m_time {};
-    int m_frequency {44100};
 };
 
-class StreamLockGuard {
+class AudioLockGuard {
 public:
-    StreamLockGuard(const AudioStream* audio_stream);
-    ~StreamLockGuard();
+    AudioLockGuard(const Audio* audio);
+    ~AudioLockGuard();
 
-    StreamLockGuard(const StreamLockGuard&) = default;
-    StreamLockGuard& operator=(const StreamLockGuard&) = default;
-    StreamLockGuard(StreamLockGuard&&) = default;
-    StreamLockGuard& operator=(StreamLockGuard&&) = default;
+    AudioLockGuard(const AudioLockGuard&) = default;
+    AudioLockGuard& operator=(const AudioLockGuard&) = default;
+    AudioLockGuard(AudioLockGuard&&) = default;
+    AudioLockGuard& operator=(AudioLockGuard&&) = default;
 private:
-    const AudioStream* m_audio_stream {};
+    const Audio* m_audio {};
 };
 
-struct AudioStreamError : std::runtime_error {
+struct AudioError : std::runtime_error {
     using std::runtime_error::runtime_error;
 };

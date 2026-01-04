@@ -1,4 +1,4 @@
-#include "audio.hpp"
+#include "alfred/audio.hpp"
 
 #include <format>
 #include <memory>
@@ -6,54 +6,64 @@
 #include <exception>
 #include <cmath>
 
-AudioStream::AudioStream() {
+#include <SDL3/SDL.h>
+
+static constexpr int FREQUENCY {44100};
+
+Audio::Audio() {
+    if (!SDL_InitSubSystem(SDL_INIT_AUDIO)) {
+        throw AudioError(std::format("SDL_InitSubSystem: {}", SDL_GetError()));
+    }
+
     const SDL_AudioSpec audio_specification {
         SDL_AUDIO_S16,
         1,
-        m_frequency
+        FREQUENCY
     };
 
     m_stream = SDL_OpenAudioDeviceStream(
         SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK,
         &audio_specification,
-        &AudioStream::audio_stream_callback,
+        &Audio::audio_stream_callback,
         this
     );
 
     if (!m_stream) {
-        throw AudioStreamError(std::format("SDL_OpenAudioDeviceStream: {}", SDL_GetError()));
+        throw AudioError(std::format("SDL_OpenAudioDeviceStream: {}", SDL_GetError()));
     }
 }
 
-AudioStream::~AudioStream() {
+Audio::~Audio() {
     if (m_stream) {
         SDL_DestroyAudioStream(m_stream);
     }
+
+    SDL_QuitSubSystem(SDL_INIT_AUDIO);
 }
 
-void AudioStream::resume() const {
+void Audio::resume() const {
     if (!SDL_ResumeAudioStreamDevice(m_stream)) {
-        throw AudioStreamError(std::format("SDL_ResumeAudioStreamDevice: {}", SDL_GetError()));
+        throw AudioError(std::format("SDL_ResumeAudioStreamDevice: {}", SDL_GetError()));
     }
 }
 
-void AudioStream::lock() const {
+void Audio::lock() const {
     if (!SDL_LockAudioStream(m_stream)) {
-        throw AudioStreamError(std::format("SDL_LockAudioStream: {}", SDL_GetError()));
+        throw AudioError(std::format("SDL_LockAudioStream: {}", SDL_GetError()));
     }
 }
 
-void AudioStream::unlock() const {
+void Audio::unlock() const {
     if (!SDL_UnlockAudioStream(m_stream)) {
-        throw AudioStreamError(std::format("SDL_UnlockAudioStream: {}", SDL_GetError()));
+        throw AudioError(std::format("SDL_UnlockAudioStream: {}", SDL_GetError()));
     }
 }
 
-double AudioStream::current_sound() const {
+double Audio::current_sound() const {
     return sound(m_time) * volume();
 }
 
-double AudioStream::clamp(double value) {
+double Audio::clamp(double value) {
     if (value >= 0.0) {
         return std::min(value, 1.0);
     } else {
@@ -61,10 +71,10 @@ double AudioStream::clamp(double value) {
     }
 }
 
-void AudioStream::audio_stream_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int total_amount) {
+void Audio::audio_stream_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int total_amount) {
     // This code is run under a mutex lock
 
-    AudioStream& self {*static_cast<AudioStream*>(userdata)};
+    Audio& self {*static_cast<Audio*>(userdata)};
 
     const auto buffer {std::make_unique<short[]>(additional_amount / sizeof(short))};
 
@@ -73,20 +83,20 @@ void AudioStream::audio_stream_callback(void* userdata, SDL_AudioStream* stream,
 
         buffer[i] = short(sound * double(std::numeric_limits<short>::max()));
 
-        self.m_time += 1.0 / double(self.m_frequency);
+        self.m_time += 1.0 / double(FREQUENCY);
     }
 
     (void) SDL_PutAudioStreamData(stream, buffer.get(), additional_amount / sizeof(short) * sizeof(short));
 }
 
-StreamLockGuard::StreamLockGuard(const AudioStream* audio_stream)
-    : m_audio_stream(audio_stream) {
-    m_audio_stream->lock();
+AudioLockGuard::AudioLockGuard(const Audio* audio)
+    : m_audio(audio) {
+    m_audio->lock();
 }
 
-StreamLockGuard::~StreamLockGuard() {
+AudioLockGuard::~AudioLockGuard() {
     try {
-        m_audio_stream->unlock();
+        m_audio->unlock();
     } catch (...) {
         std::terminate();
     }

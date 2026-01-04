@@ -2,12 +2,14 @@
 
 #include <stdexcept>
 
-#include <SDL3/SDL.h>
+union SDL_Event;
+struct SDL_Window;
+struct SDL_Renderer;
 
-class Application {
+class Video {
 public:
-    Application();
-    virtual ~Application();
+    Video();
+    virtual ~Video();
 
     virtual void on_start() {}
     virtual void on_stop() {}
@@ -22,6 +24,6 @@ protected:
     bool m_running {true};
 };
 
-struct ApplicationError : std::runtime_error {
+struct VideoError : std::runtime_error {
     using std::runtime_error::runtime_error;
 };
