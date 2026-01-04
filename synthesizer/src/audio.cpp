@@ -36,8 +36,20 @@ void AudioStream::resume() const {
     }
 }
 
+void AudioStream::lock() const {
+    if (!SDL_LockAudioStream(m_stream)) {
+        throw AudioStreamError(std::format("SDL_LockAudioStream: {}", SDL_GetError()));
+    }
+}
+
+void AudioStream::unlock() const {
+    if (!SDL_UnlockAudioStream(m_stream)) {
+        throw AudioStreamError(std::format("SDL_UnlockAudioStream: {}", SDL_GetError()));
+    }
+}
+
 double AudioStream::current_sound() const {
-    return envelope(m_time) * sound(m_time) * volume();
+    return sound(m_time) * volume();
 }
 
 double AudioStream::clamp(double value) {
@@ -49,6 +61,8 @@ double AudioStream::clamp(double value) {
 }
 
 void AudioStream::audio_stream_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int total_amount) {
+    // This code is run under a mutex lock
+
     AudioStream& self {*static_cast<AudioStream*>(userdata)};
 
     const auto buffer {std::make_unique<short[]>(additional_amount / sizeof(short))};
@@ -62,4 +76,17 @@ void AudioStream::audio_stream_callback(void* userdata, SDL_AudioStream* stream,
     }
 
     (void) SDL_PutAudioStreamData(stream, buffer.get(), additional_amount / sizeof(short) * sizeof(short));
+}
+
+StreamLockGuard::StreamLockGuard(const AudioStream* audio_stream)
+    : m_audio_stream(audio_stream) {
+    m_audio_stream->lock();
+}
+
+StreamLockGuard::~StreamLockGuard() {
+    try {
+        m_audio_stream->unlock();
+    } catch (...) {
+        std::terminate();
+    }
 }

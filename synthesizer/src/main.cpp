@@ -1,33 +1,82 @@
 #include <iostream>
 #include <memory>
+#include <vector>
+#include <algorithm>
 #include <cmath>
 
 #include "application.hpp"
 #include "audio.hpp"
 #include "synthesis.hpp"
 
-class SynthesizerStream : public AudioStream {
+class Synthesizer : public AudioStream {
 public:
-    double frequency {};
-    std::unique_ptr<Instrument> instrument {std::make_unique<instruments::Bell>()};
-private:
-    double sound(double time) const override {
-        return instrument->sound(time, frequency);
+    template<typename T>
+    void add_voice() {
+        m_voices.push_back(std::make_unique<T>());
     }
 
-    double envelope(double time) const override {
-        return instrument->get_envelope().get_amplitude(time);
+    void note_on(Note note, unsigned int octave, unsigned int voice) {
+        StreamLockGuard guard {this};
+
+        const auto iter {std::find_if(m_sounds.begin(), m_sounds.end(), [note](const Sound& sound) { return sound.note == note; })};
+
+        if (iter == m_sounds.end()) {
+            Sound& sound {m_sounds.emplace_back()};
+            sound.note = note;
+            sound.octave = octave;
+            sound.voice = voice;
+            sound.time_on = get_time();
+        } else {
+            if (iter->time_off > iter->time_on) {
+                iter->time_on = get_time();
+            }
+        }
+    }
+
+    void note_off(Note note, unsigned int octave) {
+        StreamLockGuard guard {this};
+
+        const auto iter {std::find_if(m_sounds.begin(), m_sounds.end(), [note](const Sound& sound) { return sound.note == note; })};
+
+        if (iter != m_sounds.end()) {
+            if (iter->time_on > iter->time_off) {
+                iter->time_off = get_time();
+            }
+        }
+    }
+
+    void update() {
+        StreamLockGuard guard {this};
+
+        m_sounds.erase(std::remove_if(m_sounds.begin(), m_sounds.end(), [this](const Sound& sound) {
+            return m_voices.at(sound.voice)->get_envelope().is_done(get_time(), sound.time_on, sound.time_off);
+        }), m_sounds.end());
+    }
+private:
+    double sound(double time) const override {
+        double result {};
+
+        for (const Sound& sound : m_sounds) {
+            result += m_voices.at(sound.voice)->sound(time, sound);
+        }
+
+        return result;
     }
 
     double volume() const override {
         return 0.1;
     }
+
+    std::vector<std::unique_ptr<Instrument>> m_voices;
+    std::vector<Sound> m_sounds;
 };
 
 class SynthesizerApplication : public Application {
 public:
     void on_start() override {
-        m_audio_stream.resume();
+        m_synthesizer.add_voice<instruments::Harmonica>();
+        m_synthesizer.add_voice<instruments::Bell>();
+        m_synthesizer.resume();
     }
 
     void on_event(const SDL_Event& event) override {
@@ -42,9 +91,6 @@ public:
     }
 
     void on_update() override {
-        static constexpr double base_frequency {110.0};  // La
-        static constexpr double step_frequency {1.059463094};  // 2.0 ** (1.0 / 12.0)
-
         const bool* keyboard {SDL_GetKeyboardState(nullptr)};
 
         static constexpr SDL_Scancode KEYBOARD[] {
@@ -60,36 +106,26 @@ public:
             SDL_SCANCODE_J,
             SDL_SCANCODE_M,
             SDL_SCANCODE_K,
-            SDL_SCANCODE_COMMA
+            SDL_SCANCODE_COMMA,
+            SDL_SCANCODE_L,
+            SDL_SCANCODE_PERIOD,
+            SDL_SCANCODE_SLASH
         };
 
-        m_key_pressed = false;
-
-        for (double step {}; const auto key : KEYBOARD) {
+        for (unsigned int note {}; const auto key : KEYBOARD) {
             if (keyboard[key]) {
-                if (m_current_key != key) {
-                    m_audio_stream.frequency = base_frequency * std::pow(step_frequency, step);
-                    m_audio_stream.instrument->get_envelope().trigger_on(m_audio_stream.get_time());
-                    m_current_key = key;
-                }
-
-                m_key_pressed = true;
+                m_synthesizer.note_on(Note(note), 0, 0);
+            } else {
+                m_synthesizer.note_off(Note(note), 0);
             }
 
-            step += 1.0;
+            note++;
         }
 
-        if (!m_key_pressed) {
-            if (m_current_key != SDL_SCANCODE_UNKNOWN) {
-                m_audio_stream.instrument->get_envelope().trigger_off(m_audio_stream.get_time());
-                m_current_key = SDL_SCANCODE_UNKNOWN;
-            }
-        }
+        m_synthesizer.update();
     }
 private:
-    SynthesizerStream m_audio_stream;
-    SDL_Scancode m_current_key {SDL_SCANCODE_UNKNOWN};
-    bool m_key_pressed {};
+    Synthesizer m_synthesizer;
 };
 
 int main() {

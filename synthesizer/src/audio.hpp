@@ -10,10 +10,12 @@ public:
     virtual ~AudioStream();
 
     void resume() const;
+    void lock() const;
+    void unlock() const;
+
     double get_time() const { return m_time; }
 
     virtual double sound(double time) const = 0;
-    virtual double envelope(double time) const = 0;
     virtual double volume() const = 0;
 protected:
     double current_sound() const;
@@ -23,6 +25,19 @@ protected:
     SDL_AudioStream* m_stream {};
     double m_time {};
     int m_frequency {44100};
+};
+
+class StreamLockGuard {
+public:
+    StreamLockGuard(const AudioStream* audio_stream);
+    ~StreamLockGuard();
+
+    StreamLockGuard(const StreamLockGuard&) = default;
+    StreamLockGuard& operator=(const StreamLockGuard&) = default;
+    StreamLockGuard(StreamLockGuard&&) = default;
+    StreamLockGuard& operator=(StreamLockGuard&&) = default;
+private:
+    const AudioStream* m_audio_stream {};
 };
 
 struct AudioStreamError : std::runtime_error {

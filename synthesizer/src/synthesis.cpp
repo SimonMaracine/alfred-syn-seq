@@ -52,80 +52,111 @@ namespace oscillators {
     }
 }
 
-double EnvelopeAdsr::get_amplitude(double time) const {
-    double result {};
+static double note_frequency(Note note) {
+    static constexpr double BASE_FREQUENCY {110.0};  // A
+    static constexpr double STEP_FREQUENCY {1.059463094};  // 2.0 ** (1.0 / 12.0)
 
-    const double life_time {time - m_trigger_on_time};
+    return BASE_FREQUENCY * std::pow(STEP_FREQUENCY, double(note));
+}
 
-    if (m_trigger_on) {
-        // Attack
-        if (life_time <= m_description.attack_time) {
-            result = life_time / m_description.attack_time * m_description.start_amplitude;
-        }
+double EnvelopeAdsr::get_amplitude(double time, double time_note_on, double time_note_off) const {
+    double amplitude {};
 
-        // Decay
-        if (life_time > m_description.attack_time && life_time <= m_description.attack_time + m_description.decay_time) {
-            result = ((life_time - m_description.attack_time) / m_description.decay_time) * (m_description.sustain_amplitude - m_description.start_amplitude) + m_description.start_amplitude;
-        }
-
-        // Sustain
-        if (life_time > m_description.attack_time + m_description.decay_time) {
-            result = m_description.sustain_amplitude;
-        }
+    if (time_note_on > time_note_off) {
+        amplitude = ads(time - time_note_on);
     } else {
-        // Release
-        result = ((time - m_trigger_off_time) / m_description.release_time) * -m_description.sustain_amplitude + m_description.sustain_amplitude;
+        amplitude = r(time, time_note_on, time_note_off);
     }
 
-    return zero_if_less_than(result);
+    return zero_if_less_than_eps(amplitude);
 }
 
-void EnvelopeAdsr::trigger_on(double time) {
-    m_trigger_on_time = time;
-    m_trigger_on = true;
+bool EnvelopeAdsr::is_done(double time, double time_note_on, double time_note_off) const {
+    if (time_note_on > time_note_off) {
+        return false;
+    } else {
+        return less_than_eps(r(time, time_note_on, time_note_off));
+    }
 }
 
-void EnvelopeAdsr::trigger_off(double time) {
-    m_trigger_off_time = time;
-    m_trigger_on = false;
-}
-
-double EnvelopeAd::get_amplitude(double time) const {
-    double result {};
-
-    const double life_time {time - m_trigger_on_time};
+double EnvelopeAdsr::ads(double life_time) const {
+    double amplitude {};
 
     // Attack
-    if (life_time <= m_description.attack_time) {
-        result = life_time / m_description.attack_time;
+    if (life_time <= m_description.time_attack) {
+        amplitude = life_time / m_description.time_attack * m_description.amplitude_start;
     }
 
     // Decay
-    if (life_time > m_description.attack_time && life_time <= m_description.attack_time + m_description.decay_time) {
-        result = (-(life_time - m_description.attack_time) / m_description.decay_time) + 1.0;
-    }
-
-    return zero_if_less_than(result);
-}
-
-void EnvelopeAd::trigger_on(double time) {
-    m_trigger_on_time = time;
-}
-
-namespace instruments {
-    double Bell::sound(double time, double frequency) const {
-        return (
-            1.0 * oscillators::wave_sine(time, frequency * 2.0, { 5.0, 0.001 }) +
-            0.5 * oscillators::wave_sine(time, frequency * 3.0, {}) +
-            0.25 * oscillators::wave_sine(time, frequency * 4.0, {})
+    if (life_time > m_description.time_attack && life_time <= m_description.time_attack + m_description.time_decay) {
+        amplitude = (
+            ((life_time - m_description.time_attack) / m_description.time_decay) *
+            (m_description.amplitude_sustain - m_description.amplitude_start) +
+            m_description.amplitude_start
         );
     }
 
-    double Harmonica::sound(double time, double frequency) const {
-        return (
-            1.0 * oscillators::wave_square(time, frequency, { 5.0, 0.001 }) +
-            0.5 * oscillators::wave_square(time, frequency * 1.5, {}) +
-            0.25 * oscillators::wave_square(time, frequency * 2.0, {}) +
+    // Sustain
+    if (life_time > m_description.time_attack + m_description.time_decay) {
+        amplitude = m_description.amplitude_sustain;
+    }
+
+    return amplitude;
+}
+
+double EnvelopeAdsr::r(double time, double time_note_on, double time_note_off) const {
+    // Release
+    const double release_amplitude {ads(time_note_off - time_note_on)};
+
+    return ((time - time_note_off) / m_description.time_release) * -release_amplitude + release_amplitude;
+}
+
+double EnvelopeAd::get_amplitude(double time, double time_note_on, double time_note_off) const {
+    double amplitude {};
+
+    const double life_time {time - time_note_on};
+
+    // Attack
+    if (life_time <= m_description.time_attack) {
+        amplitude = life_time / m_description.time_attack;
+    }
+
+    // Decay
+    if (life_time > m_description.time_attack && life_time <= m_description.time_attack + m_description.time_decay) {
+        amplitude = (-(life_time - m_description.time_attack) / m_description.time_decay) + 1.0;
+    }
+
+    return zero_if_less_than_eps(amplitude);
+}
+
+bool EnvelopeAd::is_done(double time, double time_note_on, double time_note_off) const {  // FIXME
+    double amplitude {};
+
+    const double life_time {time - time_note_on};
+
+    if (life_time > m_description.time_attack && life_time <= m_description.time_attack + m_description.time_decay) {
+        amplitude = (-(life_time - m_description.time_attack) / m_description.time_decay) + 1.0;
+    } else {
+        return false;
+    }
+
+    return less_than_eps(amplitude);
+}
+
+namespace instruments {
+    double Bell::sound(double time, const Sound& sound) const {
+        return m_envelope.get_amplitude(time, sound.time_on, sound.time_off) * (
+            1.0 * oscillators::wave_sine(time, note_frequency(sound.note) * 2.0, { 5.0, 0.001 }) +
+            0.5 * oscillators::wave_sine(time, note_frequency(sound.note) * 3.0, {}) +
+            0.25 * oscillators::wave_sine(time, note_frequency(sound.note) * 4.0, {})
+        );
+    }
+
+    double Harmonica::sound(double time, const Sound& sound) const {
+        return m_envelope.get_amplitude(time, sound.time_on, sound.time_off) * (
+            1.0 * oscillators::wave_square(time, note_frequency(sound.note), { 5.0, 0.001 }) +
+            0.5 * oscillators::wave_square(time, note_frequency(sound.note) * 1.5, {}) +
+            0.25 * oscillators::wave_square(time, note_frequency(sound.note) * 2.0, {}) +
             0.05 * oscillators::noise()
         );
     }
