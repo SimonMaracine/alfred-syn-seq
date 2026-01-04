@@ -69,9 +69,15 @@ enum Note : unsigned int {
     C2
 };
 
+enum Octave : unsigned int {
+    Octave0,
+    Octave1,
+    Octave2
+};
+
 struct Sound {
     Note note {};
-    unsigned int octave {};  // TODO
+    Octave octave {};
     unsigned int voice {};
     double time_on {};
     double time_off {};
@@ -117,3 +123,5 @@ namespace instruments {
         EnvelopeAdsr m_envelope {ENVELOPE};
     };
 };
+
+// TODO add asserts

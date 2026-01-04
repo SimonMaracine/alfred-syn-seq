@@ -26,10 +26,10 @@ struct Voices : private std::tuple<
 
 class Synthesizer : public AudioStream {
 public:
-    void note_on(Note note, unsigned int octave, unsigned int voice) {
+    void note_on(Note note, Octave octave, unsigned int voice) {
         StreamLockGuard guard {this};
 
-        const auto iter {std::find_if(m_sounds.begin(), m_sounds.end(), [note](const Sound& sound) { return sound.note == note; })};
+        const auto iter {find_sound(note, octave)};
 
         if (iter == m_sounds.end()) {
             Sound& sound {m_sounds.emplace_back()};
@@ -44,10 +44,10 @@ public:
         }
     }
 
-    void note_off(Note note, unsigned int octave) {
+    void note_off(Note note, Octave octave) {
         StreamLockGuard guard {this};
 
-        const auto iter {std::find_if(m_sounds.begin(), m_sounds.end(), [note](const Sound& sound) { return sound.note == note; })};
+        const auto iter {find_sound(note, octave)};
 
         if (iter != m_sounds.end()) {
             if (iter->time_on > iter->time_off) {
@@ -62,8 +62,17 @@ public:
         m_sounds.erase(std::remove_if(m_sounds.begin(), m_sounds.end(), [this](const Sound& sound) {
             return m_voices[sound.voice].get_envelope().is_done(get_time(), sound.time_on, sound.time_off);
         }), m_sounds.end());
+
     }
 private:
+    std::vector<Sound>::iterator find_sound(Note note, Octave octave) {
+        return std::find_if(m_sounds.begin(), m_sounds.end(),
+            [note, octave](const Sound& sound) {
+                return sound.note == note && sound.octave == octave;
+            }
+        );
+    }
+
     double sound(double time) const override {
         double result {};
 
@@ -91,8 +100,25 @@ public:
     void on_event(const SDL_Event& event) override {
         switch (event.type) {
             case SDL_EVENT_KEY_DOWN:
-                if (event.key.key == SDLK_ESCAPE) {
-                    m_running = false;
+                switch (event.key.key) {
+                    case SDLK_ESCAPE:
+                        m_running = false;
+                        break;
+                    case SDLK_Q:
+                        m_voice = 0;
+                        break;
+                    case SDLK_W:
+                        m_voice = 1;
+                        break;
+                    case SDLK_1:
+                        m_octave = Octave0;
+                        break;
+                    case SDLK_2:
+                        m_octave = Octave1;
+                        break;
+                    case SDLK_3:
+                        m_octave = Octave2;
+                        break;
                 }
 
                 break;
@@ -123,9 +149,9 @@ public:
 
         for (unsigned int note {}; const auto key : KEYBOARD) {
             if (keyboard[key]) {
-                m_synthesizer.note_on(Note(note), 0, 0);
+                m_synthesizer.note_on(Note(note), m_octave, m_voice);
             } else {
-                m_synthesizer.note_off(Note(note), 0);
+                m_synthesizer.note_off(Note(note), m_octave);
             }
 
             note++;
@@ -134,6 +160,8 @@ public:
         m_synthesizer.update();
     }
 private:
+    unsigned int m_voice {};
+    Octave m_octave {Octave1};
     Synthesizer m_synthesizer;
 };
 
