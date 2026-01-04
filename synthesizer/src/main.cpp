@@ -2,37 +2,22 @@
 #include <memory>
 #include <vector>
 #include <algorithm>
-#include <tuple>
-#include <utility>
+
 #include <cmath>
 
 #include "application.hpp"
 #include "audio.hpp"
 #include "synthesis.hpp"
 
-struct Voices : private std::tuple<
-    instruments::Bell,
-    instruments::Harmonica
-> {
-    const Instrument& operator[](std::size_t index) const {
-        switch (index) {
-            case 0: return std::get<0>(*this);
-            case 1: return std::get<1>(*this);
-        }
-
-        std::unreachable();
-    }
-};
-
 class Synthesizer : public AudioStream {
 public:
-    void note_on(Note note, Octave octave, unsigned int voice) {
+    void note_on(syn::Note note, syn::Octave octave, syn::Voice voice) {
         StreamLockGuard guard {this};
 
         const auto iter {find_sound(note, octave)};
 
         if (iter == m_sounds.end()) {
-            Sound& sound {m_sounds.emplace_back()};
+            syn::Sound& sound {m_sounds.emplace_back()};
             sound.note = note;
             sound.octave = octave;
             sound.voice = voice;
@@ -44,7 +29,7 @@ public:
         }
     }
 
-    void note_off(Note note, Octave octave) {
+    void note_off(syn::Note note, syn::Octave octave) {
         StreamLockGuard guard {this};
 
         const auto iter {find_sound(note, octave)};
@@ -59,15 +44,14 @@ public:
     void update() {
         StreamLockGuard guard {this};
 
-        m_sounds.erase(std::remove_if(m_sounds.begin(), m_sounds.end(), [this](const Sound& sound) {
+        m_sounds.erase(std::remove_if(m_sounds.begin(), m_sounds.end(), [this](const syn::Sound& sound) {
             return m_voices[sound.voice].get_envelope().is_done(get_time(), sound.time_on, sound.time_off);
         }), m_sounds.end());
-
     }
 private:
-    std::vector<Sound>::iterator find_sound(Note note, Octave octave) {
+    std::vector<syn::Sound>::iterator find_sound(syn::Note note, syn::Octave octave) {
         return std::find_if(m_sounds.begin(), m_sounds.end(),
-            [note, octave](const Sound& sound) {
+            [note, octave](const syn::Sound& sound) {
                 return sound.note == note && sound.octave == octave;
             }
         );
@@ -76,7 +60,7 @@ private:
     double sound(double time) const override {
         double result {};
 
-        for (const Sound& sound : m_sounds) {
+        for (const syn::Sound& sound : m_sounds) {
             result += m_voices[sound.voice].sound(time, sound);
         }
 
@@ -87,8 +71,8 @@ private:
         return 0.1;
     }
 
-    Voices m_voices;
-    std::vector<Sound> m_sounds;
+    syn::Voices m_voices;
+    std::vector<syn::Sound> m_sounds;
 };
 
 class SynthesizerApplication : public Application {
@@ -111,13 +95,13 @@ public:
                         m_voice = 1;
                         break;
                     case SDLK_1:
-                        m_octave = Octave0;
+                        m_octave = syn::Octave0;
                         break;
                     case SDLK_2:
-                        m_octave = Octave1;
+                        m_octave = syn::Octave1;
                         break;
                     case SDLK_3:
-                        m_octave = Octave2;
+                        m_octave = syn::Octave2;
                         break;
                 }
 
@@ -149,9 +133,9 @@ public:
 
         for (unsigned int note {}; const auto key : KEYBOARD) {
             if (keyboard[key]) {
-                m_synthesizer.note_on(Note(note), m_octave, m_voice);
+                m_synthesizer.note_on(syn::Note(note), m_octave, m_voice);
             } else {
-                m_synthesizer.note_off(Note(note), m_octave);
+                m_synthesizer.note_off(syn::Note(note), m_octave);
             }
 
             note++;
@@ -160,8 +144,8 @@ public:
         m_synthesizer.update();
     }
 private:
-    unsigned int m_voice {};
-    Octave m_octave {Octave1};
+    syn::Voice m_voice {};
+    syn::Octave m_octave {syn::Octave1};
     Synthesizer m_synthesizer;
 };
 
