@@ -13,15 +13,15 @@ namespace syn {
         };
 
         static double frequency_modulation(double time, double frequency, LowFrequencyOscillator lfo) {
-            return lfo.amplitude * frequency * std::sin(w(lfo.frequency) * time);
+            return lfo.amplitude * frequency * std::sin(math::w(lfo.frequency) * time);
         }
 
         static double wave_sine(double time, double frequency, LowFrequencyOscillator lfo) {
-            return std::sin(w(frequency) * time + frequency_modulation(time, frequency, lfo));
+            return std::sin(math::w(frequency) * time + frequency_modulation(time, frequency, lfo));
         }
 
         static double wave_square(double time, double frequency, LowFrequencyOscillator lfo) {
-            const double value {std::sin(w(frequency) * time + frequency_modulation(time, frequency, lfo))};
+            const double value {std::sin(math::w(frequency) * time + frequency_modulation(time, frequency, lfo))};
 
             if (value >= 0.0) {
                 return 1.0;
@@ -31,21 +31,21 @@ namespace syn {
         }
 
         static double wave_triangle(double time, double frequency, LowFrequencyOscillator lfo) {
-            return std::asin(std::sin(w(frequency) * time + frequency_modulation(time, frequency, lfo))) * (2.0 / PI);
+            return std::asin(std::sin(math::w(frequency) * time + frequency_modulation(time, frequency, lfo))) * (2.0 / math::PI);
         }
 
         static double wave_saw(double time, double frequency, LowFrequencyOscillator lfo) {
             double result {};
 
             for (double n {1.0}; n < 10.0; n++) {
-                result += std::sin(n * w(frequency) * time + frequency_modulation(time, frequency, lfo)) / n;
+                result += std::sin(n * math::w(frequency) * time + frequency_modulation(time, frequency, lfo)) / n;
             }
 
-            return result * (2.0 / PI);
+            return result * (2.0 / math::PI);
         }
 
         static double noise() {
-            static thread_local std::mt19937_64 s_random;
+            static thread_local std::mt19937_64 s_random;  // TODO
 
             std::uniform_real_distribution distribution {-1.0, 1.0};
 
@@ -69,14 +69,14 @@ namespace syn {
             amplitude = r(time, time_note_on, time_note_off);
         }
 
-        return zero_if_less_than_eps(amplitude);
+        return math::zero_if_less_than_eps(amplitude);
     }
 
     bool EnvelopeAdsr::is_done(double time, double time_note_on, double time_note_off) const {
         if (time_note_on > time_note_off) {
             return false;
         } else {
-            return less_than_eps(r(time, time_note_on, time_note_off));
+            return math::less_than_eps(r(time, time_note_on, time_note_off));
         }
     }
 
@@ -121,14 +121,14 @@ namespace syn {
             amplitude = r(time, time_note_on, time_note_off);
         }
 
-        return zero_if_less_than_eps(amplitude);
+        return math::zero_if_less_than_eps(amplitude);
     }
 
     bool EnvelopeAdr::is_done(double time, double time_note_on, double time_note_off) const {
         if (time_note_on > time_note_off) {
             return false;
         } else {
-            return less_than_eps(r(time, time_note_on, time_note_off));
+            return math::less_than_eps(r(time, time_note_on, time_note_off));
         }
     }
 

@@ -14,7 +14,7 @@ public:
     virtual void on_start() {}
     virtual void on_stop() {}
     virtual void on_update() {}
-    virtual void on_render() const {}
+    virtual void on_render() {}
     virtual void on_event(const SDL_Event&) {}
 
     void run();

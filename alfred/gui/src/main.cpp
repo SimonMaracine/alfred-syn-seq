@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
     } catch (const VideoError& e) {
         std::cerr << "Fatal video error: " << e.what() << '\n';
         return 1;
-    } catch (const AudioError& e) {
+    } catch (const audio::AudioError& e) {
         std::cerr << "Fatal audio error: " << e.what() << '\n';
         (void) SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Alfred Audio Error", "A critical audio error occurred. Check the log.", nullptr);
         return 1;

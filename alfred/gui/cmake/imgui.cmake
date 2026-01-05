@@ -19,3 +19,5 @@ add_library(imgui STATIC
 
 target_include_directories(imgui PUBLIC "extern/imgui")
 target_include_directories(imgui PRIVATE "../extern/SDL/include")
+
+target_compile_definitions(imgui PUBLIC "IMGUI_DEFINE_MATH_OPERATORS")
