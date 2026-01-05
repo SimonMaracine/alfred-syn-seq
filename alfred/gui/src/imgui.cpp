@@ -1,0 +1,43 @@
+#include "imgui.hpp"
+
+#include <SDL3/SDL.h>
+#include <imgui.h>
+#include <backends/imgui_impl_sdlrenderer3.h>
+#include <backends/imgui_impl_sdl3.h>
+
+void imgui_initialize(SDL_Window* window, SDL_Renderer* renderer) {
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
+    ImGui_ImplSDLRenderer3_Init(renderer);
+}
+
+void imgui_uninitialize() {
+    ImGui_ImplSDLRenderer3_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
+    ImGui::DestroyContext();
+}
+
+void imgui_process_event(SDL_Event* event) {
+    ImGui_ImplSDL3_ProcessEvent(event);
+}
+
+void imgui_begin() {
+    ImGui_ImplSDLRenderer3_NewFrame();
+    ImGui_ImplSDL3_NewFrame();
+    ImGui::NewFrame();
+}
+
+void imgui_end(SDL_Renderer* renderer) {
+    ImGui::EndFrame();
+    ImGui::Render();
+    ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
+}
+
+bool imgui_want_capture_mouse() {
+    return ImGui::GetIO().WantCaptureMouse;
+}
+
+bool imgui_want_capture_keyboard() {
+    return ImGui::GetIO().WantCaptureKeyboard;
+}

@@ -1,8 +1,12 @@
 cmake_minimum_required(VERSION 3.20)
 
+include(cmake/imgui.cmake)
+
 add_executable(alfred
     "src/application.cpp"
     "src/application.hpp"
+    "src/imgui.cpp"
+    "src/imgui.hpp"
     "src/main.cpp"
     "src/video.cpp"
     "src/video.hpp"
@@ -10,7 +14,7 @@ add_executable(alfred
 
 target_include_directories(alfred PRIVATE "src")
 
-target_link_libraries(alfred PRIVATE SDL3::SDL3 alfred_core)
+target_link_libraries(alfred PRIVATE SDL3::SDL3 imgui alfred_core)
 
 target_compile_features(alfred PRIVATE cxx_std_23)
 set_target_properties(alfred PROPERTIES CXX_EXTENSIONS OFF)

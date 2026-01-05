@@ -1,37 +1,14 @@
 #include "application.hpp"
 
 #include <SDL3/SDL.h>
+#include <imgui.h>
 
 void Application::on_start() {
     m_synthesizer.resume();
 }
 
-void Application::on_event(const SDL_Event& event) {
-    switch (event.type) {
-        case SDL_EVENT_KEY_DOWN:
-            switch (event.key.key) {
-                case SDLK_ESCAPE:
-                    m_running = false;
-                    break;
-                case SDLK_Q:
-                    m_voice = 0;
-                    break;
-                case SDLK_W:
-                    m_voice = 1;
-                    break;
-                case SDLK_1:
-                    m_octave = syn::Octave0;
-                    break;
-                case SDLK_2:
-                    m_octave = syn::Octave1;
-                    break;
-                case SDLK_3:
-                    m_octave = syn::Octave2;
-                    break;
-            }
+void Application::on_stop() {
 
-            break;
-    }
 }
 
 void Application::on_update() {
@@ -67,4 +44,36 @@ void Application::on_update() {
     }
 
     m_synthesizer.update();
+}
+
+void Application::on_render() const {
+    ImGui::ShowDemoWindow();
+}
+
+void Application::on_event(const SDL_Event& event) {
+    switch (event.type) {
+        case SDL_EVENT_KEY_DOWN:
+            switch (event.key.key) {
+                case SDLK_ESCAPE:
+                    m_running = false;
+                    break;
+                case SDLK_Q:
+                    m_voice = 0;
+                    break;
+                case SDLK_W:
+                    m_voice = 1;
+                    break;
+                case SDLK_1:
+                    m_octave = syn::Octave0;
+                    break;
+                case SDLK_2:
+                    m_octave = syn::Octave1;
+                    break;
+                case SDLK_3:
+                    m_octave = syn::Octave2;
+                    break;
+            }
+
+            break;
+    }
 }

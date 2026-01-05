@@ -7,8 +7,10 @@
 class Application : public Video {
 public:
     void on_start() override;
-    void on_event(const SDL_Event& event) override;
+    void on_stop() override;
     void on_update() override;
+    void on_render() const override;
+    void on_event(const SDL_Event& event) override;
 private:
     syn::Voice m_voice {};
     syn::Octave m_octave {syn::Octave1};
