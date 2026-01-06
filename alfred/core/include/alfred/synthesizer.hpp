@@ -8,18 +8,19 @@
 namespace synthesizer {
     class Synthesizer : public audio::Audio {
     public:
-        void note_on(syn::Note note, syn::Octave octave, syn::Voice voice);
-        void note_off(syn::Note note, syn::Octave octave);
+        void note_on(syn::Name name, syn::Octave octave, syn::Voice voice);
+        void note_off(syn::Name name, syn::Octave octave);
+        void silence();
         void set_volume(double volume);
         void update();
     private:
-        std::vector<syn::Sound>::iterator find_sound(syn::Note note, syn::Octave octave);
+        std::vector<syn::Note>::iterator find_note(syn::Name name, syn::Octave octave);
 
         double sound(double time) const override;
         double volume() const override;
 
         syn::Voices m_voices;
-        std::vector<syn::Sound> m_sounds;
+        std::vector<syn::Note> m_notes;
         double m_volume {0.5};
     };
 }

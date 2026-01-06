@@ -53,11 +53,11 @@ namespace syn {
         }
     }
 
-    static double note_frequency(Note note, unsigned int octave) {
+    static double note_frequency(Name name, unsigned int octave) {
         static constexpr double BASE_FREQUENCY {110.0};  // A
         static constexpr double STEP_FREQUENCY {1.059463094};  // 2.0 ** (1.0 / 12.0)
 
-        return BASE_FREQUENCY * std::pow(STEP_FREQUENCY, double(note) + double(octave) * 12.0);
+        return BASE_FREQUENCY * std::pow(STEP_FREQUENCY, double(name) + double(octave) * 12.0);
     }
 
     double EnvelopeAdsr::get_amplitude(double time, double time_note_on, double time_note_off) const {
@@ -156,19 +156,19 @@ namespace syn {
     }
 
     namespace instruments {
-        double Bell::sound(double time, const Sound& sound) const {
-            return m_envelope.get_amplitude(time, sound.time_on, sound.time_off) * (
-                1.0 * oscillators::wave_sine(time, note_frequency(sound.note, sound.octave), { 5.0, 0.001 }) +
-                0.5 * oscillators::wave_sine(time, note_frequency(sound.note, sound.octave + 1), {}) +
-                0.25 * oscillators::wave_sine(time, note_frequency(sound.note, sound.octave + 2), {})
+        double Bell::sound(double time, const Note& note) const {
+            return m_envelope.get_amplitude(time, note.time_on, note.time_off) * (
+                1.0 * oscillators::wave_sine(time, note_frequency(note.name, note.octave), { 5.0, 0.001 }) +
+                0.5 * oscillators::wave_sine(time, note_frequency(note.name, note.octave + 1), {}) +
+                0.25 * oscillators::wave_sine(time, note_frequency(note.name, note.octave + 2), {})
             );
         }
 
-        double Harmonica::sound(double time, const Sound& sound) const {
-            return m_envelope.get_amplitude(time, sound.time_on, sound.time_off) * (
-                1.0 * oscillators::wave_square(time, note_frequency(sound.note, sound.octave), { 5.0, 0.001 }) +
-                0.5 * oscillators::wave_square(time, note_frequency(sound.note, sound.octave + 1), {}) +
-                0.25 * oscillators::wave_square(time, note_frequency(sound.note, sound.octave + 2), {}) +
+        double Harmonica::sound(double time, const Note& note) const {
+            return m_envelope.get_amplitude(time, note.time_on, note.time_off) * (
+                1.0 * oscillators::wave_square(time, note_frequency(note.name, note.octave), { 5.0, 0.001 }) +
+                0.5 * oscillators::wave_square(time, note_frequency(note.name, note.octave + 1), {}) +
+                0.25 * oscillators::wave_square(time, note_frequency(note.name, note.octave + 2), {}) +
                 0.05 * oscillators::noise()
             );
         }

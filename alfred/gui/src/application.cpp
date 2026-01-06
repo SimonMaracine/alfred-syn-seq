@@ -2,11 +2,19 @@
 
 #include <SDL3/SDL.h>
 
+static constexpr double MAX_DELTA_TIME {1.0 / 30.0};
+
 void Application::on_start() {
     m_synthesizer.resume();
 
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     ImGui::StyleColorsClassic();
+
+    for (int i {}; i < 8; i++) {
+        m_composition.measures.emplace_back();
+    }
+
+    m_player = Player(m_synthesizer, m_composition);
 }
 
 void Application::on_stop() {
@@ -14,37 +22,9 @@ void Application::on_stop() {
 }
 
 void Application::on_update() {
-    m_keyboard = SDL_GetKeyboardState(nullptr);
-
-    static constexpr SDL_Scancode KEYBOARD[] {
-        SDL_SCANCODE_Z,
-        SDL_SCANCODE_S,
-        SDL_SCANCODE_X,
-        SDL_SCANCODE_C,
-        SDL_SCANCODE_F,
-        SDL_SCANCODE_V,
-        SDL_SCANCODE_G,
-        SDL_SCANCODE_B,
-        SDL_SCANCODE_N,
-        SDL_SCANCODE_J,
-        SDL_SCANCODE_M,
-        SDL_SCANCODE_K,
-        SDL_SCANCODE_COMMA,
-        SDL_SCANCODE_L,
-        SDL_SCANCODE_PERIOD,
-        SDL_SCANCODE_SLASH
-    };
-
-    for (unsigned int note {}; const auto key : KEYBOARD) {
-        if (m_keyboard[key]) {
-            m_synthesizer.note_on(syn::Note(note), m_octave, m_voice);
-        } else {
-            m_synthesizer.note_off(syn::Note(note), m_octave);
-        }
-
-        note++;
-    }
-
+    update_internals();
+    update_keyboard_input();
+    m_player.update(m_delta_time);
     m_synthesizer.update();
 }
 
@@ -53,6 +33,7 @@ void Application::on_render() {
 
     main_menu_bar();
     keyboard();
+    playback();
 
     ImGui::ShowDemoWindow();
 }
@@ -62,10 +43,10 @@ void Application::on_event(const SDL_Event& event) {
         case SDL_EVENT_KEY_DOWN:
             switch (event.key.key) {
                 case SDLK_Q:
-                    m_voice = 0;
+                    m_voice = syn::VoiceBell;
                     break;
                 case SDLK_W:
-                    m_voice = 1;
+                    m_voice = syn::VoiceHarmonica;
                     break;
                 case SDLK_1:
                     m_octave = syn::Octave0;
@@ -91,6 +72,11 @@ void Application::main_menu_bar() {
 
         if (ImGui::BeginMenu("Edit")) {
             main_menu_bar_edit();
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Sequencer")) {
+            main_menu_bar_sequencer();
             ImGui::EndMenu();
         }
 
@@ -125,6 +111,10 @@ void Application::main_menu_bar_edit() {
     if (ImGui::MenuItem("Cut", "Ctrl+X")) {}
     if (ImGui::MenuItem("Copy", "Ctrl+C")) {}
     if (ImGui::MenuItem("Paste", "Ctrl+V")) {}
+}
+
+void Application::main_menu_bar_sequencer() {
+
 }
 
 void Application::main_menu_bar_help() {
@@ -219,4 +209,93 @@ void Application::keyboard_key(ImDrawList* list, ImVec2 origin, char key, float 
     );
 
     list->AddText(base + origin + position + ImVec2(TEXT_OFFSET, TEXT_OFFSET), IM_COL32_WHITE, label);
+}
+
+void Application::playback() {
+    if (ImGui::Begin("Playback")) {
+        if (ImGui::Button("Rewind")) {
+            m_player.seek(0);
+        }
+
+        ImGui::SameLine();
+
+        if (m_player.is_playing()) {
+            if (ImGui::Button("Stop")) {
+                m_player.stop();
+            }
+        } else {
+            if (ImGui::Button("Start")) {
+                m_player.start();
+            }
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Checkbox("Metronome", &m_metronome)) {
+            if (m_metronome) {
+                for (unsigned int i {}; i < 8 * 16; i += 4) {
+                    const syn::Name name {i % 4 == 0 ? syn::C : syn::Cs};
+                    m_composition.voices[syn::VoiceBell].emplace_back(name, syn::Octave1, Quarter, i);
+                }
+                m_player.reload();  // FIXME
+            } else {
+                m_composition.voices.erase(syn::VoiceBell);
+                m_player.reload();
+            }
+        }
+
+        ImGui::SameLine();
+
+        ImGui::Text("%f", m_player.get_elapsed_time());
+
+        ImGui::SameLine();
+
+        ImGui::Text("%u", m_player.get_position());
+    }
+
+    ImGui::End();
+}
+
+void Application::update_internals() {
+    m_keyboard = SDL_GetKeyboardState(nullptr);
+
+    const double current_time {get_time()};
+    m_delta_time = std::min(current_time - m_previous_time, MAX_DELTA_TIME);
+    m_previous_time = current_time;
+}
+
+void Application::update_keyboard_input() {
+    static constexpr SDL_Scancode KEYBOARD[] {
+        SDL_SCANCODE_Z,
+        SDL_SCANCODE_S,
+        SDL_SCANCODE_X,
+        SDL_SCANCODE_C,
+        SDL_SCANCODE_F,
+        SDL_SCANCODE_V,
+        SDL_SCANCODE_G,
+        SDL_SCANCODE_B,
+        SDL_SCANCODE_N,
+        SDL_SCANCODE_J,
+        SDL_SCANCODE_M,
+        SDL_SCANCODE_K,
+        SDL_SCANCODE_COMMA,
+        SDL_SCANCODE_L,
+        SDL_SCANCODE_PERIOD,
+        SDL_SCANCODE_SLASH
+    };
+
+    for (unsigned int name {}; const auto key : KEYBOARD) {
+        if (m_keyboard[key]) {
+            m_synthesizer.note_on(syn::Name(name), m_octave, m_voice);
+        } else {
+            m_synthesizer.note_off(syn::Name(name), m_octave);
+        }
+
+        name++;
+    }
+}
+
+double Application::get_time() {
+    const Uint64 nanoseconds {SDL_GetTicksNS()};
+    return static_cast<double>(nanoseconds) / static_cast<double>(SDL_NS_PER_SECOND);
 }

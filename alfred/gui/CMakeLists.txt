@@ -8,6 +8,8 @@ add_executable(alfred
     "src/imgui.cpp"
     "src/imgui.hpp"
     "src/main.cpp"
+    "src/sequencer.cpp"
+    "src/sequencer.hpp"
     "src/video.cpp"
     "src/video.hpp"
 )

@@ -54,7 +54,7 @@ namespace syn {
         EnvelopeAdrDescription m_description;
     };
 
-    enum Note : unsigned int {
+    enum Name : unsigned int {
         A,
         As,
         B,
@@ -79,10 +79,13 @@ namespace syn {
         Octave2
     };
 
-    using Voice = unsigned int;
+    enum Voice : unsigned int {
+        VoiceBell,
+        VoiceHarmonica
+    };
 
-    struct Sound {
-        Note note {};
+    struct Note {
+        Name name {};
         Octave octave {};
         Voice voice {};
         double time_on {};
@@ -93,7 +96,7 @@ namespace syn {
         virtual ~Instrument() = default;
 
         virtual const Envelope& get_envelope() const = 0;
-        virtual double sound(double time, const Sound& sound) const = 0;
+        virtual double sound(double time, const Note& note) const = 0;
     };
 
     namespace instruments {
@@ -101,7 +104,7 @@ namespace syn {
         public:
             const Envelope& get_envelope() const override { return m_envelope; }
 
-            double sound(double time, const Sound& sound) const override;
+            double sound(double time, const Note& note) const override;
         private:
             static constexpr EnvelopeAdrDescription ENVELOPE {
                 0.01,
@@ -116,7 +119,7 @@ namespace syn {
         public:
             const Envelope& get_envelope() const override { return m_envelope; }
 
-            double sound(double time, const Sound& sound) const override;
+            double sound(double time, const Note& note) const override;
         private:
             static constexpr EnvelopeAdsrDescription ENVELOPE {
                 0.1,

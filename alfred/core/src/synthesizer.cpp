@@ -4,17 +4,17 @@
 #include <cmath>
 
 namespace synthesizer {
-    void Synthesizer::note_on(syn::Note note, syn::Octave octave, syn::Voice voice) {
+    void Synthesizer::note_on(syn::Name name, syn::Octave octave, syn::Voice voice) {
         audio::AudioLockGuard guard {this};
 
-        const auto iter {find_sound(note, octave)};
+        const auto iter {find_note(name, octave)};
 
-        if (iter == m_sounds.end()) {
-            syn::Sound& sound {m_sounds.emplace_back()};
-            sound.note = note;
-            sound.octave = octave;
-            sound.voice = voice;
-            sound.time_on = get_time();
+        if (iter == m_notes.end()) {
+            syn::Note& note {m_notes.emplace_back()};
+            note.name = name;
+            note.octave = octave;
+            note.voice = voice;
+            note.time_on = get_time();
         } else {
             if (iter->time_off > iter->time_on) {
                 iter->time_on = get_time();
@@ -22,16 +22,22 @@ namespace synthesizer {
         }
     }
 
-    void Synthesizer::note_off(syn::Note note, syn::Octave octave) {
+    void Synthesizer::note_off(syn::Name name, syn::Octave octave) {
         audio::AudioLockGuard guard {this};
 
-        const auto iter {find_sound(note, octave)};
+        const auto iter {find_note(name, octave)};
 
-        if (iter != m_sounds.end()) {
+        if (iter != m_notes.end()) {
             if (iter->time_on > iter->time_off) {
                 iter->time_off = get_time();
             }
         }
+    }
+
+    void Synthesizer::silence() {
+        audio::AudioLockGuard guard {this};
+
+        m_notes.clear();
     }
 
     void Synthesizer::set_volume(double volume) {
@@ -41,15 +47,15 @@ namespace synthesizer {
     void Synthesizer::update() {
         audio::AudioLockGuard guard {this};
 
-        m_sounds.erase(std::remove_if(m_sounds.begin(), m_sounds.end(), [this](const syn::Sound& sound) {
-            return m_voices[sound.voice].get_envelope().is_done(get_time(), sound.time_on, sound.time_off);
-        }), m_sounds.end());
+        m_notes.erase(std::remove_if(m_notes.begin(), m_notes.end(), [this](const syn::Note& note) {
+            return m_voices[note.voice].get_envelope().is_done(get_time(), note.time_on, note.time_off);
+        }), m_notes.end());
     }
 
-    std::vector<syn::Sound>::iterator Synthesizer::find_sound(syn::Note note, syn::Octave octave) {
-        return std::find_if(m_sounds.begin(), m_sounds.end(),
-            [note, octave](const syn::Sound& sound) {
-                return sound.note == note && sound.octave == octave;
+    std::vector<syn::Note>::iterator Synthesizer::find_note(syn::Name name, syn::Octave octave) {
+        return std::find_if(m_notes.begin(), m_notes.end(),
+            [name, octave](const syn::Note& note) {
+                return note.name == name && note.octave == octave;
             }
         );
     }
@@ -57,8 +63,8 @@ namespace synthesizer {
     double Synthesizer::sound(double time) const {
         double result {};
 
-        for (const syn::Sound& sound : m_sounds) {
-            result += m_voices[sound.voice].sound(time, sound);
+        for (const syn::Note& note : m_notes) {
+            result += m_voices[note.voice].sound(time, note);
         }
 
         return result;
