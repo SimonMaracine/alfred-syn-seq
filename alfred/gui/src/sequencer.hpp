@@ -16,29 +16,39 @@ enum Value : unsigned int {
     Sixteenth = 16
 };
 
-class TimeSignature {
-public:
-    TimeSignature() = default;
-    TimeSignature(unsigned int beats, Value value);
-
-    unsigned int beats() const { return m_beats; }
-    Value value() const { return m_value; }
-private:
-    unsigned int m_beats {4};
-    Value m_value {Quarter};
-};
-
 class Tempo {
 public:
     static constexpr unsigned int MIN {1};
     static constexpr unsigned int MAX {270};
 
-    Tempo() = default;
-    Tempo(unsigned int tempo);
-
     operator unsigned int() const { return m_tempo; }
 private:
-    unsigned int m_tempo {120};
+    unsigned int m_tempo {90};
+};
+
+class TimeSignature {
+public:
+    constexpr TimeSignature() = default;
+    constexpr TimeSignature(unsigned int beats, Value value)
+        : m_beats(beats), m_value(value) {}
+
+    constexpr unsigned int beats() const { return m_beats; }
+    constexpr Value value() const { return m_value; }
+
+    constexpr unsigned int measure_steps() const {
+        return m_beats * (Sixteenth / m_value);
+    }
+
+    constexpr unsigned int steps_per_minute(Tempo tempo) const {
+        return tempo * (Sixteenth / m_value);
+    }
+
+    constexpr double step_time(Tempo tempo) const {
+        return 1.0 / (double(steps_per_minute(tempo)) / 60.0);
+    }
+private:
+    unsigned int m_beats {4};
+    Value m_value {Quarter};
 };
 
 struct Note {

@@ -23,7 +23,6 @@ void Application::on_stop() {
 
 void Application::on_update() {
     update_internals();
-    update_keyboard_input();
     m_player.update(m_delta_time);
     m_synthesizer.update();
 }
@@ -58,6 +57,12 @@ void Application::on_event(const SDL_Event& event) {
                     m_octave = syn::Octave2;
                     break;
             }
+
+            update_keyboard_input(event.key.key, true);
+
+            break;
+        case SDL_EVENT_KEY_UP:
+            update_keyboard_input(event.key.key, false);
 
             break;
     }
@@ -234,8 +239,8 @@ void Application::playback() {
         if (ImGui::Checkbox("Metronome", &m_metronome)) {
             if (m_metronome) {
                 for (unsigned int i {}; i < 8 * 16; i += 4) {
-                    const syn::Name name {i % 4 == 0 ? syn::C : syn::Cs};
-                    m_composition.voices[syn::VoiceBell].emplace_back(name, syn::Octave1, Quarter, i);
+                    const syn::Name name {i % 16 == 0 ? syn::C : syn::D};
+                    m_composition.voices[syn::VoiceBell].emplace_back(name, syn::Octave1, Eighth, i);
                 }
                 m_player.reload();  // FIXME
             } else {
@@ -264,35 +269,66 @@ void Application::update_internals() {
     m_previous_time = current_time;
 }
 
-void Application::update_keyboard_input() {
-    static constexpr SDL_Scancode KEYBOARD[] {
-        SDL_SCANCODE_Z,
-        SDL_SCANCODE_S,
-        SDL_SCANCODE_X,
-        SDL_SCANCODE_C,
-        SDL_SCANCODE_F,
-        SDL_SCANCODE_V,
-        SDL_SCANCODE_G,
-        SDL_SCANCODE_B,
-        SDL_SCANCODE_N,
-        SDL_SCANCODE_J,
-        SDL_SCANCODE_M,
-        SDL_SCANCODE_K,
-        SDL_SCANCODE_COMMA,
-        SDL_SCANCODE_L,
-        SDL_SCANCODE_PERIOD,
-        SDL_SCANCODE_SLASH
-    };
-
-    for (unsigned int name {}; const auto key : KEYBOARD) {
-        if (m_keyboard[key]) {
-            m_synthesizer.note_on(syn::Name(name), m_octave, m_voice);
+void Application::update_keyboard_input(unsigned int key, bool down) {
+    const auto update {[this, down](syn::Name name) {
+        if (down) {
+            m_synthesizer.note_on(name, m_octave, m_voice);
         } else {
-            m_synthesizer.note_off(syn::Name(name), m_octave);
+            m_synthesizer.note_off(name, m_octave);
         }
+    }};
 
-        name++;
+    switch (key) {
+        case SDLK_Z: update(syn::Name::A); break;
+        case SDLK_S: update(syn::Name::As); break;
+        case SDLK_X: update(syn::Name::B); break;
+        case SDLK_C: update(syn::Name::C); break;
+        case SDLK_F: update(syn::Name::Cs); break;
+        case SDLK_V: update(syn::Name::D); break;
+        case SDLK_G: update(syn::Name::Ds); break;
+        case SDLK_B: update(syn::Name::E); break;
+        case SDLK_N: update(syn::Name::F); break;
+        case SDLK_J: update(syn::Name::Fs); break;
+        case SDLK_M: update(syn::Name::G); break;
+        case SDLK_K: update(syn::Name::Gs); break;
+        case SDLK_COMMA: update(syn::Name::A2); break;
+        case SDLK_L: update(syn::Name::As2); break;
+        case SDLK_PERIOD: update(syn::Name::B2); break;
+        case SDLK_SLASH: update(syn::Name::C2); break;
     }
+
+    // static constexpr unsigned int KEYBOARD[] {
+    //     SDLK_Z,
+    //     SDLK_S,
+    //     SDLK_X,
+    //     SDLK_C,
+    //     SDLK_F,
+    //     SDLK_V,
+    //     SDLK_G,
+    //     SDLK_B,
+    //     SDLK_N,
+    //     SDLK_J,
+    //     SDLK_M,
+    //     SDLK_K,
+    //     SDLK_COMMA,
+    //     SDLK_L,
+    //     SDLK_PERIOD,
+    //     SDLK_SLASH
+    // };
+
+    // for (unsigned int name {}; const auto key : KEYBOARD) {
+    //     if (key != event.key.key) {
+    //         continue;
+    //     }
+
+    //     if (event.type == SDL_EVENT_KEY_DOWN) {
+    //         m_synthesizer.note_on(syn::Name(name), m_octave, m_voice);
+    //     } else if (event.type == SDL_EVENT_KEY_UP) {
+    //         m_synthesizer.note_off(syn::Name(name), m_octave);
+    //     }
+
+    //     name++;
+    // }
 }
 
 double Application::get_time() {

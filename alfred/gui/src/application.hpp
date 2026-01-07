@@ -25,7 +25,7 @@ private:
     void playback();
 
     void update_internals();
-    void update_keyboard_input();
+    void update_keyboard_input(unsigned int key, bool down);
     static double get_time();
 
     syn::Voice m_voice {};

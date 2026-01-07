@@ -14,10 +14,10 @@ namespace synthesizer {
             note.name = name;
             note.octave = octave;
             note.voice = voice;
-            note.time_on = get_time();
+            note.time_on = m_time;
         } else {
             if (iter->time_off > iter->time_on) {
-                iter->time_on = get_time();
+                iter->time_on = m_time;
             }
         }
     }
@@ -29,7 +29,7 @@ namespace synthesizer {
 
         if (iter != m_notes.end()) {
             if (iter->time_on > iter->time_off) {
-                iter->time_off = get_time();
+                iter->time_off = m_time;
             }
         }
     }
@@ -48,7 +48,7 @@ namespace synthesizer {
         audio::AudioLockGuard guard {this};
 
         m_notes.erase(std::remove_if(m_notes.begin(), m_notes.end(), [this](const syn::Note& note) {
-            return m_voices[note.voice].get_envelope().is_done(get_time(), note.time_on, note.time_off);
+            return m_voices[note.voice].get_envelope().is_done(m_time, note.time_on, note.time_off);
         }), m_notes.end());
     }
 
