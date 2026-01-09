@@ -11,7 +11,7 @@ public:
     void on_start() override;
     void on_stop() override;
     void on_update() override;
-    void on_render() override;
+    void on_imgui() override;
     void on_event(const SDL_Event& event) override;
 private:
     void main_menu_bar();
@@ -23,10 +23,9 @@ private:
     void keyboard();
     void keyboard_key(ImDrawList* list, ImVec2 origin, char key, float x, float y, int scancode);
     void playback();
+    void debug();
 
-    void update_internals();
     void update_keyboard_input(unsigned int key, bool down);
-    static double get_time();
 
     syn::Voice m_voice {};
     syn::Octave m_octave {syn::Octave1};
@@ -35,11 +34,6 @@ private:
 
     synthesizer::Synthesizer m_synthesizer;
     Player m_player;
-
-    const bool* m_keyboard {};
-
-    double m_previous_time {};
-    double m_delta_time {};
 
     enum ColorScheme {
         ColorSchemeDark,

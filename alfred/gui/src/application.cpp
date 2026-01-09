@@ -2,8 +2,6 @@
 
 #include <SDL3/SDL.h>
 
-static constexpr double MAX_DELTA_TIME {1.0 / 30.0};
-
 void Application::on_start() {
     m_synthesizer.resume();
 
@@ -22,17 +20,17 @@ void Application::on_stop() {
 }
 
 void Application::on_update() {
-    update_internals();
-    m_player.update(m_delta_time);
+    m_player.update(get_frame_time());
     m_synthesizer.update();
 }
 
-void Application::on_render() {
+void Application::on_imgui() {
     ImGui::DockSpaceOverViewport();
 
     main_menu_bar();
     keyboard();
     playback();
+    debug();
 
     ImGui::ShowDemoWindow();
 }
@@ -204,7 +202,7 @@ void Application::keyboard_key(ImDrawList* list, ImVec2 origin, char key, float 
     const ImVec2 base {(space_available.x - WIDTH) / 2.0f, (space_available.y - HEIGHT) / 2.0f};
     const ImVec2 position {x * CELL, y * CELL};
     const char label[2] { key, '\0' };
-    const ImColor color {m_keyboard[scancode] ? COLOR_ACTIVE : COLOR_INACTIVE};
+    const ImColor color {get_keyboard_state()[scancode] ? COLOR_ACTIVE : COLOR_INACTIVE};
 
     list->AddRectFilled(
         base + origin + position + ImVec2(PADDING, PADDING),
@@ -261,12 +259,12 @@ void Application::playback() {
     ImGui::End();
 }
 
-void Application::update_internals() {
-    m_keyboard = SDL_GetKeyboardState(nullptr);
+void Application::debug() {
+    if (ImGui::Begin("Debug")) {
+        ImGui::Text("Frame time: %f", get_frame_time());
+    }
 
-    const double current_time {get_time()};
-    m_delta_time = std::min(current_time - m_previous_time, MAX_DELTA_TIME);
-    m_previous_time = current_time;
+    ImGui::End();
 }
 
 void Application::update_keyboard_input(unsigned int key, bool down) {
@@ -329,9 +327,4 @@ void Application::update_keyboard_input(unsigned int key, bool down) {
 
     //     name++;
     // }
-}
-
-double Application::get_time() {
-    const Uint64 nanoseconds {SDL_GetTicksNS()};
-    return static_cast<double>(nanoseconds) / static_cast<double>(SDL_NS_PER_SECOND);
 }
