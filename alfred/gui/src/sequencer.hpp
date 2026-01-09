@@ -16,12 +16,19 @@ enum Value : unsigned int {
     Sixteenth = 16
 };
 
+// A step has variable length in seconds depending on the time signature and tempo
+inline constexpr unsigned int STEP {Sixteenth * 3};
+
 class Tempo {
 public:
     static constexpr unsigned int MIN {1};
-    static constexpr unsigned int MAX {270};
+    static constexpr unsigned int MAX {240};
 
-    operator unsigned int() const { return m_tempo; }
+    constexpr Tempo() = default;
+    constexpr Tempo(unsigned int tempo)
+        : m_tempo(tempo) {}
+
+    constexpr operator unsigned int() const { return m_tempo; }
 private:
     unsigned int m_tempo {90};
 };
@@ -36,11 +43,11 @@ public:
     constexpr Value value() const { return m_value; }
 
     constexpr unsigned int measure_steps() const {
-        return m_beats * (Sixteenth / m_value);
+        return m_beats * (STEP / m_value);
     }
 
     constexpr unsigned int steps_per_minute(Tempo tempo) const {
-        return tempo * (Sixteenth / m_value);
+        return tempo * (STEP / m_value);
     }
 
     constexpr double step_time(Tempo tempo) const {
@@ -55,7 +62,7 @@ struct Note {
     syn::Name name {};
     syn::Octave octave {};
     Value value {};
-    unsigned int position {};  // Compositions are divided in sixteenth steps
+    unsigned int position {};  // Compositions are divided in steps
 };
 
 struct Measure {
@@ -88,12 +95,14 @@ public:
     void update(double dt);
 private:
     struct Execution {
-        struct Time {
-            double begin {};
-            double end {};
-        };
+        // struct Time {
+        //     double begin {};
+        //     double end {};
+        // };
 
-        using Notes = std::vector<std::pair<Note, Time>>;
+        // using Notes = std::vector<std::pair<Note, Time>>;
+
+        using Notes = std::vector<Note>;
 
         Notes notes_unplayed;
         Notes notes_played;
@@ -109,9 +118,12 @@ private:
 
     synthesizer::Synthesizer* m_synthesizer {};
     const Composition* m_composition {};
+
     Executions m_executions;
-    double m_elapsed_time {};
+
+    const Measure* m_measure {};
     double m_accumulator_time {};
+    double m_elapsed_time {};
     unsigned int m_position {};  // Like a cursor
     bool m_playing {};
 };

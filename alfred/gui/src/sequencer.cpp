@@ -70,7 +70,7 @@ void Player::update(double dt) {
         return;
     }
 
-    m_elapsed_time += dt;
+    // m_elapsed_time += dt;
     m_accumulator_time += dt;
 
     unsigned int steps {};
@@ -85,8 +85,11 @@ void Player::update(double dt) {
         }
     }
 
+    // Advance with maximum one step per frame
+    // If the frame time is larger than the step time, then the player will simply play at a lower and inconsistent speed
     if (m_accumulator_time >= step_time) {
         m_accumulator_time -= step_time;
+        m_elapsed_time += step_time;
         m_position++;
     }
 
