@@ -45,6 +45,9 @@ void Application::on_event(const SDL_Event& event) {
                 case SDLK_W:
                     m_voice = syn::VoiceHarmonica;
                     break;
+                case SDLK_E:
+                    m_voice = syn::VoiceDrumKick;
+                    break;
                 case SDLK_1:
                     m_octave = syn::Octave0;
                     break;
@@ -238,11 +241,11 @@ void Application::playback() {
             if (m_metronome) {
                 for (unsigned int i {}; i < 8 * 16; i += 4) {
                     const syn::Name name {i % 16 == 0 ? syn::C : syn::D};
-                    m_composition.voices[syn::VoiceBell].emplace_back(name, syn::Octave1, Eighth, i);
+                    m_composition.voices[syn::VoiceMetronome].emplace_back(name, syn::Octave1, Eighth, i);
                 }
                 m_player.reload();  // FIXME
             } else {
-                m_composition.voices.erase(syn::VoiceBell);
+                m_composition.voices.erase(syn::VoiceMetronome);
                 m_player.reload();
             }
         }

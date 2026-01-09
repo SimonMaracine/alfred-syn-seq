@@ -80,8 +80,10 @@ namespace syn {
     };
 
     enum Voice : unsigned int {
+        VoiceMetronome,
         VoiceBell,
-        VoiceHarmonica
+        VoiceHarmonica,
+        VoiceDrumKick
     };
 
     struct Note {
@@ -99,7 +101,22 @@ namespace syn {
         virtual double sound(double time, const Note& note) const = 0;
     };
 
-    namespace instruments {
+    namespace instruments {  // TODO note range, name, description
+        class Metronome : public Instrument {
+        public:
+            const Envelope& get_envelope() const override { return m_envelope; }
+
+            double sound(double time, const Note& note) const override;
+        private:
+            static constexpr EnvelopeAdrDescription ENVELOPE {
+                0.01,
+                0.15,
+                0.01
+            };
+
+            EnvelopeAdr m_envelope {ENVELOPE};
+        };
+
         class Bell : public Instrument {
         public:
             const Envelope& get_envelope() const override { return m_envelope; }
@@ -131,16 +148,35 @@ namespace syn {
 
             EnvelopeAdsr m_envelope {ENVELOPE};
         };
+
+        class DrumKick : public Instrument {
+        public:
+            const Envelope& get_envelope() const override { return m_envelope; }
+
+            double sound(double time, const Note& note) const override;
+        private:
+            static constexpr EnvelopeAdrDescription ENVELOPE {
+                0.01,
+                0.15,
+                0.01
+            };
+
+            EnvelopeAdr m_envelope {ENVELOPE};
+        };
     }
 
     struct Voices : private std::tuple<
+        instruments::Metronome,
         instruments::Bell,
-        instruments::Harmonica
+        instruments::Harmonica,
+        instruments::DrumKick
     > {
         const Instrument& operator[](Voice voice_index) const {
             switch (voice_index) {
                 case 0: return std::get<0>(*this);
                 case 1: return std::get<1>(*this);
+                case 2: return std::get<2>(*this);
+                case 3: return std::get<3>(*this);
             }
 
             std::unreachable();

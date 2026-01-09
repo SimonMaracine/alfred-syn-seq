@@ -156,6 +156,15 @@ namespace syn {
     }
 
     namespace instruments {
+        double Metronome::sound(double time, const Note& note) const {
+            return m_envelope.get_amplitude(time, note.time_on, note.time_off) * (
+                1.0 * oscillators::wave_triangle(time, note_frequency(note.name, note.octave), {}) +
+                0.5 * oscillators::wave_triangle(time, note_frequency(note.name, note.octave + 1), {}) +
+                0.25 * oscillators::wave_triangle(time, note_frequency(note.name, note.octave + 2), {}) +
+                0.05 * oscillators::noise()
+            );
+        }
+
         double Bell::sound(double time, const Note& note) const {
             return m_envelope.get_amplitude(time, note.time_on, note.time_off) * (
                 1.0 * oscillators::wave_sine(time, note_frequency(note.name, note.octave), { 5.0, 0.001 }) +
@@ -170,6 +179,13 @@ namespace syn {
                 0.5 * oscillators::wave_square(time, note_frequency(note.name, note.octave + 1), {}) +
                 0.25 * oscillators::wave_square(time, note_frequency(note.name, note.octave + 2), {}) +
                 0.05 * oscillators::noise()
+            );
+        }
+
+        double DrumKick::sound(double time, const Note& note) const {
+            return m_envelope.get_amplitude(time, note.time_on, note.time_off) * (
+                0.99 * oscillators::wave_sine(time, note_frequency(note.name, note.octave), {}) +
+                0.01 * oscillators::noise()
             );
         }
     }
