@@ -14,24 +14,10 @@ target_include_directories(alfred_core PUBLIC "include")
 
 target_link_libraries(alfred_core PRIVATE SDL3::SDL3)
 
-target_compile_features(alfred_core PRIVATE cxx_std_23)
-set_target_properties(alfred_core PROPERTIES CXX_EXTENSIONS OFF)
+set_target_cpp_mode(alfred_core)
+enable_target_warnings(alfred_core)
+enable_target_diagnostics(alfred_core)
 
-if(UNIX)
-    target_compile_options(alfred_core PRIVATE "-Wall" "-Wextra" "-Wpedantic" "-Wconversion")
-elseif(WIN32)
-    target_compile_options(alfred_core PRIVATE "/W4")
-endif()
-
-if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND UNIX)
-    target_compile_options(alfred_core PRIVATE "-g")
-endif()
-
-if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND UNIX AND ALFRED_SOUND_ASAN)
-    target_compile_options(alfred_core PRIVATE "-fsanitize=address" "-fsanitize=undefined" "-fno-omit-frame-pointer")
-    target_link_options(alfred_core PRIVATE "-fsanitize=address" "-fsanitize=undefined")
-endif()
-
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
+if(ALFRED_DISTRIBUTION)
     target_compile_definitions(alfred_core PRIVATE "NDEBUG")
 endif()

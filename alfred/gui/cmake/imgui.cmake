@@ -1,5 +1,9 @@
+if(NOT ALFRED_DISTRIBUTION)
+    set(IMGUI_DEMO "extern/imgui/imgui_demo.cpp")
+endif()
+
 add_library(imgui STATIC
-    "extern/imgui/imgui_demo.cpp"
+    ${IMGUI_DEMO}
     "extern/imgui/imgui_draw.cpp"
     "extern/imgui/imgui_tables.cpp"
     "extern/imgui/imgui_widgets.cpp"
@@ -20,4 +24,10 @@ add_library(imgui STATIC
 target_include_directories(imgui PUBLIC "extern/imgui")
 target_include_directories(imgui PRIVATE "../extern/SDL/include")
 
+set_target_cpp_mode(imgui)
+
 target_compile_definitions(imgui PUBLIC "IMGUI_DEFINE_MATH_OPERATORS")
+
+if(ALFRED_DISTRIBUTION)
+    target_compile_definitions(imgui PRIVATE "NDEBUG")
+endif()
