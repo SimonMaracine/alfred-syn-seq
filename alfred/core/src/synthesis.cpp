@@ -53,11 +53,11 @@ namespace syn {
         }
     }
 
-    static double note_frequency(Name name, unsigned int octave) {
-        static constexpr double BASE_FREQUENCY {110.0};  // A
+    static double note_frequency(unsigned int id) {
+        static constexpr double BASE_FREQUENCY {55.0};  // A1
         static constexpr double STEP_FREQUENCY {1.059463094};  // 2.0 ** (1.0 / 12.0)
 
-        return BASE_FREQUENCY * std::pow(STEP_FREQUENCY, double(name) + double(octave) * 12.0);
+        return BASE_FREQUENCY * std::pow(STEP_FREQUENCY, double(id));
     }
 
     double EnvelopeAdsr::get_amplitude(double time, double time_note_on, double time_note_off) const {
@@ -155,36 +155,47 @@ namespace syn {
         return (time - time_note_off) / m_description.time_release * -amplitude + amplitude;
     }
 
+    Id Note::get_id(Name name, Octave octave) {
+        const unsigned int base {name};
+        const unsigned int multiplier {octave};
+
+        if (base < 3) {
+            return base + 12 * multiplier;
+        } else {
+            return base + 12 * (multiplier - 1);
+        }
+    }
+
     namespace instruments {
         double Metronome::sound(double time, const Note& note) const {
             return m_envelope.get_amplitude(time, note.time_on, note.time_off) * (
-                1.0 * oscillators::wave_triangle(time, note_frequency(note.name, note.octave), {}) +
-                0.5 * oscillators::wave_triangle(time, note_frequency(note.name, note.octave + 1), {}) +
-                0.25 * oscillators::wave_triangle(time, note_frequency(note.name, note.octave + 2), {}) +
+                1.0 * oscillators::wave_triangle(time, note_frequency(note.id), {}) +
+                0.5 * oscillators::wave_triangle(time, note_frequency(note.id + 12), {}) +
+                0.25 * oscillators::wave_triangle(time, note_frequency(note.id + 24), {}) +
                 0.05 * oscillators::noise()
             );
         }
 
         double Bell::sound(double time, const Note& note) const {
             return m_envelope.get_amplitude(time, note.time_on, note.time_off) * (
-                1.0 * oscillators::wave_sine(time, note_frequency(note.name, note.octave), { 5.0, 0.001 }) +
-                0.5 * oscillators::wave_sine(time, note_frequency(note.name, note.octave + 1), {}) +
-                0.25 * oscillators::wave_sine(time, note_frequency(note.name, note.octave + 2), {})
+                1.0 * oscillators::wave_sine(time, note_frequency(note.id), { 5.0, 0.001 }) +
+                0.5 * oscillators::wave_sine(time, note_frequency(note.id + 12), {}) +
+                0.25 * oscillators::wave_sine(time, note_frequency(note.id + 24), {})
             );
         }
 
         double Harmonica::sound(double time, const Note& note) const {
             return m_envelope.get_amplitude(time, note.time_on, note.time_off) * (
-                1.0 * oscillators::wave_square(time, note_frequency(note.name, note.octave), { 5.0, 0.001 }) +
-                0.5 * oscillators::wave_square(time, note_frequency(note.name, note.octave + 1), {}) +
-                0.25 * oscillators::wave_square(time, note_frequency(note.name, note.octave + 2), {}) +
+                1.0 * oscillators::wave_square(time, note_frequency(note.id), { 5.0, 0.001 }) +
+                0.5 * oscillators::wave_square(time, note_frequency(note.id + 12), {}) +
+                0.25 * oscillators::wave_square(time, note_frequency(note.id + 24), {}) +
                 0.05 * oscillators::noise()
             );
         }
 
         double DrumKick::sound(double time, const Note& note) const {
             return m_envelope.get_amplitude(time, note.time_on, note.time_off) * (
-                0.99 * oscillators::wave_sine(time, note_frequency(note.name, note.octave), {}) +
+                0.99 * oscillators::wave_sine(time, note_frequency(note.id), {}) +
                 0.01 * oscillators::noise()
             );
         }

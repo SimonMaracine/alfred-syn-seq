@@ -4,18 +4,16 @@
 
 #include <SDL3/SDL.h>
 
-static constexpr ImVec2 STEP_SIZE {10.0f, 20.0f};
-static constexpr float COMPOSITION_HEIGHT {STEP_SIZE.y * 12.0f * 3.0f + STEP_SIZE.y * 4.0f};
+static constexpr ImVec2 STEP_SIZE {4.0f, 20.0f};
+static constexpr float COMPOSITION_LEFT {40.0f};
+static constexpr float COMPOSITION_HEIGHT {STEP_SIZE.y * 12.0f * float(syn::NOTE_OCTAVES) + STEP_SIZE.y * float(syn::NOTE_EXTRA)};
+static constexpr int ADD_MEASURES {8};
 
 void Application::on_start() {
     m_synthesizer.resume();
 
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     ImGui::StyleColorsClassic();
-
-    for (int i {}; i < 8; i++) {
-        m_composition.measures.emplace_back();
-    }
 
     m_player = Player(m_synthesizer, m_composition);
 }
@@ -57,13 +55,16 @@ void Application::on_event(const SDL_Event& event) {
                     m_voice = syn::VoiceDrumKick;
                     break;
                 case SDLK_1:
-                    m_octave = syn::Octave0;
-                    break;
-                case SDLK_2:
                     m_octave = syn::Octave1;
                     break;
-                case SDLK_3:
+                case SDLK_2:
                     m_octave = syn::Octave2;
+                    break;
+                case SDLK_3:
+                    m_octave = syn::Octave3;
+                    break;
+                case SDLK_4:
+                    m_octave = syn::Octave4;
                     break;
             }
 
@@ -247,6 +248,10 @@ void Application::playback() {
             }
         } else {
             if (ImGui::Button("Start")) {
+                if (m_modified) {
+                    m_player.prepare();
+                }
+
                 m_player.start();
             }
         }
@@ -255,14 +260,11 @@ void Application::playback() {
 
         if (ImGui::Checkbox("Metronome", &m_metronome)) {
             if (m_metronome) {
-                for (unsigned int i {}; i < 8 * 4 * (STEP / Quarter); i += STEP / Quarter) {
-                    const syn::Name name {i % (4 * (STEP / Quarter)) == 0 ? syn::C : syn::D};
-                    m_composition.voices[syn::VoiceBell].emplace_back(name, syn::Octave1, Quarter, i);
-                }
-                m_player.prepare();
+                add_metronome();
+                m_modified = true;
             } else {
-                m_composition.voices.erase(syn::VoiceBell);
-                m_player.prepare();
+                remove_metronome();
+                m_modified = true;
             }
         }
 
@@ -280,7 +282,20 @@ void Application::playback() {
 
 void Application::tools() {
     if (ImGui::Begin("Tools")) {
+        if (ImGui::Button("Add Measures")) {
+            if (m_composition.measures.empty()) {
+                for (int i {}; i < ADD_MEASURES; i++) {
+                    m_composition.measures.emplace_back();
+                }
+            } else {
+                const Tempo tempo {m_composition.measures.back().tempo};
+                const TimeSignature time_signature {m_composition.measures.back().time_signature};
 
+                for (int i {}; i < ADD_MEASURES; i++) {
+                    m_composition.measures.emplace_back(tempo, time_signature);
+                }
+            }
+        }
     }
 
     ImGui::End();
@@ -294,7 +309,10 @@ void Application::composition() {
         const ImVec2 origin {ImGui::GetCursorScreenPos()};
         const ImVec2 space_available {ImGui::GetContentRegionAvail()};
 
+        composition_left(list, origin);
+        composition_measures(list, origin);
         composition_notes(list, origin);
+        composition_cursor(list, origin);
 
         if (ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
             m_composition_camera -= ImGui::GetIO().MouseDelta;
@@ -310,49 +328,101 @@ void Application::composition() {
     ImGui::PopStyleVar();
 }
 
-void Application::composition_notes(ImDrawList* list, ImVec2 origin) {
+void Application::composition_left(ImDrawList* list, ImVec2 origin) {
+    const ImGuiStyle& style {ImGui::GetStyle()};
+
+    const ImColor COLOR {style.Colors[ImGuiCol_Text]};
+
     list->AddLine(
-        origin + ImVec2(40.0f, 0.0f) - ImVec2(0.0f, m_composition_camera.y),
-        origin + ImVec2(40.0f, COMPOSITION_HEIGHT) - ImVec2(0.0f, m_composition_camera.y),
-        IM_COL32_WHITE
+        origin + ImVec2(COMPOSITION_LEFT, 0.0f) - ImVec2(0.0f, m_composition_camera.y),
+        origin + ImVec2(COMPOSITION_LEFT, COMPOSITION_HEIGHT) - ImVec2(0.0f, m_composition_camera.y),
+        COLOR
     );
 
-    static const char* NOTES_SCALES[] { "C", "B", "A#", "A", "G#", "G", "F#", "F", "E", "D#", "D", "C#" };
-    static const char* NOTES_REMAINING[] { "C", "B", "A#", "A" };
+    constexpr const char* NOTES_OCTAVES[] { "C", "B", "A#", "A", "G#", "G", "F#", "F", "E", "D#", "D", "C#" };
+    constexpr const char* NOTES_EXTRA[] { "C", "B", "A#", "A" };
 
     float position_y {};
 
-    for (int j {}; j < 3; j++) {
-        for (std::size_t i {}; i < std::size(NOTES_SCALES); i++) {
+    for (int j {}; j < syn::NOTE_OCTAVES; j++) {
+        for (std::size_t i {}; i < std::size(NOTES_OCTAVES); i++) {
             list->AddText(
                 origin + ImVec2(0.0f, position_y) - ImVec2(0.0f, m_composition_camera.y),
-                IM_COL32_WHITE,
-                NOTES_SCALES[i]
+                COLOR,
+                NOTES_OCTAVES[i]
             );
             list->AddLine(
                 origin + ImVec2(0.0f, position_y + STEP_SIZE.y) - ImVec2(0.0f, m_composition_camera.y),
-                origin + ImVec2(40.0f, position_y + STEP_SIZE.y) - ImVec2(0.0f, m_composition_camera.y),
-                IM_COL32_WHITE
+                origin + ImVec2(COMPOSITION_LEFT, position_y + STEP_SIZE.y) - ImVec2(0.0f, m_composition_camera.y),
+                COLOR
             );
 
             position_y += STEP_SIZE.y;
         }
     }
 
-    for (std::size_t i {}; i < std::size(NOTES_REMAINING); i++) {
+    for (std::size_t i {}; i < std::size(NOTES_EXTRA); i++) {
         list->AddText(
             origin + ImVec2(0.0f, position_y) - ImVec2(0.0f, m_composition_camera.y),
-            IM_COL32_WHITE,
-            NOTES_REMAINING[i]
+            COLOR,
+            NOTES_EXTRA[i]
         );
         list->AddLine(
             origin + ImVec2(0.0f, position_y + STEP_SIZE.y) - ImVec2(0.0f, m_composition_camera.y),
-            origin + ImVec2(40.0f, position_y + STEP_SIZE.y) - ImVec2(0.0f, m_composition_camera.y),
-            IM_COL32_WHITE
+            origin + ImVec2(COMPOSITION_LEFT, position_y + STEP_SIZE.y) - ImVec2(0.0f, m_composition_camera.y),
+            COLOR
         );
 
         position_y += STEP_SIZE.y;
     }
+}
+
+void Application::composition_measures(ImDrawList* list, ImVec2 origin) {
+    const ImGuiStyle& style {ImGui::GetStyle()};
+
+    const ImColor COLOR {style.Colors[ImGuiCol_Text]};
+
+    for (float position_x {COMPOSITION_LEFT}; const Measure& measure : m_composition.measures) {
+        position_x += float(measure.time_signature.measure_steps()) * STEP_SIZE.x;
+
+        list->AddLine(
+            origin + ImVec2(position_x, 0.0f) - m_composition_camera,
+            origin + ImVec2(position_x, COMPOSITION_HEIGHT) - m_composition_camera,
+            COLOR
+        );
+    }
+}
+
+void Application::composition_notes(ImDrawList* list, ImVec2 origin) {
+    for (const auto& [voice, notes] : m_composition.voices) {
+        const ImColor color {IM_COL32_WHITE};
+
+        for (const Note& note : notes) {
+            const float position_x {COMPOSITION_LEFT + float(note.position) * STEP_SIZE.x};
+            const float position_y {note_height(note)};
+
+            list->AddRectFilled(
+                origin + ImVec2(position_x, position_y) - m_composition_camera,
+                origin + ImVec2(position_x + float(STEP / note.value) * STEP_SIZE.x, position_y + STEP_SIZE.y) - m_composition_camera,
+                color,
+                4.0f
+            );
+        }
+    }
+}
+
+void Application::composition_cursor(ImDrawList* list, ImVec2 origin) {
+    const ImGuiStyle& style {ImGui::GetStyle()};
+
+    const ImColor COLOR {style.Colors[ImGuiCol_PlotHistogramHovered]};
+
+    const float position_x {COMPOSITION_LEFT + float(m_player.get_position()) * STEP_SIZE.x};
+
+    list->AddLine(
+        origin + ImVec2(position_x, 0.0f) - m_composition_camera,
+        origin + ImVec2(position_x, COMPOSITION_HEIGHT) - m_composition_camera,
+        COLOR
+    );
 }
 
 void Application::debug() {
@@ -364,30 +434,53 @@ void Application::debug() {
 }
 
 void Application::update_keyboard_input(unsigned int key, bool down) {
-    const auto update {[this, down](syn::Name name) {
+    const auto update {[this, down](syn::Name name, unsigned int octave) {
         if (down) {
-            m_synthesizer.note_on(name, m_octave, m_voice);
+            m_synthesizer.note_on(name, syn::Octave(m_octave + octave), m_voice);
         } else {
-            m_synthesizer.note_off(name, m_octave);
+            m_synthesizer.note_off(name, syn::Octave(m_octave + octave));
         }
     }};
 
     switch (key) {
-        case SDLK_Z: update(syn::Name::A); break;
-        case SDLK_S: update(syn::Name::As); break;
-        case SDLK_X: update(syn::Name::B); break;
-        case SDLK_C: update(syn::Name::C); break;
-        case SDLK_F: update(syn::Name::Cs); break;
-        case SDLK_V: update(syn::Name::D); break;
-        case SDLK_G: update(syn::Name::Ds); break;
-        case SDLK_B: update(syn::Name::E); break;
-        case SDLK_N: update(syn::Name::F); break;
-        case SDLK_J: update(syn::Name::Fs); break;
-        case SDLK_M: update(syn::Name::G); break;
-        case SDLK_K: update(syn::Name::Gs); break;
-        case SDLK_COMMA: update(syn::Name::A2); break;
-        case SDLK_L: update(syn::Name::As2); break;
-        case SDLK_PERIOD: update(syn::Name::B2); break;
-        case SDLK_SLASH: update(syn::Name::C2); break;
+        case SDLK_Z: update(syn::Name::A, 0); break;
+        case SDLK_S: update(syn::Name::As, 0); break;
+        case SDLK_X: update(syn::Name::B, 0); break;
+        case SDLK_C: update(syn::Name::C, 1); break;
+        case SDLK_F: update(syn::Name::Cs, 1); break;
+        case SDLK_V: update(syn::Name::D, 1); break;
+        case SDLK_G: update(syn::Name::Ds, 1); break;
+        case SDLK_B: update(syn::Name::E, 1); break;
+        case SDLK_N: update(syn::Name::F, 1); break;
+        case SDLK_J: update(syn::Name::Fs, 1); break;
+        case SDLK_M: update(syn::Name::G, 1); break;
+        case SDLK_K: update(syn::Name::Gs, 1); break;
+        case SDLK_COMMA: update(syn::Name::A, 1); break;
+        case SDLK_L: update(syn::Name::As, 1); break;
+        case SDLK_PERIOD: update(syn::Name::B, 1); break;
+        case SDLK_SLASH: update(syn::Name::C, 2); break;
     }
+}
+
+void Application::add_metronome() {
+    for (unsigned int position {}; const Measure& measure : m_composition.measures) {
+        unsigned int i {};
+
+        for (; i < measure.time_signature.measure_steps(); i += STEP / measure.time_signature.value()) {
+            const syn::Name name {i == 0 ? syn::C : syn::D};
+            m_composition.voices[syn::VoiceMetronome].emplace_back(name, syn::Octave2, Eighth, position + i);
+        }
+
+        position += i;
+    }
+}
+
+void Application::remove_metronome() {
+    m_composition.voices.erase(syn::VoiceMetronome);
+}
+
+float Application::note_height(const Note& note) {
+    const syn::Id id {syn::Note::get_id(note.name, note.octave)};
+
+    return COMPOSITION_HEIGHT - STEP_SIZE.y - float(id) * STEP_SIZE.y;
 }

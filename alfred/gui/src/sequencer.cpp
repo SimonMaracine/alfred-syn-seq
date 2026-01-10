@@ -164,7 +164,7 @@ unsigned int Player::initialize_measure_position(unsigned int position) const {
         }
     }
 
-    throw SequencerError("Measure position initialization");
+    return 0;
 }
 
 double Player::initialize_time(unsigned int position) const {
@@ -187,7 +187,7 @@ double Player::initialize_time(unsigned int position) const {
         time += double(measure_steps) * measure.time_signature.step_time(measure.tempo);
     }
 
-    throw SequencerError("Time initialization");
+    return 0.0;
 }
 
 bool Player::done() const {

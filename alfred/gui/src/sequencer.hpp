@@ -66,8 +66,8 @@ struct Note {
 };
 
 struct Measure {
-    TimeSignature time_signature;
     Tempo tempo;
+    TimeSignature time_signature;
 };
 
 struct Composition {

@@ -14,7 +14,7 @@ namespace synthesizer {
         void set_volume(double volume);
         void update();
     private:
-        std::vector<syn::Note>::iterator find_note(syn::Name name, syn::Octave octave);
+        std::vector<syn::Note>::iterator find_note(syn::Id id);
 
         double sound(double time) const override;
         double volume() const override;

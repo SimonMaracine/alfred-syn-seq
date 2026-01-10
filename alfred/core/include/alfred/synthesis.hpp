@@ -54,6 +54,8 @@ namespace syn {
         EnvelopeAdrDescription m_description;
     };
 
+    using Id = unsigned int;
+
     enum Name : unsigned int {
         A,
         As,
@@ -66,17 +68,16 @@ namespace syn {
         F,
         Fs,
         G,
-        Gs,
-        A2,
-        As2,
-        B2,
-        C2
+        Gs
     };
 
     enum Octave : unsigned int {
-        Octave0,
         Octave1,
-        Octave2
+        Octave2,
+        Octave3,
+        Octave4,
+        Octave5,
+        Octave6
     };
 
     enum Voice : unsigned int {
@@ -86,12 +87,16 @@ namespace syn {
         VoiceDrumKick
     };
 
+    inline constexpr int NOTE_OCTAVES {4};
+    inline constexpr int NOTE_EXTRA {4};
+
     struct Note {
-        Name name {};
-        Octave octave {};
+        Id id {};
         Voice voice {};
         double time_on {};
         double time_off {};
+
+        static Id get_id(Name name, Octave octave);
     };
 
     struct Instrument {

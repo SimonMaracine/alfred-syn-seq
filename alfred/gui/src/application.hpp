@@ -26,13 +26,20 @@ private:
     void playback();
     void tools();
     void composition();
+    void composition_left(ImDrawList* list, ImVec2 origin);
+    void composition_measures(ImDrawList* list, ImVec2 origin);
     void composition_notes(ImDrawList* list, ImVec2 origin);
+    void composition_cursor(ImDrawList* list, ImVec2 origin);
     void debug();
 
     void update_keyboard_input(unsigned int key, bool down);
+    void add_metronome();
+    void remove_metronome();
+
+    static float note_height(const Note& note);
 
     syn::Voice m_voice {syn::VoiceBell};
-    syn::Octave m_octave {syn::Octave1};
+    unsigned int m_octave {syn::Octave3};
 
     ImVec2 m_composition_camera;
     Composition m_composition;
@@ -47,4 +54,5 @@ private:
     } m_color_scheme {ColorSchemeClassic};
 
     bool m_metronome {};
+    bool m_modified {};
 };

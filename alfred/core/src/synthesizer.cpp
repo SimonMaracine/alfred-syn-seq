@@ -7,12 +7,11 @@ namespace synthesizer {
     void Synthesizer::note_on(syn::Name name, syn::Octave octave, syn::Voice voice) {
         audio::AudioLockGuard guard {this};
 
-        const auto iter {find_note(name, octave)};
+        const auto iter {find_note(syn::Note::get_id(name, octave))};
 
         if (iter == m_notes.end()) {
             syn::Note& note {m_notes.emplace_back()};
-            note.name = name;
-            note.octave = octave;
+            note.id = syn::Note::get_id(name, octave);
             note.voice = voice;
             note.time_on = m_time;
         } else {
@@ -25,7 +24,7 @@ namespace synthesizer {
     void Synthesizer::note_off(syn::Name name, syn::Octave octave) {
         audio::AudioLockGuard guard {this};
 
-        const auto iter {find_note(name, octave)};
+        const auto iter {find_note(syn::Note::get_id(name, octave))};
 
         if (iter != m_notes.end()) {
             if (iter->time_on > iter->time_off) {
@@ -52,10 +51,10 @@ namespace synthesizer {
         }), m_notes.end());
     }
 
-    std::vector<syn::Note>::iterator Synthesizer::find_note(syn::Name name, syn::Octave octave) {
+    std::vector<syn::Note>::iterator Synthesizer::find_note(syn::Id id) {
         return std::find_if(m_notes.begin(), m_notes.end(),
-            [name, octave](const syn::Note& note) {
-                return note.name == name && note.octave == octave;
+            [id](const syn::Note& note) {
+                return note.id == id;
             }
         );
     }
