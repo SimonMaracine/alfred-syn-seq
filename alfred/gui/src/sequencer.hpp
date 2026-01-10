@@ -84,10 +84,11 @@ public:
     Player() = default;
     Player(synthesizer::Synthesizer& synthesizer, const Composition& composition);
 
+    void prepare();
     void start();
     void stop();
     void seek(unsigned int position);
-    void reload();
+
     double get_elapsed_time() const { return m_elapsed_time; }
     unsigned int get_position() const { return m_position; }
     bool is_playing() const { return m_playing; }
@@ -95,13 +96,6 @@ public:
     void update(double dt);
 private:
     struct Execution {
-        // struct Time {
-        //     double begin {};
-        //     double end {};
-        // };
-
-        // using Notes = std::vector<std::pair<Note, Time>>;
-
         using Notes = std::vector<Note>;
 
         Notes notes_unplayed;
@@ -112,7 +106,7 @@ private:
 
     void initialize(unsigned int position);
     Executions initialize_executions(unsigned int position) const;
-    Execution::Notes::value_type initialize_note(const Note& note) const;
+    unsigned int initialize_measure_position(unsigned int position) const;
     double initialize_time(unsigned int position) const;
     bool done() const;
 
@@ -121,10 +115,11 @@ private:
 
     Executions m_executions;
 
-    const Measure* m_measure {};
+    std::vector<Measure>::const_iterator m_measure;
     double m_accumulator_time {};
     double m_elapsed_time {};
     unsigned int m_position {};  // Like a cursor
+    unsigned int m_measure_position {};
     bool m_playing {};
 };
 

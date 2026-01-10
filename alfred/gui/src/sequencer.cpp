@@ -1,6 +1,7 @@
 #include "sequencer.hpp"
 
 #include <algorithm>
+#include <iterator>
 #include <cassert>
 
 void Composition::validate() const {
@@ -15,12 +16,10 @@ void Composition::validate() const {
 
         for (const Note& note : notes) {
             for (unsigned int steps {}; const Measure& measure : measures) {
-                const unsigned int measure_steps {measure.time_signature.beats() * (Sixteenth / measure.time_signature.value())};
+                const unsigned int measure_steps {measure.time_signature.measure_steps()};
 
-                if (steps + measure_steps == note.position) {  // FIXME
-                    break;
-                } else if (steps + measure_steps > note.position) {
-                    if (note.position + Sixteenth / note.value > steps + measure_steps) {
+                if (steps + measure_steps > note.position) {
+                    if (note.position + STEP / note.value > steps + measure_steps) {
                         throw SequencerError("Invalid note duration");
                     }
 
@@ -39,51 +38,43 @@ Player::Player(synthesizer::Synthesizer& synthesizer, const Composition& composi
     initialize(0);
 }
 
+void Player::prepare() {
+    seek(m_position);
+}
+
 void Player::start() {
     m_playing = true;
 }
 
 void Player::stop() {
-    m_playing = false;
-    m_synthesizer->silence();
-}
-
-void Player::seek(unsigned int position) {
-    stop();
-    m_executions.clear();
-    m_composition->validate();
-    initialize(position);
-    m_position = position;
-}
-
-void Player::reload() {
     seek(m_position);
 }
 
+void Player::seek(unsigned int position) {
+    m_position = position;
+
+    m_playing = false;
+    m_synthesizer->silence();
+    m_accumulator_time = 0.0;
+
+    m_executions.clear();
+    m_composition->validate();
+    initialize(m_position);
+}
+
 void Player::update(double dt) {
-    if (!m_playing || !m_composition) {
+    if (!m_playing || !m_composition || m_measure == m_composition->measures.end()) {
         return;
     }
 
     if (done()) {
-        stop();
+        m_playing = false;
         return;
     }
 
-    // m_elapsed_time += dt;
     m_accumulator_time += dt;
 
-    unsigned int steps {};
-    double step_time {};
-
-    for (auto iter {m_composition->measures.begin()}; iter != m_composition->measures.end(); iter++) {
-        steps += iter->time_signature.measure_steps();
-
-        if (steps >= m_position) {
-            step_time = iter->time_signature.step_time(iter->tempo);
-            break;
-        }
-    }
+    const double step_time {m_measure->time_signature.step_time(m_measure->tempo)};
 
     // Advance with maximum one step per frame
     // If the frame time is larger than the step time, then the player will simply play at a lower and inconsistent speed
@@ -91,46 +82,47 @@ void Player::update(double dt) {
         m_accumulator_time -= step_time;
         m_elapsed_time += step_time;
         m_position++;
+        m_measure_position++;
+    }
+
+    if (m_measure_position == m_measure->time_signature.measure_steps()) {
+        m_measure_position = 0;
+
+        if (std::next(m_measure) != m_composition->measures.end()) {
+            m_measure++;
+        }
     }
 
     for (auto& [voice, execution] : m_executions) {
         Execution::Notes::iterator iter;
 
         for (iter = execution.notes_played.begin(); iter != execution.notes_played.end(); iter++) {
-            const auto [note, time] {*iter};
-
-            if (m_elapsed_time < time.end) {
+            if (m_position + 1 < iter->position + STEP / iter->value) {
                 execution.notes_played.erase(execution.notes_played.begin(), iter);  // Invalidates iter
                 break;
-            }
+            } else if (m_position + 1 == iter->position + STEP / iter->value) {
+                m_synthesizer->note_off(iter->name, iter->octave);
 
-            m_synthesizer->note_off(note.name, note.octave);
-
-            printf("OFF\n");
-
-            if (std::next(iter) == execution.notes_played.end()) {
-                execution.notes_played.erase(iter);  // Invalidates iter
-                break;
+                if (std::next(iter) == execution.notes_played.end()) {
+                    execution.notes_played.erase(iter);  // Invalidates iter
+                    break;
+                }
             }
         }
 
         for (iter = execution.notes_unplayed.begin(); iter != execution.notes_unplayed.end(); iter++) {
-            const auto [note, time] {*iter};
-
-            if (m_elapsed_time < time.begin) {
+            if (m_position < iter->position) {
                 execution.notes_unplayed.erase(execution.notes_unplayed.begin(), iter);  // Invalidates iter
                 break;
+            } else if (m_position == iter->position) {
+                m_synthesizer->note_on(iter->name, iter->octave, voice);
+                execution.notes_played.push_back(*iter);
+
+                if (std::next(iter) == execution.notes_unplayed.end()) {
+                    execution.notes_unplayed.erase(iter);  // Invalidates iter
+                    break;
+                }
             }
-
-            m_synthesizer->note_on(note.name, note.octave, voice);
-            execution.notes_played.emplace_back(note, time);
-
-            if (std::next(iter) == execution.notes_unplayed.end()) {
-                execution.notes_unplayed.erase(iter);  // Invalidates iter
-                break;
-            }
-
-            printf("ON\n");
         }
     }
 }
@@ -138,6 +130,13 @@ void Player::update(double dt) {
 void Player::initialize(unsigned int position) {
     m_executions = initialize_executions(position);
     m_elapsed_time = initialize_time(position);
+    m_measure_position = initialize_measure_position(position);
+
+    if (!m_composition->measures.empty()) {
+        m_measure = m_composition->measures.begin();
+    } else {
+        m_measure = m_composition->measures.end();
+    }
 }
 
 Player::Executions Player::initialize_executions(unsigned int position) const {
@@ -149,38 +148,23 @@ Player::Executions Player::initialize_executions(unsigned int position) const {
                 continue;
             }
 
-            executions[voice].notes_unplayed.push_back(initialize_note(note));
+            executions[voice].notes_unplayed.push_back(note);
         }
     }
 
     return executions;
 }
 
-Player::Execution::Notes::value_type Player::initialize_note(const Note& note) const {
-    unsigned int steps {};
-    double time {};
+unsigned int Player::initialize_measure_position(unsigned int position) const {
+    for (unsigned int steps {}; const Measure& measure : m_composition->measures) {
+        steps += measure.time_signature.measure_steps();
 
-    for (const Measure& measure : m_composition->measures) {
-        const unsigned int measure_steps {measure.time_signature.measure_steps()};
-
-        if (steps + measure_steps >= note.position) {
-            const unsigned int last_steps {steps + measure_steps - note.position};
-
-            steps += measure_steps - last_steps;
-            time += double(measure_steps - last_steps) * measure.time_signature.step_time(measure.tempo);
-
-            Execution::Time execution_time;
-            execution_time.begin = time;
-            execution_time.end = time + double(Sixteenth / note.value) * measure.time_signature.step_time(measure.tempo);
-
-            return std::make_pair(note, execution_time);
+        if (steps >= position) {
+            return steps - position;
         }
-
-        steps += measure_steps;
-        time += double(measure_steps) * measure.time_signature.step_time(measure.tempo);
     }
 
-    throw SequencerError("Note initialization");
+    throw SequencerError("Measure position initialization");
 }
 
 double Player::initialize_time(unsigned int position) const {

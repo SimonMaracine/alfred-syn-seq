@@ -239,14 +239,14 @@ void Application::playback() {
 
         if (ImGui::Checkbox("Metronome", &m_metronome)) {
             if (m_metronome) {
-                for (unsigned int i {}; i < 8 * 16; i += 4) {
-                    const syn::Name name {i % 16 == 0 ? syn::C : syn::D};
+                for (unsigned int i {}; i < 8 * 4 * (STEP / Quarter); i += STEP / Quarter) {
+                    const syn::Name name {i % (4 * (STEP / Quarter)) == 0 ? syn::C : syn::D};
                     m_composition.voices[syn::VoiceBell].emplace_back(name, syn::Octave1, Quarter, i);
                 }
-                m_player.reload();  // FIXME
+                m_player.prepare();
             } else {
                 m_composition.voices.erase(syn::VoiceBell);
-                m_player.reload();
+                m_player.prepare();
             }
         }
 
@@ -297,37 +297,4 @@ void Application::update_keyboard_input(unsigned int key, bool down) {
         case SDLK_PERIOD: update(syn::Name::B2); break;
         case SDLK_SLASH: update(syn::Name::C2); break;
     }
-
-    // static constexpr unsigned int KEYBOARD[] {
-    //     SDLK_Z,
-    //     SDLK_S,
-    //     SDLK_X,
-    //     SDLK_C,
-    //     SDLK_F,
-    //     SDLK_V,
-    //     SDLK_G,
-    //     SDLK_B,
-    //     SDLK_N,
-    //     SDLK_J,
-    //     SDLK_M,
-    //     SDLK_K,
-    //     SDLK_COMMA,
-    //     SDLK_L,
-    //     SDLK_PERIOD,
-    //     SDLK_SLASH
-    // };
-
-    // for (unsigned int name {}; const auto key : KEYBOARD) {
-    //     if (key != event.key.key) {
-    //         continue;
-    //     }
-
-    //     if (event.type == SDL_EVENT_KEY_DOWN) {
-    //         m_synthesizer.note_on(syn::Name(name), m_octave, m_voice);
-    //     } else if (event.type == SDL_EVENT_KEY_UP) {
-    //         m_synthesizer.note_off(syn::Name(name), m_octave);
-    //     }
-
-    //     name++;
-    // }
 }

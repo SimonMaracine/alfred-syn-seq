@@ -27,7 +27,7 @@ private:
 
     void update_keyboard_input(unsigned int key, bool down);
 
-    syn::Voice m_voice {};
+    syn::Voice m_voice {syn::VoiceBell};
     syn::Octave m_octave {syn::Octave1};
 
     Composition m_composition;
