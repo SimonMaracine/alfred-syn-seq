@@ -1,6 +1,11 @@
 #include "application.hpp"
 
+#include <algorithm>
+
 #include <SDL3/SDL.h>
+
+static constexpr ImVec2 STEP_SIZE {10.0f, 20.0f};
+static constexpr float COMPOSITION_HEIGHT {STEP_SIZE.y * 12.0f * 3.0f + STEP_SIZE.y * 4.0f};
 
 void Application::on_start() {
     m_synthesizer.resume();
@@ -29,7 +34,10 @@ void Application::on_imgui() {
 
     main_menu_bar();
     keyboard();
+    instruments();
     playback();
+    tools();
+    composition();
     debug();
 
     ImGui::ShowDemoWindow();
@@ -217,6 +225,14 @@ void Application::keyboard_key(ImDrawList* list, ImVec2 origin, char key, float 
     list->AddText(base + origin + position + ImVec2(TEXT_OFFSET, TEXT_OFFSET), IM_COL32_WHITE, label);
 }
 
+void Application::instruments() {
+    if (ImGui::Begin("Instruments")) {
+
+    }
+
+    ImGui::End();
+}
+
 void Application::playback() {
     if (ImGui::Begin("Playback")) {
         if (ImGui::Button("Rewind")) {
@@ -260,6 +276,83 @@ void Application::playback() {
     }
 
     ImGui::End();
+}
+
+void Application::tools() {
+    if (ImGui::Begin("Tools")) {
+
+    }
+
+    ImGui::End();
+}
+
+void Application::composition() {
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+
+    if (ImGui::Begin("Composition")) {
+        ImDrawList* list {ImGui::GetWindowDrawList()};
+        const ImVec2 origin {ImGui::GetCursorScreenPos()};
+        const ImVec2 space_available {ImGui::GetContentRegionAvail()};
+
+        composition_notes(list, origin);
+
+        if (ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
+            m_composition_camera -= ImGui::GetIO().MouseDelta;
+        }
+
+        m_composition_camera.x = std::max(m_composition_camera.x, 0.0f);
+        m_composition_camera.y = std::max(m_composition_camera.y, 0.0f);
+        m_composition_camera.y = std::min(m_composition_camera.y, COMPOSITION_HEIGHT - space_available.y);
+    }
+
+    ImGui::End();
+
+    ImGui::PopStyleVar();
+}
+
+void Application::composition_notes(ImDrawList* list, ImVec2 origin) {
+    list->AddLine(
+        origin + ImVec2(40.0f, 0.0f) - ImVec2(0.0f, m_composition_camera.y),
+        origin + ImVec2(40.0f, COMPOSITION_HEIGHT) - ImVec2(0.0f, m_composition_camera.y),
+        IM_COL32_WHITE
+    );
+
+    static const char* NOTES_SCALES[] { "C", "B", "A#", "A", "G#", "G", "F#", "F", "E", "D#", "D", "C#" };
+    static const char* NOTES_REMAINING[] { "C", "B", "A#", "A" };
+
+    float position_y {};
+
+    for (int j {}; j < 3; j++) {
+        for (std::size_t i {}; i < std::size(NOTES_SCALES); i++) {
+            list->AddText(
+                origin + ImVec2(0.0f, position_y) - ImVec2(0.0f, m_composition_camera.y),
+                IM_COL32_WHITE,
+                NOTES_SCALES[i]
+            );
+            list->AddLine(
+                origin + ImVec2(0.0f, position_y + STEP_SIZE.y) - ImVec2(0.0f, m_composition_camera.y),
+                origin + ImVec2(40.0f, position_y + STEP_SIZE.y) - ImVec2(0.0f, m_composition_camera.y),
+                IM_COL32_WHITE
+            );
+
+            position_y += STEP_SIZE.y;
+        }
+    }
+
+    for (std::size_t i {}; i < std::size(NOTES_REMAINING); i++) {
+        list->AddText(
+            origin + ImVec2(0.0f, position_y) - ImVec2(0.0f, m_composition_camera.y),
+            IM_COL32_WHITE,
+            NOTES_REMAINING[i]
+        );
+        list->AddLine(
+            origin + ImVec2(0.0f, position_y + STEP_SIZE.y) - ImVec2(0.0f, m_composition_camera.y),
+            origin + ImVec2(40.0f, position_y + STEP_SIZE.y) - ImVec2(0.0f, m_composition_camera.y),
+            IM_COL32_WHITE
+        );
+
+        position_y += STEP_SIZE.y;
+    }
 }
 
 void Application::debug() {

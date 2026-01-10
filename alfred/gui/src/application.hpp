@@ -22,7 +22,11 @@ private:
     void main_menu_bar_help();
     void keyboard();
     void keyboard_key(ImDrawList* list, ImVec2 origin, char key, float x, float y, int scancode);
+    void instruments();
     void playback();
+    void tools();
+    void composition();
+    void composition_notes(ImDrawList* list, ImVec2 origin);
     void debug();
 
     void update_keyboard_input(unsigned int key, bool down);
@@ -30,6 +34,7 @@ private:
     syn::Voice m_voice {syn::VoiceBell};
     syn::Octave m_octave {syn::Octave1};
 
+    ImVec2 m_composition_camera;
     Composition m_composition;
 
     synthesizer::Synthesizer m_synthesizer;
