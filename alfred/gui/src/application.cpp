@@ -449,20 +449,28 @@ namespace application {
     }
 
     void Application::composition_notes(ImDrawList* list, ImVec2 origin) const {
-        for (const auto& [voice, notes] : m_composition.voices) {
-            const ImColor color {IM_COL32_WHITE};
+        float global_position_x {COMPOSITION_LEFT};
 
-            for (const seq::Note& note : notes) {
-                const float position_x {COMPOSITION_LEFT + float(note.position) * STEP_SIZE.x};
-                const float position_y {note_height(note)};
+        for (const seq::Measure& measure : m_composition.measures) {
+            for (const auto& [voice, notes] : measure.voices) {
+                const ImColor color {IM_COL32_WHITE};
 
-                list->AddRectFilled(
-                    origin + ImVec2(position_x, position_y) - m_composition_camera,
-                    origin + ImVec2(position_x + float(seq::STEP / note.value) * STEP_SIZE.x, position_y + STEP_SIZE.y) - m_composition_camera,
-                    color,
-                    4.0f
-                );
+                for (const seq::Note& note : notes) {
+                    const float position_x {float(note.position) * STEP_SIZE.x};
+                    const float position_y {note_height(note)};
+                    const float width {float(seq::STEP / note.value) * STEP_SIZE.x};
+                    const float height {STEP_SIZE.y};
+
+                    list->AddRectFilled(
+                        origin + ImVec2(global_position_x + position_x, position_y) - m_composition_camera,
+                        origin + ImVec2(global_position_x + position_x + width, position_y + height) - m_composition_camera,
+                        color,
+                        4.0f
+                    );
+                }
             }
+
+            global_position_x += float(measure.time_signature.measure_steps()) * STEP_SIZE.x;
         }
     }
 
@@ -523,29 +531,21 @@ namespace application {
         add_metronome(m_composition.measures.begin(), m_composition.measures.end());
     }
 
-    void Application::add_metronome(MeasureIter begin, MeasureIter end) {
-        unsigned int position {};
-
-        for (auto measure {m_composition.measures.begin()}; measure != begin; measure++) {
-            position += measure->time_signature.measure_steps();
-        }
-
+    void Application::add_metronome(MeasureIterMut begin, MeasureIterMut end) {
         for (auto measure {begin}; measure != end; measure++) {
-            unsigned int i {};
-
-            for (; i < measure->time_signature.measure_steps(); i += seq::STEP / measure->time_signature.value()) {
+            for (unsigned int i {}; i < measure->time_signature.measure_steps(); i += seq::STEP / measure->time_signature.value()) {
                 const syn::Name name {i == 0 ? syn::C : syn::D};
-                m_composition.voices[syn::VoiceMetronome].emplace_back(name, syn::Octave2, seq::Eighth, position + i);
+                measure->voices[syn::VoiceMetronome].emplace_back(name, syn::Octave2, seq::Eighth, i);
             }
-
-            position += i;
         }
 
         m_composition_modified = true;
     }
 
     void Application::remove_metronome() {
-        m_composition.voices.erase(syn::VoiceMetronome);
+        for (seq::Measure& measure : m_composition.measures) {
+            measure.voices.erase(syn::VoiceMetronome);
+        }
 
         m_composition_modified = true;
     }
@@ -601,40 +601,17 @@ namespace application {
             return;
         }
 
-        unsigned int position {};
-
-        for (auto measure {m_composition.measures.begin()}; measure != m_composition_selected_measure; measure++) {
-            position += measure->time_signature.measure_steps();
-        }
-
-        const unsigned int begin {position};
-        const unsigned int end {position + m_composition_selected_measure->time_signature.measure_steps()};
-
-        for (auto& [_, notes] : m_composition.voices) {
-            delete_notes(notes, begin, end);
-        }
-
         m_composition_selected_measure = m_composition.measures.erase(m_composition_selected_measure);
 
         m_composition_modified = true;
     }
 
     void Application::delete_notes(syn::Voice voice, unsigned int begin, unsigned int end) {
-        auto& notes {m_composition.voices.at(voice)};
 
-        notes.erase(std::remove_if(notes.begin(), notes.end(), [begin, end](const seq::Note& note) {
-            return note.position >= begin && note.position < end;
-        }), notes.end());
-
-        m_composition_modified = true;
     }
 
     void Application::delete_notes(std::vector<seq::Note>& notes, unsigned int begin, unsigned int end) {
-        notes.erase(std::remove_if(notes.begin(), notes.end(), [begin, end](const seq::Note& note) {
-            return note.position >= begin && note.position < end;
-        }), notes.end());
 
-        m_composition_modified = true;
     }
 
     void Application::shift_notes_left(std::vector<seq::Note>& notes, unsigned int begin, unsigned int end, unsigned int steps) {

@@ -35,10 +35,11 @@ namespace application {
         void debug();
 
         using MeasureIter = std::vector<seq::Measure>::const_iterator;
+        using MeasureIterMut = std::vector<seq::Measure>::iterator;
 
         void update_keyboard_input(unsigned int key, bool down);
         void add_metronome();
-        void add_metronome(MeasureIter begin, MeasureIter end);
+        void add_metronome(MeasureIterMut begin, MeasureIterMut end);
         void remove_metronome();
         void add_measures();
         void select_measure(ImVec2 position);

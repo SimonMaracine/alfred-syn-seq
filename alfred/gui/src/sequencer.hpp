@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <utility>
 #include <stdexcept>
+#include <chrono>
 
 #include <alfred/synthesizer.hpp>
 
@@ -63,22 +64,46 @@ namespace seq {
         syn::Name name {};
         syn::Octave octave {};
         Value value {};
-        unsigned int position {};  // Compositions are divided in steps
+        unsigned int position {};  // Local, inside a measure
     };
 
     struct Measure {
         Tempo tempo;
         TimeSignature time_signature;
+        std::unordered_map<syn::Voice, std::vector<Note>> voices;
     };
 
     struct Composition {
         std::string title;
         std::string author;
+        std::chrono::year year;
         std::vector<Measure> measures;
-        std::unordered_map<syn::Voice, std::vector<Note>> voices;
 
         void validate() const;
     };
+
+    namespace exec {
+        struct Note {
+            syn::Name name {};
+            syn::Octave octave {};
+
+            unsigned int position {};  // Global, in the whole composition
+            unsigned int duration {};  // Number of steps
+
+            // Needed to know how fast to play the note
+            Tempo tempo;
+            TimeSignature time_signature;
+        };
+
+        using Notes = std::vector<Note>;
+
+        struct Execution {
+            Notes notes_unplayed;
+            Notes notes_played;
+        };
+
+        using Executions = std::unordered_map<syn::Voice, Execution>;
+    }
 
     class Player {
     public:
@@ -94,27 +119,19 @@ namespace seq {
         unsigned int get_position() const { return m_position; }
         bool is_playing() const { return m_playing; }
 
-        void update(double dt);
+        void update(double dt);  // FIXME when stopped, the application accumulates time and then goes crazy
     private:
-        struct Execution {
-            using Notes = std::vector<Note>;
-
-            Notes notes_unplayed;
-            Notes notes_played;
-        };
-
-        using Executions = std::unordered_map<syn::Voice, Execution>;
-
         void initialize(unsigned int position);
-        Executions initialize_executions(unsigned int position) const;
+        exec::Executions initialize_executions(unsigned int position) const;
         unsigned int initialize_measure_position(unsigned int position) const;
         double initialize_time(unsigned int position) const;
-        bool done() const;
+        bool finished() const;
+        bool no_notes() const;
 
         synthesizer::Synthesizer* m_synthesizer {};
         const Composition* m_composition {};
 
-        Executions m_executions;
+        exec::Executions m_executions;
 
         std::vector<Measure>::const_iterator m_measure;
         double m_accumulator_time {};

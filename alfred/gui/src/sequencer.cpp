@@ -6,28 +6,20 @@
 
 namespace seq {
     void Composition::validate() const {
-        for (const auto& [_, notes] : voices) {
-            if (
-                !std::is_sorted(notes.begin(), notes.end(), [](const auto& lhs, const auto& rhs) {
-                    return lhs.position < rhs.position;
-                })
-            ) {
-                throw SequencerError("Invalid note sequence");
-            }
+        for (const Measure& measure : measures) {
+            for (const auto& [_, notes] : measure.voices) {
+                if (
+                    !std::is_sorted(notes.begin(), notes.end(), [](const auto& lhs, const auto& rhs) {
+                        return lhs.position < rhs.position;
+                    })
+                ) {
+                    throw SequencerError("Invalid note sequence");
+                }
 
-            for (const Note& note : notes) {
-                for (unsigned int steps {}; const Measure& measure : measures) {
-                    const unsigned int measure_steps {measure.time_signature.measure_steps()};
-
-                    if (steps + measure_steps > note.position) {
-                        if (note.position + STEP / note.value > steps + measure_steps) {
-                            throw SequencerError("Invalid note duration");
-                        }
-
-                        break;
+                for (const Note& note : notes) {
+                    if (note.position + STEP / note.value > measure.time_signature.measure_steps()) {
+                        throw SequencerError("Invalid note duration");
                     }
-
-                    steps += measure_steps;
                 }
             }
         }
@@ -64,11 +56,15 @@ namespace seq {
     }
 
     void Player::update(double dt) {
-        if (!m_playing || !m_composition || m_measure == m_composition->measures.end()) {
+        if (!m_playing || !m_composition) {
             return;
         }
 
-        if (done()) {
+        if (finished()) {
+            if (!no_notes()) {
+                throw SequencerError("Invalid remaining notes");
+            }
+
             m_playing = false;
             return;
         }
@@ -88,39 +84,36 @@ namespace seq {
 
         if (m_measure_position == m_measure->time_signature.measure_steps()) {
             m_measure_position = 0;
-
-            if (std::next(m_measure) != m_composition->measures.end()) {
-                m_measure++;
-            }
+            m_measure++;
         }
 
         for (auto& [voice, execution] : m_executions) {
-            Execution::Notes::iterator iter;
+            exec::Notes::iterator note;
 
-            for (iter = execution.notes_played.begin(); iter != execution.notes_played.end(); iter++) {
-                if (m_position + 1 < iter->position + STEP / iter->value) {
-                    execution.notes_played.erase(execution.notes_played.begin(), iter);  // Invalidates iter
+            for (note = execution.notes_played.begin(); note != execution.notes_played.end(); note++) {
+                if (m_position + 1 < note->position + note->duration) {
+                    execution.notes_played.erase(execution.notes_played.begin(), note);
                     break;
-                } else if (m_position + 1 == iter->position + STEP / iter->value) {
-                    m_synthesizer->note_off(iter->name, iter->octave);
+                } else if (m_position + 1 == note->position + note->duration) {
+                    m_synthesizer->note_off(note->name, note->octave);
 
-                    if (std::next(iter) == execution.notes_played.end()) {
-                        execution.notes_played.erase(iter);  // Invalidates iter
+                    if (std::next(note) == execution.notes_played.end()) {
+                        execution.notes_played.erase(note);
                         break;
                     }
                 }
             }
 
-            for (iter = execution.notes_unplayed.begin(); iter != execution.notes_unplayed.end(); iter++) {
-                if (m_position < iter->position) {
-                    execution.notes_unplayed.erase(execution.notes_unplayed.begin(), iter);  // Invalidates iter
+            for (note = execution.notes_unplayed.begin(); note != execution.notes_unplayed.end(); note++) {
+                if (m_position < note->position) {
+                    execution.notes_unplayed.erase(execution.notes_unplayed.begin(), note);
                     break;
-                } else if (m_position == iter->position) {
-                    m_synthesizer->note_on(iter->name, iter->octave, voice);
-                    execution.notes_played.push_back(*iter);
+                } else if (m_position == note->position) {
+                    m_synthesizer->note_on(note->name, note->octave, voice);
+                    execution.notes_played.push_back(*note);
 
-                    if (std::next(iter) == execution.notes_unplayed.end()) {
-                        execution.notes_unplayed.erase(iter);  // Invalidates iter
+                    if (std::next(note) == execution.notes_unplayed.end()) {
+                        execution.notes_unplayed.erase(note);
                         break;
                     }
                 }
@@ -140,17 +133,28 @@ namespace seq {
         }
     }
 
-    Player::Executions Player::initialize_executions(unsigned int position) const {
-        Executions executions;
+    exec::Executions Player::initialize_executions(unsigned int position) const {
+        exec::Executions executions;
 
-        for (const auto& [voice, notes] : m_composition->voices) {
-            for (const Note& note : notes) {
-                if (note.position < position) {
-                    continue;
+        for (unsigned int steps {}; const Measure& measure : m_composition->measures) {
+            for (const auto& [voice, notes] : measure.voices) {
+                for (const Note& note : notes) {
+                    if (note.position < position) {
+                        continue;
+                    }
+
+                    executions[voice].notes_unplayed.emplace_back(
+                        note.name,
+                        note.octave,
+                        steps + note.position,
+                        STEP / note.value,  // TODO implement legatos
+                        measure.tempo,
+                        measure.time_signature
+                    );
                 }
-
-                executions[voice].notes_unplayed.push_back(note);
             }
+
+            steps += measure.time_signature.measure_steps();
         }
 
         return executions;
@@ -161,7 +165,7 @@ namespace seq {
             steps += measure.time_signature.measure_steps();
 
             if (steps >= position) {
-                return steps - position;
+                return measure.time_signature.measure_steps() - steps - position;
             }
         }
 
@@ -191,7 +195,11 @@ namespace seq {
         return 0.0;
     }
 
-    bool Player::done() const {
+    bool Player::finished() const {
+        return m_measure == m_composition->measures.end();
+    }
+
+    bool Player::no_notes() const {
         return std::all_of(m_executions.begin(), m_executions.end(), [](const auto& execution) {
             return execution.second.notes_unplayed.empty() && execution.second.notes_played.empty();
         });
