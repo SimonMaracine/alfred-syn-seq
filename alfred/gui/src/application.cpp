@@ -20,6 +20,8 @@ namespace application {
         ImGui::StyleColorsClassic();
 
         m_player = seq::Player(m_synthesizer, m_composition);
+
+        m_composition_selected_measure = m_composition.measures.end();
     }
 
     void Application::on_stop() {
@@ -252,7 +254,7 @@ namespace application {
                 }
             } else {
                 if (ImGui::Button("Start")) {
-                    if (m_modified) {
+                    if (m_composition_modified) {
                         m_player.prepare();
                     }
 
@@ -265,10 +267,8 @@ namespace application {
             if (ImGui::Checkbox("Metronome", &m_metronome)) {
                 if (m_metronome) {
                     add_metronome();
-                    m_modified = true;
                 } else {
                     remove_metronome();
-                    m_modified = true;
                 }
             }
 
@@ -287,18 +287,13 @@ namespace application {
     void Application::tools() {
         if (ImGui::Begin("Tools")) {
             if (ImGui::Button("Add Measures")) {
-                if (m_composition.measures.empty()) {
-                    for (int i {}; i < ADD_MEASURES; i++) {
-                        m_composition.measures.emplace_back();
-                    }
-                } else {
-                    const seq::Tempo tempo {m_composition.measures.back().tempo};
-                    const seq::TimeSignature time_signature {m_composition.measures.back().time_signature};
+                add_measures();
+            }
 
-                    for (int i {}; i < ADD_MEASURES; i++) {
-                        m_composition.measures.emplace_back(tempo, time_signature);
-                    }
-                }
+            ImGui::SameLine();
+
+            if (ImGui::Button("Delete Measure")) {
+                delete_measure();
             }
         }
 
@@ -341,7 +336,7 @@ namespace application {
         ImGui::PopStyleVar();
     }
 
-    void Application::composition_left(ImDrawList* list, ImVec2 origin) {
+    void Application::composition_left(ImDrawList* list, ImVec2 origin) const {
         static constexpr ImVec2 CELL {COMPOSITION_LEFT, STEP_SIZE.y};
         static constexpr ImVec2 TEXT_OFFSET {(CELL.x - 13.0f) / 2.0f, (CELL.y - 13.0f) / 2.0f};
 
@@ -402,7 +397,7 @@ namespace application {
         }
     }
 
-    void Application::composition_measures(ImDrawList* list, ImVec2 origin) {
+    void Application::composition_measures(ImDrawList* list, ImVec2 origin) const {
         const ImGuiStyle& style {ImGui::GetStyle()};
 
         const ImColor COLOR_FOREGROUND {style.Colors[ImGuiCol_Text]};
@@ -431,7 +426,7 @@ namespace application {
         }
     }
 
-    void Application::composition_measures_labels(ImDrawList* list, ImVec2 origin) {
+    void Application::composition_measures_labels(ImDrawList* list, ImVec2 origin) const {
         static constexpr ImVec2 TEXT_OFFSET {5.0f, 5.0f};
 
         const ImGuiStyle& style {ImGui::GetStyle()};
@@ -453,7 +448,7 @@ namespace application {
         }
     }
 
-    void Application::composition_notes(ImDrawList* list, ImVec2 origin) {
+    void Application::composition_notes(ImDrawList* list, ImVec2 origin) const {
         for (const auto& [voice, notes] : m_composition.voices) {
             const ImColor color {IM_COL32_WHITE};
 
@@ -471,7 +466,7 @@ namespace application {
         }
     }
 
-    void Application::composition_cursor(ImDrawList* list, ImVec2 origin) {
+    void Application::composition_cursor(ImDrawList* list, ImVec2 origin) const {
         const ImGuiStyle& style {ImGui::GetStyle()};
 
         const ImColor COLOR {style.Colors[ImGuiCol_PlotHistogramHovered]};
@@ -525,20 +520,60 @@ namespace application {
     }
 
     void Application::add_metronome() {
-        for (unsigned int position {}; const seq::Measure& measure : m_composition.measures) {
+        add_metronome(m_composition.measures.begin(), m_composition.measures.end());
+    }
+
+    void Application::add_metronome(MeasureIter begin, MeasureIter end) {
+        unsigned int position {};
+
+        for (auto measure {m_composition.measures.begin()}; measure != begin; measure++) {
+            position += measure->time_signature.measure_steps();
+        }
+
+        for (auto measure {begin}; measure != end; measure++) {
             unsigned int i {};
 
-            for (; i < measure.time_signature.measure_steps(); i += seq::STEP / measure.time_signature.value()) {
+            for (; i < measure->time_signature.measure_steps(); i += seq::STEP / measure->time_signature.value()) {
                 const syn::Name name {i == 0 ? syn::C : syn::D};
                 m_composition.voices[syn::VoiceMetronome].emplace_back(name, syn::Octave2, seq::Eighth, position + i);
             }
 
             position += i;
         }
+
+        m_composition_modified = true;
     }
 
     void Application::remove_metronome() {
         m_composition.voices.erase(syn::VoiceMetronome);
+
+        m_composition_modified = true;
+    }
+
+    void Application::add_measures() {
+        if (m_composition.measures.empty()) {
+            for (int i {}; i < ADD_MEASURES; i++) {
+                m_composition.measures.emplace_back();
+                m_composition_selected_measure = m_composition.measures.end();
+            }
+        } else {
+            const seq::Tempo tempo {m_composition.measures.back().tempo};
+            const seq::TimeSignature time_signature {m_composition.measures.back().time_signature};
+
+            for (int i {}; i < ADD_MEASURES; i++) {
+                m_composition.measures.emplace_back(tempo, time_signature);
+                m_composition_selected_measure = m_composition.measures.end();
+            }
+        }
+
+        if (m_metronome) {
+            const auto begin {std::prev(m_composition.measures.end(), ADD_MEASURES)};
+            const auto end {m_composition.measures.end()};
+
+            add_metronome(begin, end);
+        }
+
+        m_composition_modified = true;
     }
 
     void Application::select_measure(ImVec2 position) {
@@ -559,6 +594,55 @@ namespace application {
 
             position_x += right;
         }
+    }
+
+    void Application::delete_measure() {
+        if (m_composition_selected_measure == m_composition.measures.end()) {
+            return;
+        }
+
+        unsigned int position {};
+
+        for (auto measure {m_composition.measures.begin()}; measure != m_composition_selected_measure; measure++) {
+            position += measure->time_signature.measure_steps();
+        }
+
+        const unsigned int begin {position};
+        const unsigned int end {position + m_composition_selected_measure->time_signature.measure_steps()};
+
+        for (auto& [_, notes] : m_composition.voices) {
+            delete_notes(notes, begin, end);
+        }
+
+        m_composition_selected_measure = m_composition.measures.erase(m_composition_selected_measure);
+
+        m_composition_modified = true;
+    }
+
+    void Application::delete_notes(syn::Voice voice, unsigned int begin, unsigned int end) {
+        auto& notes {m_composition.voices.at(voice)};
+
+        notes.erase(std::remove_if(notes.begin(), notes.end(), [begin, end](const seq::Note& note) {
+            return note.position >= begin && note.position < end;
+        }), notes.end());
+
+        m_composition_modified = true;
+    }
+
+    void Application::delete_notes(std::vector<seq::Note>& notes, unsigned int begin, unsigned int end) {
+        notes.erase(std::remove_if(notes.begin(), notes.end(), [begin, end](const seq::Note& note) {
+            return note.position >= begin && note.position < end;
+        }), notes.end());
+
+        m_composition_modified = true;
+    }
+
+    void Application::shift_notes_left(std::vector<seq::Note>& notes, unsigned int begin, unsigned int end, unsigned int steps) {
+
+    }
+
+    void Application::shift_notes_right(std::vector<seq::Note>& notes, unsigned int begin, unsigned int end, unsigned int steps) {
+
     }
 
     float Application::note_height(const seq::Note& note) {

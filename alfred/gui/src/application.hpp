@@ -27,17 +27,26 @@ namespace application {
         void playback();
         void tools();
         void composition();
-        void composition_left(ImDrawList* list, ImVec2 origin);
-        void composition_measures(ImDrawList* list, ImVec2 origin);
-        void composition_measures_labels(ImDrawList* list, ImVec2 origin);
-        void composition_notes(ImDrawList* list, ImVec2 origin);
-        void composition_cursor(ImDrawList* list, ImVec2 origin);
+        void composition_left(ImDrawList* list, ImVec2 origin) const;
+        void composition_measures(ImDrawList* list, ImVec2 origin) const;
+        void composition_measures_labels(ImDrawList* list, ImVec2 origin) const;
+        void composition_notes(ImDrawList* list, ImVec2 origin) const;
+        void composition_cursor(ImDrawList* list, ImVec2 origin) const;
         void debug();
+
+        using MeasureIter = std::vector<seq::Measure>::const_iterator;
 
         void update_keyboard_input(unsigned int key, bool down);
         void add_metronome();
+        void add_metronome(MeasureIter begin, MeasureIter end);
         void remove_metronome();
+        void add_measures();
         void select_measure(ImVec2 position);
+        void delete_measure();
+        void delete_notes(syn::Voice voice, unsigned int begin, unsigned int end);
+        void delete_notes(std::vector<seq::Note>& notes, unsigned int begin, unsigned int end);
+        void shift_notes_left(std::vector<seq::Note>& notes, unsigned int begin, unsigned int end, unsigned int steps);
+        void shift_notes_right(std::vector<seq::Note>& notes, unsigned int begin, unsigned int end, unsigned int steps);
 
         static float note_height(const seq::Note& note);
         static const char* measure_label(char* buffer, long number);
@@ -46,7 +55,7 @@ namespace application {
         unsigned int m_octave {syn::Octave3};
 
         ImVec2 m_composition_camera;
-        std::vector<seq::Measure>::const_iterator m_composition_selected_measure;
+        MeasureIter m_composition_selected_measure;
         seq::Composition m_composition;
 
         synthesizer::Synthesizer m_synthesizer;
@@ -59,6 +68,6 @@ namespace application {
         } m_color_scheme {ColorSchemeClassic};
 
         bool m_metronome {};
-        bool m_modified {};
+        bool m_composition_modified {};
     };
 }
