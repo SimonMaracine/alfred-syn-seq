@@ -22,9 +22,9 @@ int main(int argc, char** argv) {
     set_property(SDL_PROP_APP_METADATA_TYPE_STRING, "application");
 
     try {
-        Application application;
+        application::Application application;
         application.run();
-    } catch (const VideoError& e) {
+    } catch (const video::VideoError& e) {
         std::cerr << "Fatal video error: " << e.what() << '\n';
         show_error_message_box("Alfred Video Error", "A critical video error occurred. Check the logs.");
         return 1;
