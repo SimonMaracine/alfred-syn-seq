@@ -29,6 +29,7 @@ namespace application {
         void composition();
         void composition_left(ImDrawList* list, ImVec2 origin);
         void composition_measures(ImDrawList* list, ImVec2 origin);
+        void composition_measures_labels(ImDrawList* list, ImVec2 origin);
         void composition_notes(ImDrawList* list, ImVec2 origin);
         void composition_cursor(ImDrawList* list, ImVec2 origin);
         void debug();
@@ -39,6 +40,7 @@ namespace application {
         void select_measure(ImVec2 position);
 
         static float note_height(const seq::Note& note);
+        static const char* measure_label(char* buffer, long number);
 
         syn::Voice m_voice {syn::VoiceBell};
         unsigned int m_octave {syn::Octave3};

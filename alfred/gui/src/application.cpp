@@ -1,6 +1,9 @@
 #include "application.hpp"
 
 #include <algorithm>
+#include <ranges>
+#include <charconv>
+#include <cstring>
 
 #include <SDL3/SDL.h>
 
@@ -313,6 +316,7 @@ namespace application {
             composition_measures(list, origin);
             composition_notes(list, origin);
             composition_cursor(list, origin);
+            composition_measures_labels(list, origin);
             composition_left(list, origin);
 
             (void) ImGui::InvisibleButton("Canvas", space_available, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight);
@@ -424,6 +428,28 @@ namespace application {
                 origin + ImVec2(position_x, COMPOSITION_HEIGHT) - m_composition_camera,
                 COLOR_FOREGROUND
             );
+        }
+    }
+
+    void Application::composition_measures_labels(ImDrawList* list, ImVec2 origin) {
+        static constexpr ImVec2 TEXT_OFFSET {5.0f, 5.0f};
+
+        const ImGuiStyle& style {ImGui::GetStyle()};
+
+        const ImColor COLOR_FOREGROUND {style.Colors[ImGuiCol_Text]};
+
+        float position_x {COMPOSITION_LEFT};
+
+        for (const auto& [i, measure] : m_composition.measures | std::views::enumerate) {
+            char buffer[32] {};
+
+            list->AddText(
+                origin + ImVec2(position_x, 0.0f) + TEXT_OFFSET - ImVec2(m_composition_camera.x, 0.0f),
+                COLOR_FOREGROUND,
+                measure_label(buffer, i + 1)
+            );
+
+            position_x += float(measure.time_signature.measure_steps()) * STEP_SIZE.x;
         }
     }
 
@@ -539,5 +565,17 @@ namespace application {
         const syn::Id id {syn::Note::get_id(note.name, note.octave)};
 
         return COMPOSITION_HEIGHT - STEP_SIZE.y - float(id) * STEP_SIZE.y;
+    }
+
+    const char* Application::measure_label(char* buffer, long number) {
+        std::to_chars_result result {std::to_chars(buffer, buffer + sizeof(buffer), number)};
+
+        if (result.ec != std::errc()) {
+            std::strcpy(buffer, "?");
+        } else {
+            *result.ptr = '\0';
+        }
+
+        return buffer;
     }
 }
