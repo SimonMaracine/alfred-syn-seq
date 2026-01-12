@@ -1,10 +1,17 @@
 #pragma once
 
 namespace ui {
-    enum ColorScheme {
+    inline constexpr float FONT_SIZE {13.0f};
+
+    enum ColorScheme : unsigned int {
         ColorSchemeDark,
         ColorSchemeLight,
         ColorSchemeClassic
+    };
+
+    enum Scale : unsigned int {
+        Scale1X,
+        Scale2X
     };
 
     enum Beats : unsigned int {
@@ -38,4 +45,7 @@ namespace ui {
     };
 
     using Tempo = unsigned int;
+
+    float rem(float size);
+    void set_scale(int scale);
 }

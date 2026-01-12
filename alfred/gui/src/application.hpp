@@ -76,6 +76,7 @@ namespace application {
         ui::Tempo m_tempo {seq::Tempo()};
         ui::TimeSignature m_time_signature;
         ui::ColorScheme m_color_scheme {ui::ColorSchemeClassic};
+        ui::Scale m_scale {ui::Scale1X};
 
         bool m_metronome {};
         bool m_composition_modified {};

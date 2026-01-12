@@ -9,7 +9,7 @@
 #include <SDL3/SDL.h>
 
 namespace application {
-    static constexpr ImVec2 STEP_SIZE {4.0f, 20.0f};
+    static constexpr ImVec2 STEP_SIZE {4.0f, 20.0f};  // FIXME use rem
     static constexpr float COMPOSITION_LEFT {40.0f};
     static constexpr float COMPOSITION_HEIGHT {STEP_SIZE.y * 12.0f * float(syn::NOTE_OCTAVES) + STEP_SIZE.y * float(syn::NOTE_EXTRA)};
     static constexpr float COMPOSITION_SCROLL_SPEED {25.0f};
@@ -20,6 +20,8 @@ namespace application {
 
         ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
         ImGui::StyleColorsClassic();
+
+        ui::set_scale(1);
 
         m_player = seq::Player(m_synthesizer, m_composition);
 
@@ -172,6 +174,31 @@ namespace application {
 
             ImGui::EndMenu();
         }
+
+        if (ImGui::BeginMenu("Scale")) {
+            constexpr const char* SCALE[] { "1X", "2X" };
+
+            if (ImGui::BeginCombo("##", SCALE[m_scale])) {
+                for (std::size_t i {}; i < std::size(SCALE); i++) {
+                    if (ImGui::Selectable(SCALE[i], m_scale == i)) {
+                        m_scale = ui::Scale(i);
+
+                        switch (m_scale) {
+                            case ui::Scale1X:
+                                ui::set_scale(1);  // FIXME
+                                break;
+                            case ui::Scale2X:
+                                ui::set_scale(2);
+                                break;
+                        }
+                    }
+                }
+
+                ImGui::EndCombo();
+            }
+
+            ImGui::EndMenu();
+        }
     }
 
     void Application::keyboard() {
@@ -208,7 +235,7 @@ namespace application {
     void Application::keyboard_key(ImDrawList* list, ImVec2 origin, char key, float x, float y, int scancode) {
         static constexpr float CELL {34.0f};
         static constexpr float PADDING {2.0f};
-        static constexpr float TEXT_OFFSET {(2.0f * CELL - 13.0f) / 2.0f};
+        static constexpr float TEXT_OFFSET {(2.0f * CELL - ui::FONT_SIZE) / 2.0f};
         static constexpr float WIDTH {2.0f * 10.0f * CELL};
         static constexpr float HEIGHT {2.0f * 2.0f * CELL};
 
@@ -370,7 +397,7 @@ namespace application {
 
     void Application::composition_left(ImDrawList* list, ImVec2 origin) const {
         static constexpr ImVec2 CELL {COMPOSITION_LEFT, STEP_SIZE.y};
-        static constexpr ImVec2 TEXT_OFFSET {(CELL.x - 13.0f) / 2.0f, (CELL.y - 13.0f) / 2.0f};
+        static constexpr ImVec2 TEXT_OFFSET {(CELL.x - ui::FONT_SIZE) / 2.0f, (CELL.y - ui::FONT_SIZE) / 2.0f};
 
         const ImGuiStyle& style {ImGui::GetStyle()};
 
@@ -523,7 +550,7 @@ namespace application {
     bool Application::tempo() {
         const unsigned int one {1};
 
-        ImGui::SetNextItemWidth(80.0f);  // FIXME use rem units
+        ImGui::SetNextItemWidth(ui::rem(6.0f));
 
         bool result {};
 
@@ -832,6 +859,7 @@ namespace application {
         }
 
         switch (measure.time_signature.value()) {
+            case seq::Whole: assert(false); break;
             case seq::Half: time_signature.value = ui::Value2; break;
             case seq::Quarter: time_signature.value = ui::Value4; break;
             case seq::Eighth: time_signature.value = ui::Value8; break;
