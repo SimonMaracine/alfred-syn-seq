@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <ranges>
 #include <charconv>
+#include <iterator>
 #include <cstring>
 
 #include <SDL3/SDL.h>
@@ -11,6 +12,7 @@ namespace application {
     static constexpr ImVec2 STEP_SIZE {4.0f, 20.0f};
     static constexpr float COMPOSITION_LEFT {40.0f};
     static constexpr float COMPOSITION_HEIGHT {STEP_SIZE.y * 12.0f * float(syn::NOTE_OCTAVES) + STEP_SIZE.y * float(syn::NOTE_EXTRA)};
+    static constexpr float COMPOSITION_SCROLL_SPEED {25.0f};
     static constexpr int ADD_MEASURES {8};
 
     void Application::on_start() {
@@ -144,21 +146,21 @@ namespace application {
 
     void Application::main_menu_bar_options() {
         if (ImGui::BeginMenu("Color Scheme")) {
-            const char* SCHEMES[] { "Dark", "Light", "Classic" };
+            constexpr const char* SCHEME[] { "Dark", "Light", "Classic" };
 
-            if (ImGui::BeginCombo("##", SCHEMES[m_color_scheme])) {
-                for (std::size_t i {}; i < std::size(SCHEMES); i++) {
-                    if (ImGui::Selectable(SCHEMES[i], m_color_scheme == i)) {
-                        m_color_scheme = ColorScheme(i);
+            if (ImGui::BeginCombo("##", SCHEME[m_color_scheme])) {
+                for (std::size_t i {}; i < std::size(SCHEME); i++) {
+                    if (ImGui::Selectable(SCHEME[i], m_color_scheme == i)) {
+                        m_color_scheme = ui::ColorScheme(i);
 
                         switch (m_color_scheme) {
-                            case ColorSchemeDark:
+                            case ui::ColorSchemeDark:
                                 ImGui::StyleColorsDark();
                                 break;
-                            case ColorSchemeLight:
+                            case ui::ColorSchemeLight:
                                 ImGui::StyleColorsLight();
                                 break;
-                            case ColorSchemeClassic:
+                            case ui::ColorSchemeClassic:
                                 ImGui::StyleColorsClassic();
                                 break;
                         }
@@ -286,14 +288,32 @@ namespace application {
 
     void Application::tools() {
         if (ImGui::Begin("Tools")) {
-            if (ImGui::Button("Add Measures")) {
-                add_measures();
+            if (ImGui::Button("Append")) {
+                append_measures();
             }
 
             ImGui::SameLine();
 
-            if (ImGui::Button("Delete Measure")) {
+            if (ImGui::Button("Insert")) {
+                insert_measure();
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Clear")) {
+                clear_measure();
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Delete")) {
                 delete_measure();
+            }
+
+            ImGui::SameLine();
+
+            if (time_signature()) {
+                set_time_signature(*m_composition_selected_measure, m_time_signature);
             }
         }
 
@@ -316,9 +336,11 @@ namespace application {
 
             (void) ImGui::InvisibleButton("Canvas", space_available, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight);
 
-            if (ImGui::IsItemHovered() && ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
+            if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
                 m_composition_camera -= ImGui::GetIO().MouseDelta;
             }
+
+            m_composition_camera -= ImVec2(-COMPOSITION_SCROLL_SPEED * ImGui::GetIO().MouseWheelH, COMPOSITION_SCROLL_SPEED * ImGui::GetIO().MouseWheel);
 
             m_composition_camera.x = std::max(m_composition_camera.x, 0.0f);
             m_composition_camera.y = std::max(m_composition_camera.y, 0.0f);
@@ -488,6 +510,47 @@ namespace application {
         );
     }
 
+    bool Application::time_signature() {
+        constexpr const char* BEATS[] { "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16" };
+        constexpr const char* VALUE[] { "2", "4", "8", "16" };
+
+        const auto flags {ImGuiComboFlags_HeightSmall | ImGuiComboFlags_WidthFitPreview | ImGuiComboFlags_NoArrowButton};
+
+        bool result {};
+
+        ImGui::BeginGroup();
+
+        if (ImGui::BeginCombo("Beats", BEATS[m_time_signature.beats], flags)) {
+            for (std::size_t i {}; i < std::size(BEATS); i++) {
+                const bool selected {i == m_time_signature.beats};
+
+                if (ImGui::Selectable(BEATS[i], selected)) {
+                    m_time_signature.beats = ui::Beats(i);
+                    result = true;
+                }
+            }
+
+            ImGui::EndCombo();
+        }
+
+        if (ImGui::BeginCombo("Value", VALUE[m_time_signature.value], flags)) {
+            for (std::size_t i {}; i < std::size(VALUE); i++) {
+                const bool selected {i == m_time_signature.value};
+
+                if (ImGui::Selectable(VALUE[i], selected)) {
+                    m_time_signature.value = ui::Value(i);
+                    result = true;
+                }
+            }
+
+            ImGui::EndCombo();
+        }
+
+        ImGui::EndGroup();
+
+        return result;
+    }
+
     void Application::debug() {
 #ifndef ALFRED_DISTRIBUTION
         if (ImGui::Begin("Debug")) {
@@ -531,7 +594,7 @@ namespace application {
         add_metronome(m_composition.measures.begin(), m_composition.measures.end());
     }
 
-    void Application::add_metronome(MeasureIterMut begin, MeasureIterMut end) {
+    void Application::add_metronome(MeasureIter begin, MeasureIter end) {
         for (auto measure {begin}; measure != end; measure++) {
             for (unsigned int i {}; i < measure->time_signature.measure_steps(); i += seq::STEP / measure->time_signature.value()) {
                 const syn::Name name {i == 0 ? syn::C : syn::D};
@@ -550,20 +613,36 @@ namespace application {
         m_composition_modified = true;
     }
 
-    void Application::add_measures() {
-        if (m_composition.measures.empty()) {
-            for (int i {}; i < ADD_MEASURES; i++) {
-                m_composition.measures.emplace_back();
-                m_composition_selected_measure = m_composition.measures.end();
-            }
-        } else {
-            const seq::Tempo tempo {m_composition.measures.back().tempo};
-            const seq::TimeSignature time_signature {m_composition.measures.back().time_signature};
+    void Application::select_measure(ImVec2 position) {
+        float position_x {};
 
-            for (int i {}; i < ADD_MEASURES; i++) {
-                m_composition.measures.emplace_back(tempo, time_signature);
-                m_composition_selected_measure = m_composition.measures.end();
+        for (auto measure {m_composition.measures.begin()}; measure != m_composition.measures.end(); measure++) {
+            const float right {float(measure->time_signature.measure_steps()) * STEP_SIZE.x};
+
+            if (position.x > position_x && position.x < position_x + right) {
+                if (m_composition_selected_measure == measure) {
+                    m_composition_selected_measure = m_composition.measures.end();
+                } else {
+                    m_composition_selected_measure = measure;
+                    set_time_signature(m_time_signature, *measure);
+                }
+
+                break;
             }
+
+            position_x += right;
+        }
+    }
+
+    void Application::append_measures() {
+        const auto [tempo, time_signature] {measure_type(
+            !m_composition.measures.empty() ? std::prev(m_composition.measures.end()) : m_composition.measures.end(),
+            m_composition.measures
+        )};
+
+        for (int i {}; i < ADD_MEASURES; i++) {
+            m_composition.measures.emplace_back(tempo, time_signature);
+            m_composition_selected_measure = m_composition.measures.end();
         }
 
         if (m_metronome) {
@@ -576,24 +655,38 @@ namespace application {
         m_composition_modified = true;
     }
 
-    void Application::select_measure(ImVec2 position) {
-        float position_x {};
-
-        for (auto measure {m_composition.measures.begin()}; measure != m_composition.measures.end(); measure++) {
-            const float right {float(measure->time_signature.measure_steps()) * STEP_SIZE.x};
-
-            if (position.x > position_x && position.x < position_x + right) {
-                if (m_composition_selected_measure == measure) {
-                    m_composition_selected_measure = m_composition.measures.end();
-                } else {
-                    m_composition_selected_measure = measure;
-                }
-
-                break;
-            }
-
-            position_x += right;
+    void Application::insert_measure() {
+        if (m_composition_selected_measure == m_composition.measures.end()) {
+            return;
         }
+
+        const auto [tempo, time_signature] {measure_type(
+            m_composition_selected_measure,
+            m_composition.measures
+        )};
+
+        m_composition_selected_measure = m_composition.measures.emplace(m_composition_selected_measure, tempo, time_signature);
+
+        if (m_metronome) {
+            add_metronome(m_composition_selected_measure, std::next(m_composition_selected_measure));
+        }
+
+        m_composition_modified = true;
+    }
+
+    void Application::clear_measure() {
+        if (m_composition_selected_measure == m_composition.measures.end()) {
+            return;
+        }
+
+        m_composition_selected_measure->voices.clear();
+
+        // Metronome should stay unchanged
+        if (m_metronome) {
+            add_metronome(m_composition_selected_measure, std::next(m_composition_selected_measure));
+        }
+
+        m_composition_modified = true;
     }
 
     void Application::delete_measure() {
@@ -638,5 +731,76 @@ namespace application {
         }
 
         return buffer;
+    }
+
+    std::pair<seq::Tempo, seq::TimeSignature> Application::measure_type(MeasureIter iter, const std::vector<seq::Measure>& measures) {
+        seq::Tempo tempo;
+        seq::TimeSignature time_signature;
+
+        if (iter != measures.end()) {
+            tempo = iter->tempo;
+            time_signature = iter->time_signature;
+        }
+
+        return { tempo, time_signature };
+    }
+
+    void Application::set_time_signature(seq::Measure& measure, const ui::TimeSignature& time_signature) {
+        seq::Beats beats {};
+        seq::Value value {};
+
+        switch (time_signature.beats) {
+            case ui::Beats2: beats = 2; break;
+            case ui::Beats3: beats = 3; break;
+            case ui::Beats4: beats = 4; break;
+            case ui::Beats5: beats = 5; break;
+            case ui::Beats6: beats = 6; break;
+            case ui::Beats7: beats = 7; break;
+            case ui::Beats8: beats = 8; break;
+            case ui::Beats9: beats = 9; break;
+            case ui::Beats10: beats = 10; break;
+            case ui::Beats11: beats = 11; break;
+            case ui::Beats12: beats = 12; break;
+            case ui::Beats13: beats = 13; break;
+            case ui::Beats14: beats = 14; break;
+            case ui::Beats15: beats = 15; break;
+            case ui::Beats16: beats = 16; break;
+        }
+
+        switch (time_signature.value) {
+            case ui::Value2: value = seq::Half; break;
+            case ui::Value4: value = seq::Quarter; break;
+            case ui::Value8: value = seq::Eighth; break;
+            case ui::Value16: value = seq::Sixteenth; break;
+        }
+
+        measure.time_signature = seq::TimeSignature(beats, value);
+    }
+
+    void Application::set_time_signature(ui::TimeSignature& time_signature, const seq::Measure& measure) {
+        switch (measure.time_signature.beats()) {
+            case 2: time_signature.beats = ui::Beats2; break;
+            case 3: time_signature.beats = ui::Beats3; break;
+            case 4: time_signature.beats = ui::Beats4; break;
+            case 5: time_signature.beats = ui::Beats5; break;
+            case 6: time_signature.beats = ui::Beats6; break;
+            case 7: time_signature.beats = ui::Beats7; break;
+            case 8: time_signature.beats = ui::Beats8; break;
+            case 9: time_signature.beats = ui::Beats9; break;
+            case 10: time_signature.beats = ui::Beats10; break;
+            case 11: time_signature.beats = ui::Beats11; break;
+            case 12: time_signature.beats = ui::Beats12; break;
+            case 13: time_signature.beats = ui::Beats13; break;
+            case 14: time_signature.beats = ui::Beats14; break;
+            case 15: time_signature.beats = ui::Beats15; break;
+            case 16: time_signature.beats = ui::Beats16; break;
+        }
+
+        switch (measure.time_signature.value()) {
+            case seq::Half: time_signature.value = ui::Value2; break;
+            case seq::Quarter: time_signature.value = ui::Value4; break;
+            case seq::Eighth: time_signature.value = ui::Value8; break;
+            case seq::Sixteenth: time_signature.value = ui::Value16; break;
+        }
     }
 }

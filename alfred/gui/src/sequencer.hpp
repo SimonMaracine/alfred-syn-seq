@@ -10,6 +10,8 @@
 #include <alfred/synthesizer.hpp>
 
 namespace seq {
+    using Beats = unsigned int;
+
     enum Value : unsigned int {
         Whole = 1,
         Half = 2,
@@ -38,10 +40,10 @@ namespace seq {
     class TimeSignature {
     public:
         constexpr TimeSignature() = default;
-        constexpr TimeSignature(unsigned int beats, Value value)
+        constexpr TimeSignature(Beats beats, Value value)
             : m_beats(beats), m_value(value) {}
 
-        constexpr unsigned int beats() const { return m_beats; }
+        constexpr Beats beats() const { return m_beats; }
         constexpr Value value() const { return m_value; }
 
         constexpr unsigned int measure_steps() const {
@@ -56,7 +58,7 @@ namespace seq {
             return 1.0 / (double(steps_per_minute(tempo)) / 60.0);
         }
     private:
-        unsigned int m_beats {4};
+        Beats m_beats {4};
         Value m_value {Quarter};
     };
 

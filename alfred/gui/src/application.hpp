@@ -1,10 +1,13 @@
 #pragma once
 
+#include <utility>
+
 #include <imgui.h>
 #include <alfred/synthesizer.hpp>
 
 #include "video.hpp"
 #include "sequencer.hpp"
+#include "ui.hpp"
 
 namespace application {
     class Application : public video::Video {
@@ -32,17 +35,19 @@ namespace application {
         void composition_measures_labels(ImDrawList* list, ImVec2 origin) const;
         void composition_notes(ImDrawList* list, ImVec2 origin) const;
         void composition_cursor(ImDrawList* list, ImVec2 origin) const;
+        bool time_signature();
         void debug();
 
-        using MeasureIter = std::vector<seq::Measure>::const_iterator;
-        using MeasureIterMut = std::vector<seq::Measure>::iterator;
+        using MeasureIter = std::vector<seq::Measure>::iterator;
 
         void update_keyboard_input(unsigned int key, bool down);
         void add_metronome();
-        void add_metronome(MeasureIterMut begin, MeasureIterMut end);
+        void add_metronome(MeasureIter begin, MeasureIter end);
         void remove_metronome();
-        void add_measures();
         void select_measure(ImVec2 position);
+        void append_measures();
+        void insert_measure();
+        void clear_measure();
         void delete_measure();
         void delete_notes(syn::Voice voice, unsigned int begin, unsigned int end);
         void delete_notes(std::vector<seq::Note>& notes, unsigned int begin, unsigned int end);
@@ -51,6 +56,9 @@ namespace application {
 
         static float note_height(const seq::Note& note);
         static const char* measure_label(char* buffer, long number);
+        static std::pair<seq::Tempo, seq::TimeSignature> measure_type(MeasureIter iter, const std::vector<seq::Measure>& measures);
+        static void set_time_signature(seq::Measure& measure, const ui::TimeSignature& time_signature);
+        static void set_time_signature(ui::TimeSignature& time_signature, const seq::Measure& measure);
 
         syn::Voice m_voice {syn::VoiceBell};
         unsigned int m_octave {syn::Octave3};
@@ -62,11 +70,8 @@ namespace application {
         synthesizer::Synthesizer m_synthesizer;
         seq::Player m_player;
 
-        enum ColorScheme {
-            ColorSchemeDark,
-            ColorSchemeLight,
-            ColorSchemeClassic
-        } m_color_scheme {ColorSchemeClassic};
+        ui::TimeSignature m_time_signature;
+        ui::ColorScheme m_color_scheme {ui::ColorSchemeClassic};
 
         bool m_metronome {};
         bool m_composition_modified {};
