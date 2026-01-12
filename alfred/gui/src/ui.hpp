@@ -36,4 +36,6 @@ namespace ui {
         Beats beats {Beats4};
         Value value {Value4};
     };
+
+    using Tempo = unsigned int;
 }

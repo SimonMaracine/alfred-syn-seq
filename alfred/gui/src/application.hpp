@@ -35,6 +35,7 @@ namespace application {
         void composition_measures_labels(ImDrawList* list, ImVec2 origin) const;
         void composition_notes(ImDrawList* list, ImVec2 origin) const;
         void composition_cursor(ImDrawList* list, ImVec2 origin) const;
+        bool tempo();
         bool time_signature();
         void debug();
 
@@ -57,6 +58,8 @@ namespace application {
         static float note_height(const seq::Note& note);
         static const char* measure_label(char* buffer, long number);
         static std::pair<seq::Tempo, seq::TimeSignature> measure_type(MeasureIter iter, const std::vector<seq::Measure>& measures);
+        static void set_tempo(seq::Measure& measure, const ui::Tempo& tempo);
+        static void set_tempo(ui::Tempo& tempo, const seq::Measure& measure);
         static void set_time_signature(seq::Measure& measure, const ui::TimeSignature& time_signature);
         static void set_time_signature(ui::TimeSignature& time_signature, const seq::Measure& measure);
 
@@ -70,6 +73,7 @@ namespace application {
         synthesizer::Synthesizer m_synthesizer;
         seq::Player m_player;
 
+        ui::Tempo m_tempo {seq::Tempo()};
         ui::TimeSignature m_time_signature;
         ui::ColorScheme m_color_scheme {ui::ColorSchemeClassic};
 

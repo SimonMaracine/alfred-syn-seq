@@ -313,7 +313,17 @@ namespace application {
             ImGui::SameLine();
 
             if (time_signature()) {
-                set_time_signature(*m_composition_selected_measure, m_time_signature);
+                if (m_composition_selected_measure != m_composition.measures.end()) {
+                    set_time_signature(*m_composition_selected_measure, m_time_signature);  // FIXME notes get invalidated
+                }
+            }
+
+            ImGui::SameLine();
+
+            if (tempo()) {
+                if (m_composition_selected_measure != m_composition.measures.end()) {
+                    set_tempo(*m_composition_selected_measure, m_tempo);
+                }
             }
         }
 
@@ -510,6 +520,21 @@ namespace application {
         );
     }
 
+    bool Application::tempo() {
+        const unsigned int one {1};
+
+        ImGui::SetNextItemWidth(80.0f);  // FIXME use rem units
+
+        bool result {};
+
+        if (ImGui::InputScalar("Tempo", ImGuiDataType_U32, &m_tempo, &one)) {
+            m_tempo = std::min(std::max(m_tempo, seq::Tempo::MIN), seq::Tempo::MAX);
+            result = true;
+        }
+
+        return result;
+    }
+
     bool Application::time_signature() {
         constexpr const char* BEATS[] { "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16" };
         constexpr const char* VALUE[] { "2", "4", "8", "16" };
@@ -624,6 +649,8 @@ namespace application {
                     m_composition_selected_measure = m_composition.measures.end();
                 } else {
                     m_composition_selected_measure = measure;
+
+                    set_tempo(m_tempo, *measure);
                     set_time_signature(m_time_signature, *measure);
                 }
 
@@ -743,6 +770,14 @@ namespace application {
         }
 
         return { tempo, time_signature };
+    }
+
+    void Application::set_tempo(seq::Measure& measure, const ui::Tempo& tempo) {
+        measure.tempo = tempo;
+    }
+
+    void Application::set_tempo(ui::Tempo& tempo, const seq::Measure& measure) {
+        tempo = measure.tempo;
     }
 
     void Application::set_time_signature(seq::Measure& measure, const ui::TimeSignature& time_signature) {
