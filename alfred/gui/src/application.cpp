@@ -13,7 +13,7 @@ namespace application {
     static constexpr float COMPOSITION_LEFT {40.0f / ui::FONT_SIZE};
     static constexpr float COMPOSITION_HEIGHT {STEP_SIZE.y * 12.0f * float(syn::NOTE_OCTAVES) + STEP_SIZE.y * float(syn::NOTE_EXTRA)};
     static constexpr float COMPOSITION_SCROLL_SPEED {26.0f / ui::FONT_SIZE};
-    static constexpr int ADD_MEASURES {8};
+    static constexpr int ADD_MEASURES {4};
 
     void Application::on_start() {
         m_synthesizer.resume();
@@ -154,7 +154,7 @@ namespace application {
         if (ImGui::BeginMenu("Color Scheme")) {
             constexpr const char* SCHEME[] { "Dark", "Light", "Classic" };
 
-            if (ImGui::BeginCombo("##", SCHEME[m_color_scheme])) {
+            if (ImGui::BeginCombo("##", SCHEME[m_color_scheme], ImGuiComboFlags_WidthFitPreview)) {
                 for (std::size_t i {}; i < std::size(SCHEME); i++) {
                     if (ImGui::Selectable(SCHEME[i], m_color_scheme == i)) {
                         m_color_scheme = ui::ColorScheme(i);
@@ -182,7 +182,7 @@ namespace application {
         if (ImGui::BeginMenu("Scale")) {
             constexpr const char* SCALE[] { "1X", "2X" };
 
-            if (ImGui::BeginCombo("##", SCALE[m_scale])) {
+            if (ImGui::BeginCombo("##", SCALE[m_scale], ImGuiComboFlags_WidthFitPreview)) {
                 for (std::size_t i {}; i < std::size(SCALE); i++) {
                     if (ImGui::Selectable(SCALE[i], m_scale == i)) {
                         m_scale = ui::Scale(i);
@@ -349,7 +349,11 @@ namespace application {
 
             if (time_signature()) {
                 if (m_composition_selected_measure != m_composition.measures.end()) {
-                    set_time_signature(*m_composition_selected_measure, m_time_signature);  // FIXME notes get invalidated
+                    if (m_composition_selected_measure->voices.empty()) {
+                        set_time_signature(*m_composition_selected_measure, m_time_signature);
+                    } else {
+                        set_time_signature(m_time_signature, *m_composition_selected_measure);
+                    }
                 }
             }
 
@@ -497,7 +501,7 @@ namespace application {
     }
 
     void Application::composition_measures_labels(ImDrawList* list, ImVec2 origin) const {
-        static constexpr ImVec2 TEXT_OFFSET {5.0f, 5.0f};
+        static constexpr ImVec2 TEXT_OFFSET {5.0f / ui::FONT_SIZE, 5.0f / ui::FONT_SIZE};
 
         const ImGuiStyle& style {ImGui::GetStyle()};
 
@@ -509,7 +513,7 @@ namespace application {
             char buffer[32] {};
 
             list->AddText(
-                origin + ImVec2(position_x, 0.0f) + TEXT_OFFSET - ImVec2(m_composition_camera.x, 0.0f),
+                origin + ImVec2(position_x, 0.0f) + ui::rem(TEXT_OFFSET) - ImVec2(m_composition_camera.x, 0.0f),
                 COLOR_FOREGROUND,
                 measure_label(buffer, i + 1)
             );
@@ -657,7 +661,7 @@ namespace application {
         add_metronome(m_composition.measures.begin(), m_composition.measures.end());
     }
 
-    void Application::add_metronome(MeasureIter begin, MeasureIter end) {
+    void Application::add_metronome(MeasureIter begin, MeasureIter end) {  // TODO handle metronome differently
         for (auto measure {begin}; measure != end; measure++) {
             for (unsigned int i {}; i < measure->time_signature.measure_steps(); i += seq::STEP / measure->time_signature.value()) {
                 const syn::Name name {i == 0 ? syn::C : syn::D};
