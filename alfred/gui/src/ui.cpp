@@ -4,8 +4,6 @@
 #include <cmath>
 #include <cstring>
 
-#include <imgui.h>
-
 namespace ui {
     static void set_font(int scale) {
         const float font_size {std::floor(FONT_SIZE * float(scale))};
@@ -17,7 +15,7 @@ namespace ui {
         ImFontConfig config;
         config.SizePixels = font_size;
 
-        const auto font {io.Fonts->AddFontDefault(&config)};
+        const auto font {io.Fonts->AddFontDefaultBitmap(&config)};
 
         if (!font) {
             throw std::runtime_error("Could not add font");
@@ -36,6 +34,10 @@ namespace ui {
 
     float rem(float size) {
         return ImGui::GetFontSize() * size;
+    }
+
+    ImVec2 rem(ImVec2 size) {
+        return ImVec2(ImGui::GetFontSize() * size.x, ImGui::GetFontSize() * size.y);
     }
 
     void set_scale(int scale) {

@@ -10,6 +10,8 @@ add_executable(alfred
     "src/main.cpp"
     "src/sequencer.cpp"
     "src/sequencer.hpp"
+    "src/task.cpp"
+    "src/task.hpp"
     "src/ui.cpp"
     "src/ui.hpp"
     "src/video.cpp"

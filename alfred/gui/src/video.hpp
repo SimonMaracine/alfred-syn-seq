@@ -16,6 +16,7 @@ namespace video {
         virtual void on_stop() {}
         virtual void on_update() {}
         virtual void on_imgui() {}
+        virtual void on_late_update() {}
         virtual void on_event(const SDL_Event&) {}
 
         void run();

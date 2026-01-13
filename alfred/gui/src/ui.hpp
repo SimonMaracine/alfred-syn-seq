@@ -1,5 +1,7 @@
 #pragma once
 
+#include <imgui.h>
+
 namespace ui {
     inline constexpr float FONT_SIZE {13.0f};
 
@@ -47,5 +49,6 @@ namespace ui {
     using Tempo = unsigned int;
 
     float rem(float size);
+    ImVec2 rem(ImVec2 size);
     void set_scale(int scale);
 }

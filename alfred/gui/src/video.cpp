@@ -74,6 +74,8 @@ namespace video {
                 m_imgui_accumulator_time = 0;
             }
 
+            on_late_update();
+
             unsigned long long current_time {};
 
             current_time = SDL_GetTicksNS();

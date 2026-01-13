@@ -8,6 +8,7 @@
 #include "video.hpp"
 #include "sequencer.hpp"
 #include "ui.hpp"
+#include "task.hpp"
 
 namespace application {
     class Application : public video::Video {
@@ -16,6 +17,7 @@ namespace application {
         void on_stop() override;
         void on_update() override;
         void on_imgui() override;
+        void on_late_update() override;
         void on_event(const SDL_Event& event) override;
     private:
         void main_menu_bar();
@@ -62,6 +64,8 @@ namespace application {
         static void set_tempo(ui::Tempo& tempo, const seq::Measure& measure);
         static void set_time_signature(seq::Measure& measure, const ui::TimeSignature& time_signature);
         static void set_time_signature(ui::TimeSignature& time_signature, const seq::Measure& measure);
+
+        task::TaskManager m_task_manager;
 
         syn::Voice m_voice {syn::VoiceBell};
         unsigned int m_octave {syn::Octave3};
