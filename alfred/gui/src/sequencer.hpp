@@ -20,8 +20,11 @@ namespace seq {
         Sixteenth = 16
     };
 
+    // A sixteenth divided by three is the step size
+    inline constexpr unsigned int DIV {3};
+
     // A step has variable length in seconds depending on the time signature and tempo
-    inline constexpr unsigned int STEP {Sixteenth * 3};
+    inline constexpr unsigned int STEP {Sixteenth * DIV};
 
     class Tempo {
     public:

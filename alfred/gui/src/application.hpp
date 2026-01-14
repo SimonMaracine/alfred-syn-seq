@@ -46,6 +46,13 @@ namespace application {
 
         using MeasureIter = std::vector<seq::Measure>::iterator;
 
+        struct Note {
+            syn::Name name {};
+            syn::Octave octave {};
+            MeasureIter measure;
+            unsigned int position {};
+        };
+
         void update_keyboard_input(unsigned int key, bool down);
         void add_metronome();
         void add_metronome(MeasureIter begin, MeasureIter end);
@@ -58,10 +65,14 @@ namespace application {
         void delete_measure();
         void set_measure_tempo();
         void set_measure_time_signature();
+        bool choose_note(ImVec2 position, Note& note);
+        void select_note(ImVec2 position);
         void delete_notes(syn::Voice voice, unsigned int begin, unsigned int end);
         void delete_notes(std::vector<seq::Note>& notes, unsigned int begin, unsigned int end);
         void shift_notes_left(std::vector<seq::Note>& notes, unsigned int begin, unsigned int end, unsigned int steps);
         void shift_notes_right(std::vector<seq::Note>& notes, unsigned int begin, unsigned int end, unsigned int steps);
+
+        ImVec2 composition_mouse_position(ImVec2 origin) const;
 
         static float note_height(const seq::Note& note);
         static const char* measure_label(char* buffer, long number);
@@ -71,6 +82,7 @@ namespace application {
         static void set_time_signature(seq::Measure& measure, const ui::TimeSignature& time_signature);
         static void set_time_signature(ui::TimeSignature& time_signature, const seq::Measure& measure);
         static bool empty_except_metronome(const seq::Measure& measure);
+        static seq::Value get_value(ui::Value value);
 
         task::TaskManager m_task_manager;
 

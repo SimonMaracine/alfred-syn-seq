@@ -463,19 +463,49 @@ namespace application {
                 m_composition_camera -= ImGui::GetIO().MouseDelta;
             }
 
-            m_composition_camera -= ImVec2(
-                -ui::rem(COMPOSITION_SCROLL_SPEED) * ImGui::GetIO().MouseWheelH,
-                ui::rem(COMPOSITION_SCROLL_SPEED) * ImGui::GetIO().MouseWheel
-            );
+            if (ImGui::IsItemHovered()) {
+                if (ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+                    m_composition_camera -= ImVec2(
+                        ui::rem(COMPOSITION_SCROLL_SPEED * 2.0f) * ImGui::GetIO().MouseWheel,
+                        -ui::rem(COMPOSITION_SCROLL_SPEED) * ImGui::GetIO().MouseWheelH
+                    );
+                } else {
+                    m_composition_camera -= ImVec2(
+                        -ui::rem(COMPOSITION_SCROLL_SPEED * 2.0f) * ImGui::GetIO().MouseWheelH,
+                        ui::rem(COMPOSITION_SCROLL_SPEED) * ImGui::GetIO().MouseWheel
+                    );
+                }
+            }
 
             m_composition_camera.x = std::max(m_composition_camera.x, 0.0f);
             m_composition_camera.y = std::max(m_composition_camera.y, 0.0f);
             m_composition_camera.y = std::min(m_composition_camera.y, ui::rem(COMPOSITION_HEIGHT) - space_available.y);
 
             if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-                const ImVec2 position {ImGui::GetIO().MousePos - origin - ImVec2(ui::rem(COMPOSITION_LEFT), 0.0f) + m_composition_camera};
+                switch (m_ui.tool) {
+                    case ui::ToolMeasure:
+                        select_measure(composition_mouse_position(origin));
+                        break;
+                    case ui::ToolNote: {
+                        Note note;
 
-                select_measure(position);
+                        if (choose_note(composition_mouse_position(origin), note)) {
+                            std::vector<seq::Note>::iterator n {note.measure->voices[m_voice].end()};
+
+                            for (n = note.measure->voices[m_voice].begin(); n != note.measure->voices[m_voice].end(); n++) {
+                                if (n->position >= note.position) {
+                                    break;
+                                }
+                            }
+
+                            note.measure->voices[m_voice].emplace(n, note.name, note.octave, get_value(ui::Value(m_ui.value)), note.position);
+                        }
+
+                        break;
+                    }
+                    case ui::ToolRecord:
+                        break;
+                }
             }
         }
 
@@ -760,7 +790,7 @@ namespace application {
         for (auto measure {m_composition.measures.begin()}; measure != m_composition.measures.end(); measure++) {
             const float right {float(measure->time_signature.measure_steps()) * ui::rem(STEP_SIZE.x)};
 
-            if (position.x > position_x && position.x < position_x + right) {
+            if (position.x >= position_x && position.x < position_x + right) {
                 if (m_composition_selected_measure == measure) {
                     m_composition_selected_measure = m_composition.measures.end();
                 } else {
@@ -869,6 +899,98 @@ namespace application {
         m_composition_modified = true;
     }
 
+    bool Application::choose_note(ImVec2 position, Note& note) {
+        static constexpr std::pair<syn::Name, syn::Octave> NOTES[] {
+            { syn::C, syn::Octave6 },
+
+            { syn::B, syn::Octave5 },
+            { syn::As, syn::Octave5 },
+            { syn::A, syn::Octave5 },
+            { syn::Gs, syn::Octave5 },
+            { syn::G, syn::Octave5 },
+            { syn::Fs, syn::Octave5 },
+            { syn::F, syn::Octave5 },
+            { syn::E, syn::Octave5 },
+            { syn::Ds, syn::Octave5 },
+            { syn::D, syn::Octave5 },
+            { syn::Cs, syn::Octave5 },
+            { syn::C, syn::Octave5 },
+
+            { syn::B, syn::Octave4 },
+            { syn::As, syn::Octave4 },
+            { syn::A, syn::Octave4 },
+            { syn::Gs, syn::Octave4 },
+            { syn::G, syn::Octave4 },
+            { syn::Fs, syn::Octave4 },
+            { syn::F, syn::Octave4 },
+            { syn::E, syn::Octave4 },
+            { syn::Ds, syn::Octave4 },
+            { syn::D, syn::Octave4 },
+            { syn::Cs, syn::Octave4 },
+            { syn::C, syn::Octave4 },
+
+            { syn::B, syn::Octave3 },
+            { syn::As, syn::Octave3 },
+            { syn::A, syn::Octave3 },
+            { syn::Gs, syn::Octave3 },
+            { syn::G, syn::Octave3 },
+            { syn::Fs, syn::Octave3 },
+            { syn::F, syn::Octave3 },
+            { syn::E, syn::Octave3 },
+            { syn::Ds, syn::Octave3 },
+            { syn::D, syn::Octave3 },
+            { syn::Cs, syn::Octave3 },
+            { syn::C, syn::Octave3 },
+
+            { syn::B, syn::Octave2 },
+            { syn::As, syn::Octave2 },
+            { syn::A, syn::Octave2 },
+            { syn::Gs, syn::Octave2 },
+            { syn::G, syn::Octave2 },
+            { syn::Fs, syn::Octave2 },
+            { syn::F, syn::Octave2 },
+            { syn::E, syn::Octave2 },
+            { syn::Ds, syn::Octave2 },
+            { syn::D, syn::Octave2 },
+            { syn::Cs, syn::Octave2 },
+            { syn::C, syn::Octave2 },
+
+            { syn::B, syn::Octave1 },
+            { syn::As, syn::Octave1 },
+            { syn::A, syn::Octave1 },
+        };
+
+        {
+            const int index {int(position.y / ui::rem(STEP_SIZE.y))};
+
+            note.name = NOTES[index].first;
+            note.octave = NOTES[index].second;
+        }
+
+        float position_x {};
+
+        for (auto measure {m_composition.measures.begin()}; measure != m_composition.measures.end(); measure++) {
+            const float right {float(measure->time_signature.measure_steps()) * ui::rem(STEP_SIZE.x)};
+
+            if (position.x >= position_x && position.x < position_x + right) {
+                const float offset {position.x - position_x};
+
+                note.measure = measure;
+                note.position = seq::DIV * static_cast<unsigned int>(offset / (float(seq::DIV) * ui::rem(STEP_SIZE.x)));
+
+                return true;
+            }
+
+            position_x += right;
+        }
+
+        return false;
+    }
+
+    void Application::select_note(ImVec2 position) {
+
+    }
+
     void Application::delete_notes(syn::Voice voice, unsigned int begin, unsigned int end) {
 
     }
@@ -883,6 +1005,10 @@ namespace application {
 
     void Application::shift_notes_right(std::vector<seq::Note>& notes, unsigned int begin, unsigned int end, unsigned int steps) {
 
+    }
+
+    ImVec2 Application::composition_mouse_position(ImVec2 origin) const {
+        return ImGui::GetIO().MousePos - origin - ImVec2(ui::rem(COMPOSITION_LEFT), 0.0f) + m_composition_camera;
     }
 
     float Application::note_height(const seq::Note& note) {
@@ -985,5 +1111,22 @@ namespace application {
 
     bool Application::empty_except_metronome(const seq::Measure& measure) {
         return measure.voices.empty() || measure.voices.size() == 1 && measure.voices.count(syn::VoiceMetronome) == 1;
+    }
+
+    seq::Value Application::get_value(ui::Value value) {
+        switch (value) {
+            case ui::ValueWhole:
+                return seq::Whole;
+            case ui::ValueHalf:
+                return seq::Half;
+            case ui::ValueQuarter:
+                return seq::Quarter;
+            case ui::ValueEighth:
+                return seq::Eighth;
+            case ui::ValueSixteenth:
+                return seq::Sixteenth;
+        }
+
+        std::unreachable();
     }
 }
