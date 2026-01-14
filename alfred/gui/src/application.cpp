@@ -348,21 +348,13 @@ namespace application {
             ImGui::SameLine();
 
             if (time_signature()) {
-                if (m_composition_selected_measure != m_composition.measures.end()) {
-                    if (m_composition_selected_measure->voices.empty()) {
-                        set_time_signature(*m_composition_selected_measure, m_time_signature);
-                    } else {
-                        set_time_signature(m_time_signature, *m_composition_selected_measure);
-                    }
-                }
+                set_measure_time_signature();
             }
 
             ImGui::SameLine();
 
             if (tempo()) {
-                if (m_composition_selected_measure != m_composition.measures.end()) {
-                    set_tempo(*m_composition_selected_measure, m_tempo);
-                }
+                set_measure_tempo();
             }
         }
 
@@ -661,7 +653,7 @@ namespace application {
         add_metronome(m_composition.measures.begin(), m_composition.measures.end());
     }
 
-    void Application::add_metronome(MeasureIter begin, MeasureIter end) {  // TODO handle metronome differently
+    void Application::add_metronome(MeasureIter begin, MeasureIter end) {
         for (auto measure {begin}; measure != end; measure++) {
             for (unsigned int i {}; i < measure->time_signature.measure_steps(); i += seq::STEP / measure->time_signature.value()) {
                 const syn::Name name {i == 0 ? syn::C : syn::D};
@@ -673,8 +665,12 @@ namespace application {
     }
 
     void Application::remove_metronome() {
-        for (seq::Measure& measure : m_composition.measures) {
-            measure.voices.erase(syn::VoiceMetronome);
+        remove_metronome(m_composition.measures.begin(), m_composition.measures.end());
+    }
+
+    void Application::remove_metronome(MeasureIter begin, MeasureIter end) {
+        for (auto measure {begin}; measure != end; measure++) {
+            measure->voices.erase(syn::VoiceMetronome);
         }
 
         m_composition_modified = true;
@@ -748,12 +744,9 @@ namespace application {
             return;
         }
 
-        m_composition_selected_measure->voices.clear();
-
-        // Metronome should stay unchanged
-        if (m_metronome) {
-            add_metronome(m_composition_selected_measure, std::next(m_composition_selected_measure));
-        }
+        std::erase_if(m_composition_selected_measure->voices, [](const auto& voice) {
+            return voice.first != syn::VoiceMetronome;
+        });
 
         m_composition_modified = true;
     }
@@ -764,6 +757,36 @@ namespace application {
         }
 
         m_composition_selected_measure = m_composition.measures.erase(m_composition_selected_measure);
+
+        m_composition_modified = true;
+    }
+
+    void Application::set_measure_tempo() {
+        if (m_composition_selected_measure == m_composition.measures.end()) {
+            return;
+        }
+
+        set_tempo(*m_composition_selected_measure, m_tempo);
+
+        m_composition_modified = true;
+    }
+
+    void Application::set_measure_time_signature() {
+        if (m_composition_selected_measure == m_composition.measures.end()) {
+            return;
+        }
+
+        if (empty_except_metronome(*m_composition_selected_measure)) {
+            set_time_signature(*m_composition_selected_measure, m_time_signature);
+
+            if (m_metronome) {
+                remove_metronome(m_composition_selected_measure, std::next(m_composition_selected_measure));
+                add_metronome(m_composition_selected_measure, std::next(m_composition_selected_measure));
+            }
+        } else {
+            // Reset back
+            set_time_signature(m_time_signature, *m_composition_selected_measure);
+        }
 
         m_composition_modified = true;
     }
@@ -880,5 +903,9 @@ namespace application {
             case seq::Eighth: time_signature.value = ui::Value8; break;
             case seq::Sixteenth: time_signature.value = ui::Value16; break;
         }
+    }
+
+    bool Application::empty_except_metronome(const seq::Measure& measure) {
+        return measure.voices.empty() || measure.voices.size() == 1 && measure.voices.count(syn::VoiceMetronome) == 1;
     }
 }

@@ -10,6 +10,11 @@ namespace audio {
         Audio();
         virtual ~Audio();
 
+        Audio(const Audio&) = delete;
+        Audio& operator=(const Audio&) = delete;
+        Audio(Audio&&) = delete;
+        Audio& operator=(Audio&&) = delete;
+
         void resume() const;
         void lock() const;
         void unlock() const;

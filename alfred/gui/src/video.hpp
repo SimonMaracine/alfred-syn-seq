@@ -12,6 +12,11 @@ namespace video {
         Video();
         virtual ~Video();
 
+        Video(const Video&) = delete;
+        Video& operator=(const Video&) = delete;
+        Video(Video&&) = delete;
+        Video& operator=(Video&&) = delete;
+
         virtual void on_start() {}
         virtual void on_stop() {}
         virtual void on_update() {}

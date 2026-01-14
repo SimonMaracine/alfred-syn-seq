@@ -11,7 +11,7 @@
 #include "task.hpp"
 
 namespace application {
-    class Application : public video::Video {
+    class Application : public video::Video {  // FIXME pure virtual method call sometimes
     public:
         void on_start() override;
         void on_stop() override;
@@ -47,11 +47,14 @@ namespace application {
         void add_metronome();
         void add_metronome(MeasureIter begin, MeasureIter end);
         void remove_metronome();
+        void remove_metronome(MeasureIter begin, MeasureIter end);
         void select_measure(ImVec2 position);
         void append_measures();
         void insert_measure();
         void clear_measure();
         void delete_measure();
+        void set_measure_tempo();
+        void set_measure_time_signature();
         void delete_notes(syn::Voice voice, unsigned int begin, unsigned int end);
         void delete_notes(std::vector<seq::Note>& notes, unsigned int begin, unsigned int end);
         void shift_notes_left(std::vector<seq::Note>& notes, unsigned int begin, unsigned int end, unsigned int steps);
@@ -64,6 +67,7 @@ namespace application {
         static void set_tempo(ui::Tempo& tempo, const seq::Measure& measure);
         static void set_time_signature(seq::Measure& measure, const ui::TimeSignature& time_signature);
         static void set_time_signature(ui::TimeSignature& time_signature, const seq::Measure& measure);
+        static bool empty_except_metronome(const seq::Measure& measure);
 
         task::TaskManager m_task_manager;
 

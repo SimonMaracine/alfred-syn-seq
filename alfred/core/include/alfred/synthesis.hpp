@@ -5,7 +5,13 @@
 
 namespace syn {
     struct Envelope {
+        Envelope() = default;
         virtual ~Envelope() = default;
+
+        Envelope(const Envelope&) = default;
+        Envelope& operator=(const Envelope&) = default;
+        Envelope(Envelope&&) = default;
+        Envelope& operator=(Envelope&&) = default;
 
         virtual double get_amplitude(double time, double time_note_on, double time_note_off) const = 0;
         virtual bool is_done(double time, double time_note_on, double time_note_off) const = 0;
@@ -100,7 +106,13 @@ namespace syn {
     };
 
     struct Instrument {
+        Instrument() = default;
         virtual ~Instrument() = default;
+
+        Instrument(const Instrument&) = default;
+        Instrument& operator=(const Instrument&) = default;
+        Instrument(Instrument&&) = default;
+        Instrument& operator=(Instrument&&) = default;
 
         virtual const Envelope& get_envelope() const = 0;
         virtual double sound(double time, const Note& note) const = 0;
