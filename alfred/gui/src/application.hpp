@@ -29,8 +29,11 @@ namespace application {
         void keyboard();
         void keyboard_key(ImDrawList* list, ImVec2 origin, char key, float x, float y, int scancode);
         void instruments();
+        void volume();
         void playback();
         void tools();
+        void tools_measure();
+        void tools_note();
         void composition();
         void composition_left(ImDrawList* list, ImVec2 origin) const;
         void composition_measures(ImDrawList* list, ImVec2 origin) const;
@@ -81,10 +84,17 @@ namespace application {
         synthesizer::Synthesizer m_synthesizer;
         seq::Player m_player;
 
-        ui::Tempo m_tempo {seq::Tempo()};
-        ui::TimeSignature m_time_signature;
-        ui::ColorScheme m_color_scheme {ui::ColorSchemeClassic};
-        ui::Scale m_scale {ui::Scale1X};
+        struct {
+            int tool {ui::ToolMeasure};
+            int value {ui::ValueQuarter};
+            ui::Voice voice {ui::VoiceBell};
+            ui::Tempo tempo {seq::Tempo()};
+            ui::TimeSignature time_signature;
+            ui::ColorScheme color_scheme {ui::ColorSchemeClassic};
+            ui::Scale scale {ui::Scale1X};
+            int octave {};
+            double volume {};
+        } m_ui;
 
         bool m_metronome {};
         bool m_composition_modified {};

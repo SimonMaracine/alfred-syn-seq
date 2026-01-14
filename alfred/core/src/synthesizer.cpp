@@ -1,7 +1,6 @@
 #include "alfred/synthesizer.hpp"
 
 #include <algorithm>
-#include <cmath>
 
 namespace synthesizer {
     void Synthesizer::note_on(syn::Name name, syn::Octave octave, syn::Voice voice) {

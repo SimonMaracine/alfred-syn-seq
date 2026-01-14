@@ -13,6 +13,8 @@ namespace synthesizer {
         void silence();
         void set_volume(double volume);
         void update();
+
+        double get_volume() const { return m_volume; }
     private:
         std::vector<syn::Note>::iterator find_note(syn::Id id);
 
