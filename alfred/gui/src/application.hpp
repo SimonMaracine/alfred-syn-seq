@@ -30,7 +30,7 @@ namespace application {
         void keyboard();
         void keyboard_key(ImDrawList* list, ImVec2 origin, char key, float x, float y, int scancode);
         void instruments();
-        void volume();
+        void output();
         void playback();
         void tools();
         void tools_measure();
@@ -114,6 +114,7 @@ namespace application {
             ui::ColorScheme color_scheme {ui::ColorSchemeClassic};
             ui::Scale scale {ui::Scale1X};
             int octave {};
+            unsigned int device {};
             double volume {};
         } m_ui;
 

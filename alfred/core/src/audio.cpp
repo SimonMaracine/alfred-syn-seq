@@ -16,6 +16,60 @@ namespace audio {
             throw AudioError(std::format("SDL_InitSubSystem: {}", SDL_GetError()));
         }
 
+        get_devices();
+    }
+
+    Audio::~Audio() {
+        if (m_stream) {
+            SDL_DestroyAudioStream(m_stream);
+        }
+
+        SDL_QuitSubSystem(SDL_INIT_AUDIO);
+    }
+
+    const char* Audio::get_driver() const {
+        const char* driver {SDL_GetCurrentAudioDriver()};
+
+        if (!driver) {
+            return "[Error]";
+        }
+
+        return driver;
+    }
+
+    Audio::Devices Audio::list_devices() const {
+        return { m_device_names.begin(), m_device_names.end() };
+    }
+
+    void Audio::get_devices() {
+        int count {};
+
+        SDL_AudioDeviceID* devices {SDL_GetAudioPlaybackDevices(&count)};
+
+        if (!devices) {
+            throw AudioError(std::format("SDL_GetAudioPlaybackDevices: {}", SDL_GetError()));
+        }
+
+        m_device_names.clear();
+
+        for (int i {}; i < count; i++) {
+            const char* name {SDL_GetAudioDeviceName(devices[i])};
+
+            if (!name) {
+                name = "[Error]";
+            }
+
+            m_device_names.emplace_back(devices[i], name);
+        }
+
+        SDL_free(devices);
+    }
+
+    void Audio::open() {
+        open(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK);
+    }
+
+    void Audio::open(unsigned int device) {
         const SDL_AudioSpec audio_specification {
             SDL_AUDIO_S16,
             1,
@@ -23,7 +77,7 @@ namespace audio {
         };
 
         m_stream = SDL_OpenAudioDeviceStream(
-            SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK,
+            device,
             &audio_specification,
             &Audio::audio_stream_callback,
             this
@@ -34,12 +88,8 @@ namespace audio {
         }
     }
 
-    Audio::~Audio() {
-        if (m_stream) {
-            SDL_DestroyAudioStream(m_stream);
-        }
-
-        SDL_QuitSubSystem(SDL_INIT_AUDIO);
+    void Audio::close() {
+        SDL_DestroyAudioStream(m_stream);
     }
 
     void Audio::resume() const {

@@ -18,6 +18,7 @@ namespace application {
     static constexpr int ADD_MEASURES {4};
 
     void Application::on_start() {
+        m_synthesizer.open();
         m_synthesizer.resume();
 
         ImGuiIO& io {ImGui::GetIO()};
@@ -33,6 +34,7 @@ namespace application {
         m_composition_selected_measure = m_composition.measures.end();
         m_ui.octave = m_octave;
         m_ui.volume = m_synthesizer.get_volume();
+        // m_ui.device =  // FIXME
     }
 
     void Application::on_stop() {
@@ -50,7 +52,7 @@ namespace application {
         main_menu_bar();
         keyboard();
         instruments();
-        volume();
+        output();
         playback();
         tools();
         composition();
@@ -291,13 +293,37 @@ namespace application {
         ImGui::End();
     }
 
-    void Application::volume() {
+    void Application::output() {
         constexpr double zero {0.0};
         constexpr double one {1.0};
 
-        if (ImGui::Begin("Volume")) {
-            if (ImGui::VSliderScalar("##", ui::rem(ImVec2(4.0f, 20.0f)), ImGuiDataType_Double, &m_ui.volume, &zero, &one, "%.2f")) {
+        if (ImGui::Begin("Output")) {
+            ImGui::SeparatorText("Volume");
+
+            if (ImGui::SliderScalar("##volume", ImGuiDataType_Double, &m_ui.volume, &zero, &one, "%.2f")) {
                 m_synthesizer.set_volume(m_ui.volume);
+            }
+
+            ImGui::Dummy(ui::rem(ImVec2(0.0f, 1.0f)));
+
+            ImGui::SeparatorText("Device");
+
+            const auto devices {m_synthesizer.list_devices()};
+
+            if (ImGui::BeginCombo("##device", devices[m_ui.device].second, ImGuiComboFlags_NoArrowButton)) {
+                for (std::size_t i {}; i < devices.size(); i++) {
+                    if (ImGui::Selectable(devices[i].second, m_ui.device == i)) {
+                        m_ui.device = static_cast<unsigned int>(i);
+
+                        // TODO
+                    }
+                }
+
+                ImGui::EndCombo();
+            }
+
+            if (ImGui::Button("Reload")) {
+                m_synthesizer.get_devices();
             }
         }
 
@@ -756,6 +782,10 @@ namespace application {
 #ifndef ALFRED_DISTRIBUTION
         if (ImGui::Begin("Debug")) {
             ImGui::Text("Frame time: %f", get_frame_time());
+
+            if (ImGui::SmallButton("Write Settings")) {
+                ImGui::SaveIniSettingsToDisk("imguid.ini");
+            }
         }
 
         ImGui::End();

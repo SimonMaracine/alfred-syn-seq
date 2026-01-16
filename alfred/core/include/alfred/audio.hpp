@@ -1,6 +1,9 @@
 #pragma once
 
 #include <stdexcept>
+#include <span>
+#include <utility>
+#include <vector>
 
 struct SDL_AudioStream;
 
@@ -15,6 +18,15 @@ namespace audio {
         Audio(Audio&&) = delete;
         Audio& operator=(Audio&&) = delete;
 
+        using Devices = std::span<const std::pair<unsigned int, const char*>>;
+
+        const char* get_driver() const;
+        Devices list_devices() const;
+        void get_devices();
+
+        void open();
+        void open(unsigned int device);
+        void close();
         void resume() const;
         void lock() const;
         void unlock() const;
@@ -30,6 +42,7 @@ namespace audio {
 
         SDL_AudioStream* m_stream {};
         double m_time {};
+        std::vector<std::pair<unsigned int, const char*>> m_device_names;
     };
 
     class AudioLockGuard {
