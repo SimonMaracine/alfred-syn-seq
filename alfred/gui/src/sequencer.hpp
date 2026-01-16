@@ -80,7 +80,7 @@ namespace seq {
     struct Measure {
         Tempo tempo;
         TimeSignature time_signature;
-        std::unordered_map<syn::Voice, std::flat_set<Note>> voices;  // Notes must always be sorted
+        std::unordered_map<syn::Voice, std::flat_multiset<Note>> voices;  // Notes must always be sorted
     };
 
     struct Composition {
@@ -125,8 +125,8 @@ namespace seq {
         };
 
         // Notes must always be ordered
-        using UnplayedNotes = std::flat_set<UnplayedNote>;
-        using PlayedNotes = std::flat_set<PlayedNote>;
+        using UnplayedNotes = std::flat_multiset<UnplayedNote>;
+        using PlayedNotes = std::flat_multiset<PlayedNote>;
 
         struct Execution {
             UnplayedNotes notes_unplayed;

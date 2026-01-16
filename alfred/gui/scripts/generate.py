@@ -9,8 +9,6 @@ def _contents(file_name: str) -> str:
 
 
 def _generate(variable_name: str, file_name: str):
-    contents = _contents(file_name)
-
     file_contents = (
 f"""
 #pragma once
@@ -18,7 +16,7 @@ f"""
 #include <string_view>
 
 inline constexpr std::string_view {variable_name} {{
-    R"({contents})"
+    R"({_contents(file_name)})"
 }};
 """
     )

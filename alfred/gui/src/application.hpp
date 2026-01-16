@@ -1,6 +1,7 @@
 #pragma once
 
 #include <utility>
+#include <vector>
 
 #include <imgui.h>
 #include <alfred/synthesizer.hpp>
@@ -45,8 +46,14 @@ namespace application {
         void debug();
 
         using MeasureIter = std::vector<seq::Measure>::iterator;
+        using NoteIter = std::flat_multiset<seq::Note>::iterator;
 
-        struct Note {
+        struct SelectedNote {
+            MeasureIter measure;
+            NoteIter note;
+        };
+
+        struct CompositionNote {
             syn::Name name {};
             syn::Octave octave {};
             MeasureIter measure;
@@ -65,16 +72,17 @@ namespace application {
         void delete_measure();
         void set_measure_tempo();
         void set_measure_time_signature();
-        bool choose_note(ImVec2 position, Note& note);
-        void select_note(ImVec2 position);
-        void delete_notes(syn::Voice voice, unsigned int begin, unsigned int end);
-        void delete_notes(std::vector<seq::Note>& notes, unsigned int begin, unsigned int end);
+        bool click_note(ImVec2 position, CompositionNote& composition_note);
+        bool select_note(const CompositionNote& composition_note, NoteIter& note);
+        void do_with_clicked_note(const CompositionNote& composition_note);
+        void delete_notes();
         void shift_notes_left(std::vector<seq::Note>& notes, unsigned int begin, unsigned int end, unsigned int steps);
         void shift_notes_right(std::vector<seq::Note>& notes, unsigned int begin, unsigned int end, unsigned int steps);
 
         ImVec2 composition_mouse_position(ImVec2 origin) const;
 
         static float note_height(const seq::Note& note);
+        static ImVec4 note_rectangle(const seq::Note& note);
         static const char* measure_label(char* buffer, long number);
         static std::pair<seq::Tempo, seq::TimeSignature> measure_type(MeasureIter iter, const std::vector<seq::Measure>& measures);
         static void set_tempo(seq::Measure& measure, const ui::Tempo& tempo);
@@ -91,6 +99,7 @@ namespace application {
 
         ImVec2 m_composition_camera;
         MeasureIter m_composition_selected_measure;
+        std::vector<SelectedNote> m_composition_selected_notes;
         seq::Composition m_composition;
 
         synthesizer::Synthesizer m_synthesizer;
