@@ -2,7 +2,15 @@ cmake_minimum_required(VERSION 3.20)
 
 include(cmake/imgui.cmake)
 
+add_custom_command(
+    OUTPUT "imgui.ini.hpp"
+    COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate.py"
+    ARGS "SETTINGS" "${CMAKE_CURRENT_SOURCE_DIR}/src/imgui.ini"
+    DEPENDS "src/imgui.ini"
+)
+
 add_executable(alfred
+    "imgui.ini.hpp"
     "src/application.cpp"
     "src/application.hpp"
     "src/imgui.cpp"
@@ -19,6 +27,7 @@ add_executable(alfred
 )
 
 target_include_directories(alfred PRIVATE "src")
+target_include_directories(alfred PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 
 target_link_libraries(alfred PRIVATE SDL3::SDL3 imgui alfred_core)
 

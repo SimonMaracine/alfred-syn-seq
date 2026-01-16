@@ -8,6 +8,8 @@
 
 #include <SDL3/SDL.h>
 
+#include "imgui.ini.hpp"
+
 namespace application {
     static constexpr ImVec2 STEP_SIZE {4.0f / ui::FONT_SIZE, 20.0f / ui::FONT_SIZE};
     static constexpr float COMPOSITION_LEFT {40.0f / ui::FONT_SIZE};
@@ -18,7 +20,11 @@ namespace application {
     void Application::on_start() {
         m_synthesizer.resume();
 
-        ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+        ImGuiIO& io {ImGui::GetIO()};
+        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+        io.IniFilename = nullptr;
+
+        ImGui::LoadIniSettingsFromMemory(SETTINGS.data(), SETTINGS.size());
         ImGui::StyleColorsClassic();
 
         ui::set_scale(1);
