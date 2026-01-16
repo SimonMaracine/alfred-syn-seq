@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <flat_set>
 #include <utility>
 #include <stdexcept>
 #include <chrono>
@@ -70,12 +71,16 @@ namespace seq {
         syn::Octave octave {};
         Value value {};
         unsigned int position {};  // Local, inside a measure
+
+        bool operator<(const Note& other) const {
+            return position < other.position;
+        }
     };
 
     struct Measure {
         Tempo tempo;
         TimeSignature time_signature;
-        std::unordered_map<syn::Voice, std::vector<Note>> voices;
+        std::unordered_map<syn::Voice, std::flat_set<Note>> voices;  // Notes must always be sorted
     };
 
     struct Composition {
@@ -89,6 +94,9 @@ namespace seq {
 
     namespace exec {
         struct Note {
+            Note(syn::Name name, syn::Octave octave, unsigned int position, unsigned int duration, Tempo tempo, TimeSignature time_signature)
+                : name(name), octave(octave), position(position), duration(duration), tempo(tempo), time_signature(time_signature) {}
+
             syn::Name name {};
             syn::Octave octave {};
 
@@ -100,11 +108,29 @@ namespace seq {
             TimeSignature time_signature;
         };
 
-        using Notes = std::vector<Note>;
+        struct UnplayedNote : Note {
+            using Note::Note;
+
+            bool operator<(const UnplayedNote& other) const {
+                return position < other.position;
+            }
+        };
+
+        struct PlayedNote : Note {
+            using Note::Note;
+
+            bool operator<(const PlayedNote& other) const {
+                return position + duration < other.position + other.duration;
+            }
+        };
+
+        // Notes must always be ordered
+        using UnplayedNotes = std::flat_set<UnplayedNote>;
+        using PlayedNotes = std::flat_set<PlayedNote>;
 
         struct Execution {
-            Notes notes_unplayed;
-            Notes notes_played;
+            UnplayedNotes notes_unplayed;
+            PlayedNotes notes_played;
         };
 
         using Executions = std::unordered_map<syn::Voice, Execution>;

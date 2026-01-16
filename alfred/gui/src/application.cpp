@@ -490,15 +490,7 @@ namespace application {
                         Note note;
 
                         if (choose_note(composition_mouse_position(origin), note)) {
-                            std::vector<seq::Note>::iterator n {note.measure->voices[m_voice].end()};
-
-                            for (n = note.measure->voices[m_voice].begin(); n != note.measure->voices[m_voice].end(); n++) {
-                                if (n->position >= note.position) {
-                                    break;
-                                }
-                            }
-
-                            note.measure->voices[m_voice].emplace(n, note.name, note.octave, get_value(ui::Value(m_ui.value)), note.position);
+                            note.measure->voices[m_voice].emplace(note.name, note.octave, get_value(ui::Value(m_ui.value)), note.position);
                         }
 
                         break;
@@ -765,7 +757,7 @@ namespace application {
         for (auto measure {begin}; measure != end; measure++) {
             for (unsigned int i {}; i < measure->time_signature.measure_steps(); i += seq::STEP / measure->time_signature.value()) {
                 const syn::Name name {i == 0 ? syn::C : syn::D};
-                measure->voices[syn::VoiceMetronome].emplace_back(name, syn::Octave2, seq::Eighth, i);
+                measure->voices[syn::VoiceMetronome].emplace(name, syn::Octave2, seq::Eighth, i);
             }
         }
 
