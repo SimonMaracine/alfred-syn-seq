@@ -38,6 +38,7 @@ namespace application {
         void tools_note();
         void composition();
         void composition_left(ImDrawList* list, ImVec2 origin) const;
+        void composition_octaves(ImDrawList* list, ImVec2 origin) const;
         void composition_measures(ImDrawList* list, ImVec2 origin) const;
         void composition_measures_labels(ImDrawList* list, ImVec2 origin) const;
         void composition_notes(ImDrawList* list, ImVec2 origin) const;
@@ -82,7 +83,6 @@ namespace application {
 
         ImVec2 composition_mouse_position(ImVec2 origin) const;
         std::flat_set<syn::Voice> instruments_in_project() const;
-        void initialize_voice_colors();
 
         static float note_height(const seq::Note& note);
         static ImVec4 note_rectangle(const seq::Note& note);

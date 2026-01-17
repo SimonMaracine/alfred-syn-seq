@@ -5,6 +5,7 @@
 #include <charconv>
 #include <iterator>
 #include <cstring>
+#include <cassert>
 
 #include <SDL3/SDL.h>
 
@@ -14,7 +15,7 @@ namespace application {
     static constexpr ImVec2 STEP_SIZE {4.0f / ui::FONT_SIZE, 20.0f / ui::FONT_SIZE};
     static constexpr float COMPOSITION_LEFT {40.0f / ui::FONT_SIZE};
     static constexpr float COMPOSITION_HEIGHT {STEP_SIZE.y * 12.0f * float(syn::NOTE_OCTAVES) + STEP_SIZE.y * float(syn::NOTE_EXTRA)};
-    static constexpr float COMPOSITION_SCROLL_SPEED {26.0f / ui::FONT_SIZE};
+    static constexpr float COMPOSITION_SCROLL_SPEED {40.0f / ui::FONT_SIZE};
     static constexpr int ADD_MEASURES {4};
 
     void Application::on_start() {
@@ -43,7 +44,10 @@ namespace application {
             return false;
         }, 5000);
 
-        initialize_voice_colors();
+        m_synthesizer.for_each_instrument([this, index = std::size_t()](const auto& instrument) mutable {
+            m_ui.colors[instrument.voice()] = ui::ColorIndex(index);
+            index = (index + 1) % std::size(ui::COLORS);
+        });
     }
 
     void Application::on_stop() {
@@ -533,8 +537,9 @@ namespace application {
             const ImVec2 space_available {ImGui::GetContentRegionAvail()};
 
             composition_measures(list, origin);
-            composition_notes(list, origin);
+            composition_octaves(list, origin);
             composition_cursor(list, origin);
+            composition_notes(list, origin);
             composition_measures_labels(list, origin);
             composition_left(list, origin);
 
@@ -647,10 +652,38 @@ namespace application {
         }
     }
 
+    void Application::composition_octaves(ImDrawList* list, ImVec2 origin) const {
+        const ImGuiStyle& style {ImGui::GetStyle()};
+        const ImColor COLOR_FOREGROUND {style.Colors[ImGuiCol_TextDisabled]};
+
+        const ImVec2 space_available {ImGui::GetContentRegionAvail()};
+
+        float position_y {float(syn::NOTE_EXTRA) * ui::rem(STEP_SIZE.y)};
+
+        list->AddLine(
+            origin + ImVec2(0.0f, position_y) - ImVec2(0.0f, m_composition_camera.y),
+            origin + ImVec2(space_available.x, position_y) - ImVec2(0.0f, m_composition_camera.y),
+            COLOR_FOREGROUND
+        );
+
+        for (int i {1}; i < syn::NOTE_OCTAVES; i++) {
+            position_y += 12.0f * ui::rem(STEP_SIZE.y);
+
+            list->AddLine(
+                origin + ImVec2(0.0f, position_y) - ImVec2(0.0f, m_composition_camera.y),
+                origin + ImVec2(space_available.x, position_y) - ImVec2(0.0f, m_composition_camera.y),
+                COLOR_FOREGROUND
+            );
+        }
+    }
+
     void Application::composition_measures(ImDrawList* list, ImVec2 origin) const {
         const ImGuiStyle& style {ImGui::GetStyle()};
         const ImColor COLOR_FOREGROUND {style.Colors[ImGuiCol_Text]};
+        const ImColor COLOR_FOREGROUND2 {style.Colors[ImGuiCol_TextDisabled]};
         const ImColor COLOR_SELECTION {style.Colors[ImGuiCol_TableHeaderBg]};
+
+        const ImVec2 space_available {ImGui::GetContentRegionAvail()};
 
         float position_x {ui::rem(COMPOSITION_LEFT)};
 
@@ -659,17 +692,31 @@ namespace application {
 
             if (measure == m_composition_selected_measure) {
                 list->AddRectFilled(
-                    origin + ImVec2(position_x + 1.0f, 0.0f) - m_composition_camera,
-                    origin + ImVec2(position_x + width, ui::rem(COMPOSITION_HEIGHT)) - m_composition_camera,
+                    origin + ImVec2(position_x + 1.0f, 0.0f) - ImVec2(m_composition_camera.x, 0.0f),
+                    origin + ImVec2(position_x + width, space_available.y) - ImVec2(m_composition_camera.x, 0.0f),
                     COLOR_SELECTION
+                );
+            }
+
+            for (seq::Beats beat {1}; beat < measure->time_signature.beats(); beat++) {
+                const float position_x_beat {
+                    position_x +
+                    float(beat) *
+                    float(seq::STEP / measure->time_signature.value()) * ui::rem(STEP_SIZE.x)
+                };
+
+                list->AddLine(
+                    origin + ImVec2(position_x_beat, 0.0f) - ImVec2(m_composition_camera.x, 0.0f),
+                    origin + ImVec2(position_x_beat, space_available.y) - ImVec2(m_composition_camera.x, 0.0f),
+                    COLOR_FOREGROUND2
                 );
             }
 
             position_x += width;
 
             list->AddLine(
-                origin + ImVec2(position_x, 0.0f) - m_composition_camera,
-                origin + ImVec2(position_x, ui::rem(COMPOSITION_HEIGHT)) - m_composition_camera,
+                origin + ImVec2(position_x, 0.0f) - ImVec2(m_composition_camera.x, 0.0f),
+                origin + ImVec2(position_x, space_available.y) - ImVec2(m_composition_camera.x, 0.0f),
                 COLOR_FOREGROUND
             );
         }
@@ -1179,15 +1226,6 @@ namespace application {
         instruments.erase(syn::VoiceMetronome);
 
         return instruments;
-    }
-
-    void Application::initialize_voice_colors() {
-        std::size_t index {};
-
-        m_synthesizer.for_each_instrument([this, &index](const auto& instrument) {
-            m_ui.colors[instrument.voice()] = ui::ColorIndex(index);
-            index = (index + 1) % std::size(ui::COLORS);
-        });
     }
 
     float Application::note_height(const seq::Note& note) {
