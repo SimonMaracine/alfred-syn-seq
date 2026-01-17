@@ -2,6 +2,8 @@
 
 #include <utility>
 #include <vector>
+#include <flat_set>
+#include <unordered_map>
 
 #include <imgui.h>
 #include <alfred/synthesizer.hpp>
@@ -80,6 +82,7 @@ namespace application {
 
         ImVec2 composition_mouse_position(ImVec2 origin) const;
         std::flat_set<syn::Voice> instruments_in_project() const;
+        void initialize_voice_colors();
 
         static float note_height(const seq::Note& note);
         static ImVec4 note_rectangle(const seq::Note& note);
@@ -116,6 +119,7 @@ namespace application {
             int octave {};
             double volume {};
             const char* device {};
+            std::unordered_map<syn::Voice, ui::ColorIndex> colors;
         } m_ui;
 
         bool m_metronome {};

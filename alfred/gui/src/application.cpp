@@ -42,6 +42,8 @@ namespace application {
             m_ui.device = m_synthesizer.device().second;
             return false;
         }, 5000);
+
+        initialize_voice_colors();
     }
 
     void Application::on_stop() {
@@ -296,10 +298,15 @@ namespace application {
 
             if (ImGui::BeginListBox("##in_project")) {
                 for (const auto instruments {instruments_in_project()}; const syn::Voice voice : instruments) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(ui::COLORS[m_ui.colors.at(voice)].second));
+
                     if (ImGui::Selectable(m_synthesizer.instrument_name(voice), voice == m_voice)) {
                         m_voice = voice;
+                        m_composition_selected_notes.clear();
 
                         switch (m_voice) {
+                            case syn::VoiceMetronome:
+                                break;
                             case syn::VoiceBell:
                                 m_ui.voice = ui::VoiceBell;
                                 break;
@@ -311,9 +318,25 @@ namespace application {
                                 break;
                         }
                     }
+
+                    ImGui::PopStyleColor();
                 }
 
                 ImGui::EndListBox();
+            }
+
+            ImGui::Dummy(ui::rem(ImVec2(0.0f, 1.0f)));
+
+            ImGui::SeparatorText("Color");
+
+            if (ImGui::BeginCombo("##color", ui::COLORS[m_ui.colors.at(m_voice)].first)) {
+                for (std::size_t i {}; i < std::size(ui::COLORS); i++) {
+                    if (ImGui::Selectable(ui::COLORS[i].first, m_ui.colors.at(m_voice) == i)) {
+                        m_ui.colors.at(m_voice) = ui::ColorIndex(i);
+                    }
+                }
+
+                ImGui::EndCombo();
             }
         }
 
@@ -680,8 +703,6 @@ namespace application {
 
         for (auto measure {m_composition.measures.begin()}; measure != m_composition.measures.end(); measure++) {
             for (const auto& [voice, notes] : measure->voices) {
-                const ImColor color {IM_COL32_WHITE};
-
                 for (const seq::Note& note : notes) {
                     const ImVec4 rect {note_rectangle(note)};
 
@@ -693,7 +714,7 @@ namespace application {
                     list->AddRectFilled(
                         origin + ImVec2(global_position_x + position_x, position_y) - m_composition_camera,
                         origin + ImVec2(global_position_x + position_x + width, position_y + height) - m_composition_camera,
-                        color,
+                        ui::COLORS[m_ui.colors.at(voice)].second,
                         ROUNDING
                     );
                 }
@@ -709,7 +730,7 @@ namespace application {
                     const float height {rect.w};
 
                     const ImGuiStyle& style {ImGui::GetStyle()};
-                    const ImColor COLOR {style.Colors[ImGuiCol_PlotHistogramHovered]};
+                    const ImColor COLOR {style.Colors[ImGuiCol_Text]};
 
                     list->AddRect(
                         origin + ImVec2(global_position_x + position_x, position_y) - m_composition_camera,
@@ -1158,6 +1179,15 @@ namespace application {
         instruments.erase(syn::VoiceMetronome);
 
         return instruments;
+    }
+
+    void Application::initialize_voice_colors() {
+        std::size_t index {};
+
+        m_synthesizer.for_each_instrument([this, &index](const auto& instrument) {
+            m_ui.colors[instrument.voice()] = ui::ColorIndex(index);
+            index = (index + 1) % std::size(ui::COLORS);
+        });
     }
 
     float Application::note_height(const seq::Note& note) {

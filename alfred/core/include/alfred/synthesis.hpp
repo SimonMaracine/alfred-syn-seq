@@ -115,6 +115,7 @@ namespace syn {
         Instrument& operator=(Instrument&&) = default;
 
         virtual const char* name() const = 0;
+        virtual Voice voice() const = 0;
         virtual const Envelope& envelope() const = 0;
         virtual double sound(double time, const Note& note) const = 0;
     };
@@ -123,7 +124,7 @@ namespace syn {
         class Metronome : public Instrument {
         public:
             const char* name() const { return "Metronome"; }
-
+            Voice voice() const override { return VoiceMetronome; }
             const Envelope& envelope() const override { return m_envelope; }
 
             double sound(double time, const Note& note) const override;
@@ -140,7 +141,7 @@ namespace syn {
         class Bell : public Instrument {
         public:
             const char* name() const { return "Bell"; }
-
+            Voice voice() const override { return VoiceBell; }
             const Envelope& envelope() const override { return m_envelope; }
 
             double sound(double time, const Note& note) const override;
@@ -157,7 +158,7 @@ namespace syn {
         class Harmonica : public Instrument {
         public:
             const char* name() const { return "Harmonica"; }
-
+            Voice voice() const override { return VoiceHarmonica; }
             const Envelope& envelope() const override { return m_envelope; }
 
             double sound(double time, const Note& note) const override;
@@ -176,7 +177,7 @@ namespace syn {
         class DrumKick : public Instrument {
         public:
             const char* name() const { return "Drum Kick"; }
-
+            Voice voice() const override { return VoiceDrumKick; }
             const Envelope& envelope() const override { return m_envelope; }
 
             double sound(double time, const Note& note) const override;
@@ -191,21 +192,28 @@ namespace syn {
         };
     }
 
-    struct Voices : private std::tuple<
-        instruments::Metronome,
-        instruments::Bell,
-        instruments::Harmonica,
-        instruments::DrumKick
-    > {
+    class Voices {
+    public:
+        using Storage = std::tuple<
+            instruments::Metronome,
+            instruments::Bell,
+            instruments::Harmonica,
+            instruments::DrumKick
+        >;
+
+        const Storage& get() const { return m_storage; }
+
         const Instrument& operator[](Voice voice_index) const {
             switch (voice_index) {
-                case 0: return std::get<0>(*this);
-                case 1: return std::get<1>(*this);
-                case 2: return std::get<2>(*this);
-                case 3: return std::get<3>(*this);
+                case 0: return std::get<0>(m_storage);
+                case 1: return std::get<1>(m_storage);
+                case 2: return std::get<2>(m_storage);
+                case 3: return std::get<3>(m_storage);
             }
 
             std::unreachable();
         }
+    private:
+        Storage m_storage;
     };
 }

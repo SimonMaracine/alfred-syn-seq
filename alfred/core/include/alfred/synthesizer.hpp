@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <functional>
 
 #include "alfred/audio.hpp"
 #include "alfred/synthesis.hpp"
@@ -13,6 +14,7 @@ namespace synthesizer {
         void silence();
         void volume(double volume);
         void update();
+        void for_each_instrument(std::function<void(const syn::Instrument&)> function) const;
         const char* instrument_name(syn::Voice voice) const;
 
         double volume() const override;

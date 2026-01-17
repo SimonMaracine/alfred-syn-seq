@@ -1,5 +1,7 @@
 #pragma once
 
+#include <utility>
+
 #include <imgui.h>
 
 namespace ui {
@@ -73,6 +75,25 @@ namespace ui {
         Octave2,
         Octave3,
         Octave4
+    };
+
+    // https://www.colorhexa.com/color-names
+
+    using ColorIndex = unsigned int;
+
+    inline constexpr std::pair<const char*, ImColor> COLORS[] {
+        { "American rose", ImColor(255, 3, 62) },
+        { "Amethyst", ImColor(153, 102, 204) },
+        { "Android green", ImColor(164, 198, 67) },
+        { "Antique fuchsia", ImColor(145, 92, 131) },
+        { "Ao", ImColor(0, 128, 0) },
+        { "Amber", ImColor(255, 191, 0) },
+        { "Azure", ImColor(0, 127, 255) },
+        { "Bittersweet", ImColor(254, 111, 94) },
+        { "Blue violet", ImColor(138, 43, 226) },
+        { "Blue", ImColor(0, 0, 255) },
+        { "Brightpink", ImColor(255, 0, 127) },
+        { "Bronze", ImColor(205, 127, 50) }
     };
 
     float rem(float size);

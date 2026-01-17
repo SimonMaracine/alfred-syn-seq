@@ -1,6 +1,7 @@
 #include "alfred/synthesizer.hpp"
 
 #include <algorithm>
+#include <tuple>
 
 namespace synthesizer {
     void Synthesizer::note_on(syn::Name name, syn::Octave octave, syn::Voice voice) {
@@ -48,6 +49,12 @@ namespace synthesizer {
         m_notes.erase(std::remove_if(m_notes.begin(), m_notes.end(), [this](const syn::Note& note) {
             return m_voices[note.voice].envelope().is_done(m_time, note.time_on, note.time_off);
         }), m_notes.end());
+    }
+
+    void Synthesizer::for_each_instrument(std::function<void(const syn::Instrument&)> function) const {
+        std::apply([function = std::move(function)](auto&&... args) {
+            (function(args), ...);
+        }, m_voices.get());
     }
 
     const char* Synthesizer::instrument_name(syn::Voice voice) const {
