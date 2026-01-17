@@ -20,7 +20,7 @@ namespace audio {
 
         using Devices = std::span<const std::pair<unsigned int, const char*>>;
 
-        const char* get_driver() const;
+        const char* driver() const;
         Devices list_devices() const;
         void get_devices();
 
@@ -31,7 +31,8 @@ namespace audio {
         void lock() const;
         void unlock() const;
 
-        double get_time() const { return m_time; }
+        double time() const { return m_time; }
+        double device() const { return m_device; }
 
         virtual double sound(double time) const = 0;
         virtual double volume() const = 0;
@@ -40,6 +41,7 @@ namespace audio {
         static double clamp(double value);
         static void audio_stream_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int total_amount);
 
+        unsigned int m_device {};
         SDL_AudioStream* m_stream {};
         double m_time {};
         std::vector<std::pair<unsigned int, const char*>> m_device_names;

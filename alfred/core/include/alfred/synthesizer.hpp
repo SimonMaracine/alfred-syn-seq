@@ -11,15 +11,15 @@ namespace synthesizer {
         void note_on(syn::Name name, syn::Octave octave, syn::Voice voice);
         void note_off(syn::Name name, syn::Octave octave);
         void silence();
-        void set_volume(double volume);
+        void volume(double volume);
         void update();
+        const char* instrument_name(syn::Voice voice) const;
 
-        double get_volume() const { return m_volume; }
-    private:
-        std::vector<syn::Note>::iterator find_note(syn::Id id);
-
-        double sound(double time) const override;
         double volume() const override;
+    private:
+        double sound(double time) const override;
+
+        std::vector<syn::Note>::iterator find_note(syn::Id id);
 
         syn::Voices m_voices;
         std::vector<syn::Note> m_notes;

@@ -114,14 +114,17 @@ namespace syn {
         Instrument(Instrument&&) = default;
         Instrument& operator=(Instrument&&) = default;
 
-        virtual const Envelope& get_envelope() const = 0;
+        virtual const char* name() const = 0;
+        virtual const Envelope& envelope() const = 0;
         virtual double sound(double time, const Note& note) const = 0;
     };
 
     namespace instruments {  // TODO note range, name, description
         class Metronome : public Instrument {
         public:
-            const Envelope& get_envelope() const override { return m_envelope; }
+            const char* name() const { return "Metronome"; }
+
+            const Envelope& envelope() const override { return m_envelope; }
 
             double sound(double time, const Note& note) const override;
         private:
@@ -136,7 +139,9 @@ namespace syn {
 
         class Bell : public Instrument {
         public:
-            const Envelope& get_envelope() const override { return m_envelope; }
+            const char* name() const { return "Bell"; }
+
+            const Envelope& envelope() const override { return m_envelope; }
 
             double sound(double time, const Note& note) const override;
         private:
@@ -151,7 +156,9 @@ namespace syn {
 
         class Harmonica : public Instrument {
         public:
-            const Envelope& get_envelope() const override { return m_envelope; }
+            const char* name() const { return "Harmonica"; }
+
+            const Envelope& envelope() const override { return m_envelope; }
 
             double sound(double time, const Note& note) const override;
         private:
@@ -168,7 +175,9 @@ namespace syn {
 
         class DrumKick : public Instrument {
         public:
-            const Envelope& get_envelope() const override { return m_envelope; }
+            const char* name() const { return "Drum Kick"; }
+
+            const Envelope& envelope() const override { return m_envelope; }
 
             double sound(double time, const Note& note) const override;
         private:

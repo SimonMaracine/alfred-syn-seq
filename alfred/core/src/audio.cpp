@@ -27,7 +27,7 @@ namespace audio {
         SDL_QuitSubSystem(SDL_INIT_AUDIO);
     }
 
-    const char* Audio::get_driver() const {
+    const char* Audio::driver() const {
         const char* driver {SDL_GetCurrentAudioDriver()};
 
         if (!driver) {
@@ -85,6 +85,12 @@ namespace audio {
 
         if (!m_stream) {
             throw AudioError(std::format("SDL_OpenAudioDeviceStream: {}", SDL_GetError()));
+        }
+
+        m_device = SDL_GetAudioStreamDevice(m_stream);
+
+        if (!m_device) {
+            throw AudioError(std::format("SDL_GetAudioStreamDevice: {}", SDL_GetError()));
         }
     }
 

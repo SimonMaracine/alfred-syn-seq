@@ -24,7 +24,6 @@ namespace application {
         void main_menu_bar();
         void main_menu_bar_file();
         void main_menu_bar_edit();
-        void main_menu_bar_sequencer();
         void main_menu_bar_options();
         void main_menu_bar_help();
         void keyboard();
@@ -80,6 +79,8 @@ namespace application {
         void shift_notes_right(std::vector<seq::Note>& notes, unsigned int begin, unsigned int end, unsigned int steps);
 
         ImVec2 composition_mouse_position(ImVec2 origin) const;
+        std::flat_set<syn::Voice> instruments_in_project() const;
+        unsigned int current_device_index() const;
 
         static float note_height(const seq::Note& note);
         static ImVec4 note_rectangle(const seq::Note& note);

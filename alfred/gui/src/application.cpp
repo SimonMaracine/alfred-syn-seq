@@ -23,6 +23,8 @@ namespace application {
 
         ImGuiIO& io {ImGui::GetIO()};
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+        io.ConfigWindowsResizeFromEdges = false;
+        io.ConfigWindowsMoveFromTitleBarOnly = true;
         io.IniFilename = nullptr;
 
         ImGui::LoadIniSettingsFromMemory(SETTINGS.data(), SETTINGS.size());
@@ -33,8 +35,8 @@ namespace application {
         m_player = seq::Player(m_synthesizer, m_composition);
         m_composition_selected_measure = m_composition.measures.end();
         m_ui.octave = m_octave;
-        m_ui.volume = m_synthesizer.get_volume();
-        // m_ui.device =  // FIXME
+        m_ui.volume = m_synthesizer.volume();
+        m_ui.device =  current_device_index();
     }
 
     void Application::on_stop() {
@@ -47,7 +49,7 @@ namespace application {
     }
 
     void Application::on_imgui() {
-        ImGui::DockSpaceOverViewport();
+        ImGui::DockSpaceOverViewport(0, nullptr, ImGuiDockNodeFlags_NoResize);
 
         main_menu_bar();
         keyboard();
@@ -88,11 +90,6 @@ namespace application {
                 ImGui::EndMenu();
             }
 
-            if (ImGui::BeginMenu("Sequencer")) {
-                main_menu_bar_sequencer();
-                ImGui::EndMenu();
-            }
-
             if (ImGui::BeginMenu("Options")) {
                 main_menu_bar_options();
                 ImGui::EndMenu();
@@ -126,12 +123,11 @@ namespace application {
         if (ImGui::MenuItem("Paste", "Ctrl+V")) {}
     }
 
-    void Application::main_menu_bar_sequencer() {
-
-    }
-
     void Application::main_menu_bar_help() {
-
+        if (ImGui::BeginMenu("Driver")) {
+            ImGui::Text("%s", m_synthesizer.driver());
+            ImGui::EndMenu();
+        }
     }
 
     void Application::main_menu_bar_options() {
@@ -196,7 +192,7 @@ namespace application {
     void Application::keyboard() {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
-        if (ImGui::Begin("Keyboard")) {
+        if (ImGui::Begin("Keyboard", nullptr, ImGuiWindowFlags_NoResize)) {
             ImDrawList* list {ImGui::GetWindowDrawList()};
             const ImVec2 origin {ImGui::GetCursorScreenPos()};
 
@@ -253,7 +249,7 @@ namespace application {
     }
 
     void Application::instruments() {
-        if (ImGui::Begin("Instruments")) {
+        if (ImGui::Begin("Instruments", nullptr, ImGuiWindowFlags_NoResize)) {
             constexpr const char* INSTRUMENT[] { "Bell", "Harmonica", "Drum Kick" };
 
             ImGui::SeparatorText("Voice");
@@ -288,6 +284,32 @@ namespace application {
             if (ImGui::SliderInt("##octave", &m_ui.octave, ui::Octave1, ui::Octave4)) {
                 m_octave = m_ui.octave - 1;
             }
+
+            ImGui::Dummy(ui::rem(ImVec2(0.0f, 1.0f)));
+
+            ImGui::SeparatorText("In Project");
+
+            if (ImGui::BeginListBox("##in_project")) {
+                for (const auto instruments {instruments_in_project()}; const syn::Voice voice : instruments) {
+                    if (ImGui::Selectable(m_synthesizer.instrument_name(voice), voice == m_voice)) {
+                        m_voice = voice;
+
+                        switch (m_voice) {
+                            case syn::VoiceBell:
+                                m_ui.voice = ui::VoiceBell;
+                                break;
+                            case syn::VoiceHarmonica:
+                                m_ui.voice = ui::VoiceHarmonica;
+                                break;
+                            case syn::VoiceDrumKick:
+                                m_ui.voice = ui::VoiceDrumKick;
+                                break;
+                        }
+                    }
+                }
+
+                ImGui::EndListBox();
+            }
         }
 
         ImGui::End();
@@ -297,11 +319,11 @@ namespace application {
         constexpr double zero {0.0};
         constexpr double one {1.0};
 
-        if (ImGui::Begin("Output")) {
+        if (ImGui::Begin("Output", nullptr, ImGuiWindowFlags_NoResize)) {
             ImGui::SeparatorText("Volume");
 
             if (ImGui::SliderScalar("##volume", ImGuiDataType_Double, &m_ui.volume, &zero, &one, "%.2f")) {
-                m_synthesizer.set_volume(m_ui.volume);
+                m_synthesizer.volume(m_ui.volume);
             }
 
             ImGui::Dummy(ui::rem(ImVec2(0.0f, 1.0f)));
@@ -315,7 +337,8 @@ namespace application {
                     if (ImGui::Selectable(devices[i].second, m_ui.device == i)) {
                         m_ui.device = static_cast<unsigned int>(i);
 
-                        // TODO
+                        m_synthesizer.close();
+                        m_synthesizer.open(m_ui.device);
                     }
                 }
 
@@ -331,7 +354,7 @@ namespace application {
     }
 
     void Application::playback() {
-        if (ImGui::Begin("Playback")) {
+        if (ImGui::Begin("Playback", nullptr, ImGuiWindowFlags_NoResize)) {
             if (ImGui::Button("Rewind")) {
                 m_player.seek(0);
             }
@@ -375,7 +398,7 @@ namespace application {
     }
 
     void Application::tools() {
-        if (ImGui::Begin("Tools")) {
+        if (ImGui::Begin("Tools", nullptr, ImGuiWindowFlags_NoResize)) {
             ImGui::BeginGroup();
 
             if (ImGui::RadioButton("Measure", &m_ui.tool, ui::ToolMeasure)) {
@@ -493,7 +516,7 @@ namespace application {
     void Application::composition() {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
-        if (ImGui::Begin("Composition")) {
+        if (ImGui::Begin("Composition", nullptr, ImGuiWindowFlags_NoResize)) {
             ImDrawList* list {ImGui::GetWindowDrawList()};
             const ImVec2 origin {ImGui::GetCursorScreenPos()};
             const ImVec2 space_available {ImGui::GetContentRegionAvail()};
@@ -1131,6 +1154,32 @@ namespace application {
 
     ImVec2 Application::composition_mouse_position(ImVec2 origin) const {
         return ImGui::GetIO().MousePos - origin - ImVec2(ui::rem(COMPOSITION_LEFT), 0.0f) + m_composition_camera;
+    }
+
+    std::flat_set<syn::Voice> Application::instruments_in_project() const {
+        std::flat_set<syn::Voice> instruments;
+
+        for (const seq::Measure& measure : m_composition.measures) {
+            for (const auto& voice : measure.voices) {
+                if (!voice.second.empty()) {
+                    instruments.insert(voice.first);
+                }
+            }
+        }
+
+        return instruments;
+    }
+
+    unsigned int Application::current_device_index() const {
+        const auto devices {m_synthesizer.list_devices()};
+
+        for (const auto& [i, device] : devices | std::views::enumerate) {
+            if (device.first == m_synthesizer.device()) {
+                return static_cast<unsigned int>(i);
+            }
+        }
+
+        return 0;
     }
 
     float Application::note_height(const seq::Note& note) {

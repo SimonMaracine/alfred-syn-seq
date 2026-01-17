@@ -38,7 +38,7 @@ namespace synthesizer {
         m_notes.clear();
     }
 
-    void Synthesizer::set_volume(double volume) {
+    void Synthesizer::volume(double volume) {
         m_volume = std::min(std::max(volume, 0.0), 1.0);
     }
 
@@ -46,16 +46,16 @@ namespace synthesizer {
         audio::AudioLockGuard guard {this};
 
         m_notes.erase(std::remove_if(m_notes.begin(), m_notes.end(), [this](const syn::Note& note) {
-            return m_voices[note.voice].get_envelope().is_done(m_time, note.time_on, note.time_off);
+            return m_voices[note.voice].envelope().is_done(m_time, note.time_on, note.time_off);
         }), m_notes.end());
     }
 
-    std::vector<syn::Note>::iterator Synthesizer::find_note(syn::Id id) {
-        return std::find_if(m_notes.begin(), m_notes.end(),
-            [id](const syn::Note& note) {
-                return note.id == id;
-            }
-        );
+    const char* Synthesizer::instrument_name(syn::Voice voice) const {
+        return m_voices[voice].name();
+    }
+
+    double Synthesizer::volume() const {
+        return m_volume;
     }
 
     double Synthesizer::sound(double time) const {
@@ -68,7 +68,11 @@ namespace synthesizer {
         return result;
     }
 
-    double Synthesizer::volume() const {
-        return m_volume;
+    std::vector<syn::Note>::iterator Synthesizer::find_note(syn::Id id) {
+        return std::find_if(m_notes.begin(), m_notes.end(),
+            [id](const syn::Note& note) {
+                return note.id == id;
+            }
+        );
     }
 }
