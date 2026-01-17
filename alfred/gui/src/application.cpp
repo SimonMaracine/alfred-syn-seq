@@ -36,7 +36,12 @@ namespace application {
         m_composition_selected_measure = m_composition.measures.end();
         m_ui.octave = m_octave;
         m_ui.volume = m_synthesizer.volume();
-        m_ui.device =  current_device_index();
+        m_ui.device = m_synthesizer.device().second;
+
+        m_task_manager.add_repeatable_task([this]() {
+            m_ui.device = m_synthesizer.device().second;
+            return false;
+        }, 5000);
     }
 
     void Application::on_stop() {
@@ -330,24 +335,7 @@ namespace application {
 
             ImGui::SeparatorText("Device");
 
-            const auto devices {m_synthesizer.list_devices()};
-
-            if (ImGui::BeginCombo("##device", devices[m_ui.device].second, ImGuiComboFlags_NoArrowButton)) {
-                for (std::size_t i {}; i < devices.size(); i++) {
-                    if (ImGui::Selectable(devices[i].second, m_ui.device == i)) {
-                        m_ui.device = static_cast<unsigned int>(i);
-
-                        m_synthesizer.close();
-                        m_synthesizer.open(m_ui.device);
-                    }
-                }
-
-                ImGui::EndCombo();
-            }
-
-            if (ImGui::Button("Reload")) {
-                m_synthesizer.get_devices();
-            }
+            ImGui::TextWrapped("%s", m_ui.device);
         }
 
         ImGui::End();
@@ -1167,19 +1155,9 @@ namespace application {
             }
         }
 
+        instruments.erase(syn::VoiceMetronome);
+
         return instruments;
-    }
-
-    unsigned int Application::current_device_index() const {
-        const auto devices {m_synthesizer.list_devices()};
-
-        for (const auto& [i, device] : devices | std::views::enumerate) {
-            if (device.first == m_synthesizer.device()) {
-                return static_cast<unsigned int>(i);
-            }
-        }
-
-        return 0;
     }
 
     float Application::note_height(const seq::Note& note) {

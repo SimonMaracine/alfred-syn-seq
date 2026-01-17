@@ -18,11 +18,13 @@ namespace audio {
         Audio(Audio&&) = delete;
         Audio& operator=(Audio&&) = delete;
 
-        using Devices = std::span<const std::pair<unsigned int, const char*>>;
+        using Device = std::pair<unsigned int, const char*>;
+        using Devices = std::span<const Device>;
 
         const char* driver() const;
-        Devices list_devices() const;
-        void get_devices();
+        Device device() const;
+        Devices devices() const;
+        void query_devices();
 
         void open();
         void open(unsigned int device);
@@ -32,7 +34,6 @@ namespace audio {
         void unlock() const;
 
         double time() const { return m_time; }
-        double device() const { return m_device; }
 
         virtual double sound(double time) const = 0;
         virtual double volume() const = 0;
@@ -41,10 +42,9 @@ namespace audio {
         static double clamp(double value);
         static void audio_stream_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int total_amount);
 
-        unsigned int m_device {};
         SDL_AudioStream* m_stream {};
         double m_time {};
-        std::vector<std::pair<unsigned int, const char*>> m_device_names;
+        std::vector<Device> m_devices;
     };
 
     class AudioLockGuard {

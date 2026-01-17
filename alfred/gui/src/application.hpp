@@ -80,7 +80,6 @@ namespace application {
 
         ImVec2 composition_mouse_position(ImVec2 origin) const;
         std::flat_set<syn::Voice> instruments_in_project() const;
-        unsigned int current_device_index() const;
 
         static float note_height(const seq::Note& note);
         static ImVec4 note_rectangle(const seq::Note& note);
@@ -115,8 +114,8 @@ namespace application {
             ui::ColorScheme color_scheme {ui::ColorSchemeClassic};
             ui::Scale scale {ui::Scale1X};
             int octave {};
-            unsigned int device {};
             double volume {};
+            const char* device {};
         } m_ui;
 
         bool m_metronome {};

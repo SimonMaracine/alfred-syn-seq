@@ -15,8 +15,6 @@ namespace audio {
         if (!SDL_InitSubSystem(SDL_INIT_AUDIO)) {
             throw AudioError(std::format("SDL_InitSubSystem: {}", SDL_GetError()));
         }
-
-        get_devices();
     }
 
     Audio::~Audio() {
@@ -31,17 +29,33 @@ namespace audio {
         const char* driver {SDL_GetCurrentAudioDriver()};
 
         if (!driver) {
-            return "[Error]";
+            return "[...]";
         }
 
         return driver;
     }
 
-    Audio::Devices Audio::list_devices() const {
-        return { m_device_names.begin(), m_device_names.end() };
+    Audio::Device Audio::device() const {
+        const SDL_AudioDeviceID device {SDL_GetAudioStreamDevice(m_stream)};
+
+        if (!device) {
+            throw AudioError(std::format("SDL_GetAudioStreamDevice: {}", SDL_GetError()));
+        }
+
+        const char* name {SDL_GetAudioDeviceName(device)};
+
+        if (!name) {
+            name = "[...]";
+        }
+
+        return { device, name };
     }
 
-    void Audio::get_devices() {
+    Audio::Devices Audio::devices() const {
+        return { m_devices.begin(), m_devices.end() };
+    }
+
+    void Audio::query_devices() {
         int count {};
 
         SDL_AudioDeviceID* devices {SDL_GetAudioPlaybackDevices(&count)};
@@ -50,16 +64,16 @@ namespace audio {
             throw AudioError(std::format("SDL_GetAudioPlaybackDevices: {}", SDL_GetError()));
         }
 
-        m_device_names.clear();
+        m_devices.clear();
 
         for (int i {}; i < count; i++) {
             const char* name {SDL_GetAudioDeviceName(devices[i])};
 
             if (!name) {
-                name = "[Error]";
+                name = "[...]";
             }
 
-            m_device_names.emplace_back(devices[i], name);
+            m_devices.emplace_back(devices[i], name);
         }
 
         SDL_free(devices);
@@ -85,12 +99,6 @@ namespace audio {
 
         if (!m_stream) {
             throw AudioError(std::format("SDL_OpenAudioDeviceStream: {}", SDL_GetError()));
-        }
-
-        m_device = SDL_GetAudioStreamDevice(m_stream);
-
-        if (!m_device) {
-            throw AudioError(std::format("SDL_GetAudioStreamDevice: {}", SDL_GetError()));
         }
     }
 
