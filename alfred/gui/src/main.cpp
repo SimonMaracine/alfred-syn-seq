@@ -1,4 +1,4 @@
-#include <iostream>
+#include <print>
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
@@ -25,11 +25,11 @@ int main(int, char**) {
         application::Application application;
         application.run();
     } catch (const video::VideoError& e) {
-        std::cerr << "Fatal video error: " << e.what() << '\n';
+        std::println(stderr, "Fatal video error: {}", e.what());
         show_error_message_box("Alfred Video Error", "A critical video error occurred. Check the logs.");
         return 1;
     } catch (const audio::AudioError& e) {
-        std::cerr << "Fatal audio error: " << e.what() << '\n';
+        std::println(stderr, "Fatal audio error: {}", e.what());
         show_error_message_box("Alfred Audio Error", "A critical audio error occurred. Check the logs.");
         return 1;
     }

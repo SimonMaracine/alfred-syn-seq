@@ -10,6 +10,7 @@
 #include <SDL3/SDL.h>
 
 #include "imgui.ini.hpp"
+#include "logging.hpp"
 
 namespace application {
     static constexpr ImVec2 STEP_SIZE {4.0f / ui::FONT_SIZE, 20.0f / ui::FONT_SIZE};
@@ -383,6 +384,7 @@ namespace application {
             } else {
                 if (ImGui::Button("Start")) {
                     if (m_composition_modified) {
+                        LOG_DEBUG("Compiling composition");
                         m_player.prepare();
                     }
 

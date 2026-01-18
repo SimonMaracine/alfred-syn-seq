@@ -15,6 +15,7 @@ add_executable(alfred
     "src/application.hpp"
     "src/imgui.cpp"
     "src/imgui.hpp"
+    "src/logging.hpp"
     "src/main.cpp"
     "src/sequencer.cpp"
     "src/sequencer.hpp"
