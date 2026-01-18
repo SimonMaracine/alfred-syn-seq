@@ -1,9 +1,8 @@
-#include <print>
-
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
 #include "application.hpp"
+#include "logging.hpp"
 
 static void set_property(const char* property, const char* value) {
     (void) SDL_SetAppMetadataProperty(property, value);
@@ -25,14 +24,21 @@ int main(int, char**) {
         application::Application application;
         application.run();
     } catch (const video::VideoError& e) {
-        std::println(stderr, "Fatal video error: {}", e.what());
+        logging::critical("Fatal video error: {}", e.what());
         show_error_message_box("Alfred Video Error", "A critical video error occurred. Check the logs.");
         return 1;
     } catch (const audio::AudioError& e) {
-        std::println(stderr, "Fatal audio error: {}", e.what());
+        logging::critical("Fatal audio error: {}", e.what());
         show_error_message_box("Alfred Audio Error", "A critical audio error occurred. Check the logs.");
         return 1;
     }
+#ifdef ALFRED_DISTRIBUTION
+    catch (...) {
+        logging::critical("Unknown fatal error");
+        show_error_message_box("Alfred Unknown Error", "An unknown critical error occurred.");
+        return 1;
+    }
+#endif
 
     return 0;
 }

@@ -41,7 +41,7 @@ namespace logging {
 
         std::println(
             stderr,
-            "[{} {} {}:{}:{}:{}] {}",
+            "[{} {} {} {} {}:{}] {}",
             severity_to_string(severity),
             time_of_day,
             location.file_name(),

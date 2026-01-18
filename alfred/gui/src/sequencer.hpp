@@ -152,10 +152,13 @@ namespace seq {
 
         void update(double dt);  // FIXME when stopped, the application accumulates time and then goes crazy
     private:
+        using MeasureIter = std::vector<Measure>::const_iterator;
+
         void initialize(unsigned int position);
         exec::Executions initialize_executions(unsigned int position) const;
+        MeasureIter initialize_measure(unsigned int position) const;
+        double initialize_elapsed_time(unsigned int position) const;
         unsigned int initialize_measure_position(unsigned int position) const;
-        double initialize_time(unsigned int position) const;
         bool finished() const;
         bool no_notes() const;
 
@@ -163,8 +166,7 @@ namespace seq {
         const Composition* m_composition {};
 
         exec::Executions m_executions;
-
-        std::vector<Measure>::const_iterator m_measure;
+        MeasureIter m_measure;
         double m_accumulator_time {};
         double m_elapsed_time {};
         unsigned int m_position {};  // Like a cursor

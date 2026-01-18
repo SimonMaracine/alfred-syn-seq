@@ -32,7 +32,8 @@ namespace seq {
     }
 
     void Player::stop() {
-        seek(m_position);
+        m_playing = false;
+        m_synthesizer->silence();
     }
 
     void Player::seek(unsigned int position) {
@@ -121,14 +122,9 @@ namespace seq {
 
     void Player::initialize(unsigned int position) {
         m_executions = initialize_executions(position);  // FIXME
-        m_elapsed_time = initialize_time(position);
+        m_measure = initialize_measure(position);
+        m_elapsed_time = initialize_elapsed_time(position);
         m_measure_position = initialize_measure_position(position);
-
-        if (!m_composition->measures.empty()) {
-            m_measure = m_composition->measures.begin();
-        } else {
-            m_measure = m_composition->measures.end();
-        }
     }
 
     exec::Executions Player::initialize_executions(unsigned int position) const {
@@ -137,7 +133,7 @@ namespace seq {
         for (unsigned int steps {}; const Measure& measure : m_composition->measures) {
             for (const auto& [voice, notes] : measure.voices) {
                 for (const Note& note : notes) {
-                    if (note.position < position) {
+                    if (steps + note.position < position) {
                         continue;
                     }
 
@@ -158,39 +154,54 @@ namespace seq {
         return executions;
     }
 
-    unsigned int Player::initialize_measure_position(unsigned int position) const {
-        for (unsigned int steps {}; const Measure& measure : m_composition->measures) {
-            steps += measure.time_signature.measure_steps();
+    Player::MeasureIter Player::initialize_measure(unsigned int position) const {
+        unsigned int steps {};
+        MeasureIter measure {m_composition->measures.end()};
 
-            if (steps >= position) {
-                return measure.time_signature.measure_steps() - steps - position;
+        for (measure = m_composition->measures.begin(); measure != m_composition->measures.end(); measure++) {
+            steps += measure->time_signature.measure_steps();
+
+            if (steps > position) {
+                return measure;
             }
         }
 
-        return 0;
+        return measure;
     }
 
-    double Player::initialize_time(unsigned int position) const {
+    double Player::initialize_elapsed_time(unsigned int position) const {
         unsigned int steps {};
         double time {};
 
         for (const Measure& measure : m_composition->measures) {
-            const unsigned int measure_steps {measure.time_signature.measure_steps()};
+            steps += measure.time_signature.measure_steps();
 
-            if (steps + measure_steps >= position) {
-                const unsigned int last_steps {steps + measure_steps - position};
+            if (steps > position) {
+                const unsigned int last_steps {measure.time_signature.measure_steps() - (steps - position)};
 
-                steps += measure_steps - last_steps;
-                time += double(measure_steps - last_steps) * measure.time_signature.step_time(measure.tempo);
+                time += double(last_steps) * measure.time_signature.step_time(measure.tempo);
 
                 return time;
             }
 
-            steps += measure_steps;
-            time += double(measure_steps) * measure.time_signature.step_time(measure.tempo);
+            time += double(measure.time_signature.measure_steps()) * measure.time_signature.step_time(measure.tempo);
         }
 
-        return 0.0;
+        return time;
+    }
+
+    unsigned int Player::initialize_measure_position(unsigned int position) const {
+        unsigned int steps {};
+
+        for (const Measure& measure : m_composition->measures) {
+            steps += measure.time_signature.measure_steps();
+
+            if (steps > position) {
+                return measure.time_signature.measure_steps() - (steps - position);
+            }
+        }
+
+        return steps;
     }
 
     bool Player::finished() const {

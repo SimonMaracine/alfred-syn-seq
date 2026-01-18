@@ -386,6 +386,7 @@ namespace application {
                     if (m_composition_modified) {
                         LOG_DEBUG("Compiling composition");
                         m_player.prepare();
+                        m_composition_modified = false;
                     }
 
                     m_player.start();
@@ -914,7 +915,7 @@ namespace application {
             }
         }
 
-        m_composition_modified = true;
+        modify_composition();
     }
 
     void Application::remove_metronome() {
@@ -926,7 +927,7 @@ namespace application {
             measure->voices.erase(syn::VoiceMetronome);
         }
 
-        m_composition_modified = true;
+        modify_composition();
     }
 
     void Application::select_measure(ImVec2 position) {
@@ -970,7 +971,7 @@ namespace application {
             add_metronome(begin, end);
         }
 
-        m_composition_modified = true;
+        modify_composition();
     }
 
     void Application::insert_measure() {
@@ -989,7 +990,7 @@ namespace application {
             add_metronome(m_composition_selected_measure, std::next(m_composition_selected_measure));
         }
 
-        m_composition_modified = true;
+        modify_composition();
     }
 
     void Application::clear_measure() {
@@ -1001,7 +1002,7 @@ namespace application {
             return voice.first != syn::VoiceMetronome;
         });
 
-        m_composition_modified = true;
+        modify_composition();
     }
 
     void Application::delete_measure() {
@@ -1011,7 +1012,7 @@ namespace application {
 
         m_composition_selected_measure = m_composition.measures.erase(m_composition_selected_measure);
 
-        m_composition_modified = true;
+        modify_composition();
     }
 
     void Application::set_measure_tempo() {
@@ -1021,7 +1022,7 @@ namespace application {
 
         set_tempo(*m_composition_selected_measure, m_ui.tempo);
 
-        m_composition_modified = true;
+        modify_composition();
     }
 
     void Application::set_measure_time_signature() {
@@ -1041,7 +1042,7 @@ namespace application {
             set_time_signature(m_ui.time_signature, *m_composition_selected_measure);
         }
 
-        m_composition_modified = true;
+        modify_composition();
     }
 
     bool Application::click_note(ImVec2 position, CompositionNote& composition_note) {
@@ -1185,7 +1186,7 @@ namespace application {
                     composition_note.position
                 );
 
-                m_composition_modified = true;
+                modify_composition();
             } else {
                 m_composition_selected_notes.clear();
             }
@@ -1199,7 +1200,7 @@ namespace application {
 
         m_composition_selected_notes.clear();
 
-        m_composition_modified = true;
+        modify_composition();
     }
 
     void Application::shift_notes_left(std::vector<seq::Note>& notes, unsigned int begin, unsigned int end, unsigned int steps) {
@@ -1208,6 +1209,14 @@ namespace application {
 
     void Application::shift_notes_right(std::vector<seq::Note>& notes, unsigned int begin, unsigned int end, unsigned int steps) {
 
+    }
+
+    void Application::modify_composition() {
+        if (!m_composition_modified) {
+            LOG_DEBUG("Composition modified");
+        }
+
+        m_composition_modified = true;
     }
 
     ImVec2 Application::composition_mouse_position(ImVec2 origin) const {
