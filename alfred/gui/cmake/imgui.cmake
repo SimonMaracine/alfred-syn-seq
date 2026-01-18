@@ -2,27 +2,35 @@ if(NOT ALFRED_DISTRIBUTION)
     set(IMGUI_DEMO "extern/imgui/imgui_demo.cpp")
 endif()
 
-add_library(
-    imgui STATIC
-    ${IMGUI_DEMO}
-    "extern/imgui/imgui_draw.cpp"
-    "extern/imgui/imgui_tables.cpp"
-    "extern/imgui/imgui_widgets.cpp"
-    "extern/imgui/imgui.cpp"
-    "extern/imgui/imconfig.h"
-    "extern/imgui/imgui_internal.h"
-    "extern/imgui/imgui.h"
-    "extern/imgui/imstb_rectpack.h"
-    "extern/imgui/imstb_textedit.h"
-    "extern/imgui/imstb_truetype.h"
+add_library(imgui STATIC)
 
-    "extern/imgui/backends/imgui_impl_sdl3.cpp"
-    "extern/imgui/backends/imgui_impl_sdl3.h"
-    "extern/imgui/backends/imgui_impl_sdlrenderer3.cpp"
-    "extern/imgui/backends/imgui_impl_sdlrenderer3.h"
+target_sources(
+    imgui
+    PRIVATE
+        ${IMGUI_DEMO}
+        "extern/imgui/imgui_draw.cpp"
+        "extern/imgui/imgui_tables.cpp"
+        "extern/imgui/imgui_widgets.cpp"
+        "extern/imgui/imgui.cpp"
+
+        "extern/imgui/backends/imgui_impl_sdl3.cpp"
+        "extern/imgui/backends/imgui_impl_sdlrenderer3.cpp"
+    PUBLIC
+        FILE_SET HEADERS
+        BASE_DIRS
+            "extern/imgui"
+        FILES
+            "extern/imgui/imconfig.h"
+            "extern/imgui/imgui_internal.h"
+            "extern/imgui/imgui.h"
+            "extern/imgui/imstb_rectpack.h"
+            "extern/imgui/imstb_textedit.h"
+            "extern/imgui/imstb_truetype.h"
+
+            "extern/imgui/backends/imgui_impl_sdl3.h"
+            "extern/imgui/backends/imgui_impl_sdlrenderer3.h"
 )
 
-target_include_directories(imgui PUBLIC "extern/imgui")
 target_include_directories(imgui PRIVATE "../extern/SDL/include")
 
 set_target_cpp_mode(imgui)
