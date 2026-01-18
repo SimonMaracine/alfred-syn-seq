@@ -5,11 +5,12 @@ include(cmake/imgui.cmake)
 add_custom_command(
     OUTPUT "imgui.ini.hpp"
     COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate.py"
-    ARGS "SETTINGS" "${CMAKE_CURRENT_SOURCE_DIR}/src/imgui.ini"
-    DEPENDS "src/imgui.ini"
+    ARGS "SETTINGS" "${CMAKE_CURRENT_SOURCE_DIR}/res/imgui.ini"
+    DEPENDS "res/imgui.ini"
 )
 
-add_executable(alfred
+add_executable(
+    alfred
     "imgui.ini.hpp"
     "src/application.cpp"
     "src/application.hpp"

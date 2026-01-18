@@ -121,7 +121,7 @@ namespace seq {
     }
 
     void Player::initialize(unsigned int position) {
-        m_executions = initialize_executions(position);  // FIXME
+        m_executions = initialize_executions(position);
         m_measure = initialize_measure(position);
         m_elapsed_time = initialize_elapsed_time(position);
         m_measure_position = initialize_measure_position(position);

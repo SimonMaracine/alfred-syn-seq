@@ -1,6 +1,10 @@
 function(set_target_cpp_mode TARGET)
     target_compile_features(${TARGET} PRIVATE cxx_std_23)
-    set_target_properties(${TARGET} PROPERTIES CXX_EXTENSIONS OFF)
+    set_target_properties(
+        ${TARGET} PROPERTIES
+        CXX_EXTENSIONS OFF
+        CMAKE_CXX_STANDARD_REQUIRED ON
+    )
 endfunction()
 
 function(enable_target_warnings TARGET)

@@ -2,7 +2,8 @@ if(NOT ALFRED_DISTRIBUTION)
     set(IMGUI_DEMO "extern/imgui/imgui_demo.cpp")
 endif()
 
-add_library(imgui STATIC
+add_library(
+    imgui STATIC
     ${IMGUI_DEMO}
     "extern/imgui/imgui_draw.cpp"
     "extern/imgui/imgui_tables.cpp"
