@@ -5,7 +5,6 @@
 #include <charconv>
 #include <iterator>
 #include <cstring>
-#include <cassert>
 
 #include <SDL3/SDL.h>
 
@@ -824,8 +823,8 @@ namespace application {
     }
 
     bool Application::time_signature() {
-        constexpr const char* BEATS[] { "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16" };
-        constexpr const char* VALUE[] { "2", "4", "8", "16" };
+        constexpr const char* BEATS[] { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16" };
+        constexpr const char* VALUE[] { "1", "2", "4", "8", "16" };
 
         const auto flags {ImGuiComboFlags_HeightSmall | ImGuiComboFlags_WidthFitPreview | ImGuiComboFlags_NoArrowButton};
 
@@ -1040,6 +1039,7 @@ namespace application {
         } else {
             // Reset back
             set_time_signature(m_ui.time_signature, *m_composition_selected_measure);
+            LOG_INFORMATION("Cannot change time signature in this state");
         }
 
         modify_composition();
@@ -1291,6 +1291,7 @@ namespace application {
         seq::Value value {};
 
         switch (time_signature.beats) {
+            case ui::TimeSignature::Beats1: beats = 1; break;
             case ui::TimeSignature::Beats2: beats = 2; break;
             case ui::TimeSignature::Beats3: beats = 3; break;
             case ui::TimeSignature::Beats4: beats = 4; break;
@@ -1309,6 +1310,7 @@ namespace application {
         }
 
         switch (time_signature.value) {
+            case ui::TimeSignature::Value1: value = seq::Whole; break;
             case ui::TimeSignature::Value2: value = seq::Half; break;
             case ui::TimeSignature::Value4: value = seq::Quarter; break;
             case ui::TimeSignature::Value8: value = seq::Eighth; break;
@@ -1320,6 +1322,7 @@ namespace application {
 
     void Application::set_time_signature(ui::TimeSignature& time_signature, const seq::Measure& measure) {
         switch (measure.time_signature.beats()) {
+            case 1: time_signature.beats = ui::TimeSignature::Beats1; break;
             case 2: time_signature.beats = ui::TimeSignature::Beats2; break;
             case 3: time_signature.beats = ui::TimeSignature::Beats3; break;
             case 4: time_signature.beats = ui::TimeSignature::Beats4; break;
@@ -1338,7 +1341,7 @@ namespace application {
         }
 
         switch (measure.time_signature.value()) {
-            case seq::Whole: assert(false); break;
+            case seq::Whole: time_signature.value = ui::TimeSignature::Value1; break;
             case seq::Half: time_signature.value = ui::TimeSignature::Value2; break;
             case seq::Quarter: time_signature.value = ui::TimeSignature::Value4; break;
             case seq::Eighth: time_signature.value = ui::TimeSignature::Value8; break;

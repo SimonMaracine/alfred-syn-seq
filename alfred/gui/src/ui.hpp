@@ -26,6 +26,7 @@ namespace ui {
 
     struct TimeSignature {
         enum Beats : unsigned int {
+            Beats1,
             Beats2,
             Beats3,
             Beats4,
@@ -44,6 +45,7 @@ namespace ui {
         };
 
         enum Value : unsigned int {
+            Value1,
             Value2,
             Value4,
             Value8,
