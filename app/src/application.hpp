@@ -4,6 +4,7 @@
 #include <vector>
 #include <flat_set>
 #include <unordered_map>
+#include <optional>
 
 #include <imgui.h>
 #include <alfred/synthesizer.hpp>
@@ -55,11 +56,13 @@ namespace application {
             NoteIter note;
         };
 
-        struct CompositionNote {
+        struct HoveredNote {
             syn::Name name {};
             syn::Octave octave {};
             MeasureIter measure;
             unsigned int position {};
+
+            bool operator<=>(const HoveredNote&) const = default;
         };
 
         void update_keyboard_input(unsigned int key, bool down);
@@ -67,19 +70,22 @@ namespace application {
         void add_metronome(MeasureIter begin, MeasureIter end);
         void remove_metronome();
         void remove_metronome(MeasureIter begin, MeasureIter end);
-        void select_measure(ImVec2 position);
+        bool hover_measure(ImVec2 position, MeasureIter& hovered_measure);
+        void select_measure(MeasureIter hovered_measure);
         void append_measures();
         void insert_measure();
         void clear_measure();
         void delete_measure();
         void set_measure_tempo();
         void set_measure_time_signature();
-        bool click_note(ImVec2 position, CompositionNote& composition_note);
-        bool select_note(const CompositionNote& composition_note, NoteIter& note);
-        void do_with_clicked_note(const CompositionNote& composition_note);
+        bool hover_note(ImVec2 position, HoveredNote& hovered_note);
+        bool select_note(const HoveredNote& hovered_note, NoteIter& note);
+        void do_with_note(const HoveredNote& hovered_note);
         void delete_notes();
-        void shift_notes_left(std::vector<seq::Note>& notes, unsigned int begin, unsigned int end, unsigned int steps);
-        void shift_notes_right(std::vector<seq::Note>& notes, unsigned int begin, unsigned int end, unsigned int steps);
+        void shift_notes_up();
+        void shift_notes_down();
+        void shift_notes_left();
+        void shift_notes_right();
 
         void modify_composition();
         ImVec2 composition_mouse_position(ImVec2 origin) const;
@@ -121,6 +127,8 @@ namespace application {
             double volume {};
             const char* device {};
             std::unordered_map<syn::Voice, ui::ColorIndex> colors;
+            std::optional<MeasureIter> hovered_measure;
+            std::optional<HoveredNote> hovered_note;
         } m_ui;
 
         bool m_metronome {};

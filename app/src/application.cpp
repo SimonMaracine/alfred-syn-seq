@@ -22,7 +22,7 @@ namespace application {
         m_synthesizer.open();
         m_synthesizer.resume();
 
-        ImGuiIO& io {ImGui::GetIO()};
+        auto& io {ImGui::GetIO()};
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
         io.ConfigWindowsResizeFromEdges = false;
         io.ConfigWindowsMoveFromTitleBarOnly = true;
@@ -501,6 +501,32 @@ namespace application {
     void Application::tools_note() {
         ImGui::BeginGroup();
 
+        ImGui::BeginGroup();
+
+        if (ImGui::ArrowButton("Shift Up", ImGuiDir_Up)) {
+            shift_notes_up();
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::ArrowButton("Shift Down", ImGuiDir_Down)) {
+            shift_notes_down();
+        }
+
+        if (ImGui::ArrowButton("Shift Left", ImGuiDir_Left)) {
+            shift_notes_left();
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::ArrowButton("Shift Right", ImGuiDir_Right)) {
+            shift_notes_right();
+        }
+
+        ImGui::EndGroup();
+
+        ImGui::SameLine();
+
         if (ImGui::Button("Delete")) {
             delete_notes();
         }
@@ -537,6 +563,7 @@ namespace application {
             ImDrawList* list {ImGui::GetWindowDrawList()};
             const ImVec2 origin {ImGui::GetCursorScreenPos()};
             const ImVec2 space_available {ImGui::GetContentRegionAvail()};
+            const auto& io {ImGui::GetIO()};
 
             composition_measures(list, origin);
             composition_octaves(list, origin);
@@ -547,20 +574,23 @@ namespace application {
 
             (void) ImGui::InvisibleButton("Canvas", space_available, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight);
 
-            if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
-                m_composition_camera -= ImGui::GetIO().MouseDelta;
+            const bool item_active {ImGui::IsItemActive()};
+            const bool item_hovered {ImGui::IsItemHovered()};
+
+            if (item_active && ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
+                m_composition_camera -= io.MouseDelta;
             }
 
-            if (ImGui::IsItemHovered()) {
+            if (item_hovered) {
                 if (ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
                     m_composition_camera -= ImVec2(
-                        ui::rem(COMPOSITION_SCROLL_SPEED * 2.0f) * ImGui::GetIO().MouseWheel,
-                        -ui::rem(COMPOSITION_SCROLL_SPEED) * ImGui::GetIO().MouseWheelH
+                        ui::rem(COMPOSITION_SCROLL_SPEED * 2.0f) * io.MouseWheel,
+                        -ui::rem(COMPOSITION_SCROLL_SPEED) * io.MouseWheelH
                     );
                 } else {
                     m_composition_camera -= ImVec2(
-                        -ui::rem(COMPOSITION_SCROLL_SPEED * 2.0f) * ImGui::GetIO().MouseWheelH,
-                        ui::rem(COMPOSITION_SCROLL_SPEED) * ImGui::GetIO().MouseWheel
+                        -ui::rem(COMPOSITION_SCROLL_SPEED * 2.0f) * io.MouseWheelH,
+                        ui::rem(COMPOSITION_SCROLL_SPEED) * io.MouseWheel
                     );
                 }
             }
@@ -569,16 +599,22 @@ namespace application {
             m_composition_camera.y = std::max(m_composition_camera.y, 0.0f);
             m_composition_camera.y = std::min(m_composition_camera.y, ui::rem(COMPOSITION_HEIGHT) - space_available.y);
 
-            if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+            if (item_hovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
                 switch (m_ui.tool) {
-                    case ui::ToolMeasure:
-                        select_measure(composition_mouse_position(origin));
-                        break;
-                    case ui::ToolNote: {
-                        CompositionNote composition_note;
+                    case ui::ToolMeasure: {
+                        MeasureIter hovered_measure;
 
-                        if (click_note(composition_mouse_position(origin), composition_note)) {
-                            do_with_clicked_note(composition_note);
+                        if (hover_measure(composition_mouse_position(origin), hovered_measure)) {
+                            m_ui.hovered_measure = hovered_measure;
+                        }
+
+                        break;
+                    }
+                    case ui::ToolNote: {
+                        HoveredNote hovered_note;
+
+                        if (hover_note(composition_mouse_position(origin), hovered_note)) {
+                            m_ui.hovered_note = hovered_note;
                         }
 
                         break;
@@ -586,6 +622,48 @@ namespace application {
                     case ui::ToolRecord:
                         break;
                 }
+            }
+
+            if (item_hovered && ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
+                switch (m_ui.tool) {
+                    case ui::ToolMeasure:
+                        if (m_ui.hovered_measure) {
+                            MeasureIter hovered_measure;
+
+                            if (hover_measure(composition_mouse_position(origin), hovered_measure)) {
+                                if (hovered_measure == *m_ui.hovered_measure) {
+                                    select_measure(hovered_measure);
+                                }
+                            }
+                        } else {
+                            // FIXME this is not perfect
+
+                            MeasureIter hovered_measure;
+
+                            if (!hover_measure(composition_mouse_position(origin), hovered_measure)) {
+                                m_composition_selected_measure = m_composition.measures.end();
+                            }
+                        }
+
+                        break;
+                    case ui::ToolNote:
+                        if (m_ui.hovered_note) {
+                            HoveredNote hovered_note;
+
+                            if (hover_note(composition_mouse_position(origin), hovered_note)) {
+                                if (hovered_note == *m_ui.hovered_note) {
+                                    do_with_note(hovered_note);
+                                }
+                            }
+                        }
+
+                        break;
+                    case ui::ToolRecord:
+                        break;
+                }
+
+                m_ui.hovered_measure = std::nullopt;
+                m_ui.hovered_note = std::nullopt;
             }
         }
 
@@ -929,26 +1007,31 @@ namespace application {
         modify_composition();
     }
 
-    void Application::select_measure(ImVec2 position) {
+    bool Application::hover_measure(ImVec2 position, MeasureIter& hovered_measure) {
         float position_x {};
 
         for (auto measure {m_composition.measures.begin()}; measure != m_composition.measures.end(); measure++) {
             const float right {float(measure->time_signature.measure_steps()) * ui::rem(STEP_SIZE.x)};
 
             if (position.x >= position_x && position.x < position_x + right) {
-                if (m_composition_selected_measure == measure) {
-                    m_composition_selected_measure = m_composition.measures.end();
-                } else {
-                    m_composition_selected_measure = measure;
-
-                    set_tempo(m_ui.tempo, *measure);
-                    set_time_signature(m_ui.time_signature, *measure);
-                }
-
-                break;
+                hovered_measure = measure;
+                return true;
             }
 
             position_x += right;
+        }
+
+        return false;
+    }
+
+    void Application::select_measure(MeasureIter hovered_measure) {
+        if (m_composition_selected_measure == hovered_measure) {
+            m_composition_selected_measure = m_composition.measures.end();
+        } else {
+            m_composition_selected_measure = hovered_measure;
+
+            set_tempo(m_ui.tempo, *hovered_measure);
+            set_time_signature(m_ui.time_signature, *hovered_measure);
         }
     }
 
@@ -1045,7 +1128,7 @@ namespace application {
         modify_composition();
     }
 
-    bool Application::click_note(ImVec2 position, CompositionNote& composition_note) {
+    bool Application::hover_note(ImVec2 position, HoveredNote& hovered_note) {
         static constexpr std::pair<syn::Name, syn::Octave> NOTES[] {
             { syn::C, syn::Octave6 },
 
@@ -1109,8 +1192,8 @@ namespace application {
         {
             const int index {int(position.y / ui::rem(STEP_SIZE.y))};
 
-            composition_note.name = NOTES[index].first;
-            composition_note.octave = NOTES[index].second;
+            hovered_note.name = NOTES[index].first;
+            hovered_note.octave = NOTES[index].second;
         }
 
         float position_x {};
@@ -1121,8 +1204,8 @@ namespace application {
             if (position.x >= position_x && position.x < position_x + right) {
                 const float offset {position.x - position_x};
 
-                composition_note.measure = measure;
-                composition_note.position = seq::DIV * static_cast<unsigned int>(offset / (float(seq::DIV) * ui::rem(STEP_SIZE.x)));
+                hovered_note.measure = measure;
+                hovered_note.position = seq::DIV * static_cast<unsigned int>(offset / (float(seq::DIV) * ui::rem(STEP_SIZE.x)));
 
                 return true;
             }
@@ -1133,16 +1216,16 @@ namespace application {
         return false;
     }
 
-    bool Application::select_note(const CompositionNote& composition_note, NoteIter& note) {
-        auto voice {composition_note.measure->voices.find(m_voice)};
+    bool Application::select_note(const HoveredNote& hovered_note, NoteIter& note) {
+        auto voice {hovered_note.measure->voices.find(m_voice)};
 
-        if (voice == composition_note.measure->voices.end()) {
+        if (voice == hovered_note.measure->voices.end()) {
             return false;
         }
 
         for (auto n {voice->second.begin()}; n != voice->second.end(); n++) {
-            if (composition_note.name == n->name && composition_note.octave == n->octave) {
-                if (composition_note.position >= n->position && composition_note.position < n->position + seq::STEP / n->value) {
+            if (hovered_note.name == n->name && hovered_note.octave == n->octave) {
+                if (hovered_note.position >= n->position && hovered_note.position < n->position + seq::STEP / n->value) {
                     note = n;
                     return true;
                 }
@@ -1152,13 +1235,13 @@ namespace application {
         return false;
     }
 
-    void Application::do_with_clicked_note(const CompositionNote& composition_note) {
+    void Application::do_with_note(const HoveredNote& hovered_note) {
         NoteIter note;
 
-        if (select_note(composition_note, note)) {
+        if (select_note(hovered_note, note)) {
             const auto selected_note {
-                std::find_if(m_composition_selected_notes.begin(), m_composition_selected_notes.end(), [composition_note, note](const auto& n) {
-                    return n.measure == composition_note.measure && n.note == note;
+                std::find_if(m_composition_selected_notes.begin(), m_composition_selected_notes.end(), [hovered_note, note](const auto& n) {
+                    return n.measure == hovered_note.measure && n.note == note;
                 })
             };
 
@@ -1166,7 +1249,7 @@ namespace application {
                 if (selected_note != m_composition_selected_notes.end()) {
                     m_composition_selected_notes.erase(selected_note);
                 } else {
-                    m_composition_selected_notes.emplace_back(composition_note.measure, note);
+                    m_composition_selected_notes.emplace_back(hovered_note.measure, note);
                 }
             } else {
                 const bool exists {selected_note != m_composition_selected_notes.end()};
@@ -1174,22 +1257,24 @@ namespace application {
                 m_composition_selected_notes.clear();
 
                 if (!exists) {
-                    m_composition_selected_notes.emplace_back(composition_note.measure, note);
+                    m_composition_selected_notes.emplace_back(hovered_note.measure, note);
                 }
             }
-        } else {
-            if (m_composition_selected_notes.empty()) {
-                composition_note.measure->voices[m_voice].emplace(
-                    composition_note.name,
-                    composition_note.octave,
-                    get_value(ui::Value(m_ui.value)),
-                    composition_note.position
-                );
 
-                modify_composition();
-            } else {
-                m_composition_selected_notes.clear();
-            }
+            return;
+        }
+
+        if (!m_composition_selected_notes.empty()) {
+            m_composition_selected_notes.clear();
+        } else {
+            hovered_note.measure->voices[m_voice].emplace(
+                hovered_note.name,
+                hovered_note.octave,
+                get_value(ui::Value(m_ui.value)),
+                hovered_note.position
+            );
+
+            modify_composition();
         }
     }
 
@@ -1203,12 +1288,20 @@ namespace application {
         modify_composition();
     }
 
-    void Application::shift_notes_left(std::vector<seq::Note>& notes, unsigned int begin, unsigned int end, unsigned int steps) {
-
+    void Application::shift_notes_up() {
+        logging::debug("up");
     }
 
-    void Application::shift_notes_right(std::vector<seq::Note>& notes, unsigned int begin, unsigned int end, unsigned int steps) {
+    void Application::shift_notes_down() {
+        logging::debug("down");
+    }
 
+    void Application::shift_notes_left() {
+        logging::debug("left");
+    }
+
+    void Application::shift_notes_right() {
+        logging::debug("right");
     }
 
     void Application::modify_composition() {

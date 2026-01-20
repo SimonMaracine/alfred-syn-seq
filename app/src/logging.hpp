@@ -21,7 +21,7 @@ namespace logging {
             case Severity::Information:
                 return "Information";
             case Severity::Warning:
-                return "Error";
+                return "Warning";
             case Severity::Error:
                 return "Error";
             case Severity::Critical:
@@ -104,11 +104,11 @@ namespace logging {
 }
 
 #ifdef ALFRED_DISTRIBUTION
-    #define LOG_DEBUG(...) static_cast<void>(0)
-    #define LOG_INFORMATION(...) static_cast<void>(0)
-    #define LOG_WARNING(...) static_cast<void>(0)
-    #define LOG_ERROR(...) static_cast<void>(0)
-    #define LOG_CRITICAL(...) static_cast<void>(0)
+    #define LOG_DEBUG(...) (void) 0
+    #define LOG_INFORMATION(...) (void) 0
+    #define LOG_WARNING(...) (void) 0
+    #define LOG_ERROR(...) (void) 0
+    #define LOG_CRITICAL(...) (void) 0
 #else
     #define LOG_DEBUG(...) logging::debug(__VA_ARGS__)
     #define LOG_INFORMATION(...) logging::information(__VA_ARGS__)

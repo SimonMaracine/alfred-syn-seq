@@ -8,6 +8,7 @@ option(ALFRED_ASAN "Whether to build with sanitizers on Linux or not" OFF)
 set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Build type")
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Configuration types")
 set(BUILD_SHARED_LIBS OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(cmake/sanity_checks.cmake)
 include(cmake/target_options.cmake)

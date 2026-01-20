@@ -46,3 +46,7 @@ if(UNIX)
 elseif(WIN32)
     target_compile_definitions(alfred PRIVATE "ALFRED_WINDOWS")
 endif()
+
+if(UNIX)
+    target_compile_options(alfred PRIVATE "-Wno-parentheses")
+endif()
