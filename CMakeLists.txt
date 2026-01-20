@@ -12,6 +12,8 @@ set(BUILD_SHARED_LIBS OFF)
 include(cmake/sanity_checks.cmake)
 include(cmake/target_options.cmake)
 
-add_subdirectory(alfred)
+include(cmake/sdl.cmake)
+add_subdirectory(lib)
+add_subdirectory(app)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
