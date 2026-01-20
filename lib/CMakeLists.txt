@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.20)
 
-add_library(alfred_core STATIC)
+add_library(alfred_lib STATIC)
 
 target_sources(
-    alfred_core
+    alfred_lib
     PRIVATE
         "src/audio.cpp"
         "src/synthesis.cpp"
@@ -19,12 +19,14 @@ target_sources(
             "include/alfred/synthesizer.hpp"
 )
 
-target_link_libraries(alfred_core PRIVATE SDL3::SDL3)
+target_link_libraries(alfred_lib PRIVATE SDL3::SDL3)
 
-set_target_cpp_mode(alfred_core)
-enable_target_warnings(alfred_core)
-enable_target_diagnostics(alfred_core)
+set_target_properties(alfred_lib PROPERTIES OUTPUT_NAME "alfred")
+
+set_target_cpp_mode(alfred_lib)
+enable_target_warnings(alfred_lib)
+enable_target_diagnostics(alfred_lib)
 
 if(ALFRED_DISTRIBUTION)
-    target_compile_definitions(alfred_core PRIVATE "NDEBUG")
+    target_compile_definitions(alfred_lib PRIVATE "NDEBUG")
 endif()

@@ -31,7 +31,7 @@ add_executable(
 target_include_directories(alfred PRIVATE "src")
 target_include_directories(alfred PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 
-target_link_libraries(alfred PRIVATE SDL3::SDL3 imgui alfred_core)
+target_link_libraries(alfred PRIVATE SDL3::SDL3 imgui alfred_lib)
 
 set_target_cpp_mode(alfred)
 enable_target_warnings(alfred)
