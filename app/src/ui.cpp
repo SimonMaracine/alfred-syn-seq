@@ -22,7 +22,6 @@ namespace ui {
         }
 
         io.FontDefault = font;
-        io.Fonts->Build();
     }
 
     static void reset_style() {

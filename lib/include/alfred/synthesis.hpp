@@ -106,6 +106,7 @@ namespace syn {
 
         inline constexpr int OCTAVES {5};
         inline constexpr int EXTRA {4};
+        inline constexpr int NOTES {OCTAVES * 12 + EXTRA};
     }
 
     struct Note {

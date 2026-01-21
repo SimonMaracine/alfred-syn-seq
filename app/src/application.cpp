@@ -530,6 +530,8 @@ namespace application {
 
         ImGui::BeginGroup();
 
+        ImGui::PushItemFlag(ImGuiItemFlags_ButtonRepeat, true);
+
         if (ImGui::ArrowButton("Shift Up", ImGuiDir_Up)) {
             shift_notes_up();
         }
@@ -549,6 +551,8 @@ namespace application {
         if (ImGui::ArrowButton("Shift Right", ImGuiDir_Right)) {
             shift_notes_right();
         }
+
+        ImGui::PopItemFlag();
 
         ImGui::EndGroup();
 
@@ -649,6 +653,8 @@ namespace application {
                     case ui::ToolRecord:
                         break;
                 }
+
+                m_ui.hovered_composition = true;
             }
 
             if (item_hovered && ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
@@ -662,9 +668,7 @@ namespace application {
                                     select_measure(hovered_measure);
                                 }
                             }
-                        } else {
-                            // FIXME this is not perfect
-
+                        } else if (m_ui.hovered_composition) {
                             MeasureIter hovered_measure;
 
                             if (!hover_measure(composition_mouse_position(origin), hovered_measure)) {
@@ -691,6 +695,7 @@ namespace application {
 
                 m_ui.hovered_measure = std::nullopt;
                 m_ui.hovered_note = std::nullopt;
+                m_ui.hovered_composition = false;
             }
         }
 
@@ -1157,10 +1162,9 @@ namespace application {
 
     bool Application::hover_note(ImVec2 position, HoveredNote& hovered_note) {
         {
-            static constexpr int NOTES {syn::keyboard::OCTAVES * 12 + syn::keyboard::EXTRA};
             const int index {int(position.y / ui::rem(STEP_SIZE.y))};
 
-            const int id {NOTES - 1 - index};
+            const int id {syn::keyboard::NOTES - 1 - index};
             assert(id >= 0);
 
             hovered_note.id = syn::Id(id);
@@ -1262,29 +1266,79 @@ namespace application {
     }
 
     void Application::shift_notes_up() {
-        logging::debug("up");
-
         if (m_composition_selected_notes.empty()) {
             return;
         }
 
-        for (const SelectedNote& selected_note : m_composition_selected_notes) {
-            // selected_note.note->name
+        for (SelectedNote& selected_note : m_composition_selected_notes) {
+            seq::Note note {*selected_note.note};
+
+            if (note.id < static_cast<unsigned int>(syn::keyboard::NOTES - 1)) {
+                note.id++;
+            }
+
+            const auto iter {selected_note.measure->voices.at(m_voice).erase(selected_note.note)};
+            selected_note.note = selected_note.measure->voices.at(m_voice).insert(iter, note);
         }
 
         modify_composition();
     }
 
     void Application::shift_notes_down() {
-        logging::debug("down");
+        if (m_composition_selected_notes.empty()) {
+            return;
+        }
+
+        for (SelectedNote& selected_note : m_composition_selected_notes) {
+            seq::Note note {*selected_note.note};
+
+            if (note.id > 0) {
+                note.id--;
+            }
+
+            const auto iter {selected_note.measure->voices.at(m_voice).erase(selected_note.note)};
+            selected_note.note = selected_note.measure->voices.at(m_voice).insert(iter, note);
+        }
+
+        modify_composition();
     }
 
     void Application::shift_notes_left() {
-        logging::debug("left");
+        if (m_composition_selected_notes.empty()) {
+            return;
+        }
+
+        for (SelectedNote& selected_note : m_composition_selected_notes) {
+            seq::Note note {*selected_note.note};
+
+            if (note.position > 0) {
+                note.position--;
+            }
+
+            const auto iter {selected_note.measure->voices.at(m_voice).erase(selected_note.note)};
+            selected_note.note = selected_note.measure->voices.at(m_voice).insert(iter, note);
+        }
+
+        modify_composition();
     }
 
     void Application::shift_notes_right() {
-        logging::debug("right");
+        if (m_composition_selected_notes.empty()) {
+            return;
+        }
+
+        for (SelectedNote& selected_note : m_composition_selected_notes) {
+            seq::Note note {*selected_note.note};
+
+            if (note.position < selected_note.measure->time_signature.measure_steps() - seq::STEP / note.value) {
+                note.position++;
+            }
+
+            const auto iter {selected_note.measure->voices.at(m_voice).erase(selected_note.note)};
+            selected_note.note = selected_note.measure->voices.at(m_voice).insert(iter, note);
+        }
+
+        modify_composition();
     }
 
     void Application::modify_composition() {

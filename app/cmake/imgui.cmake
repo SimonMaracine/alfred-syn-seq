@@ -35,7 +35,7 @@ target_include_directories(imgui PRIVATE ${SDL_INCLUDE_DIRECTORY})
 
 set_target_cpp_mode(imgui)
 
-target_compile_definitions(imgui PUBLIC "IMGUI_DEFINE_MATH_OPERATORS")
+target_compile_definitions(imgui PUBLIC "IMGUI_DEFINE_MATH_OPERATORS" "IMGUI_DISABLE_OBSOLETE_FUNCTIONS")
 
 if(ALFRED_DISTRIBUTION)
     target_compile_definitions(imgui PRIVATE "NDEBUG")

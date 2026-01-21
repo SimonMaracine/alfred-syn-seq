@@ -2,7 +2,6 @@
 
 #include <utility>
 #include <vector>
-#include <flat_set>
 #include <unordered_map>
 #include <optional>
 
@@ -49,7 +48,7 @@ namespace application {
         void debug();
 
         using MeasureIter = std::vector<seq::Measure>::iterator;
-        using NoteIter = std::flat_multiset<seq::Note>::iterator;
+        using NoteIter = std::multiset<seq::Note>::iterator;
 
         struct SelectedNote {
             MeasureIter measure;
@@ -129,6 +128,7 @@ namespace application {
             std::unordered_map<syn::Voice, ui::ColorIndex> colors;
             std::optional<MeasureIter> hovered_measure;
             std::optional<HoveredNote> hovered_note;
+            bool hovered_composition {};
         } m_ui;
 
         bool m_metronome {};

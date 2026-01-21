@@ -4,6 +4,7 @@
 #include <vector>
 #include <unordered_map>
 #include <flat_set>
+#include <set>
 #include <utility>
 #include <stdexcept>
 #include <chrono>
@@ -79,7 +80,10 @@ namespace seq {
     struct Measure {
         Tempo tempo;
         TimeSignature time_signature;
-        std::unordered_map<syn::Voice, std::flat_multiset<Note>> voices;  // Notes must always be sorted
+        std::unordered_map<syn::Voice, std::multiset<Note>> voices;
+
+        // Notes must always be sorted
+        // Use a normal set, because the iterators need to stay stable
     };
 
     struct Composition {
