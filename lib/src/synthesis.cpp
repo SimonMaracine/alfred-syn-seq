@@ -44,12 +44,11 @@ namespace syn {
             return result * (2.0 / math::PI);
         }
 
+        thread_local std::mt19937_64 g_random;
+        thread_local std::uniform_real_distribution g_distribution {-1.0, 1.0};
+
         static double noise() {
-            static thread_local std::mt19937_64 s_random;  // TODO
-
-            std::uniform_real_distribution distribution {-1.0, 1.0};
-
-            return distribution(s_random);
+            return g_distribution(g_random);
         }
     }
 
