@@ -9,3 +9,7 @@ endif()
 if(ALFRED_DISTRIBUTION AND NOT CMAKE_BUILD_TYPE STREQUAL "Release")
     message(FATAL_ERROR "Distribution mode requires release mode")
 endif()
+
+if(ALFRED_DISTRIBUTION AND ALFRED_ASAN)
+    message(FATAL_ERROR "Asan is incompatible with distribution mode")
+endif()

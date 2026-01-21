@@ -71,7 +71,9 @@ namespace application {
         composition();
         debug();
 
+#ifndef ALFRED_DISTRIBUTION
         ImGui::ShowDemoWindow();
+#endif
     }
 
     void Application::on_late_update() {

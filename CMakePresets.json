@@ -1,0 +1,71 @@
+{
+    "version": 4,
+    "configurePresets": [
+        {
+            "name": "conf-dev",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "ALFRED_DISTRIBUTION": "OFF",
+                "ALFRED_ASAN": "OFF"
+            }
+        },
+        {
+            "name": "conf-dev-asan",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "ALFRED_DISTRIBUTION": "OFF",
+                "ALFRED_ASAN": "ON"
+            }
+        },
+        {
+            "name": "conf-dist-nix",
+            "binaryDir": "${sourceDir}/build_dist",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "OFF",
+                "ALFRED_DISTRIBUTION": "ON",
+                "ALFRED_ASAN": "OFF"
+            }
+        },
+        {
+            "name": "conf-dist-win",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "OFF",
+                "ALFRED_DISTRIBUTION": "ON",
+                "ALFRED_ASAN": "OFF"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "build-dev-nix",
+            "configurePreset": "conf-dev",
+            "jobs": 4
+        },
+        {
+            "name": "build-dev-win",
+            "configurePreset": "conf-dev",
+            "jobs": 4,
+            "configuration": "Debug"
+        },
+        {
+            "name": "build-dist-nix",
+            "configurePreset": "conf-dist-nix",
+            "jobs": 8,
+            "cleanFirst": true
+        },
+        {
+            "name": "build-dist-win",
+            "configurePreset": "conf-dist-win",
+            "jobs": 8,
+            "configuration": "Release",
+            "cleanFirst": true
+        }
+    ]
+}

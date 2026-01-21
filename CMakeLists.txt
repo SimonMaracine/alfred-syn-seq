@@ -5,10 +5,9 @@ project(alfred)
 option(ALFRED_DISTRIBUTION "Whether to build for distribution" OFF)
 option(ALFRED_ASAN "Whether to build with sanitizers on Linux or not" OFF)
 
-set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Build type")
-set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Configuration types")
+set(CACHE{CMAKE_BUILD_TYPE} TYPE STRING VALUE "Debug")
+set(CACHE{CMAKE_CONFIGURATION_TYPES} TYPE STRINGS VALUE "Debug;Release")
 set(BUILD_SHARED_LIBS OFF)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(cmake/sanity_checks.cmake)
 include(cmake/target_options.cmake)
@@ -18,3 +17,6 @@ add_subdirectory(lib)
 add_subdirectory(app)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+message(STATUS "ALFRED_DISTRIBUTION: ${ALFRED_DISTRIBUTION}")
+message(STATUS "ALFRED_ASAN: ${ALFRED_ASAN}")

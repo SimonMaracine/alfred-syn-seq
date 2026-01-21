@@ -1,27 +1,27 @@
-function(set_target_cpp_mode TARGET)
-    target_compile_features(${TARGET} PRIVATE cxx_std_23)
+function(set_target_cpp_mode target)
     set_target_properties(
-        ${TARGET} PROPERTIES
+        ${target} PROPERTIES
+        CXX_STANDARD 23
         CXX_EXTENSIONS OFF
         CMAKE_CXX_STANDARD_REQUIRED ON
     )
 endfunction()
 
-function(enable_target_warnings TARGET)
+function(enable_target_warnings target)
     if(UNIX)
-        target_compile_options(${TARGET} PRIVATE "-Wall" "-Wextra" "-Wpedantic" "-Wconversion")
+        target_compile_options(${target} PRIVATE "-Wall" "-Wextra" "-Wpedantic" "-Wconversion")
     elseif(WIN32)
-        target_compile_options(${TARGET} PRIVATE "/W4")
+        target_compile_options(${target} PRIVATE "/W4")
     endif()
 endfunction()
 
-function(enable_target_diagnostics TARGET)
+function(enable_target_diagnostics target)
     if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND UNIX)
-        target_compile_options(${TARGET} PRIVATE "-g")
+        target_compile_options(${target} PRIVATE "-g")
     endif()
 
     if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND UNIX AND ALFRED_ASAN)
-        target_compile_options(${TARGET} PRIVATE "-fsanitize=address" "-fsanitize=undefined" "-fno-omit-frame-pointer")
-        target_link_options(${TARGET} PRIVATE "-fsanitize=address" "-fsanitize=undefined")
+        target_compile_options(${target} PRIVATE "-fsanitize=address" "-fsanitize=undefined" "-fno-omit-frame-pointer")
+        target_link_options(${target} PRIVATE "-fsanitize=address" "-fsanitize=undefined")
     endif()
 endfunction()
