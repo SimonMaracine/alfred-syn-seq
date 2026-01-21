@@ -137,8 +137,33 @@ namespace application {
     }
 
     void Application::main_menu_bar_help() {
+        if (ImGui::BeginMenu("About")) {
+            const char* link {get_property(SDL_PROP_APP_METADATA_URL_STRING)};
+            ImGui::TextLinkOpenURL(link, link);
+
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Build")) {
+#ifdef ALFRED_DISTRIBUTION
+            const char* DEV_TAG {""};
+#else
+            const char* DEV_TAG {" dev"};
+#endif
+            ImGui::Text("Version: %s%s", get_property(SDL_PROP_APP_METADATA_VERSION_STRING), DEV_TAG);
+#if defined(ALFRED_LINUX)
+            ImGui::Text("Compiler: GCC %d.%d", __GNUC__, __GNUC_MINOR__);
+#elif defined(ALFRED_WINDOWS)
+            ImGui::Text("Compiler: MSVC %d", _MSC_VER);
+#endif
+            ImGui::Text("Date: %s %s", __DATE__, __TIME__);
+
+            ImGui::EndMenu();
+        }
+
         if (ImGui::BeginMenu("Driver")) {
             ImGui::Text("%s", m_synthesizer.driver());
+
             ImGui::EndMenu();
         }
     }
@@ -1417,5 +1442,15 @@ namespace application {
         }
 
         std::unreachable();
+    }
+
+    const char* Application::get_property(const char* property) {
+        const char* value {SDL_GetAppMetadataProperty(property)};
+
+        if (!value) {
+            return "";
+        }
+
+        return value;
     }
 }

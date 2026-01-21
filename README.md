@@ -1,6 +1,6 @@
 # Alfred
 
-A free and open source synthesizer and sequencer program.
+A free and open source cross-platform synthesizer and sequencer program.
 
 ## Building
 

@@ -100,6 +100,7 @@ namespace application {
         static void set_time_signature(ui::TimeSignature& time_signature, const seq::Measure& measure);
         static bool empty_except_metronome(const seq::Measure& measure);
         static seq::Value get_value(ui::Value value);
+        static const char* get_property(const char* property);
 
         task::TaskManager m_task_manager;
 

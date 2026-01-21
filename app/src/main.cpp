@@ -17,7 +17,7 @@ int main(int, char**) {
     set_property(SDL_PROP_APP_METADATA_VERSION_STRING, "0.1.0");
     set_property(SDL_PROP_APP_METADATA_IDENTIFIER_STRING, "dev.simonmara.alfred");
     set_property(SDL_PROP_APP_METADATA_CREATOR_STRING, "Simon");
-    set_property(SDL_PROP_APP_METADATA_URL_STRING, "https://github.com/SimonMaracine");
+    set_property(SDL_PROP_APP_METADATA_URL_STRING, "https://github.com/SimonMaracine/alfred");
     set_property(SDL_PROP_APP_METADATA_TYPE_STRING, "application");
 
     try {
