@@ -60,6 +60,7 @@ namespace syn {
         EnvelopeAdrDescription m_description;
     };
 
+    // MIDI-like note ID
     using Id = unsigned int;
 
     enum Name : unsigned int {
@@ -83,7 +84,8 @@ namespace syn {
         Octave3,
         Octave4,
         Octave5,
-        Octave6
+        Octave6,
+        Octave7
     };
 
     enum Voice : unsigned int {
@@ -93,8 +95,18 @@ namespace syn {
         VoiceDrumKick
     };
 
-    inline constexpr int NOTE_OCTAVES {4};
-    inline constexpr int NOTE_EXTRA {4};
+    namespace keyboard {
+        enum Octave : unsigned int {
+            Octave1,
+            Octave2,
+            Octave3,
+            Octave4,
+            Octave5
+        };
+
+        inline constexpr int OCTAVES {5};
+        inline constexpr int EXTRA {4};
+    }
 
     struct Note {
         Id id {};

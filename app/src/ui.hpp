@@ -76,7 +76,8 @@ namespace ui {
         Octave1 = 1,
         Octave2,
         Octave3,
-        Octave4
+        Octave4,
+        Octave5
     };
 
     // https://www.colorhexa.com/color-names

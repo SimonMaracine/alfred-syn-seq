@@ -5,13 +5,21 @@
 
 namespace synthesizer {
     void Synthesizer::note_on(syn::Name name, syn::Octave octave, syn::Voice voice) {
+        note_on(syn::Note::get_id(name, octave), voice);
+    }
+
+    void Synthesizer::note_off(syn::Name name, syn::Octave octave) {
+        note_off(syn::Note::get_id(name, octave));
+    }
+
+    void Synthesizer::note_on(syn::Id id, syn::Voice voice) {
         audio::AudioLockGuard guard {this};
 
-        const auto iter {find_note(syn::Note::get_id(name, octave))};
+        const auto iter {find_note(id)};
 
         if (iter == m_notes.end()) {
             syn::Note& note {m_notes.emplace_back()};
-            note.id = syn::Note::get_id(name, octave);
+            note.id = id;
             note.voice = voice;
             note.time_on = m_time;
         } else {
@@ -21,10 +29,10 @@ namespace synthesizer {
         }
     }
 
-    void Synthesizer::note_off(syn::Name name, syn::Octave octave) {
+    void Synthesizer::note_off(syn::Id id) {
         audio::AudioLockGuard guard {this};
 
-        const auto iter {find_note(syn::Note::get_id(name, octave))};
+        const auto iter {find_note(id)};
 
         if (iter != m_notes.end()) {
             if (iter->time_on > iter->time_off) {

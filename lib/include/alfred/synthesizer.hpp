@@ -11,6 +11,8 @@ namespace synthesizer {
     public:
         void note_on(syn::Name name, syn::Octave octave, syn::Voice voice);
         void note_off(syn::Name name, syn::Octave octave);
+        void note_on(syn::Id id, syn::Voice voice);
+        void note_off(syn::Id id);
         void silence();
         void volume(double volume);
         void update();

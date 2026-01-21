@@ -57,8 +57,7 @@ namespace application {
         };
 
         struct HoveredNote {
-            syn::Name name {};
-            syn::Octave octave {};
+            syn::Id id {};
             MeasureIter measure;
             unsigned int position {};
 
@@ -105,7 +104,7 @@ namespace application {
         task::TaskManager m_task_manager;
 
         syn::Voice m_voice {syn::VoiceBell};
-        unsigned int m_octave {syn::Octave3};
+        syn::keyboard::Octave m_octave {syn::keyboard::Octave3};
 
         ImVec2 m_composition_camera;
         MeasureIter m_composition_selected_measure;
@@ -123,7 +122,7 @@ namespace application {
             ui::TimeSignature time_signature;
             ui::ColorScheme color_scheme {ui::ColorSchemeClassic};
             ui::Scale scale {ui::Scale1X};
-            int octave {};
+            int octave {ui::Octave3};
             double volume {};
             const char* device {};
             std::unordered_map<syn::Voice, ui::ColorIndex> colors;

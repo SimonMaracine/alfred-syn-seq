@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <iterator>
-#include <cassert>
 
 namespace seq {
     void Composition::validate() const {
@@ -86,7 +85,7 @@ namespace seq {
                     execution.notes_played.erase(execution.notes_played.begin(), note);
                     break;
                 } else if (m_position + 1 == note->position + note->duration) {
-                    m_synthesizer->note_off(note->name, note->octave);
+                    m_synthesizer->note_off(note->id);
 
                     if (std::next(note) == execution.notes_played.end()) {
                         execution.notes_played.erase(execution.notes_played.begin(), std::next(note));
@@ -100,11 +99,10 @@ namespace seq {
                     execution.notes_unplayed.erase(execution.notes_unplayed.begin(), note);
                     break;
                 } else if (m_position == note->position) {
-                    m_synthesizer->note_on(note->name, note->octave, voice);
+                    m_synthesizer->note_on(note->id, voice);
 
                     execution.notes_played.emplace(
-                        note->name,
-                        note->octave,
+                        note->id,
                         note->position,
                         note->duration,
                         note->tempo,
@@ -138,8 +136,7 @@ namespace seq {
                     }
 
                     executions[voice].notes_unplayed.emplace(
-                        note.name,
-                        note.octave,
+                        note.id,
                         steps + note.position,
                         STEP / note.value,  // TODO implement legatos
                         measure.tempo,

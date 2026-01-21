@@ -5,6 +5,7 @@
 #include <charconv>
 #include <iterator>
 #include <cstring>
+#include <cassert>
 
 #include <SDL3/SDL.h>
 
@@ -14,7 +15,7 @@
 namespace application {
     static constexpr ImVec2 STEP_SIZE {4.0f / ui::FONT_SIZE, 20.0f / ui::FONT_SIZE};
     static constexpr float COMPOSITION_LEFT {40.0f / ui::FONT_SIZE};
-    static constexpr float COMPOSITION_HEIGHT {STEP_SIZE.y * 12.0f * float(syn::NOTE_OCTAVES) + STEP_SIZE.y * float(syn::NOTE_EXTRA)};
+    static constexpr float COMPOSITION_HEIGHT {STEP_SIZE.y * 12.0f * float(syn::keyboard::OCTAVES) + STEP_SIZE.y * float(syn::keyboard::EXTRA)};
     static constexpr float COMPOSITION_SCROLL_SPEED {40.0f / ui::FONT_SIZE};
     static constexpr int ADD_MEASURES {4};
 
@@ -35,7 +36,6 @@ namespace application {
 
         m_player = seq::Player(m_synthesizer, m_composition);
         m_composition_selected_measure = m_composition.measures.end();
-        m_ui.octave = m_octave;
         m_ui.volume = m_synthesizer.volume();
         m_ui.device = m_synthesizer.device().second;
 
@@ -294,8 +294,8 @@ namespace application {
 
             ImGui::SeparatorText("Octave");
 
-            if (ImGui::SliderInt("##octave", &m_ui.octave, ui::Octave1, ui::Octave4)) {
-                m_octave = m_ui.octave - 1;
+            if (ImGui::SliderInt("##octave", &m_ui.octave, ui::Octave1, ui::Octave5)) {
+                m_octave = syn::keyboard::Octave(m_ui.octave - 1);
             }
 
             ImGui::Dummy(ui::rem(ImVec2(0.0f, 1.0f)));
@@ -699,7 +699,7 @@ namespace application {
 
         float position_y {};
 
-        for (int j {}; j < syn::NOTE_OCTAVES; j++) {
+        for (int j {}; j < syn::keyboard::OCTAVES; j++) {
             for (std::size_t i {}; i < std::size(NOTES_OCTAVES); i++) {
                 list->AddText(
                     origin + ImVec2(0.0f, position_y) + ui::rem(TEXT_OFFSET) - ImVec2(0.0f, m_composition_camera.y),
@@ -740,7 +740,7 @@ namespace application {
 
         const ImVec2 space_available {ImGui::GetContentRegionAvail()};
 
-        float position_y {float(syn::NOTE_EXTRA) * ui::rem(STEP_SIZE.y)};
+        float position_y {float(syn::keyboard::EXTRA) * ui::rem(STEP_SIZE.y)};
 
         list->AddLine(
             origin + ImVec2(0.0f, position_y) - ImVec2(0.0f, m_composition_camera.y),
@@ -748,7 +748,7 @@ namespace application {
             COLOR_FOREGROUND
         );
 
-        for (int i {1}; i < syn::NOTE_OCTAVES; i++) {
+        for (int i {1}; i < syn::keyboard::OCTAVES; i++) {
             position_y += 12.0f * ui::rem(STEP_SIZE.y);
 
             list->AddLine(
@@ -954,31 +954,31 @@ namespace application {
     }
 
     void Application::update_keyboard_input(unsigned int key, bool down) {
-        const auto update {[this, down](syn::Name name, unsigned int octave) {
+        const auto update {[this, down](syn::Id id) {
             if (down) {
-                m_synthesizer.note_on(name, syn::Octave(m_octave + octave), m_voice);
+                m_synthesizer.note_on(id + m_octave * 12, m_voice);
             } else {
-                m_synthesizer.note_off(name, syn::Octave(m_octave + octave));
+                m_synthesizer.note_off(id + m_octave * 12);
             }
         }};
 
         switch (key) {
-            case SDLK_Z: update(syn::Name::A, 0); break;
-            case SDLK_S: update(syn::Name::As, 0); break;
-            case SDLK_X: update(syn::Name::B, 0); break;
-            case SDLK_C: update(syn::Name::C, 1); break;
-            case SDLK_F: update(syn::Name::Cs, 1); break;
-            case SDLK_V: update(syn::Name::D, 1); break;
-            case SDLK_G: update(syn::Name::Ds, 1); break;
-            case SDLK_B: update(syn::Name::E, 1); break;
-            case SDLK_N: update(syn::Name::F, 1); break;
-            case SDLK_J: update(syn::Name::Fs, 1); break;
-            case SDLK_M: update(syn::Name::G, 1); break;
-            case SDLK_K: update(syn::Name::Gs, 1); break;
-            case SDLK_COMMA: update(syn::Name::A, 1); break;
-            case SDLK_L: update(syn::Name::As, 1); break;
-            case SDLK_PERIOD: update(syn::Name::B, 1); break;
-            case SDLK_SLASH: update(syn::Name::C, 2); break;
+            case SDLK_Z: update(0); break;
+            case SDLK_S: update(1); break;
+            case SDLK_X: update(2); break;
+            case SDLK_C: update(3); break;
+            case SDLK_F: update(4); break;
+            case SDLK_V: update(5); break;
+            case SDLK_G: update(6); break;
+            case SDLK_B: update(7); break;
+            case SDLK_N: update(8); break;
+            case SDLK_J: update(9); break;
+            case SDLK_M: update(10); break;
+            case SDLK_K: update(11); break;
+            case SDLK_COMMA: update(12); break;
+            case SDLK_L: update(13); break;
+            case SDLK_PERIOD: update(14); break;
+            case SDLK_SLASH: update(15); break;
         }
     }
 
@@ -989,8 +989,8 @@ namespace application {
     void Application::add_metronome(MeasureIter begin, MeasureIter end) {
         for (auto measure {begin}; measure != end; measure++) {
             for (unsigned int i {}; i < measure->time_signature.measure_steps(); i += seq::STEP / measure->time_signature.value()) {
-                const syn::Name name {i == 0 ? syn::C : syn::D};
-                measure->voices[syn::VoiceMetronome].emplace(name, syn::Octave2, seq::Eighth, i);
+                const syn::Id id {i == 0 ? 3u : 4u};
+                measure->voices[syn::VoiceMetronome].emplace(id, seq::Eighth, i);
             }
         }
 
@@ -1131,71 +1131,14 @@ namespace application {
     }
 
     bool Application::hover_note(ImVec2 position, HoveredNote& hovered_note) {
-        static constexpr std::pair<syn::Name, syn::Octave> NOTES[] {
-            { syn::C, syn::Octave6 },
-
-            { syn::B, syn::Octave5 },
-            { syn::As, syn::Octave5 },
-            { syn::A, syn::Octave5 },
-            { syn::Gs, syn::Octave5 },
-            { syn::G, syn::Octave5 },
-            { syn::Fs, syn::Octave5 },
-            { syn::F, syn::Octave5 },
-            { syn::E, syn::Octave5 },
-            { syn::Ds, syn::Octave5 },
-            { syn::D, syn::Octave5 },
-            { syn::Cs, syn::Octave5 },
-            { syn::C, syn::Octave5 },
-
-            { syn::B, syn::Octave4 },
-            { syn::As, syn::Octave4 },
-            { syn::A, syn::Octave4 },
-            { syn::Gs, syn::Octave4 },
-            { syn::G, syn::Octave4 },
-            { syn::Fs, syn::Octave4 },
-            { syn::F, syn::Octave4 },
-            { syn::E, syn::Octave4 },
-            { syn::Ds, syn::Octave4 },
-            { syn::D, syn::Octave4 },
-            { syn::Cs, syn::Octave4 },
-            { syn::C, syn::Octave4 },
-
-            { syn::B, syn::Octave3 },
-            { syn::As, syn::Octave3 },
-            { syn::A, syn::Octave3 },
-            { syn::Gs, syn::Octave3 },
-            { syn::G, syn::Octave3 },
-            { syn::Fs, syn::Octave3 },
-            { syn::F, syn::Octave3 },
-            { syn::E, syn::Octave3 },
-            { syn::Ds, syn::Octave3 },
-            { syn::D, syn::Octave3 },
-            { syn::Cs, syn::Octave3 },
-            { syn::C, syn::Octave3 },
-
-            { syn::B, syn::Octave2 },
-            { syn::As, syn::Octave2 },
-            { syn::A, syn::Octave2 },
-            { syn::Gs, syn::Octave2 },
-            { syn::G, syn::Octave2 },
-            { syn::Fs, syn::Octave2 },
-            { syn::F, syn::Octave2 },
-            { syn::E, syn::Octave2 },
-            { syn::Ds, syn::Octave2 },
-            { syn::D, syn::Octave2 },
-            { syn::Cs, syn::Octave2 },
-            { syn::C, syn::Octave2 },
-
-            { syn::B, syn::Octave1 },
-            { syn::As, syn::Octave1 },
-            { syn::A, syn::Octave1 },
-        };
-
         {
+            static constexpr int NOTES {syn::keyboard::OCTAVES * 12 + syn::keyboard::EXTRA};
             const int index {int(position.y / ui::rem(STEP_SIZE.y))};
 
-            hovered_note.name = NOTES[index].first;
-            hovered_note.octave = NOTES[index].second;
+            const int id {NOTES - 1 - index};
+            assert(id >= 0);
+
+            hovered_note.id = syn::Id(id);
         }
 
         float position_x {};
@@ -1226,7 +1169,7 @@ namespace application {
         }
 
         for (auto n {voice->second.begin()}; n != voice->second.end(); n++) {
-            if (hovered_note.name == n->name && hovered_note.octave == n->octave) {
+            if (hovered_note.id == n->id) {
                 if (hovered_note.position >= n->position && hovered_note.position < n->position + seq::STEP / n->value) {
                     note = n;
                     return true;
@@ -1270,8 +1213,7 @@ namespace application {
             m_composition_selected_notes.clear();
         } else {
             hovered_note.measure->voices[m_voice].emplace(
-                hovered_note.name,
-                hovered_note.octave,
+                hovered_note.id,
                 get_value(ui::Value(m_ui.value)),
                 hovered_note.position
             );
@@ -1281,6 +1223,10 @@ namespace application {
     }
 
     void Application::delete_notes() {
+        if (m_composition_selected_notes.empty()) {
+            return;
+        }
+
         for (const SelectedNote& selected_note : m_composition_selected_notes) {
             selected_note.measure->voices.at(m_voice).erase(selected_note.note);
         }
@@ -1292,6 +1238,16 @@ namespace application {
 
     void Application::shift_notes_up() {
         logging::debug("up");
+
+        if (m_composition_selected_notes.empty()) {
+            return;
+        }
+
+        for (const SelectedNote& selected_note : m_composition_selected_notes) {
+            // selected_note.note->name
+        }
+
+        modify_composition();
     }
 
     void Application::shift_notes_down() {
@@ -1335,9 +1291,7 @@ namespace application {
     }
 
     float Application::note_height(const seq::Note& note) {
-        const syn::Id id {syn::Note::get_id(note.name, note.octave)};
-
-        return ui::rem(COMPOSITION_HEIGHT) - ui::rem(STEP_SIZE.y) - float(id) * ui::rem(STEP_SIZE.y);
+        return ui::rem(COMPOSITION_HEIGHT) - ui::rem(STEP_SIZE.y) - float(note.id) * ui::rem(STEP_SIZE.y);
     }
 
     ImVec4 Application::note_rectangle(const seq::Note& note) {

@@ -141,7 +141,7 @@ namespace audio {
 
         Audio& self {*static_cast<Audio*>(userdata)};
 
-        const auto buffer {std::make_unique<short[]>(additional_amount / sizeof(short))};
+        const auto buffer {std::make_unique<short[]>(additional_amount / sizeof(short))};  // TODO use vector
 
         for (int i {}; i < additional_amount / int(sizeof(short)); i++) {
             const double sound {clamp(self.current_sound())};

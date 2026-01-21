@@ -67,8 +67,7 @@ namespace seq {
     };
 
     struct Note {
-        syn::Name name {};
-        syn::Octave octave {};
+        syn::Id id {};
         Value value {};
         unsigned int position {};  // Local, inside a measure
 
@@ -94,11 +93,10 @@ namespace seq {
 
     namespace exec {
         struct Note {
-            Note(syn::Name name, syn::Octave octave, unsigned int position, unsigned int duration, Tempo tempo, TimeSignature time_signature)
-                : name(name), octave(octave), position(position), duration(duration), tempo(tempo), time_signature(time_signature) {}
+            Note(syn::Id id, unsigned int position, unsigned int duration, Tempo tempo, TimeSignature time_signature)
+                : id(id), position(position), duration(duration), tempo(tempo), time_signature(time_signature) {}
 
-            syn::Name name {};
-            syn::Octave octave {};
+            syn::Id id {};
 
             unsigned int position {};  // Global, in the whole composition
             unsigned int duration {};  // Number of steps
