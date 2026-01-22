@@ -1179,7 +1179,7 @@ namespace application {
                 const float offset {position.x - position_x};
 
                 hovered_note.measure = measure;
-                hovered_note.position = seq::DIV * static_cast<unsigned int>(offset / (float(seq::DIV) * ui::rem(STEP_SIZE.x)));
+                hovered_note.position = static_cast<unsigned int>(offset / ui::rem(STEP_SIZE.x));
 
                 return true;
             }
@@ -1244,7 +1244,7 @@ namespace application {
             hovered_note.measure->voices[m_voice].emplace(
                 hovered_note.id,
                 get_value(ui::Value(m_ui.value)),
-                hovered_note.position
+                hovered_note.position / seq::DIV * seq::DIV  // Always place on groups of steps
             );
 
             modify_composition();
@@ -1270,12 +1270,38 @@ namespace application {
             return;
         }
 
+        bool valid {true};
+
+        for (const SelectedNote& selected_note : m_composition_selected_notes) {
+            if (!check_note_up_limit(*selected_note.note)) {
+                valid = false;
+                break;
+            }
+
+            const auto& notes {selected_note.measure->voices.at(m_voice)};
+
+            for (auto note {notes.begin()}; note != notes.end(); note++) {
+                if (note_in_selection(note, selected_note.measure, m_composition_selected_notes)) {
+                    continue;
+                }
+
+                seq::Note shifted_note {*selected_note.note};
+                shifted_note.id++;
+
+                if (notes_overlapping(*note, shifted_note)) {
+                    valid = false;
+                    break;
+                }
+            }
+        }
+
+        if (!valid) {
+            return;
+        }
+
         for (SelectedNote& selected_note : m_composition_selected_notes) {
             seq::Note note {*selected_note.note};
-
-            if (note.id < static_cast<unsigned int>(syn::keyboard::NOTES - 1)) {
-                note.id++;
-            }
+            note.id++;
 
             const auto iter {selected_note.measure->voices.at(m_voice).erase(selected_note.note)};
             selected_note.note = selected_note.measure->voices.at(m_voice).insert(iter, note);
@@ -1289,12 +1315,38 @@ namespace application {
             return;
         }
 
+        bool valid {true};
+
+        for (const SelectedNote& selected_note : m_composition_selected_notes) {
+            if (!check_note_down_limit(*selected_note.note)) {
+                valid = false;
+                break;
+            }
+
+            const auto& notes {selected_note.measure->voices.at(m_voice)};
+
+            for (auto note {notes.begin()}; note != notes.end(); note++) {
+                if (note_in_selection(note, selected_note.measure, m_composition_selected_notes)) {
+                    continue;
+                }
+
+                seq::Note shifted_note {*selected_note.note};
+                shifted_note.id--;
+
+                if (notes_overlapping(*note, shifted_note)) {
+                    valid = false;
+                    break;
+                }
+            }
+        }
+
+        if (!valid) {
+            return;
+        }
+
         for (SelectedNote& selected_note : m_composition_selected_notes) {
             seq::Note note {*selected_note.note};
-
-            if (note.id > 0) {
-                note.id--;
-            }
+            note.id--;
 
             const auto iter {selected_note.measure->voices.at(m_voice).erase(selected_note.note)};
             selected_note.note = selected_note.measure->voices.at(m_voice).insert(iter, note);
@@ -1308,12 +1360,38 @@ namespace application {
             return;
         }
 
+        bool valid {true};
+
+        for (const SelectedNote& selected_note : m_composition_selected_notes) {
+            if (!check_note_left_limit(*selected_note.note)) {
+                valid = false;
+                break;
+            }
+
+            const auto& notes {selected_note.measure->voices.at(m_voice)};
+
+            for (auto note {notes.begin()}; note != notes.end(); note++) {
+                if (note_in_selection(note, selected_note.measure, m_composition_selected_notes)) {
+                    continue;
+                }
+
+                seq::Note shifted_note {*selected_note.note};
+                shifted_note.position--;
+
+                if (notes_overlapping(*note, shifted_note)) {
+                    valid = false;
+                    break;
+                }
+            }
+        }
+
+        if (!valid) {
+            return;
+        }
+
         for (SelectedNote& selected_note : m_composition_selected_notes) {
             seq::Note note {*selected_note.note};
-
-            if (note.position > 0) {
-                note.position--;
-            }
+            note.position--;
 
             const auto iter {selected_note.measure->voices.at(m_voice).erase(selected_note.note)};
             selected_note.note = selected_note.measure->voices.at(m_voice).insert(iter, note);
@@ -1327,12 +1405,38 @@ namespace application {
             return;
         }
 
+        bool valid {true};
+
+        for (const SelectedNote& selected_note : m_composition_selected_notes) {
+            if (!check_note_right_limit(*selected_note.note, *selected_note.measure)) {
+                valid = false;
+                break;
+            }
+
+            const auto& notes {selected_note.measure->voices.at(m_voice)};
+
+            for (auto note {notes.begin()}; note != notes.end(); note++) {
+                if (note_in_selection(note, selected_note.measure, m_composition_selected_notes)) {
+                    continue;
+                }
+
+                seq::Note shifted_note {*selected_note.note};
+                shifted_note.position++;
+
+                if (notes_overlapping(*note, shifted_note)) {
+                    valid = false;
+                    break;
+                }
+            }
+        }
+
+        if (!valid) {
+            return;
+        }
+
         for (SelectedNote& selected_note : m_composition_selected_notes) {
             seq::Note note {*selected_note.note};
-
-            if (note.position < selected_note.measure->time_signature.measure_steps() - seq::STEP / note.value) {
-                note.position++;
-            }
+            note.position++;
 
             const auto iter {selected_note.measure->voices.at(m_voice).erase(selected_note.note)};
             selected_note.note = selected_note.measure->voices.at(m_voice).insert(iter, note);
@@ -1479,6 +1583,46 @@ namespace application {
 
     bool Application::empty_except_metronome(const seq::Measure& measure) {
         return measure.voices.empty() || measure.voices.size() == 1 && measure.voices.count(syn::VoiceMetronome) == 1;
+    }
+
+    bool Application::check_note_up_limit(const seq::Note& note) {
+        return note.id < static_cast<unsigned int>(syn::keyboard::NOTES - 1);
+    }
+
+    bool Application::check_note_down_limit(const seq::Note& note) {
+        return note.id > 0;
+    }
+
+    bool Application::check_note_left_limit(const seq::Note& note) {
+        return note.position > 0;
+    }
+
+    bool Application::check_note_right_limit(const seq::Note& note, const seq::Measure& measure) {
+        return note.position < measure.time_signature.measure_steps() - seq::STEP / note.value;
+    }
+
+    bool Application::notes_overlapping(const seq::Note& note1, const seq::Note& note2) {
+        if (note1.id != note2.id) {
+            return false;
+        }
+
+        const auto note1_left {note1.position};
+        const auto note1_right {note1.position + seq::STEP / note1.value};
+        const auto note2_left {note2.position};
+        const auto note2_right {note2.position + seq::STEP / note2.value};
+
+        return (
+            note1_left > note2_left && note1_left < note2_right ||
+            note1_right > note2_left && note1_right < note2_right ||
+            note2_left > note1_left && note2_left < note1_right ||
+            note2_right > note1_left && note2_right < note1_right
+        );
+    }
+
+    bool Application::note_in_selection(NoteIter note, MeasureIter measure, const std::vector<SelectedNote>& selected_notes) {
+        return std::find_if(selected_notes.begin(), selected_notes.end(), [note, measure](const auto& n) {
+            return measure == n.measure && note == n.note;
+        }) != selected_notes.end();
     }
 
     seq::Value Application::get_value(ui::Value value) {

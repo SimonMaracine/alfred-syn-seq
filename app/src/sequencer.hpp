@@ -73,7 +73,13 @@ namespace seq {
         unsigned int position {};  // Local, inside a measure
 
         bool operator<(const Note& other) const {
-            return position < other.position;
+            if (position < other.position) {
+                return true;
+            } else if (position == other.position) {
+                return id < other.id;
+            } else {
+                return false;
+            }
         }
     };
 

@@ -98,6 +98,12 @@ namespace application {
         static void set_time_signature(seq::Measure& measure, const ui::TimeSignature& time_signature);
         static void set_time_signature(ui::TimeSignature& time_signature, const seq::Measure& measure);
         static bool empty_except_metronome(const seq::Measure& measure);
+        static bool check_note_up_limit(const seq::Note& note);
+        static bool check_note_down_limit(const seq::Note& note);
+        static bool check_note_left_limit(const seq::Note& note);
+        static bool check_note_right_limit(const seq::Note& note, const seq::Measure& measure);
+        static bool notes_overlapping(const seq::Note& note1, const seq::Note& note2);
+        static bool note_in_selection(NoteIter note, MeasureIter measure, const std::vector<SelectedNote>& selected_notes);
         static seq::Value get_value(ui::Value value);
         static const char* get_property(const char* property);
 
