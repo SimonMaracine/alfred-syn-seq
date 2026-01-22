@@ -625,68 +625,9 @@ namespace application {
             m_composition_camera.y = std::max(m_composition_camera.y, 0.0f);
             m_composition_camera.y = std::min(m_composition_camera.y, ui::rem(COMPOSITION_HEIGHT) - space_available.y);
 
-            if (item_hovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-                switch (m_ui.tool) {
-                    case ui::ToolMeasure: {
-                        MeasureIter hovered_measure;
-
-                        if (hover_measure(composition_mouse_position(origin), hovered_measure)) {
-                            m_ui.hovered_measure = hovered_measure;
-                        }
-
-                        break;
-                    }
-                    case ui::ToolNote: {
-                        HoveredNote hovered_note;
-
-                        if (hover_note(composition_mouse_position(origin), hovered_note)) {
-                            m_ui.hovered_note = hovered_note;
-                        }
-
-                        break;
-                    }
-                }
-
-                m_ui.hovered_composition = true;
-            }
-
-            if (item_hovered && ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
-                switch (m_ui.tool) {
-                    case ui::ToolMeasure:
-                        if (m_ui.hovered_measure) {
-                            MeasureIter hovered_measure;
-
-                            if (hover_measure(composition_mouse_position(origin), hovered_measure)) {
-                                if (hovered_measure == *m_ui.hovered_measure) {
-                                    select_measure(hovered_measure);
-                                }
-                            }
-                        } else if (m_ui.hovered_composition) {
-                            MeasureIter hovered_measure;
-
-                            if (!hover_measure(composition_mouse_position(origin), hovered_measure)) {
-                                m_composition_selected_measure = m_composition.measures.end();
-                            }
-                        }
-
-                        break;
-                    case ui::ToolNote:
-                        if (m_ui.hovered_note) {
-                            HoveredNote hovered_note;
-
-                            if (hover_note(composition_mouse_position(origin), hovered_note)) {
-                                if (hovered_note == *m_ui.hovered_note) {
-                                    do_with_note(hovered_note);
-                                }
-                            }
-                        }
-
-                        break;
-                }
-
-                m_ui.hovered_measure = std::nullopt;
-                m_ui.hovered_note = std::nullopt;
-                m_ui.hovered_composition = false;
+            if (item_hovered) {
+                composition_mouse_pressed(origin);
+                composition_mouse_released(origin);
             }
         }
 
@@ -1530,6 +1471,106 @@ namespace application {
         }
 
         modify_composition();
+    }
+
+    bool Application::hover_position(ImVec2 position, unsigned int& position_) const {
+        unsigned int result {};
+
+        for (float position_x {}; const seq::Measure& measure : m_composition.measures) {
+            const float right {float(measure.time_signature.measure_steps()) * ui::rem(STEP_SIZE.x)};
+
+            if (position.x >= position_x && position.x < position_x + right) {
+                const float offset {position.x - position_x};
+
+                result += static_cast<unsigned int>(offset / ui::rem(STEP_SIZE.x));
+                position_ = result;
+
+                return true;
+            }
+
+            position_x += right;
+            result += measure.time_signature.measure_steps();
+        }
+
+        return false;
+    }
+
+    void Application::composition_mouse_pressed(ImVec2 origin) {
+        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+            switch (m_ui.tool) {
+                case ui::ToolMeasure: {
+                    MeasureIter hovered_measure;
+
+                    if (hover_measure(composition_mouse_position(origin), hovered_measure)) {
+                        m_ui.hovered_measure = hovered_measure;
+                    }
+
+                    break;
+                }
+                case ui::ToolNote: {
+                    HoveredNote hovered_note;
+
+                    if (hover_note(composition_mouse_position(origin), hovered_note)) {
+                        m_ui.hovered_note = hovered_note;
+                    }
+
+                    break;
+                }
+            }
+
+            m_ui.hovered_composition = true;
+        }
+    }
+
+    void Application::composition_mouse_released(ImVec2 origin) {
+        if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
+            if (ImGui::IsKeyDown(ImGuiKey_LeftAlt) || ImGui::IsKeyDown(ImGuiKey_RightAlt)) {
+                unsigned int position {};
+
+                if (hover_position(composition_mouse_position(origin), position)) {
+                    m_player.seek(position);
+                }
+
+                return;
+            }
+
+            switch (m_ui.tool) {
+                case ui::ToolMeasure:
+                    if (m_ui.hovered_measure) {
+                        MeasureIter hovered_measure;
+
+                        if (hover_measure(composition_mouse_position(origin), hovered_measure)) {
+                            if (hovered_measure == *m_ui.hovered_measure) {
+                                select_measure(hovered_measure);
+                            }
+                        }
+                    } else if (m_ui.hovered_composition) {
+                        MeasureIter hovered_measure;
+
+                        if (!hover_measure(composition_mouse_position(origin), hovered_measure)) {
+                            m_composition_selected_measure = m_composition.measures.end();
+                        }
+                    }
+
+                    break;
+                case ui::ToolNote:
+                    if (m_ui.hovered_note) {
+                        HoveredNote hovered_note;
+
+                        if (hover_note(composition_mouse_position(origin), hovered_note)) {
+                            if (hovered_note == *m_ui.hovered_note) {
+                                do_with_note(hovered_note);
+                            }
+                        }
+                    }
+
+                    break;
+            }
+
+            m_ui.hovered_measure = std::nullopt;
+            m_ui.hovered_note = std::nullopt;
+            m_ui.hovered_composition = false;
+        }
     }
 
     void Application::start_player() {

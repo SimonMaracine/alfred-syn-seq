@@ -85,6 +85,9 @@ namespace application {
         void shift_notes_down();
         void shift_notes_left();
         void shift_notes_right();
+        bool hover_position(ImVec2 position, unsigned int& position_) const;
+        void composition_mouse_pressed(ImVec2 origin);
+        void composition_mouse_released(ImVec2 origin);
 
         void start_player();
         void modify_composition();

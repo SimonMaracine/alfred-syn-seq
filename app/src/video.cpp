@@ -91,7 +91,7 @@ namespace video {
 
             m_imgui_accumulator_time += m_frame_time;
 
-            m_frame_timef = static_cast<double>(m_frame_time) / static_cast<double>(SDL_NS_PER_SECOND);
+            m_frame_timef = double(m_frame_time) / double(SDL_NS_PER_SECOND);
         }
 
         on_stop();
