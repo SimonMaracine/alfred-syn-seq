@@ -909,7 +909,7 @@ namespace application {
     }
 
     void Application::shortcuts() {
-        if (ImGui::IsKeyPressed(ImGuiKey_Space, false)) {
+        if (ImGui::Shortcut(ImGuiKey_Space, ImGuiInputFlags_RouteAlways)) {
             if (m_player.is_playing()) {
                 m_player.stop();
             } else {
@@ -917,11 +917,11 @@ namespace application {
             }
         }
 
-        if (ImGui::IsKeyPressed(ImGuiKey_R, false)) {
+        if (ImGui::Shortcut(ImGuiKey_R, ImGuiInputFlags_RouteAlways)) {
             m_player.seek(0);
         }
 
-        if (ImGui::IsKeyChordPressed(ImGuiMod_Ctrl | ImGuiKey_Tab)) {
+        if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_Tab, ImGuiInputFlags_RouteAlways)) {
             switch (m_ui.tool) {
                 case ui::ToolMeasure:
                     m_ui.tool = ui::ToolNote;
@@ -934,41 +934,41 @@ namespace application {
 
         switch (m_ui.tool) {
             case ui::ToolMeasure:
-                if (ImGui::IsKeyChordPressed(ImGuiMod_Ctrl | ImGuiKey_A)) {
+                if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_A, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
                     append_measures();
                 }
 
-                if (ImGui::IsKeyChordPressed(ImGuiMod_Ctrl | ImGuiKey_I)) {
+                if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_I, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
                     insert_measure();
                 }
 
-                if (ImGui::IsKeyPressed(ImGuiKey_Backspace)) {
+                if (ImGui::Shortcut(ImGuiKey_Backspace, ImGuiInputFlags_RouteAlways)) {
                     clear_measure();
                 }
 
-                if (ImGui::IsKeyPressed(ImGuiKey_Delete)) {
+                if (ImGui::Shortcut(ImGuiKey_Delete, ImGuiInputFlags_RouteAlways)) {
                     delete_measure();
                 }
 
                 break;
             case ui::ToolNote:
-                if (ImGui::IsKeyChordPressed(ImGuiMod_Ctrl | ImGuiKey_W)) {
+                if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_W, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
                     shift_notes_up();
                 }
 
-                if (ImGui::IsKeyChordPressed(ImGuiMod_Ctrl | ImGuiKey_S)) {
+                if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_S, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
                     shift_notes_down();
                 }
 
-                if (ImGui::IsKeyChordPressed(ImGuiMod_Ctrl | ImGuiKey_A)) {
+                if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_A, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
                     shift_notes_left();
                 }
 
-                if (ImGui::IsKeyChordPressed(ImGuiMod_Ctrl | ImGuiKey_D)) {
+                if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_D, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
                     shift_notes_right();
                 }
 
-                if (ImGui::IsKeyPressed(ImGuiKey_Delete)) {
+                if (ImGui::Shortcut(ImGuiKey_Delete, ImGuiInputFlags_RouteAlways)) {
                     delete_notes();
                 }
 
