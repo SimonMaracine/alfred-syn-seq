@@ -23,16 +23,16 @@ namespace application {
         m_synthesizer.open();
         m_synthesizer.resume();
 
+        ImGui::LoadIniSettingsFromMemory(SETTINGS.data(), SETTINGS.size());
+        ImGui::StyleColorsClassic();
+
+        ui::set_scale(1);
+
         auto& io {ImGui::GetIO()};
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
         io.ConfigWindowsResizeFromEdges = false;
         io.ConfigWindowsMoveFromTitleBarOnly = true;
         io.IniFilename = nullptr;
-
-        ImGui::LoadIniSettingsFromMemory(SETTINGS.data(), SETTINGS.size());
-        ImGui::StyleColorsClassic();
-
-        ui::set_scale(1);
 
         m_player = seq::Player(m_synthesizer, m_composition);
         m_composition_selected_measure = m_composition.measures.end();
@@ -60,7 +60,9 @@ namespace application {
     }
 
     void Application::on_imgui() {
-        ImGui::DockSpaceOverViewport(0, nullptr, ImGuiDockNodeFlags_NoResize);
+        ImGui::DockSpaceOverViewport(0, nullptr, ImGuiDockNodeFlags_NoResize | ImGuiDockNodeFlags_NoUndocking);
+
+        ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_Tab, ImGuiInputFlags_RouteGlobal);
 
         main_menu_bar();
         keyboard();
@@ -69,9 +71,10 @@ namespace application {
         playback();
         tools();
         composition();
-        debug();
+        shortcuts();
 
 #ifndef ALFRED_DISTRIBUTION
+        debug();
         ImGui::ShowDemoWindow();
 #endif
     }
@@ -274,7 +277,12 @@ namespace application {
         const ImVec2 base {(space_available.x - ui::rem(WIDTH)) / 2.0f, (space_available.y - ui::rem(HEIGHT)) / 2.0f};
         const ImVec2 position {x * ui::rem(CELL), y * ui::rem(CELL)};
         const char label[2] { key, '\0' };
-        const ImColor color {get_keyboard_state()[scancode] ? COLOR_ACTIVE : COLOR_INACTIVE};
+        ImColor color {get_keyboard_state()[scancode] ? COLOR_ACTIVE : COLOR_INACTIVE};
+
+        // Just override when keyboard is disabled
+        if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl)) {
+            color = COLOR_INACTIVE;
+        }
 
         list->AddRectFilled(
             base + origin + position + ui::rem(ImVec2(PADDING, PADDING)),
@@ -409,13 +417,7 @@ namespace application {
                 }
             } else {
                 if (ImGui::Button("Start")) {
-                    if (m_composition_modified) {
-                        LOG_DEBUG("Compiling composition");
-                        m_player.prepare();
-                        m_composition_modified = false;
-                    }
-
-                    m_player.start();
+                    start_player();
                 }
             }
 
@@ -453,11 +455,6 @@ namespace application {
                 m_composition_selected_measure = m_composition.measures.end();
             }
 
-            if (ImGui::RadioButton("Record", &m_ui.tool, ui::ToolRecord)) {
-                m_composition_selected_measure = m_composition.measures.end();
-                m_composition_selected_notes.clear();
-            }
-
             ImGui::EndGroup();
 
             ImGui::SameLine();
@@ -472,8 +469,6 @@ namespace application {
                     break;
                 case ui::ToolNote:
                     tools_note();
-                    break;
-                case ui::ToolRecord:
                     break;
             }
         }
@@ -613,7 +608,7 @@ namespace application {
             }
 
             if (item_hovered) {
-                if (ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+                if (ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift)) {
                     m_composition_camera -= ImVec2(
                         ui::rem(COMPOSITION_SCROLL_SPEED * 2.0f) * io.MouseWheel,
                         -ui::rem(COMPOSITION_SCROLL_SPEED) * io.MouseWheelH
@@ -650,8 +645,6 @@ namespace application {
 
                         break;
                     }
-                    case ui::ToolRecord:
-                        break;
                 }
 
                 m_ui.hovered_composition = true;
@@ -688,8 +681,6 @@ namespace application {
                             }
                         }
 
-                        break;
-                    case ui::ToolRecord:
                         break;
                 }
 
@@ -917,6 +908,74 @@ namespace application {
         );
     }
 
+    void Application::shortcuts() {
+        if (ImGui::IsKeyPressed(ImGuiKey_Space, false)) {
+            if (m_player.is_playing()) {
+                m_player.stop();
+            } else {
+                start_player();
+            }
+        }
+
+        if (ImGui::IsKeyPressed(ImGuiKey_R, false)) {
+            m_player.seek(0);
+        }
+
+        if (ImGui::IsKeyChordPressed(ImGuiMod_Ctrl | ImGuiKey_Tab)) {
+            switch (m_ui.tool) {
+                case ui::ToolMeasure:
+                    m_ui.tool = ui::ToolNote;
+                    break;
+                case ui::ToolNote:
+                    m_ui.tool = ui::ToolMeasure;
+                    break;
+            }
+        }
+
+        switch (m_ui.tool) {
+            case ui::ToolMeasure:
+                if (ImGui::IsKeyChordPressed(ImGuiMod_Ctrl | ImGuiKey_A)) {
+                    append_measures();
+                }
+
+                if (ImGui::IsKeyChordPressed(ImGuiMod_Ctrl | ImGuiKey_I)) {
+                    insert_measure();
+                }
+
+                if (ImGui::IsKeyPressed(ImGuiKey_Backspace)) {
+                    clear_measure();
+                }
+
+                if (ImGui::IsKeyPressed(ImGuiKey_Delete)) {
+                    delete_measure();
+                }
+
+                break;
+            case ui::ToolNote:
+                if (ImGui::IsKeyChordPressed(ImGuiMod_Ctrl | ImGuiKey_W)) {
+                    shift_notes_up();
+                }
+
+                if (ImGui::IsKeyChordPressed(ImGuiMod_Ctrl | ImGuiKey_S)) {
+                    shift_notes_down();
+                }
+
+                if (ImGui::IsKeyChordPressed(ImGuiMod_Ctrl | ImGuiKey_A)) {
+                    shift_notes_left();
+                }
+
+                if (ImGui::IsKeyChordPressed(ImGuiMod_Ctrl | ImGuiKey_D)) {
+                    shift_notes_right();
+                }
+
+                if (ImGui::IsKeyPressed(ImGuiKey_Delete)) {
+                    delete_notes();
+                }
+
+                break;
+        }
+    }
+
     bool Application::tempo() {
         const unsigned int one {1};
 
@@ -986,7 +1045,9 @@ namespace application {
     void Application::update_keyboard_input(unsigned int key, bool down) {
         const auto update {[this, down](syn::Id id) {
             if (down) {
-                m_synthesizer.note_on(id + m_octave * 12, m_voice);
+                if (!(ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl))) {
+                    m_synthesizer.note_on(id + m_octave * 12, m_voice);
+                }
             } else {
                 m_synthesizer.note_off(id + m_octave * 12);
             }
@@ -1219,7 +1280,7 @@ namespace application {
                 })
             };
 
-            if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl)) {
+            if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl)) {
                 if (selected_note != m_composition_selected_notes.end()) {
                     m_composition_selected_notes.erase(selected_note);
                 } else {
@@ -1469,6 +1530,16 @@ namespace application {
         }
 
         modify_composition();
+    }
+
+    void Application::start_player() {
+        if (m_composition_modified) {
+            LOG_DEBUG("Compiling composition");
+            m_player.prepare();
+            m_composition_modified = false;
+        }
+
+        m_player.start();
     }
 
     void Application::modify_composition() {

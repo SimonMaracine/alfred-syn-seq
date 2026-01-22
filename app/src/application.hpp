@@ -43,6 +43,7 @@ namespace application {
         void composition_measures_labels(ImDrawList* list, ImVec2 origin) const;
         void composition_notes(ImDrawList* list, ImVec2 origin) const;
         void composition_cursor(ImDrawList* list, ImVec2 origin) const;
+        void shortcuts();
         bool tempo();
         bool time_signature();
         void debug();
@@ -85,6 +86,7 @@ namespace application {
         void shift_notes_left();
         void shift_notes_right();
 
+        void start_player();
         void modify_composition();
         ImVec2 composition_mouse_position(ImVec2 origin) const;
         std::flat_set<syn::Voice> instruments_in_project() const;

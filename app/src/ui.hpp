@@ -20,8 +20,7 @@ namespace ui {
 
     enum Tool : int {
         ToolMeasure,
-        ToolNote,
-        ToolRecord
+        ToolNote
     };
 
     struct TimeSignature {
