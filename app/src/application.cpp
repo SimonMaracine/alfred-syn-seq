@@ -1154,7 +1154,7 @@ namespace application {
         } else {
             // Reset back
             set_time_signature(m_ui.time_signature, *m_composition_selected_measure);
-            LOG_INFORMATION("Cannot change time signature in this state");
+            LOG_DEBUG("Cannot change time signature in this state");
         }
 
         modify_composition();
@@ -1240,15 +1240,37 @@ namespace application {
 
         if (!m_composition_selected_notes.empty()) {
             m_composition_selected_notes.clear();
-        } else {
-            hovered_note.measure->voices[m_voice].emplace(
-                hovered_note.id,
-                get_value(ui::Value(m_ui.value)),
-                hovered_note.position / seq::DIV * seq::DIV  // Always place on groups of steps
-            );
-
-            modify_composition();
+            return;
         }
+
+        const seq::Note new_note {
+            hovered_note.id,
+            get_value(ui::Value(m_ui.value)),
+            hovered_note.position / seq::DIV * seq::DIV  // Always place on groups of steps
+        };
+
+        if (
+            ![this, &hovered_note, &new_note]() {
+                if (new_note.position + seq::STEP / new_note.value > hovered_note.measure->time_signature.measure_steps()) {
+                    return false;
+                }
+
+                for (const seq::Note& note : hovered_note.measure->voices[m_voice]) {
+                    if (notes_overlapping(note, new_note)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }()
+        ) {
+            LOG_DEBUG("Cannot place note here");
+            return;
+        }
+
+        hovered_note.measure->voices[m_voice].insert(new_note);
+
+        modify_composition();
     }
 
     void Application::delete_notes() {
@@ -1270,32 +1292,33 @@ namespace application {
             return;
         }
 
-        bool valid {true};
+        if (
+            ![this]() {
+                for (const SelectedNote& selected_note : m_composition_selected_notes) {
+                    if (!check_note_up_limit(*selected_note.note)) {
+                        return false;
+                    }
 
-        for (const SelectedNote& selected_note : m_composition_selected_notes) {
-            if (!check_note_up_limit(*selected_note.note)) {
-                valid = false;
-                break;
-            }
+                    const auto& notes {selected_note.measure->voices.at(m_voice)};
 
-            const auto& notes {selected_note.measure->voices.at(m_voice)};
+                    for (auto note {notes.begin()}; note != notes.end(); note++) {
+                        if (note_in_selection(note, selected_note.measure, m_composition_selected_notes)) {
+                            continue;
+                        }
 
-            for (auto note {notes.begin()}; note != notes.end(); note++) {
-                if (note_in_selection(note, selected_note.measure, m_composition_selected_notes)) {
-                    continue;
+                        seq::Note shifted_note {*selected_note.note};
+                        shifted_note.id++;
+
+                        if (notes_overlapping(*note, shifted_note)) {
+                            return false;
+                        }
+                    }
                 }
 
-                seq::Note shifted_note {*selected_note.note};
-                shifted_note.id++;
-
-                if (notes_overlapping(*note, shifted_note)) {
-                    valid = false;
-                    break;
-                }
-            }
-        }
-
-        if (!valid) {
+                return true;
+            }()
+        ) {
+            LOG_DEBUG("Cannot shift notes here");
             return;
         }
 
@@ -1315,32 +1338,33 @@ namespace application {
             return;
         }
 
-        bool valid {true};
+        if (
+            ![this]() {
+                for (const SelectedNote& selected_note : m_composition_selected_notes) {
+                    if (!check_note_down_limit(*selected_note.note)) {
+                        return false;
+                    }
 
-        for (const SelectedNote& selected_note : m_composition_selected_notes) {
-            if (!check_note_down_limit(*selected_note.note)) {
-                valid = false;
-                break;
-            }
+                    const auto& notes {selected_note.measure->voices.at(m_voice)};
 
-            const auto& notes {selected_note.measure->voices.at(m_voice)};
+                    for (auto note {notes.begin()}; note != notes.end(); note++) {
+                        if (note_in_selection(note, selected_note.measure, m_composition_selected_notes)) {
+                            continue;
+                        }
 
-            for (auto note {notes.begin()}; note != notes.end(); note++) {
-                if (note_in_selection(note, selected_note.measure, m_composition_selected_notes)) {
-                    continue;
+                        seq::Note shifted_note {*selected_note.note};
+                        shifted_note.id--;
+
+                        if (notes_overlapping(*note, shifted_note)) {
+                            return false;
+                        }
+                    }
                 }
 
-                seq::Note shifted_note {*selected_note.note};
-                shifted_note.id--;
-
-                if (notes_overlapping(*note, shifted_note)) {
-                    valid = false;
-                    break;
-                }
-            }
-        }
-
-        if (!valid) {
+                return true;
+            }()
+        ) {
+            LOG_DEBUG("Cannot shift notes here");
             return;
         }
 
@@ -1360,32 +1384,33 @@ namespace application {
             return;
         }
 
-        bool valid {true};
+        if (
+            ![this]() {
+                for (const SelectedNote& selected_note : m_composition_selected_notes) {
+                    if (!check_note_left_limit(*selected_note.note)) {
+                        return false;
+                    }
 
-        for (const SelectedNote& selected_note : m_composition_selected_notes) {
-            if (!check_note_left_limit(*selected_note.note)) {
-                valid = false;
-                break;
-            }
+                    const auto& notes {selected_note.measure->voices.at(m_voice)};
 
-            const auto& notes {selected_note.measure->voices.at(m_voice)};
+                    for (auto note {notes.begin()}; note != notes.end(); note++) {
+                        if (note_in_selection(note, selected_note.measure, m_composition_selected_notes)) {
+                            continue;
+                        }
 
-            for (auto note {notes.begin()}; note != notes.end(); note++) {
-                if (note_in_selection(note, selected_note.measure, m_composition_selected_notes)) {
-                    continue;
+                        seq::Note shifted_note {*selected_note.note};
+                        shifted_note.position--;
+
+                        if (notes_overlapping(*note, shifted_note)) {
+                            return false;
+                        }
+                    }
                 }
 
-                seq::Note shifted_note {*selected_note.note};
-                shifted_note.position--;
-
-                if (notes_overlapping(*note, shifted_note)) {
-                    valid = false;
-                    break;
-                }
-            }
-        }
-
-        if (!valid) {
+                return true;
+            }()
+        ) {
+            LOG_DEBUG("Cannot shift notes here");
             return;
         }
 
@@ -1405,32 +1430,33 @@ namespace application {
             return;
         }
 
-        bool valid {true};
+        if (
+            ![this]() {
+                for (const SelectedNote& selected_note : m_composition_selected_notes) {
+                    if (!check_note_right_limit(*selected_note.note, *selected_note.measure)) {
+                        return false;
+                    }
 
-        for (const SelectedNote& selected_note : m_composition_selected_notes) {
-            if (!check_note_right_limit(*selected_note.note, *selected_note.measure)) {
-                valid = false;
-                break;
-            }
+                    const auto& notes {selected_note.measure->voices.at(m_voice)};
 
-            const auto& notes {selected_note.measure->voices.at(m_voice)};
+                    for (auto note {notes.begin()}; note != notes.end(); note++) {
+                        if (note_in_selection(note, selected_note.measure, m_composition_selected_notes)) {
+                            continue;
+                        }
 
-            for (auto note {notes.begin()}; note != notes.end(); note++) {
-                if (note_in_selection(note, selected_note.measure, m_composition_selected_notes)) {
-                    continue;
+                        seq::Note shifted_note {*selected_note.note};
+                        shifted_note.position++;
+
+                        if (notes_overlapping(*note, shifted_note)) {
+                            return false;
+                        }
+                    }
                 }
 
-                seq::Note shifted_note {*selected_note.note};
-                shifted_note.position++;
-
-                if (notes_overlapping(*note, shifted_note)) {
-                    valid = false;
-                    break;
-                }
-            }
-        }
-
-        if (!valid) {
+                return true;
+            }()
+        ) {
+            LOG_DEBUG("Cannot shift notes here");
             return;
         }
 
@@ -1483,7 +1509,7 @@ namespace application {
         const float width {float(seq::STEP / note.value) * ui::rem(STEP_SIZE.x)};
         const float height {ui::rem(STEP_SIZE.y)};
 
-        return ImVec4(x, y, width, height);
+        return ImVec4(x, y + 1.0f, width, height - 2.0f);
     }
 
     const char* Application::measure_label(char* buffer, long number) {

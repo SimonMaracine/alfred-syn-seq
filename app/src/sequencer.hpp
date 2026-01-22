@@ -86,7 +86,7 @@ namespace seq {
     struct Measure {
         Tempo tempo;
         TimeSignature time_signature;
-        std::unordered_map<syn::Voice, std::multiset<Note>> voices;
+        std::unordered_map<syn::Voice, std::multiset<Note>> voices;  // TODO erase empty voices when serializing
 
         // Notes must always be sorted
         // Use a normal set, because the iterators need to stay stable
