@@ -34,6 +34,10 @@ namespace application {
         io.ConfigWindowsMoveFromTitleBarOnly = true;
         io.IniFilename = nullptr;
 
+        auto& style {ImGui::GetStyle()};
+        style.WindowBorderSize = 0.0f;
+        style.WindowMenuButtonPosition = ImGuiDir_None;
+
         m_player = seq::Player(m_synthesizer, m_composition);
         m_composition_selected_measure = m_composition.measures.end();
         m_ui.volume = m_synthesizer.volume();
@@ -86,10 +90,10 @@ namespace application {
     void Application::on_event(const SDL_Event& event) {
         switch (event.type) {
             case SDL_EVENT_KEY_DOWN:
-                update_keyboard_input(event.key.key, true);
+                keyboard_input(event.key.key, true);
                 break;
             case SDL_EVENT_KEY_UP:
-                update_keyboard_input(event.key.key, false);
+                keyboard_input(event.key.key, false);
                 break;
         }
     }
@@ -233,7 +237,7 @@ namespace application {
     void Application::keyboard() {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
-        if (ImGui::Begin("Keyboard", nullptr, ImGuiWindowFlags_NoResize)) {
+        if (ImGui::Begin("Keyboard", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse)) {
             ImDrawList* list {ImGui::GetWindowDrawList()};
             const ImVec2 origin {ImGui::GetCursorScreenPos()};
 
@@ -272,9 +276,9 @@ namespace application {
         const ImColor COLOR_INACTIVE {style.Colors[ImGuiCol_TableBorderLight]};
         const ImColor COLOR_ACTIVE {style.Colors[ImGuiCol_PlotHistogramHovered]};
 
-        const ImVec2 space_available {ImGui::GetContentRegionAvail()};
+        const ImVec2 space {ImGui::GetContentRegionAvail()};
 
-        const ImVec2 base {(space_available.x - ui::rem(WIDTH)) / 2.0f, (space_available.y - ui::rem(HEIGHT)) / 2.0f};
+        const ImVec2 base {(space.x - ui::rem(WIDTH)) / 2.0f, (space.y - ui::rem(HEIGHT)) / 2.0f};
         const ImVec2 position {x * ui::rem(CELL), y * ui::rem(CELL)};
         const char label[2] { key, '\0' };
         ImColor color {get_keyboard_state()[scancode] ? COLOR_ACTIVE : COLOR_INACTIVE};
@@ -588,20 +592,26 @@ namespace application {
         if (ImGui::Begin("Composition", nullptr, ImGuiWindowFlags_NoResize)) {
             ImDrawList* list {ImGui::GetWindowDrawList()};
             const ImVec2 origin {ImGui::GetCursorScreenPos()};
-            const ImVec2 space_available {ImGui::GetContentRegionAvail()};
+            const ImVec2 space {ImGui::GetContentRegionAvail()};
             const auto& io {ImGui::GetIO()};
 
-            composition_measures(list, origin);
-            composition_octaves(list, origin);
+            (void) ImGui::InvisibleButton("Canvas", space, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight);
+
+            const bool item_active {ImGui::IsItemActive()};
+            const bool item_hovered {ImGui::IsItemHovered()};
+
+            if (!(ImGui::IsKeyDown(ImGuiKey_LeftAlt) || ImGui::IsKeyDown(ImGuiKey_RightAlt))) {
+                if (HoveredNote hovered_note; item_hovered && hover_note(composition_mouse_position(origin), hovered_note)) {
+                    composition_hover(list, origin, space, hovered_note);
+                }
+            }
+
+            composition_measures(list, origin, space);
+            composition_octaves(list, origin, space);
             composition_cursor(list, origin);
             composition_notes(list, origin);
             composition_measures_labels(list, origin);
             composition_left(list, origin);
-
-            (void) ImGui::InvisibleButton("Canvas", space_available, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight);
-
-            const bool item_active {ImGui::IsItemActive()};
-            const bool item_hovered {ImGui::IsItemHovered()};
 
             if (item_active && ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
                 m_composition_camera -= io.MouseDelta;
@@ -623,11 +633,16 @@ namespace application {
 
             m_composition_camera.x = std::max(m_composition_camera.x, 0.0f);
             m_composition_camera.y = std::max(m_composition_camera.y, 0.0f);
-            m_composition_camera.y = std::min(m_composition_camera.y, ui::rem(COMPOSITION_HEIGHT) - space_available.y);
+            m_composition_camera.y = std::min(m_composition_camera.y, ui::rem(COMPOSITION_HEIGHT) - space.y);
 
             if (item_hovered) {
-                composition_mouse_pressed(origin);
-                composition_mouse_released(origin);
+                if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+                    composition_mouse_pressed(origin);
+                }
+
+                if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
+                    composition_mouse_released(origin);
+                }
             }
         }
 
@@ -696,17 +711,15 @@ namespace application {
         }
     }
 
-    void Application::composition_octaves(ImDrawList* list, ImVec2 origin) const {
+    void Application::composition_octaves(ImDrawList* list, ImVec2 origin, ImVec2 space) const {
         const ImGuiStyle& style {ImGui::GetStyle()};
-        const ImColor COLOR_FOREGROUND {style.Colors[ImGuiCol_TextDisabled]};
-
-        const ImVec2 space_available {ImGui::GetContentRegionAvail()};
+        const ImColor COLOR_FOREGROUND {set_opacity(style.Colors[ImGuiCol_TextDisabled], 0.7f)};
 
         float position_y {float(syn::keyboard::EXTRA) * ui::rem(STEP_SIZE.y)};
 
         list->AddLine(
             origin + ImVec2(0.0f, position_y) - ImVec2(0.0f, m_composition_camera.y),
-            origin + ImVec2(space_available.x, position_y) - ImVec2(0.0f, m_composition_camera.y),
+            origin + ImVec2(space.x, position_y) - ImVec2(0.0f, m_composition_camera.y),
             COLOR_FOREGROUND
         );
 
@@ -715,19 +728,17 @@ namespace application {
 
             list->AddLine(
                 origin + ImVec2(0.0f, position_y) - ImVec2(0.0f, m_composition_camera.y),
-                origin + ImVec2(space_available.x, position_y) - ImVec2(0.0f, m_composition_camera.y),
+                origin + ImVec2(space.x, position_y) - ImVec2(0.0f, m_composition_camera.y),
                 COLOR_FOREGROUND
             );
         }
     }
 
-    void Application::composition_measures(ImDrawList* list, ImVec2 origin) const {
+    void Application::composition_measures(ImDrawList* list, ImVec2 origin, ImVec2 space) const {
         const ImGuiStyle& style {ImGui::GetStyle()};
         const ImColor COLOR_FOREGROUND {style.Colors[ImGuiCol_Text]};
-        const ImColor COLOR_FOREGROUND2 {style.Colors[ImGuiCol_TextDisabled]};
-        const ImColor COLOR_SELECTION {style.Colors[ImGuiCol_TableHeaderBg]};
-
-        const ImVec2 space_available {ImGui::GetContentRegionAvail()};
+        const ImColor COLOR_FOREGROUND2 {set_opacity(style.Colors[ImGuiCol_TextDisabled], 0.7f)};
+        const ImColor COLOR_SELECTION {set_opacity(style.Colors[ImGuiCol_TableHeaderBg], 0.3f)};
 
         float position_x {ui::rem(COMPOSITION_LEFT)};
 
@@ -737,7 +748,7 @@ namespace application {
             if (measure == m_composition_selected_measure) {
                 list->AddRectFilled(
                     origin + ImVec2(position_x + 1.0f, 0.0f) - ImVec2(m_composition_camera.x, 0.0f),
-                    origin + ImVec2(position_x + width, space_available.y) - ImVec2(m_composition_camera.x, 0.0f),
+                    origin + ImVec2(position_x + width, space.y) - ImVec2(m_composition_camera.x, 0.0f),
                     COLOR_SELECTION
                 );
             }
@@ -751,7 +762,7 @@ namespace application {
 
                 list->AddLine(
                     origin + ImVec2(position_x_beat, 0.0f) - ImVec2(m_composition_camera.x, 0.0f),
-                    origin + ImVec2(position_x_beat, space_available.y) - ImVec2(m_composition_camera.x, 0.0f),
+                    origin + ImVec2(position_x_beat, space.y) - ImVec2(m_composition_camera.x, 0.0f),
                     COLOR_FOREGROUND2
                 );
             }
@@ -760,7 +771,7 @@ namespace application {
 
             list->AddLine(
                 origin + ImVec2(position_x, 0.0f) - ImVec2(m_composition_camera.x, 0.0f),
-                origin + ImVec2(position_x, space_available.y) - ImVec2(m_composition_camera.x, 0.0f),
+                origin + ImVec2(position_x, space.y) - ImVec2(m_composition_camera.x, 0.0f),
                 COLOR_FOREGROUND
             );
         }
@@ -789,6 +800,9 @@ namespace application {
 
     void Application::composition_notes(ImDrawList* list, ImVec2 origin) const {
         static constexpr float ROUNDING {6.0f};
+
+        const ImGuiStyle& style {ImGui::GetStyle()};
+        const ImColor COLOR {style.Colors[ImGuiCol_Text]};
 
         float global_position_x {ui::rem(COMPOSITION_LEFT)};
 
@@ -820,9 +834,6 @@ namespace application {
                     const float width {rect.z};
                     const float height {rect.w};
 
-                    const ImGuiStyle& style {ImGui::GetStyle()};
-                    const ImColor COLOR {style.Colors[ImGuiCol_Text]};
-
                     list->AddRect(
                         origin + ImVec2(global_position_x + position_x, position_y) - m_composition_camera,
                         origin + ImVec2(global_position_x + position_x + width, position_y + height) - m_composition_camera,
@@ -846,6 +857,28 @@ namespace application {
             origin + ImVec2(position_x, 0.0f) - m_composition_camera,
             origin + ImVec2(position_x, ui::rem(COMPOSITION_HEIGHT)) - m_composition_camera,
             COLOR
+        );
+    }
+
+    void Application::composition_hover(ImDrawList* list, ImVec2 origin, ImVec2 space, const HoveredNote& hovered_note) const {
+        const ImGuiStyle& style {ImGui::GetStyle()};
+        const ImColor COLOR {set_opacity(style.Colors[ImGuiCol_PopupBg], 0.3f)};
+        const ImColor COLOR2 {set_opacity(style.Colors[ImGuiCol_PopupBg], 0.5f)};
+
+        const float position_y {float(syn::keyboard::NOTES - 1 - hovered_note.id) * ui::rem(STEP_SIZE.y)};
+
+        list->AddRectFilled(
+            origin + ImVec2(0.0f, position_y) - ImVec2(0.0f, m_composition_camera.y),
+            origin + ImVec2(space.x, position_y + ui::rem(STEP_SIZE.y)) - ImVec2(0.0f, m_composition_camera.y),
+            COLOR
+        );
+
+        const float position_x {ui::rem(COMPOSITION_LEFT) + float(hovered_note.global_position / seq::DIV * seq::DIV) * ui::rem(STEP_SIZE.x)};
+
+        list->AddRectFilled(
+            origin + ImVec2(position_x, position_y) - m_composition_camera,
+            origin + ImVec2(position_x + ui::rem(STEP_SIZE.x) * float(seq::DIV), position_y + ui::rem(STEP_SIZE.y)) - m_composition_camera,
+            COLOR2
         );
     }
 
@@ -983,7 +1016,7 @@ namespace application {
 #endif
     }
 
-    void Application::update_keyboard_input(unsigned int key, bool down) {
+    void Application::keyboard_input(unsigned int key, bool down) {
         const auto update {[this, down](syn::Id id) {
             if (down) {
                 if (!(ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl))) {
@@ -1012,6 +1045,80 @@ namespace application {
             case SDLK_PERIOD: update(14); break;
             case SDLK_SLASH: update(15); break;
         }
+    }
+
+    void Application::composition_mouse_pressed(ImVec2 origin) {
+        switch (m_ui.tool) {
+            case ui::ToolMeasure: {
+                MeasureIter hovered_measure;
+
+                if (hover_measure(composition_mouse_position(origin), hovered_measure)) {
+                    m_ui.hovered_measure = hovered_measure;
+                }
+
+                break;
+            }
+            case ui::ToolNote: {
+                HoveredNote hovered_note;
+
+                if (hover_note(composition_mouse_position(origin), hovered_note)) {
+                    m_ui.hovered_note = hovered_note;
+                }
+
+                break;
+            }
+        }
+
+        m_ui.hovered_composition = true;
+    }
+
+    void Application::composition_mouse_released(ImVec2 origin) {
+        if (ImGui::IsKeyDown(ImGuiKey_LeftAlt) || ImGui::IsKeyDown(ImGuiKey_RightAlt)) {
+            unsigned int position {};
+
+            if (hover_position(composition_mouse_position(origin), position)) {
+                m_player.seek(position);
+            }
+
+            return;
+        }
+
+        switch (m_ui.tool) {
+            case ui::ToolMeasure:
+                if (m_ui.hovered_measure) {
+                    MeasureIter hovered_measure;
+
+                    if (hover_measure(composition_mouse_position(origin), hovered_measure)) {
+                        if (hovered_measure == *m_ui.hovered_measure) {
+                            select_measure(hovered_measure);
+                        }
+                    }
+                } else if (m_ui.hovered_composition) {
+                    MeasureIter hovered_measure;
+
+                    if (!hover_measure(composition_mouse_position(origin), hovered_measure)) {
+                        m_composition_selected_measure = m_composition.measures.end();
+                    }
+                }
+
+                break;
+            case ui::ToolNote:
+                if (m_ui.hovered_note) {
+                    HoveredNote hovered_note;
+
+                    if (hover_note(composition_mouse_position(origin), hovered_note)) {
+                        if (hovered_note == *m_ui.hovered_note) {
+                            do_with_note(hovered_note);
+                        }
+                    }
+                }
+
+                break;
+        }
+
+        m_ui.hovered_measure = std::nullopt;
+        m_ui.hovered_note = std::nullopt;
+        m_ui.hovered_composition = false;
     }
 
     void Application::add_metronome() {
@@ -1173,6 +1280,7 @@ namespace application {
         }
 
         float position_x {};
+        unsigned int global_position {};
 
         for (auto measure {m_composition.measures.begin()}; measure != m_composition.measures.end(); measure++) {
             const float right {float(measure->time_signature.measure_steps()) * ui::rem(STEP_SIZE.x)};
@@ -1182,11 +1290,13 @@ namespace application {
 
                 hovered_note.measure = measure;
                 hovered_note.position = static_cast<unsigned int>(offset / ui::rem(STEP_SIZE.x));
+                hovered_note.global_position = global_position + hovered_note.position;
 
                 return true;
             }
 
             position_x += right;
+            global_position += measure->time_signature.measure_steps();
         }
 
         return false;
@@ -1495,84 +1605,6 @@ namespace application {
         return false;
     }
 
-    void Application::composition_mouse_pressed(ImVec2 origin) {
-        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-            switch (m_ui.tool) {
-                case ui::ToolMeasure: {
-                    MeasureIter hovered_measure;
-
-                    if (hover_measure(composition_mouse_position(origin), hovered_measure)) {
-                        m_ui.hovered_measure = hovered_measure;
-                    }
-
-                    break;
-                }
-                case ui::ToolNote: {
-                    HoveredNote hovered_note;
-
-                    if (hover_note(composition_mouse_position(origin), hovered_note)) {
-                        m_ui.hovered_note = hovered_note;
-                    }
-
-                    break;
-                }
-            }
-
-            m_ui.hovered_composition = true;
-        }
-    }
-
-    void Application::composition_mouse_released(ImVec2 origin) {
-        if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
-            if (ImGui::IsKeyDown(ImGuiKey_LeftAlt) || ImGui::IsKeyDown(ImGuiKey_RightAlt)) {
-                unsigned int position {};
-
-                if (hover_position(composition_mouse_position(origin), position)) {
-                    m_player.seek(position);
-                }
-
-                return;
-            }
-
-            switch (m_ui.tool) {
-                case ui::ToolMeasure:
-                    if (m_ui.hovered_measure) {
-                        MeasureIter hovered_measure;
-
-                        if (hover_measure(composition_mouse_position(origin), hovered_measure)) {
-                            if (hovered_measure == *m_ui.hovered_measure) {
-                                select_measure(hovered_measure);
-                            }
-                        }
-                    } else if (m_ui.hovered_composition) {
-                        MeasureIter hovered_measure;
-
-                        if (!hover_measure(composition_mouse_position(origin), hovered_measure)) {
-                            m_composition_selected_measure = m_composition.measures.end();
-                        }
-                    }
-
-                    break;
-                case ui::ToolNote:
-                    if (m_ui.hovered_note) {
-                        HoveredNote hovered_note;
-
-                        if (hover_note(composition_mouse_position(origin), hovered_note)) {
-                            if (hovered_note == *m_ui.hovered_note) {
-                                do_with_note(hovered_note);
-                            }
-                        }
-                    }
-
-                    break;
-            }
-
-            m_ui.hovered_measure = std::nullopt;
-            m_ui.hovered_note = std::nullopt;
-            m_ui.hovered_composition = false;
-        }
-    }
-
     void Application::start_player() {
         if (m_composition_modified) {
             LOG_DEBUG("Compiling composition");
@@ -1778,6 +1810,11 @@ namespace application {
         }
 
         std::unreachable();
+    }
+
+    ImColor Application::set_opacity(ImColor color, float opacity) {
+        color.Value.w = opacity;
+        return color;
     }
 
     const char* Application::get_property(const char* property) {

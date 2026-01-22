@@ -23,6 +23,8 @@ namespace application {
         void on_late_update() override;
         void on_event(const SDL_Event& event) override;
     private:
+        struct HoveredNote;
+
         void main_menu_bar();
         void main_menu_bar_file();
         void main_menu_bar_edit();
@@ -38,11 +40,12 @@ namespace application {
         void tools_note();
         void composition();
         void composition_left(ImDrawList* list, ImVec2 origin) const;
-        void composition_octaves(ImDrawList* list, ImVec2 origin) const;
-        void composition_measures(ImDrawList* list, ImVec2 origin) const;
+        void composition_octaves(ImDrawList* list, ImVec2 origin, ImVec2 space) const;
+        void composition_measures(ImDrawList* list, ImVec2 origin, ImVec2 space) const;
         void composition_measures_labels(ImDrawList* list, ImVec2 origin) const;
         void composition_notes(ImDrawList* list, ImVec2 origin) const;
         void composition_cursor(ImDrawList* list, ImVec2 origin) const;
+        void composition_hover(ImDrawList* list, ImVec2 origin, ImVec2 space, const HoveredNote& hovered_note) const;
         void shortcuts();
         bool tempo();
         bool time_signature();
@@ -60,11 +63,14 @@ namespace application {
             syn::Id id {};
             MeasureIter measure;
             unsigned int position {};
+            unsigned int global_position {};
 
             bool operator<=>(const HoveredNote&) const = default;
         };
 
-        void update_keyboard_input(unsigned int key, bool down);
+        void keyboard_input(unsigned int key, bool down);
+        void composition_mouse_pressed(ImVec2 origin);
+        void composition_mouse_released(ImVec2 origin);
         void add_metronome();
         void add_metronome(MeasureIter begin, MeasureIter end);
         void remove_metronome();
@@ -86,8 +92,6 @@ namespace application {
         void shift_notes_left();
         void shift_notes_right();
         bool hover_position(ImVec2 position, unsigned int& position_) const;
-        void composition_mouse_pressed(ImVec2 origin);
-        void composition_mouse_released(ImVec2 origin);
 
         void start_player();
         void modify_composition();
@@ -110,6 +114,7 @@ namespace application {
         static bool notes_overlapping(const seq::Note& note1, const seq::Note& note2);
         static bool note_in_selection(NoteIter note, MeasureIter measure, const std::vector<SelectedNote>& selected_notes);
         static seq::Value get_value(ui::Value value);
+        static ImColor set_opacity(ImColor color, float opacity);
         static const char* get_property(const char* property);
 
         task::TaskManager m_task_manager;
