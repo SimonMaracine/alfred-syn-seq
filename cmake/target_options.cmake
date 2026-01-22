@@ -1,7 +1,7 @@
 function(set_target_cpp_mode target)
+    target_compile_features(${target} PRIVATE cxx_std_23)
     set_target_properties(
         ${target} PROPERTIES
-        CXX_STANDARD 23
         CXX_EXTENSIONS OFF
         CMAKE_CXX_STANDARD_REQUIRED ON
     )
