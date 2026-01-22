@@ -36,6 +36,13 @@ namespace application {
 
         auto& style {ImGui::GetStyle()};
         style.WindowBorderSize = 0.0f;
+        style.ChildBorderSize = 0.0f;
+        style.TabBarBorderSize = 0.0f;
+        style.WindowRounding = 4.0f;
+        style.ChildRounding = 4.0f;
+        style.FrameRounding = 4.0f;
+        style.PopupRounding = 4.0f;
+        style.GrabRounding = 4.0f;
         style.WindowMenuButtonPosition = ImGuiDir_None;
 
         m_player = seq::Player(m_synthesizer, m_composition);
@@ -862,8 +869,8 @@ namespace application {
 
     void Application::composition_hover(ImDrawList* list, ImVec2 origin, ImVec2 space, const HoveredNote& hovered_note) const {
         const ImGuiStyle& style {ImGui::GetStyle()};
-        const ImColor COLOR {set_opacity(style.Colors[ImGuiCol_PopupBg], 0.3f)};
-        const ImColor COLOR2 {set_opacity(style.Colors[ImGuiCol_PopupBg], 0.5f)};
+        const ImColor COLOR {set_opacity(style.Colors[ImGuiCol_PopupBg], 0.4f)};
+        const ImColor COLOR2 {set_opacity(style.Colors[ImGuiCol_PopupBg], 0.6f)};
 
         const float position_y {float(syn::keyboard::NOTES - 1 - hovered_note.id) * ui::rem(STEP_SIZE.y)};
 
