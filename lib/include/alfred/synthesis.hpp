@@ -143,9 +143,9 @@ namespace syn {
             double sound(double time, const Note& note) const override;
         private:
             static constexpr EnvelopeAdrDescription ENVELOPE {
-                0.01,
+                0.005,
                 0.15,
-                0.01
+                0.005
             };
 
             EnvelopeAdr m_envelope {ENVELOPE};

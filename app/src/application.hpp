@@ -4,6 +4,7 @@
 #include <vector>
 #include <unordered_map>
 #include <optional>
+#include <tuple>
 
 #include <imgui.h>
 #include <alfred/synthesizer.hpp>
@@ -54,18 +55,42 @@ namespace application {
         using MeasureIter = std::vector<seq::Measure>::iterator;
         using NoteIter = std::multiset<seq::Note>::iterator;
 
-        struct SelectedNote {
-            MeasureIter measure;
-            NoteIter note;
+        class SelectedNote {
+        public:
+            SelectedNote() = default;
+            SelectedNote(MeasureIter measure, NoteIter note)
+                : m_measure(measure), m_note(note) {}
+
+            MeasureIter measure() const { return m_measure; };
+            NoteIter note() const { return m_note; };
+        private:
+            MeasureIter m_measure;
+            NoteIter m_note;
         };
 
-        struct HoveredNote {
-            syn::Id id {};
-            MeasureIter measure;
-            unsigned int position {};
-            unsigned int global_position {};
+        class HoveredNote {
+        public:
+            HoveredNote() = default;
+            HoveredNote(syn::Id id, MeasureIter measure, unsigned int position, unsigned int global_position)
+                : m_id(id), m_measure(measure), m_position(position), m_global_position(global_position) {}
 
-            bool operator<=>(const HoveredNote&) const = default;
+            syn::Id id() const { return m_id; }
+            MeasureIter measure() const { return m_measure; }
+            unsigned int position() const { return m_position; }
+            unsigned int global_position() const { return m_global_position; }
+
+            unsigned int measure_position() const {
+                return m_global_position - m_position;
+            }
+
+            bool operator==(const HoveredNote& other) const {
+                return std::tie(m_id, m_global_position) == std::tie(other.m_id, other.m_global_position);
+            }
+        private:
+            syn::Id m_id {};
+            MeasureIter m_measure;
+            unsigned int m_position {};
+            unsigned int m_global_position {};
         };
 
         void keyboard_input(unsigned int key, bool down);
@@ -94,6 +119,7 @@ namespace application {
         bool hover_position(ImVec2 position, unsigned int& position_) const;
 
         void start_player();
+        void stop_player();
         void modify_composition();
         ImVec2 composition_mouse_position(ImVec2 origin) const;
         std::flat_set<syn::Voice> instruments_in_project() const;

@@ -16,8 +16,8 @@ namespace seq {
         }
     }
 
-    Player::Player(synthesizer::Synthesizer& synthesizer, const Composition& composition)
-        : m_synthesizer(&synthesizer), m_composition(&composition) {
+    Player::Player(synthesizer::Synthesizer& synthesizer, const Composition& composition, std::function<void()> stopped)
+        : m_synthesizer(&synthesizer), m_composition(&composition), m_stopped(stopped) {
         m_composition->validate();
         initialize(0);
     }
@@ -32,6 +32,7 @@ namespace seq {
 
     void Player::stop() {
         m_playing = false;
+        m_in_time = true;
         m_synthesizer->silence();
     }
 
@@ -39,12 +40,15 @@ namespace seq {
         m_position = position;
 
         m_playing = false;
+        m_in_time = true;
         m_synthesizer->silence();
         m_accumulator_time = 0.0;
 
         m_executions.clear();
         m_composition->validate();
         initialize(m_position);
+
+        m_stopped();
     }
 
     void Player::update(double dt) {
@@ -58,6 +62,9 @@ namespace seq {
             }
 
             m_playing = false;
+            m_in_time = true;
+            m_stopped();
+
             return;
         }
 
@@ -73,6 +80,8 @@ namespace seq {
             m_position++;
             m_measure_position++;
         }
+
+        m_in_time = m_accumulator_time < step_time;
 
         if (m_measure_position == m_measure->time_signature.measure_steps()) {
             m_measure_position = 0;

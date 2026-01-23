@@ -8,6 +8,7 @@
 #include <utility>
 #include <stdexcept>
 #include <chrono>
+#include <functional>
 
 #include <alfred/synthesizer.hpp>
 
@@ -28,9 +29,10 @@ namespace seq {
     // A step has variable length in seconds depending on the time signature and tempo
     inline constexpr unsigned int STEP {Sixteenth * DIV};
 
+    // Quarters per minute
     class Tempo {
     public:
-        static constexpr unsigned int MIN {1};
+        static constexpr unsigned int MIN {4};
         static constexpr unsigned int MAX {240};
 
         constexpr Tempo() = default;
@@ -55,12 +57,13 @@ namespace seq {
             return m_beats * (STEP / m_value);
         }
 
-        constexpr unsigned int steps_per_minute(Tempo tempo) const {
-            return tempo * (STEP / m_value);
+        // Transforms tempo quarters per minute into beats per minute
+        constexpr double steps_per_minutef(Tempo tempo) const {
+            return double(tempo) / (double(Quarter) / double(m_value)) * double(STEP / m_value);
         }
 
         constexpr double step_time(Tempo tempo) const {
-            return 1.0 / (double(steps_per_minute(tempo)) / 60.0);
+            return 1.0 / (steps_per_minutef(tempo) / 60.0);
         }
     private:
         Beats m_beats {4};
@@ -147,7 +150,7 @@ namespace seq {
     class Player {
     public:
         Player() = default;
-        Player(synthesizer::Synthesizer& synthesizer, const Composition& composition);
+        Player(synthesizer::Synthesizer& synthesizer, const Composition& composition, std::function<void()> stopped);
 
         void prepare();
         void start();
@@ -157,6 +160,7 @@ namespace seq {
         double get_elapsed_time() const { return m_elapsed_time; }
         unsigned int get_position() const { return m_position; }
         bool is_playing() const { return m_playing; }
+        bool is_in_time() const { return m_in_time; }
 
         void update(double dt);  // FIXME when stopped, the application accumulates time and then goes crazy
     private:
@@ -172,6 +176,7 @@ namespace seq {
 
         synthesizer::Synthesizer* m_synthesizer {};
         const Composition* m_composition {};
+        std::function<void()> m_stopped;
 
         exec::Executions m_executions;
         MeasureIter m_measure;
@@ -180,6 +185,7 @@ namespace seq {
         unsigned int m_position {};  // Like a cursor
         unsigned int m_measure_position {};
         bool m_playing {};
+        bool m_in_time {true};  // Is the player able to keep up with the piece
     };
 
     struct SequencerError : std::runtime_error {

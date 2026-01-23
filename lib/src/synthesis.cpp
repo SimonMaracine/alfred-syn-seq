@@ -171,7 +171,7 @@ namespace syn {
                 1.0 * oscillators::wave_triangle(time, note_frequency(note.id), {}) +
                 0.5 * oscillators::wave_triangle(time, note_frequency(note.id + 12), {}) +
                 0.25 * oscillators::wave_triangle(time, note_frequency(note.id + 24), {}) +
-                0.05 * oscillators::noise()
+                0.02 * oscillators::noise()
             );
         }
 

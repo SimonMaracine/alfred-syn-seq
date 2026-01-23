@@ -4,6 +4,7 @@
 #include <span>
 #include <utility>
 #include <vector>
+#include <atomic>
 
 struct SDL_AudioStream;
 
@@ -43,7 +44,7 @@ namespace audio {
         static void audio_stream_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int total_amount);
 
         SDL_AudioStream* m_stream {};
-        double m_time {};
+        std::atomic<double> m_time {0.0};
         std::vector<Device> m_devices;
     };
 

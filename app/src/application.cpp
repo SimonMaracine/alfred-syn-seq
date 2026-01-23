@@ -18,8 +18,12 @@ namespace application {
     static constexpr float COMPOSITION_HEIGHT {STEP_SIZE.y * 12.0f * float(syn::keyboard::OCTAVES) + STEP_SIZE.y * float(syn::keyboard::EXTRA)};
     static constexpr float COMPOSITION_SCROLL_SPEED {40.0f / ui::FONT_SIZE};
     static constexpr int ADD_MEASURES {4};
+    static constexpr unsigned long long FRAME_TIME_DEFAULT {16};
+    static constexpr unsigned long long FRAME_TIME_PLAYBACK {2};
 
     void Application::on_start() {
+        set_desired_frame_time(FRAME_TIME_DEFAULT);
+
         m_synthesizer.open();
         m_synthesizer.resume();
 
@@ -45,7 +49,7 @@ namespace application {
         style.GrabRounding = 4.0f;
         style.WindowMenuButtonPosition = ImGuiDir_None;
 
-        m_player = seq::Player(m_synthesizer, m_composition);
+        m_player = seq::Player(m_synthesizer, m_composition, [this]() { set_desired_frame_time(FRAME_TIME_DEFAULT); });
         m_composition_selected_measure = m_composition.measures.end();
         m_ui.volume = m_synthesizer.volume();
         m_ui.device = m_synthesizer.device().second;
@@ -280,8 +284,8 @@ namespace application {
         static constexpr float HEIGHT {2.0f * 2.0f * CELL};
 
         const ImGuiStyle& style {ImGui::GetStyle()};
-        const ImColor COLOR_INACTIVE {style.Colors[ImGuiCol_TableBorderLight]};
-        const ImColor COLOR_ACTIVE {style.Colors[ImGuiCol_PlotHistogramHovered]};
+        const ImColor& COLOR_INACTIVE {style.Colors[ImGuiCol_TableBorderLight]};
+        const ImColor& COLOR_ACTIVE {style.Colors[ImGuiCol_PlotHistogramHovered]};
 
         const ImVec2 space {ImGui::GetContentRegionAvail()};
 
@@ -424,7 +428,7 @@ namespace application {
 
             if (m_player.is_playing()) {
                 if (ImGui::Button("Stop")) {
-                    m_player.stop();
+                    stop_player();
                 }
             } else {
                 if (ImGui::Button("Start")) {
@@ -444,7 +448,14 @@ namespace application {
 
             ImGui::SameLine();
 
-            ImGui::Text("%f", m_player.get_elapsed_time());
+            if (m_player.is_in_time()) {
+                ImGui::Text("%f", m_player.get_elapsed_time());
+            } else {
+                const ImGuiStyle& style {ImGui::GetStyle()};
+                const ImColor& COLOR {style.Colors[ImGuiCol_PlotLinesHovered]};
+
+                ImGui::TextColored(COLOR, "%f", m_player.get_elapsed_time());
+            }
 
             ImGui::SameLine();
 
@@ -663,8 +674,8 @@ namespace application {
         static constexpr ImVec2 TEXT_OFFSET {(CELL.x - ui::FONT_SIZE / ui::FONT_SIZE) / 2.0f, (CELL.y - ui::FONT_SIZE / ui::FONT_SIZE) / 2.0f};
 
         const ImGuiStyle& style {ImGui::GetStyle()};
-        const ImColor COLOR_FOREGROUND {style.Colors[ImGuiCol_Text]};
-        const ImColor COLOR_BACKGROUND {style.Colors[ImGuiCol_WindowBg]};
+        const ImColor& COLOR_FOREGROUND {style.Colors[ImGuiCol_Text]};
+        const ImColor& COLOR_BACKGROUND {style.Colors[ImGuiCol_WindowBg]};
 
         list->AddRectFilled(
             origin + ImVec2(0.0f, 0.0f) - ImVec2(0.0f, m_composition_camera.y),
@@ -720,14 +731,14 @@ namespace application {
 
     void Application::composition_octaves(ImDrawList* list, ImVec2 origin, ImVec2 space) const {
         const ImGuiStyle& style {ImGui::GetStyle()};
-        const ImColor COLOR_FOREGROUND {set_opacity(style.Colors[ImGuiCol_TextDisabled], 0.7f)};
+        const ImColor& COLOR {set_opacity(style.Colors[ImGuiCol_TextDisabled], 0.7f)};
 
         float position_y {float(syn::keyboard::EXTRA) * ui::rem(STEP_SIZE.y)};
 
         list->AddLine(
             origin + ImVec2(0.0f, position_y) - ImVec2(0.0f, m_composition_camera.y),
             origin + ImVec2(space.x, position_y) - ImVec2(0.0f, m_composition_camera.y),
-            COLOR_FOREGROUND
+            COLOR
         );
 
         for (int i {1}; i < syn::keyboard::OCTAVES; i++) {
@@ -736,16 +747,16 @@ namespace application {
             list->AddLine(
                 origin + ImVec2(0.0f, position_y) - ImVec2(0.0f, m_composition_camera.y),
                 origin + ImVec2(space.x, position_y) - ImVec2(0.0f, m_composition_camera.y),
-                COLOR_FOREGROUND
+                COLOR
             );
         }
     }
 
     void Application::composition_measures(ImDrawList* list, ImVec2 origin, ImVec2 space) const {
         const ImGuiStyle& style {ImGui::GetStyle()};
-        const ImColor COLOR_FOREGROUND {style.Colors[ImGuiCol_Text]};
-        const ImColor COLOR_FOREGROUND2 {set_opacity(style.Colors[ImGuiCol_TextDisabled], 0.7f)};
-        const ImColor COLOR_SELECTION {set_opacity(style.Colors[ImGuiCol_TableHeaderBg], 0.3f)};
+        const ImColor& COLOR_FOREGROUND {style.Colors[ImGuiCol_Text]};
+        const ImColor& COLOR_FOREGROUND2 {set_opacity(style.Colors[ImGuiCol_TextDisabled], 0.7f)};
+        const ImColor& COLOR_SELECTION {set_opacity(style.Colors[ImGuiCol_TableHeaderBg], 0.3f)};
 
         float position_x {ui::rem(COMPOSITION_LEFT)};
 
@@ -788,7 +799,7 @@ namespace application {
         static constexpr ImVec2 TEXT_OFFSET {5.0f / ui::FONT_SIZE, 5.0f / ui::FONT_SIZE};
 
         const ImGuiStyle& style {ImGui::GetStyle()};
-        const ImColor COLOR_FOREGROUND {style.Colors[ImGuiCol_Text]};
+        const ImColor& COLOR {style.Colors[ImGuiCol_Text]};
 
         float position_x {ui::rem(COMPOSITION_LEFT)};
 
@@ -797,7 +808,7 @@ namespace application {
 
             list->AddText(
                 origin + ImVec2(position_x, 0.0f) + ui::rem(TEXT_OFFSET) - ImVec2(m_composition_camera.x, 0.0f),
-                COLOR_FOREGROUND,
+                COLOR,
                 measure_label(buffer, i + 1)
             );
 
@@ -809,7 +820,7 @@ namespace application {
         static constexpr float ROUNDING {6.0f};
 
         const ImGuiStyle& style {ImGui::GetStyle()};
-        const ImColor COLOR {style.Colors[ImGuiCol_Text]};
+        const ImColor& COLOR {style.Colors[ImGuiCol_Text]};
 
         float global_position_x {ui::rem(COMPOSITION_LEFT)};
 
@@ -833,8 +844,8 @@ namespace application {
             }
 
             for (const SelectedNote& selected_note : m_composition_selected_notes) {
-                if (selected_note.measure == measure) {
-                    const ImVec4 rect {note_rectangle(*selected_note.note)};
+                if (selected_note.measure() == measure) {
+                    const ImVec4 rect {note_rectangle(*selected_note.note())};
 
                     const float position_x {rect.x};
                     const float position_y {rect.y};
@@ -856,7 +867,7 @@ namespace application {
 
     void Application::composition_cursor(ImDrawList* list, ImVec2 origin) const {
         const ImGuiStyle& style {ImGui::GetStyle()};
-        const ImColor COLOR {style.Colors[ImGuiCol_PlotHistogramHovered]};
+        const ImColor& COLOR {style.Colors[ImGuiCol_PlotHistogramHovered]};
 
         const float position_x {ui::rem(COMPOSITION_LEFT) + float(m_player.get_position()) * ui::rem(STEP_SIZE.x)};
 
@@ -869,30 +880,48 @@ namespace application {
 
     void Application::composition_hover(ImDrawList* list, ImVec2 origin, ImVec2 space, const HoveredNote& hovered_note) const {
         const ImGuiStyle& style {ImGui::GetStyle()};
-        const ImColor COLOR {set_opacity(style.Colors[ImGuiCol_PopupBg], 0.4f)};
-        const ImColor COLOR2 {set_opacity(style.Colors[ImGuiCol_PopupBg], 0.6f)};
+        const ImColor& COLOR {set_opacity(style.Colors[ImGuiCol_PopupBg], 0.4f)};
+        const ImColor& COLOR2 {set_opacity(style.Colors[ImGuiCol_PopupBg], 0.6f)};
 
-        const float position_y {float(syn::keyboard::NOTES - 1 - hovered_note.id) * ui::rem(STEP_SIZE.y)};
+        switch (m_ui.tool) {
+            case ui::ToolMeasure: {
+                const float position_x {ui::rem(COMPOSITION_LEFT) + float(hovered_note.measure_position()) * ui::rem(STEP_SIZE.x)};
+                const float width {float(hovered_note.measure()->time_signature.measure_steps()) * ui::rem(STEP_SIZE.x)};
 
-        list->AddRectFilled(
-            origin + ImVec2(0.0f, position_y) - ImVec2(0.0f, m_composition_camera.y),
-            origin + ImVec2(space.x, position_y + ui::rem(STEP_SIZE.y)) - ImVec2(0.0f, m_composition_camera.y),
-            COLOR
-        );
+                list->AddRectFilled(
+                    origin + ImVec2(position_x + 1.0f, 0.0f) - ImVec2(m_composition_camera.x, 0.0f),
+                    origin + ImVec2(position_x + width, space.y) - ImVec2(m_composition_camera.x, 0.0f),
+                    COLOR
+                );
 
-        const float position_x {ui::rem(COMPOSITION_LEFT) + float(hovered_note.global_position / seq::DIV * seq::DIV) * ui::rem(STEP_SIZE.x)};
+                break;
+            }
+            case ui::ToolNote: {
+                const float position_y {float(syn::keyboard::NOTES - 1 - hovered_note.id()) * ui::rem(STEP_SIZE.y)};
 
-        list->AddRectFilled(
-            origin + ImVec2(position_x, position_y) - m_composition_camera,
-            origin + ImVec2(position_x + ui::rem(STEP_SIZE.x) * float(seq::DIV), position_y + ui::rem(STEP_SIZE.y)) - m_composition_camera,
-            COLOR2
-        );
+                list->AddRectFilled(
+                    origin + ImVec2(0.0f, position_y) - ImVec2(0.0f, m_composition_camera.y),
+                    origin + ImVec2(space.x, position_y + ui::rem(STEP_SIZE.y)) - ImVec2(0.0f, m_composition_camera.y),
+                    COLOR
+                );
+
+                const float position_x {ui::rem(COMPOSITION_LEFT) + float(hovered_note.global_position() / seq::DIV * seq::DIV) * ui::rem(STEP_SIZE.x)};
+
+                list->AddRectFilled(
+                    origin + ImVec2(position_x, position_y) - m_composition_camera,
+                    origin + ImVec2(position_x + ui::rem(STEP_SIZE.x) * float(seq::DIV), position_y + ui::rem(STEP_SIZE.y)) - m_composition_camera,
+                    COLOR2
+                );
+
+                break;
+            }
+        }
     }
 
     void Application::shortcuts() {
         if (ImGui::Shortcut(ImGuiKey_Space, ImGuiInputFlags_RouteAlways)) {
             if (m_player.is_playing()) {
-                m_player.stop();
+                stop_player();
             } else {
                 start_player();
             }
@@ -906,9 +935,11 @@ namespace application {
             switch (m_ui.tool) {
                 case ui::ToolMeasure:
                     m_ui.tool = ui::ToolNote;
+                    m_composition_selected_measure = m_composition.measures.end();
                     break;
                 case ui::ToolNote:
                     m_ui.tool = ui::ToolMeasure;
+                    m_composition_selected_notes.clear();
                     break;
             }
         }
@@ -951,6 +982,26 @@ namespace application {
 
                 if (ImGui::Shortcut(ImGuiKey_Delete, ImGuiInputFlags_RouteAlways)) {
                     delete_notes();
+                }
+
+                if (ImGui::Shortcut(ImGuiKey_1, ImGuiInputFlags_RouteAlways)) {
+                    m_ui.value = ui::ValueWhole;
+                }
+
+                if (ImGui::Shortcut(ImGuiKey_2, ImGuiInputFlags_RouteAlways)) {
+                    m_ui.value = ui::ValueHalf;
+                }
+
+                if (ImGui::Shortcut(ImGuiKey_3, ImGuiInputFlags_RouteAlways)) {
+                    m_ui.value = ui::ValueQuarter;
+                }
+
+                if (ImGui::Shortcut(ImGuiKey_4, ImGuiInputFlags_RouteAlways)) {
+                    m_ui.value = ui::ValueEighth;
+                }
+
+                if (ImGui::Shortcut(ImGuiKey_5, ImGuiInputFlags_RouteAlways)) {
+                    m_ui.value = ui::ValueSixteenth;
                 }
 
                 break;
@@ -1135,8 +1186,8 @@ namespace application {
     void Application::add_metronome(MeasureIter begin, MeasureIter end) {
         for (auto measure {begin}; measure != end; measure++) {
             for (unsigned int i {}; i < measure->time_signature.measure_steps(); i += seq::STEP / measure->time_signature.value()) {
-                const syn::Id id {i == 0 ? 3u : 4u};
-                measure->voices[syn::VoiceMetronome].emplace(id, seq::Eighth, i);
+                const syn::Id id {i == 0 ? 48u : 49u};
+                measure->voices[syn::VoiceMetronome].emplace(id, seq::Sixteenth, i);
             }
         }
 
@@ -1267,23 +1318,25 @@ namespace application {
                 remove_metronome(m_composition_selected_measure, std::next(m_composition_selected_measure));
                 add_metronome(m_composition_selected_measure, std::next(m_composition_selected_measure));
             }
+
+            modify_composition();
         } else {
             // Reset back
             set_time_signature(m_ui.time_signature, *m_composition_selected_measure);
             LOG_DEBUG("Cannot change time signature in this state");
         }
-
-        modify_composition();
     }
 
     bool Application::hover_note(ImVec2 position, HoveredNote& hovered_note) {
+        syn::Id result_id {};
+
         {
             const int index {int(position.y / ui::rem(STEP_SIZE.y))};
 
             const int id {syn::keyboard::NOTES - 1 - index};
             assert(id >= 0);
 
-            hovered_note.id = syn::Id(id);
+            result_id = syn::Id(id);
         }
 
         float position_x {};
@@ -1294,10 +1347,14 @@ namespace application {
 
             if (position.x >= position_x && position.x < position_x + right) {
                 const float offset {position.x - position_x};
+                const unsigned int result_position {static_cast<unsigned int>(offset / ui::rem(STEP_SIZE.x))};
 
-                hovered_note.measure = measure;
-                hovered_note.position = static_cast<unsigned int>(offset / ui::rem(STEP_SIZE.x));
-                hovered_note.global_position = global_position + hovered_note.position;
+                hovered_note = HoveredNote(
+                    result_id,
+                    measure,
+                    result_position,
+                    global_position + result_position
+                );
 
                 return true;
             }
@@ -1310,15 +1367,15 @@ namespace application {
     }
 
     bool Application::select_note(const HoveredNote& hovered_note, NoteIter& note) {
-        auto voice {hovered_note.measure->voices.find(m_voice)};
+        auto voice {hovered_note.measure()->voices.find(m_voice)};
 
-        if (voice == hovered_note.measure->voices.end()) {
+        if (voice == hovered_note.measure()->voices.end()) {
             return false;
         }
 
         for (auto n {voice->second.begin()}; n != voice->second.end(); n++) {
-            if (hovered_note.id == n->id) {
-                if (hovered_note.position >= n->position && hovered_note.position < n->position + seq::STEP / n->value) {
+            if (hovered_note.id() == n->id) {
+                if (hovered_note.position() >= n->position && hovered_note.position() < n->position + seq::STEP / n->value) {
                     note = n;
                     return true;
                 }
@@ -1334,7 +1391,7 @@ namespace application {
         if (select_note(hovered_note, note)) {
             const auto selected_note {
                 std::find_if(m_composition_selected_notes.begin(), m_composition_selected_notes.end(), [hovered_note, note](const auto& n) {
-                    return n.measure == hovered_note.measure && n.note == note;
+                    return n.measure() == hovered_note.measure() && n.note() == note;
                 })
             };
 
@@ -1342,7 +1399,7 @@ namespace application {
                 if (selected_note != m_composition_selected_notes.end()) {
                     m_composition_selected_notes.erase(selected_note);
                 } else {
-                    m_composition_selected_notes.emplace_back(hovered_note.measure, note);
+                    m_composition_selected_notes.emplace_back(hovered_note.measure(), note);
                 }
             } else {
                 const bool exists {selected_note != m_composition_selected_notes.end()};
@@ -1350,7 +1407,7 @@ namespace application {
                 m_composition_selected_notes.clear();
 
                 if (!exists) {
-                    m_composition_selected_notes.emplace_back(hovered_note.measure, note);
+                    m_composition_selected_notes.emplace_back(hovered_note.measure(), note);
                 }
             }
 
@@ -1363,18 +1420,18 @@ namespace application {
         }
 
         const seq::Note new_note {
-            hovered_note.id,
+            hovered_note.id(),
             get_value(ui::Value(m_ui.value)),
-            hovered_note.position / seq::DIV * seq::DIV  // Always place on groups of steps
+            hovered_note.position() / seq::DIV * seq::DIV  // Always place on groups of steps
         };
 
         if (
             ![this, &hovered_note, &new_note]() {
-                if (new_note.position + seq::STEP / new_note.value > hovered_note.measure->time_signature.measure_steps()) {
+                if (new_note.position + seq::STEP / new_note.value > hovered_note.measure()->time_signature.measure_steps()) {
                     return false;
                 }
 
-                for (const seq::Note& note : hovered_note.measure->voices[m_voice]) {
+                for (const seq::Note& note : hovered_note.measure()->voices[m_voice]) {
                     if (notes_overlapping(note, new_note)) {
                         return false;
                     }
@@ -1387,7 +1444,7 @@ namespace application {
             return;
         }
 
-        hovered_note.measure->voices[m_voice].insert(new_note);
+        hovered_note.measure()->voices[m_voice].insert(new_note);
 
         modify_composition();
     }
@@ -1398,7 +1455,7 @@ namespace application {
         }
 
         for (const SelectedNote& selected_note : m_composition_selected_notes) {
-            selected_note.measure->voices.at(m_voice).erase(selected_note.note);
+            selected_note.measure()->voices.at(m_voice).erase(selected_note.note());
         }
 
         m_composition_selected_notes.clear();
@@ -1414,18 +1471,18 @@ namespace application {
         if (
             ![this]() {
                 for (const SelectedNote& selected_note : m_composition_selected_notes) {
-                    if (!check_note_up_limit(*selected_note.note)) {
+                    if (!check_note_up_limit(*selected_note.note())) {
                         return false;
                     }
 
-                    const auto& notes {selected_note.measure->voices.at(m_voice)};
+                    const auto& notes {selected_note.measure()->voices.at(m_voice)};
 
                     for (auto note {notes.begin()}; note != notes.end(); note++) {
-                        if (note_in_selection(note, selected_note.measure, m_composition_selected_notes)) {
+                        if (note_in_selection(note, selected_note.measure(), m_composition_selected_notes)) {
                             continue;
                         }
 
-                        seq::Note shifted_note {*selected_note.note};
+                        seq::Note shifted_note {*selected_note.note()};
                         shifted_note.id++;
 
                         if (notes_overlapping(*note, shifted_note)) {
@@ -1442,11 +1499,11 @@ namespace application {
         }
 
         for (SelectedNote& selected_note : m_composition_selected_notes) {
-            seq::Note note {*selected_note.note};
+            seq::Note note {*selected_note.note()};
             note.id++;
 
-            const auto iter {selected_note.measure->voices.at(m_voice).erase(selected_note.note)};
-            selected_note.note = selected_note.measure->voices.at(m_voice).insert(iter, note);
+            const auto iter {selected_note.measure()->voices.at(m_voice).erase(selected_note.note())};
+            selected_note.note() = selected_note.measure()->voices.at(m_voice).insert(iter, note);
         }
 
         modify_composition();
@@ -1460,18 +1517,18 @@ namespace application {
         if (
             ![this]() {
                 for (const SelectedNote& selected_note : m_composition_selected_notes) {
-                    if (!check_note_down_limit(*selected_note.note)) {
+                    if (!check_note_down_limit(*selected_note.note())) {
                         return false;
                     }
 
-                    const auto& notes {selected_note.measure->voices.at(m_voice)};
+                    const auto& notes {selected_note.measure()->voices.at(m_voice)};
 
                     for (auto note {notes.begin()}; note != notes.end(); note++) {
-                        if (note_in_selection(note, selected_note.measure, m_composition_selected_notes)) {
+                        if (note_in_selection(note, selected_note.measure(), m_composition_selected_notes)) {
                             continue;
                         }
 
-                        seq::Note shifted_note {*selected_note.note};
+                        seq::Note shifted_note {*selected_note.note()};
                         shifted_note.id--;
 
                         if (notes_overlapping(*note, shifted_note)) {
@@ -1488,11 +1545,11 @@ namespace application {
         }
 
         for (SelectedNote& selected_note : m_composition_selected_notes) {
-            seq::Note note {*selected_note.note};
+            seq::Note note {*selected_note.note()};
             note.id--;
 
-            const auto iter {selected_note.measure->voices.at(m_voice).erase(selected_note.note)};
-            selected_note.note = selected_note.measure->voices.at(m_voice).insert(iter, note);
+            const auto iter {selected_note.measure()->voices.at(m_voice).erase(selected_note.note())};
+            selected_note.note() = selected_note.measure()->voices.at(m_voice).insert(iter, note);
         }
 
         modify_composition();
@@ -1506,18 +1563,18 @@ namespace application {
         if (
             ![this]() {
                 for (const SelectedNote& selected_note : m_composition_selected_notes) {
-                    if (!check_note_left_limit(*selected_note.note)) {
+                    if (!check_note_left_limit(*selected_note.note())) {
                         return false;
                     }
 
-                    const auto& notes {selected_note.measure->voices.at(m_voice)};
+                    const auto& notes {selected_note.measure()->voices.at(m_voice)};
 
                     for (auto note {notes.begin()}; note != notes.end(); note++) {
-                        if (note_in_selection(note, selected_note.measure, m_composition_selected_notes)) {
+                        if (note_in_selection(note, selected_note.measure(), m_composition_selected_notes)) {
                             continue;
                         }
 
-                        seq::Note shifted_note {*selected_note.note};
+                        seq::Note shifted_note {*selected_note.note()};
                         shifted_note.position--;
 
                         if (notes_overlapping(*note, shifted_note)) {
@@ -1534,11 +1591,11 @@ namespace application {
         }
 
         for (SelectedNote& selected_note : m_composition_selected_notes) {
-            seq::Note note {*selected_note.note};
+            seq::Note note {*selected_note.note()};
             note.position--;
 
-            const auto iter {selected_note.measure->voices.at(m_voice).erase(selected_note.note)};
-            selected_note.note = selected_note.measure->voices.at(m_voice).insert(iter, note);
+            const auto iter {selected_note.measure()->voices.at(m_voice).erase(selected_note.note())};
+            selected_note.note() = selected_note.measure()->voices.at(m_voice).insert(iter, note);
         }
 
         modify_composition();
@@ -1552,18 +1609,18 @@ namespace application {
         if (
             ![this]() {
                 for (const SelectedNote& selected_note : m_composition_selected_notes) {
-                    if (!check_note_right_limit(*selected_note.note, *selected_note.measure)) {
+                    if (!check_note_right_limit(*selected_note.note(), *selected_note.measure())) {
                         return false;
                     }
 
-                    const auto& notes {selected_note.measure->voices.at(m_voice)};
+                    const auto& notes {selected_note.measure()->voices.at(m_voice)};
 
                     for (auto note {notes.begin()}; note != notes.end(); note++) {
-                        if (note_in_selection(note, selected_note.measure, m_composition_selected_notes)) {
+                        if (note_in_selection(note, selected_note.measure(), m_composition_selected_notes)) {
                             continue;
                         }
 
-                        seq::Note shifted_note {*selected_note.note};
+                        seq::Note shifted_note {*selected_note.note()};
                         shifted_note.position++;
 
                         if (notes_overlapping(*note, shifted_note)) {
@@ -1580,11 +1637,11 @@ namespace application {
         }
 
         for (SelectedNote& selected_note : m_composition_selected_notes) {
-            seq::Note note {*selected_note.note};
+            seq::Note note {*selected_note.note()};
             note.position++;
 
-            const auto iter {selected_note.measure->voices.at(m_voice).erase(selected_note.note)};
-            selected_note.note = selected_note.measure->voices.at(m_voice).insert(iter, note);
+            const auto iter {selected_note.measure()->voices.at(m_voice).erase(selected_note.note())};
+            selected_note.note() = selected_note.measure()->voices.at(m_voice).insert(iter, note);
         }
 
         modify_composition();
@@ -1620,6 +1677,14 @@ namespace application {
         }
 
         m_player.start();
+
+        set_desired_frame_time(FRAME_TIME_PLAYBACK);
+    }
+
+    void Application::stop_player() {
+        m_player.stop();
+
+        set_desired_frame_time(FRAME_TIME_DEFAULT);
     }
 
     void Application::modify_composition() {
@@ -1759,7 +1824,9 @@ namespace application {
     }
 
     bool Application::empty_except_metronome(const seq::Measure& measure) {
-        return measure.voices.empty() || measure.voices.size() == 1 && measure.voices.count(syn::VoiceMetronome) == 1;
+        return std::all_of(measure.voices.begin(), measure.voices.end(), [](const auto& voice) {
+            return voice.second.empty() || voice.first == syn::VoiceMetronome;
+        });
     }
 
     bool Application::check_note_up_limit(const seq::Note& note) {
@@ -1798,7 +1865,7 @@ namespace application {
 
     bool Application::note_in_selection(NoteIter note, MeasureIter measure, const std::vector<SelectedNote>& selected_notes) {
         return std::find_if(selected_notes.begin(), selected_notes.end(), [note, measure](const auto& n) {
-            return measure == n.measure && note == n.note;
+            return measure == n.measure() && note == n.note();
         }) != selected_notes.end();
     }
 
