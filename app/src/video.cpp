@@ -86,7 +86,7 @@ namespace video {
             }
 
             current_time = SDL_GetTicksNS();
-            m_frame_time = current_time - m_previous_time;
+            m_frame_time = std::min(current_time - m_previous_time, 50ull * SDL_NS_PER_MS);  // Cap the frame time at 20 frames per second
             m_previous_time = current_time;
 
             m_imgui_accumulator_time += m_frame_time;

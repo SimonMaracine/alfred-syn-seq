@@ -92,6 +92,8 @@ namespace application {
         debug();
         ImGui::ShowDemoWindow();
 #endif
+
+        logging::debug("{}", get_frame_time());
     }
 
     void Application::on_late_update() {
