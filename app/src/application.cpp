@@ -5,6 +5,8 @@
 #include <charconv>
 #include <iterator>
 #include <cstring>
+#include <cmath>
+#include <cstdlib>
 #include <cassert>
 
 #include <SDL3/SDL.h>
@@ -449,18 +451,16 @@ namespace application {
 
             ImGui::SameLine();
 
+            const Time time {elapsed_seconds_to_time(m_player.get_elapsed_time())};
+
             if (m_player.is_in_time()) {
-                ImGui::Text("%f", m_player.get_elapsed_time());
+                ImGui::Text("%02d:%02d.%d", time.minutes, time.seconds, time.deciseconds);
             } else {
                 const ImGuiStyle& style {ImGui::GetStyle()};
                 const ImColor& COLOR {style.Colors[ImGuiCol_PlotLinesHovered]};
 
-                ImGui::TextColored(COLOR, "%f", m_player.get_elapsed_time());
+                ImGui::TextColored(COLOR, "%02d:%02d.%d", time.minutes, time.seconds, time.deciseconds);
             }
-
-            ImGui::SameLine();
-
-            ImGui::Text("%u", m_player.get_position());
         }
 
         ImGui::End();
@@ -1069,6 +1069,8 @@ namespace application {
             if (ImGui::SmallButton("Write Settings")) {
                 ImGui::SaveIniSettingsToDisk("imguid.ini");
             }
+
+            ImGui::Text("%u", m_player.get_position());
         }
 
         ImGui::End();
@@ -1868,6 +1870,21 @@ namespace application {
         return std::find_if(selected_notes.begin(), selected_notes.end(), [note, measure](const auto& n) {
             return measure == n.measure() && note == n.note();
         }) != selected_notes.end();
+    }
+
+    Application::Time Application::elapsed_seconds_to_time(double elapsed_seconds) {
+        Time time;
+
+        double total_seconds {};
+        const double fraction_seconds {std::modf(elapsed_seconds, &total_seconds)};
+
+        const std::div_t division {std::div(int(total_seconds), 60)};
+
+        time.minutes = division.quot;
+        time.seconds = division.rem;
+        time.deciseconds = int(fraction_seconds * 10.0);
+
+        return time;
     }
 
     seq::Value Application::get_value(ui::Value value) {

@@ -15,7 +15,7 @@
 #include "task.hpp"
 
 namespace application {
-    class Application : public video::Video {  // FIXME pure virtual method call sometimes
+    class Application : public video::Video {
     public:
         void on_start() override;
         void on_stop() override;
@@ -93,6 +93,12 @@ namespace application {
             unsigned int m_global_position {};
         };
 
+        struct Time {
+            int minutes {};
+            int seconds {};
+            int deciseconds {};
+        };
+
         void keyboard_input(unsigned int key, bool down);
         void composition_mouse_pressed(ImVec2 origin);
         void composition_mouse_released(ImVec2 origin);
@@ -139,6 +145,7 @@ namespace application {
         static bool check_note_right_limit(const seq::Note& note, const seq::Measure& measure);
         static bool notes_overlapping(const seq::Note& note1, const seq::Note& note2);
         static bool note_in_selection(NoteIter note, MeasureIter measure, const std::vector<SelectedNote>& selected_notes);
+        static Time elapsed_seconds_to_time(double elapsed_seconds);
         static seq::Value get_value(ui::Value value);
         static ImColor set_opacity(ImColor color, float opacity);
         static const char* get_property(const char* property);

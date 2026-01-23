@@ -162,7 +162,7 @@ namespace seq {
         bool is_playing() const { return m_playing; }
         bool is_in_time() const { return m_in_time; }
 
-        void update(double dt);  // FIXME when stopped, the application accumulates time and then goes crazy
+        void update(double dt);
     private:
         using MeasureIter = std::vector<Measure>::const_iterator;
 
