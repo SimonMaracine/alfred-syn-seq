@@ -8,7 +8,8 @@
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "ALFRED_DISTRIBUTION": "OFF",
-                "ALFRED_ASAN": "OFF"
+                "ALFRED_ASAN": "OFF",
+                "ALFRED_ASAN_THREAD": "OFF"
             }
         },
         {
@@ -18,7 +19,19 @@
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "ALFRED_DISTRIBUTION": "OFF",
-                "ALFRED_ASAN": "ON"
+                "ALFRED_ASAN": "ON",
+                "ALFRED_ASAN_THREAD": "OFF"
+            }
+        },
+        {
+            "name": "conf-dev-asant",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "ALFRED_DISTRIBUTION": "OFF",
+                "ALFRED_ASAN": "ON",
+                "ALFRED_ASAN_THREAD": "ON"
             }
         },
         {
@@ -28,7 +41,8 @@
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "OFF",
                 "ALFRED_DISTRIBUTION": "ON",
-                "ALFRED_ASAN": "OFF"
+                "ALFRED_ASAN": "OFF",
+                "ALFRED_ASAN_THREAD": "OFF"
             }
         },
         {
@@ -38,7 +52,8 @@
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "OFF",
                 "ALFRED_DISTRIBUTION": "ON",
-                "ALFRED_ASAN": "OFF"
+                "ALFRED_ASAN": "OFF",
+                "ALFRED_ASAN_THREAD": "OFF"
             }
         }
     ],

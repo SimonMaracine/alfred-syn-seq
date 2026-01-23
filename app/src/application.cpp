@@ -26,6 +26,7 @@ namespace application {
 
         m_synthesizer.open();
         m_synthesizer.resume();
+        m_synthesizer.volume(0.5);
 
         ImGui::LoadIniSettingsFromMemory(SETTINGS.data(), SETTINGS.size());
         ImGui::StyleColorsClassic();
@@ -92,8 +93,6 @@ namespace application {
         debug();
         ImGui::ShowDemoWindow();
 #endif
-
-        logging::debug("{}", get_frame_time());
     }
 
     void Application::on_late_update() {

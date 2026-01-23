@@ -31,15 +31,16 @@ namespace audio {
         void open(unsigned int device);
         void close();
         void resume() const;
+        void halt() const;
         void lock() const;
         void unlock() const;
+        void volume(double volume) const;
+        double volume() const;
 
         double time() const { return m_time; }
 
         virtual double sound(double time) const = 0;
-        virtual double volume() const = 0;
     protected:
-        double current_sound() const;
         static double clamp(double value);
         static void audio_stream_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int total_amount);
 

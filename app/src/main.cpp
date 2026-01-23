@@ -1,3 +1,5 @@
+#include <cstdlib>
+
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
@@ -13,6 +15,8 @@ static void show_error_message_box(const char* title, const char* message) {
 }
 
 int main(int, char**) {
+    std::atexit(SDL_Quit);
+
     set_property(SDL_PROP_APP_METADATA_NAME_STRING, "Alfred");
     set_property(SDL_PROP_APP_METADATA_VERSION_STRING, "0.1.0");
     set_property(SDL_PROP_APP_METADATA_IDENTIFIER_STRING, "dev.simonmara.alfred");

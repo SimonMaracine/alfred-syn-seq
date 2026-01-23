@@ -2,8 +2,18 @@
 
 #include <algorithm>
 #include <tuple>
+#include <exception>
 
 namespace synthesizer {
+    Synthesizer::~Synthesizer() {
+        // Prevent audio from being processed in the base class destructor, causing pure virtual function calls
+        try {
+            halt();
+        } catch (...) {
+            std::terminate();
+        }
+    }
+
     void Synthesizer::note_on(syn::Name name, syn::Octave octave, syn::Voice voice) {
         note_on(syn::Note::get_id(name, octave), voice);
     }
@@ -47,10 +57,6 @@ namespace synthesizer {
         m_notes.clear();
     }
 
-    void Synthesizer::volume(double volume) {
-        m_volume = std::min(std::max(volume, 0.0), 1.0);
-    }
-
     void Synthesizer::update() {
         audio::AudioLockGuard guard {this};
 
@@ -67,10 +73,6 @@ namespace synthesizer {
 
     const char* Synthesizer::instrument_name(syn::Voice voice) const {
         return m_voices[voice].name();
-    }
-
-    double Synthesizer::volume() const {
-        return m_volume;
     }
 
     double Synthesizer::sound(double time) const {

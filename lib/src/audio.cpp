@@ -4,6 +4,8 @@
 #include <memory>
 #include <limits>
 #include <exception>
+#include <algorithm>
+#include <vector>
 #include <cmath>
 
 #include <SDL3/SDL.h>
@@ -112,6 +114,16 @@ namespace audio {
         }
     }
 
+    void Audio::halt() const {
+        if (!SDL_PauseAudioStreamDevice(m_stream)) {
+            throw AudioError(std::format("SDL_PauseAudioStreamDevice: {}", SDL_GetError()));
+        }
+
+        if (!SDL_ClearAudioStream(m_stream)) {
+            throw AudioError(std::format("SDL_ClearAudioStream: {}", SDL_GetError()));
+        }
+    }
+
     void Audio::lock() const {
         if (!SDL_LockAudioStream(m_stream)) {
             throw AudioError(std::format("SDL_LockAudioStream: {}", SDL_GetError()));
@@ -124,8 +136,20 @@ namespace audio {
         }
     }
 
-    double Audio::current_sound() const {
-        return sound(m_time) * volume();
+    void Audio::volume(double volume) const {
+        if (!SDL_SetAudioStreamGain(m_stream, std::min(std::max(float(volume), 0.0f), 1.0f))) {
+            throw AudioError(std::format("SDL_SetAudioStreamGain: {}", SDL_GetError()));
+        }
+    }
+
+    double Audio::volume() const {
+        const float gain {SDL_GetAudioStreamGain(m_stream)};
+
+        if (gain == -1.0f) {
+            throw AudioError(std::format("SDL_GetAudioStreamGain: {}", SDL_GetError()));
+        }
+
+        return double(gain);
     }
 
     double Audio::clamp(double value) {
@@ -136,22 +160,52 @@ namespace audio {
         }
     }
 
-    void Audio::audio_stream_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int total_amount) {
-        // This code is run under a mutex lock
+    thread_local std::vector<short> g_buffer;
+
+    void Audio::audio_stream_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int) {
+        // This code is run under an SDL internal mutex
+        // Fiddle with that mutex in order to decrease latency, which could be very dangerous...
 
         Audio& self {*static_cast<Audio*>(userdata)};
 
-        const auto buffer {std::make_unique<short[]>(additional_amount / sizeof(short))};  // TODO use vector
+        static constexpr int DIVISIONS {8};
 
-        for (int i {}; i < additional_amount / int(sizeof(short)); i++) {
-            const double sound {clamp(self.current_sound())};
+        const int samples {additional_amount / int(sizeof(short))};
 
-            buffer[i] = short(sound * double(std::numeric_limits<short>::max()));
-
-            self.m_time += 1.0 / double(FREQUENCY);
+        if (int(g_buffer.size()) < samples) {
+            g_buffer.resize(samples);
         }
 
-        (void) SDL_PutAudioStreamData(stream, buffer.get(), additional_amount / sizeof(short) * sizeof(short));
+        if (samples / DIVISIONS == 0) {
+            for (int i {}; i < samples / DIVISIONS; i++) {
+                const double sound {clamp(self.sound(self.m_time))};
+
+                g_buffer[i] = short(sound * double(std::numeric_limits<short>::max()));
+
+                self.m_time += 1.0 / double(FREQUENCY);
+            }
+        } else {
+            (void) SDL_UnlockAudioStream(self.m_stream);  // FIXME doesn't seem to help
+
+            for (int j {}; j < DIVISIONS; j++) {
+                (void) SDL_LockAudioStream(self.m_stream);
+
+                for (int i {}; i < samples / DIVISIONS; i++) {
+                    const double sound {clamp(self.sound(self.m_time))};
+
+                    g_buffer[j * (samples / DIVISIONS) + i] = short(sound * double(std::numeric_limits<short>::max()));
+
+                    self.m_time += 1.0 / double(FREQUENCY);
+                }
+
+                (void) SDL_UnlockAudioStream(self.m_stream);
+            }
+
+            (void) SDL_LockAudioStream(self.m_stream);
+        }
+
+        // Buffer size could be larger than the samples written!
+        (void) SDL_PutAudioStreamData(stream, g_buffer.data(), samples * int(sizeof(short)));
     }
 
     AudioLockGuard::AudioLockGuard(const Audio* audio)
