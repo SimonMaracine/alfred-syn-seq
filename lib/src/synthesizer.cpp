@@ -6,6 +6,10 @@
 
 namespace synthesizer {
     Synthesizer::~Synthesizer() {
+        if (!*this) {
+            return;
+        }
+
         // Prevent audio from being processed in the base class destructor, causing pure virtual function calls
         try {
             halt();
@@ -31,10 +35,10 @@ namespace synthesizer {
             syn::Note& note {m_notes.emplace_back()};
             note.id = id;
             note.voice = voice;
-            note.time_on = m_time;
+            note.time_on = time();
         } else {
             if (iter->time_off > iter->time_on) {
-                iter->time_on = m_time;
+                iter->time_on = time();
             }
         }
     }
@@ -46,7 +50,7 @@ namespace synthesizer {
 
         if (iter != m_notes.end()) {
             if (iter->time_on > iter->time_off) {
-                iter->time_off = m_time;
+                iter->time_off = time();
             }
         }
     }
@@ -61,7 +65,7 @@ namespace synthesizer {
         audio::AudioLockGuard guard {this};
 
         m_notes.erase(std::remove_if(m_notes.begin(), m_notes.end(), [this](const syn::Note& note) {
-            return m_voices[note.voice].envelope().is_done(m_time, note.time_on, note.time_off);
+            return m_voices[note.voice].envelope().is_done(time(), note.time_on, note.time_off);
         }), m_notes.end());
     }
 

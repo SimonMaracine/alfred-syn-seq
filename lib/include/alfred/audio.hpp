@@ -37,10 +37,11 @@ namespace audio {
         void volume(double volume) const;
         double volume() const;
 
+        operator bool() const { return m_stream; }
         double time() const { return m_time; }
 
         virtual double sound(double time) const = 0;
-    protected:
+    private:
         static double clamp(double value);
         static void audio_stream_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int total_amount);
 

@@ -105,10 +105,6 @@ namespace audio {
     }
 
     void Audio::close() {
-        if (!m_stream) {
-            return;
-        }
-
         SDL_DestroyAudioStream(m_stream);
     }
 
@@ -119,10 +115,6 @@ namespace audio {
     }
 
     void Audio::halt() const {
-        if (!m_stream) {
-            return;
-        }
-
         if (!SDL_PauseAudioStreamDevice(m_stream)) {
             throw AudioError(std::format("SDL_PauseAudioStreamDevice: {}", SDL_GetError()));
         }
