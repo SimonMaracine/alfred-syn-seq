@@ -17,6 +17,10 @@ static void show_error_message_box(const char* title, const char* message) {
 int main(int, char**) {
     std::atexit(SDL_Quit);
 
+    if (!SDL_SetHint(SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES, "512")) {
+        logging::error("SDL_SetHint");
+    }
+
     set_property(SDL_PROP_APP_METADATA_NAME_STRING, "Alfred");
     set_property(SDL_PROP_APP_METADATA_VERSION_STRING, "0.1.0");
     set_property(SDL_PROP_APP_METADATA_IDENTIFIER_STRING, "dev.simonmara.alfred");

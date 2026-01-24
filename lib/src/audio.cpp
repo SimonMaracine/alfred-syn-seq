@@ -105,6 +105,10 @@ namespace audio {
     }
 
     void Audio::close() {
+        if (!m_stream) {
+            return;
+        }
+
         SDL_DestroyAudioStream(m_stream);
     }
 
@@ -115,6 +119,10 @@ namespace audio {
     }
 
     void Audio::halt() const {
+        if (!m_stream) {
+            return;
+        }
+
         if (!SDL_PauseAudioStreamDevice(m_stream)) {
             throw AudioError(std::format("SDL_PauseAudioStreamDevice: {}", SDL_GetError()));
         }
@@ -164,11 +172,8 @@ namespace audio {
 
     void Audio::audio_stream_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int) {
         // This code is run under an SDL internal mutex
-        // Fiddle with that mutex in order to decrease latency, which could be very dangerous...
 
         Audio& self {*static_cast<Audio*>(userdata)};
-
-        static constexpr int DIVISIONS {8};
 
         const int samples {additional_amount / int(sizeof(short))};
 
@@ -176,32 +181,12 @@ namespace audio {
             g_buffer.resize(samples);
         }
 
-        if (samples / DIVISIONS == 0) {
-            for (int i {}; i < samples / DIVISIONS; i++) {
-                const double sound {clamp(self.sound(self.m_time))};
+        for (int i {}; i < samples; i++) {
+            const double sound {clamp(self.sound(self.m_time))};
 
-                g_buffer[i] = short(sound * double(std::numeric_limits<short>::max()));
+            g_buffer[i] = short(sound * double(std::numeric_limits<short>::max()));
 
-                self.m_time += 1.0 / double(FREQUENCY);
-            }
-        } else {
-            (void) SDL_UnlockAudioStream(self.m_stream);  // FIXME doesn't seem to help
-
-            for (int j {}; j < DIVISIONS; j++) {
-                (void) SDL_LockAudioStream(self.m_stream);
-
-                for (int i {}; i < samples / DIVISIONS; i++) {
-                    const double sound {clamp(self.sound(self.m_time))};
-
-                    g_buffer[j * (samples / DIVISIONS) + i] = short(sound * double(std::numeric_limits<short>::max()));
-
-                    self.m_time += 1.0 / double(FREQUENCY);
-                }
-
-                (void) SDL_UnlockAudioStream(self.m_stream);
-            }
-
-            (void) SDL_LockAudioStream(self.m_stream);
+            self.m_time += 1.0 / double(FREQUENCY);
         }
 
         // Buffer size could be larger than the samples written!
