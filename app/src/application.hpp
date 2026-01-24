@@ -103,6 +103,7 @@ namespace application {
         void keyboard_input(unsigned int key, bool down);
         void composition_mouse_pressed(ImVec2 origin);
         void composition_mouse_released(ImVec2 origin);
+        void composition_camera(bool item_active, bool item_hovered, ImVec2 space);
         void add_metronome();
         void add_metronome(MeasureIter begin, MeasureIter end);
         void remove_metronome();

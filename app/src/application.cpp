@@ -23,6 +23,10 @@ namespace application {
     static constexpr unsigned long long FRAME_TIME_DEFAULT {16};
     static constexpr unsigned long long FRAME_TIME_PLAYBACK {2};
 
+    constexpr float decay(float friction, float delta_time) {
+        return 1.0f / (1.0f + friction * delta_time);
+    }
+
     void Application::on_start() {
         set_desired_frame_time(FRAME_TIME_DEFAULT);
 
@@ -612,7 +616,6 @@ namespace application {
             ImDrawList* list {ImGui::GetWindowDrawList()};
             const ImVec2 origin {ImGui::GetCursorScreenPos()};
             const ImVec2 space {ImGui::GetContentRegionAvail()};
-            const auto& io {ImGui::GetIO()};
 
             (void) ImGui::InvisibleButton("Canvas", space, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight);
 
@@ -625,34 +628,14 @@ namespace application {
                 }
             }
 
+            composition_camera(item_active, item_hovered, space);
+
             composition_measures(list, origin, space);
             composition_octaves(list, origin, space);
             composition_cursor(list, origin);
             composition_notes(list, origin);
             composition_measures_labels(list, origin);
             composition_left(list, origin);
-
-            if (item_active && ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
-                m_composition_camera -= io.MouseDelta;
-            }
-
-            if (item_hovered) {
-                if (ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift)) {
-                    m_composition_camera -= ImVec2(
-                        ui::rem(COMPOSITION_SCROLL_SPEED * 2.0f) * io.MouseWheel,
-                        -ui::rem(COMPOSITION_SCROLL_SPEED) * io.MouseWheelH
-                    );
-                } else {
-                    m_composition_camera -= ImVec2(
-                        -ui::rem(COMPOSITION_SCROLL_SPEED * 2.0f) * io.MouseWheelH,
-                        ui::rem(COMPOSITION_SCROLL_SPEED) * io.MouseWheel
-                    );
-                }
-            }
-
-            m_composition_camera.x = std::max(m_composition_camera.x, 0.0f);
-            m_composition_camera.y = std::max(m_composition_camera.y, 0.0f);
-            m_composition_camera.y = std::min(m_composition_camera.y, ui::rem(COMPOSITION_HEIGHT) - space.y);
 
             if (item_hovered) {
                 if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
@@ -1180,6 +1163,38 @@ namespace application {
         m_ui.hovered_measure = std::nullopt;
         m_ui.hovered_note = std::nullopt;
         m_ui.hovered_composition = false;
+    }
+
+    void Application::composition_camera(bool item_active, bool item_hovered, ImVec2 space) {
+        const auto& io {ImGui::GetIO()};
+
+        if (item_active && ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
+            m_composition_camera -= io.MouseDelta;
+        }
+
+        if (item_hovered) {
+            if (ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift)) {
+                m_composition_camera -= ImVec2(
+                    ui::rem(COMPOSITION_SCROLL_SPEED * 2.0f) * io.MouseWheel,
+                    -ui::rem(COMPOSITION_SCROLL_SPEED) * io.MouseWheelH
+                );
+            } else {
+                m_composition_camera -= ImVec2(
+                    -ui::rem(COMPOSITION_SCROLL_SPEED * 2.0f) * io.MouseWheelH,
+                    ui::rem(COMPOSITION_SCROLL_SPEED) * io.MouseWheel
+                );
+            }
+        }
+
+        const float cursor_position {float(m_player.get_position()) * ui::rem(STEP_SIZE.x) - m_composition_camera.x};
+
+        if (m_player.is_playing() && cursor_position > space.x / 2.0f) {
+            m_composition_camera.x += std::floor(cursor_position - space.x / 2.0f);
+        }
+
+        m_composition_camera.x = std::max(m_composition_camera.x, 0.0f);
+        m_composition_camera.y = std::max(m_composition_camera.y, 0.0f);
+        m_composition_camera.y = std::min(m_composition_camera.y, ui::rem(COMPOSITION_HEIGHT) - space.y);
     }
 
     void Application::add_metronome() {
