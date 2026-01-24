@@ -318,7 +318,7 @@ namespace application {
 
     void Application::instruments() {
         if (ImGui::Begin("Instruments", nullptr, ImGuiWindowFlags_NoResize)) {
-            constexpr const char* INSTRUMENT[] { "Bell", "Harmonica", "Drum Kick" };
+            constexpr const char* INSTRUMENT[] { "Bell", "Harmonica", "Drum Kick", "Drum Snare", "Drum HiHat" };  // TODO remove this; doesn't scale well
 
             ImGui::SeparatorText("Voice");
 
@@ -337,6 +337,12 @@ namespace application {
                                 break;
                             case ui::VoiceDrumKick:
                                 m_voice = syn::VoiceDrumKick;
+                                break;
+                            case ui::VoiceDrumSnare:
+                                m_voice = syn::VoiceDrumSnare;
+                                break;
+                            case ui::VoiceDrumHiHat:
+                                m_voice = syn::VoiceDrumHiHat;
                                 break;
                         }
                     }
@@ -376,6 +382,12 @@ namespace application {
                                 break;
                             case syn::VoiceDrumKick:
                                 m_ui.voice = ui::VoiceDrumKick;
+                                break;
+                            case syn::VoiceDrumSnare:
+                                m_ui.voice = ui::VoiceDrumSnare;
+                                break;
+                            case syn::VoiceDrumHiHat:
+                                m_ui.voice = ui::VoiceDrumHiHat;
                                 break;
                         }
                     }
@@ -1204,8 +1216,7 @@ namespace application {
     void Application::add_metronome(MeasureIter begin, MeasureIter end) {
         for (auto measure {begin}; measure != end; measure++) {
             for (unsigned int i {}; i < measure->time_signature.measure_steps(); i += seq::STEP / measure->time_signature.value()) {
-                const syn::Id id {i == 0 ? 48u : 49u};
-                measure->voices[syn::VoiceMetronome].emplace(id, seq::Sixteenth, i);
+                measure->voices[syn::VoiceMetronome].emplace(i == 0 ? 50 : 48, seq::Sixteenth, i);
             }
         }
 

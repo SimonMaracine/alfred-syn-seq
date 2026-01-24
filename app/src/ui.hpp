@@ -68,7 +68,9 @@ namespace ui {
     enum Voice : unsigned int {
         VoiceBell,
         VoiceHarmonica,
-        VoiceDrumKick
+        VoiceDrumKick,
+        VoiceDrumSnare,
+        VoiceDrumHiHat
     };
 
     enum Octave : int {

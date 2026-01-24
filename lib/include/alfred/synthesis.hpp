@@ -92,7 +92,9 @@ namespace syn {
         VoiceMetronome,
         VoiceBell,
         VoiceHarmonica,
-        VoiceDrumKick
+        VoiceDrumKick,
+        VoiceDrumSnare,
+        VoiceDrumHiHat
     };
 
     namespace keyboard {
@@ -143,9 +145,9 @@ namespace syn {
             double sound(double time, const Note& note) const override;
         private:
             static constexpr EnvelopeAdrDescription ENVELOPE {
-                0.005,
+                0.007,
                 0.15,
-                0.005
+                0.007
             };
 
             EnvelopeAdr m_envelope {ENVELOPE};
@@ -203,6 +205,40 @@ namespace syn {
 
             EnvelopeAdr m_envelope {ENVELOPE};
         };
+
+        class DrumSnare : public Instrument {
+        public:
+            const char* name() const { return "Drum Snare"; }
+            Voice voice() const override { return VoiceDrumSnare; }
+            const Envelope& envelope() const override { return m_envelope; }
+
+            double sound(double time, const Note& note) const override;
+        private:
+            static constexpr EnvelopeAdrDescription ENVELOPE {
+                0.01,
+                0.15,
+                0.01
+            };
+
+            EnvelopeAdr m_envelope {ENVELOPE};
+        };
+
+        class DrumHiHat : public Instrument {
+        public:
+            const char* name() const { return "Drum HiHat"; }
+            Voice voice() const override { return VoiceDrumHiHat; }
+            const Envelope& envelope() const override { return m_envelope; }
+
+            double sound(double time, const Note& note) const override;
+        private:
+            static constexpr EnvelopeAdrDescription ENVELOPE {
+                0.01,
+                0.15,
+                0.01
+            };
+
+            EnvelopeAdr m_envelope {ENVELOPE};
+        };
     }
 
     class Voices {
@@ -211,7 +247,9 @@ namespace syn {
             instruments::Metronome,
             instruments::Bell,
             instruments::Harmonica,
-            instruments::DrumKick
+            instruments::DrumKick,
+            instruments::DrumSnare,
+            instruments::DrumHiHat
         >;
 
         const Storage& get() const { return m_storage; }
@@ -222,6 +260,8 @@ namespace syn {
                 case 1: return std::get<1>(m_storage);
                 case 2: return std::get<2>(m_storage);
                 case 3: return std::get<3>(m_storage);
+                case 4: return std::get<4>(m_storage);
+                case 5: return std::get<5>(m_storage);
             }
 
             std::unreachable();
