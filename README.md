@@ -2,6 +2,8 @@
 
 A free and open source cross-platform synthesizer and sequencer program.
 
+![Alfred](alfred.png)
+
 ## Building
 
 ### Requirements
