@@ -1393,7 +1393,7 @@ namespace application {
 
         if (select_note(hovered_note, note)) {
             const auto selected_note {
-                std::find_if(m_composition_selected_notes.begin(), m_composition_selected_notes.end(), [hovered_note, note](const auto& n) {
+                std::find_if(m_composition_selected_notes.begin(), m_composition_selected_notes.end(), [&hovered_note, note](const auto& n) {
                     return n.measure() == hovered_note.measure() && n.note() == note;
                 })
             };
@@ -1505,8 +1505,8 @@ namespace application {
             seq::Note note {*selected_note.note()};
             note.id++;
 
-            const auto iter {selected_note.measure()->voices.at(m_voice).erase(selected_note.note())};
-            selected_note.note() = selected_note.measure()->voices.at(m_voice).insert(iter, note);
+            selected_note.measure()->voices.at(m_voice).erase(selected_note.note());
+            selected_note.note(selected_note.measure()->voices.at(m_voice).insert(note));
         }
 
         modify_composition();
@@ -1551,8 +1551,8 @@ namespace application {
             seq::Note note {*selected_note.note()};
             note.id--;
 
-            const auto iter {selected_note.measure()->voices.at(m_voice).erase(selected_note.note())};
-            selected_note.note() = selected_note.measure()->voices.at(m_voice).insert(iter, note);
+            selected_note.measure()->voices.at(m_voice).erase(selected_note.note());
+            selected_note.note(selected_note.measure()->voices.at(m_voice).insert(note));
         }
 
         modify_composition();
@@ -1597,8 +1597,8 @@ namespace application {
             seq::Note note {*selected_note.note()};
             note.position--;
 
-            const auto iter {selected_note.measure()->voices.at(m_voice).erase(selected_note.note())};
-            selected_note.note() = selected_note.measure()->voices.at(m_voice).insert(iter, note);
+            selected_note.measure()->voices.at(m_voice).erase(selected_note.note());
+            selected_note.note(selected_note.measure()->voices.at(m_voice).insert(note));
         }
 
         modify_composition();
@@ -1643,8 +1643,8 @@ namespace application {
             seq::Note note {*selected_note.note()};
             note.position++;
 
-            const auto iter {selected_note.measure()->voices.at(m_voice).erase(selected_note.note())};
-            selected_note.note() = selected_note.measure()->voices.at(m_voice).insert(iter, note);
+            selected_note.measure()->voices.at(m_voice).erase(selected_note.note());
+            selected_note.note(selected_note.measure()->voices.at(m_voice).insert(note));
         }
 
         modify_composition();

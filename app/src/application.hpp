@@ -63,6 +63,7 @@ namespace application {
 
             MeasureIter measure() const { return m_measure; };
             NoteIter note() const { return m_note; };
+            void note(NoteIter note) { m_note = note; };
         private:
             MeasureIter m_measure;
             NoteIter m_note;
