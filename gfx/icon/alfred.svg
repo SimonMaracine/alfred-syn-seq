@@ -24,9 +24,9 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="px"
      showgrid="true"
-     inkscape:zoom="1.8101934"
-     inkscape:cx="240.02961"
-     inkscape:cy="259.08835"
+     inkscape:zoom="0.9050967"
+     inkscape:cx="141.97378"
+     inkscape:cy="236.43882"
      inkscape:window-width="1920"
      inkscape:window-height="1011"
      inkscape:window-x="0"
@@ -55,7 +55,7 @@
      inkscape:groupmode="layer"
      id="layer1">
     <ellipse
-       style="fill:#dedede;fill-opacity:1;stroke-width:1.60085"
+       style="fill:#f5f5f5;fill-opacity:1;stroke-width:1.60085"
        id="path1"
        ry="191.59081"
        rx="209.00816"
@@ -124,5 +124,13 @@
        style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:12;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1"
        d="m 309.93327,121.34019 c 2.9497,3.23412 1.32475,1.87308 4.82375,4.14333 4.06728,2.63897 8.86528,4.52346 12.3625,7.96151 0.72232,0.71011 1.21511,1.75526 1.87655,2.5292 0.36044,0.42175 0.99575,0.43143 1.25645,0.63636 0.1751,0.13764 0.36904,0.93205 0.5272,1.11711 0.68055,0.79629 2.15719,1.87925 3.0401,2.38985 0.39951,0.23103 2.32961,0.77729 2.46647,0.88487 0.2289,0.17994 0.3205,0.48617 0.48075,0.72926 0.28953,0.22761 0.57906,0.45521 0.8686,0.68281 0.50012,0.39315 0.79979,0.10821 0.8686,0.68282"
        id="path12" />
+    <path
+       style="fill:none;stroke:#ffffff;stroke-width:2;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1"
+       d="m 199.97863,167.38543 c 5.17531,6.35233 8.83884,9.85463 8.83884,18.2301"
+       id="path4" />
+    <path
+       style="fill:none;stroke:#ffffff;stroke-width:1.93168;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1"
+       d="m 319.82116,165.14156 c 0.92726,0.68225 1.99289,1.23047 2.7818,2.04674 2.64384,2.73548 0.96213,1.76973 2.22545,4.09348 0.59807,1.10008 1.62736,1.97002 2.22543,3.0701 1.02914,1.89298 3.74759,8.83378 1.66909,10.74538"
+       id="path10" />
   </g>
 </svg>
