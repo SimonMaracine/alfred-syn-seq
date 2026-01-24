@@ -84,18 +84,24 @@ namespace ui {
     using ColorIndex = unsigned int;
 
     inline constexpr std::pair<const char*, ImColor> COLORS[] {
-        { "American rose", ImColor(255, 3, 62) },
+        { "Ash grey", ImColor(178, 190, 181) },
+        { "Debian red", ImColor(215, 10, 83) },
         { "Amethyst", ImColor(153, 102, 204) },
-        { "Android green", ImColor(164, 198, 67) },
-        { "Antique fuchsia", ImColor(145, 92, 131) },
-        { "Ao", ImColor(0, 128, 0) },
-        { "Amber", ImColor(255, 191, 0) },
+        { "Bright pink", ImColor(255, 0, 127) },
+        { "India green", ImColor(19, 136, 8) },
         { "Azure", ImColor(0, 127, 255) },
+        { "Lemon", ImColor(255, 247, 0) },
+        { "Antique fuchsia", ImColor(145, 92, 131) },
+        { "Pastel blue", ImColor(174, 198, 207) },
         { "Bittersweet", ImColor(254, 111, 94) },
+        { "Pale lavender", ImColor(220, 208, 255) },
         { "Blue violet", ImColor(138, 43, 226) },
-        { "Blue", ImColor(0, 0, 255) },
-        { "Brightpink", ImColor(255, 0, 127) },
-        { "Bronze", ImColor(205, 127, 50) }
+        { "Medium Blue", ImColor(0, 0, 205) },
+        { "Android green", ImColor(164, 198, 67) },
+        { "Bright green", ImColor(102, 255, 0) },
+        { "Bronze", ImColor(205, 127, 50) },
+        { "Army green", ImColor(75, 83, 32) },
+        { "Amber", ImColor(255, 191, 0) }
     };
 
     float rem(float size);
