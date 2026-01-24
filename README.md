@@ -2,7 +2,7 @@
 
 A free and open source cross-platform synthesizer and sequencer program.
 
-![Alfred](alfred.png)
+![Alfred](gfx/mascot/alfred.png)
 
 ## Building
 
