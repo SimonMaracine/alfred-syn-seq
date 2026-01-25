@@ -167,7 +167,6 @@ namespace application {
         struct {
             int tool {ui::ToolMeasure};
             int value {ui::ValueQuarter};
-            ui::Voice voice {ui::VoiceBell};
             ui::Tempo tempo {seq::Tempo()};
             ui::TimeSignature time_signature;
             ui::ColorScheme color_scheme {ui::ColorSchemeClassic};

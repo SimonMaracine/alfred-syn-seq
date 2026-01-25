@@ -65,14 +65,6 @@ namespace ui {
         ValueSixteenth
     };
 
-    enum Voice : unsigned int {
-        VoiceBell,
-        VoiceHarmonica,
-        VoiceDrumKick,
-        VoiceDrumSnare,
-        VoiceDrumHiHat
-    };
-
     enum Octave : int {
         Octave1 = 1,
         Octave2,

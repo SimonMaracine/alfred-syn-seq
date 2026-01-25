@@ -21,11 +21,7 @@ namespace application {
     static constexpr float COMPOSITION_SCROLL_SPEED {40.0f / ui::FONT_SIZE};
     static constexpr int ADD_MEASURES {4};
     static constexpr unsigned long long FRAME_TIME_DEFAULT {16};
-    static constexpr unsigned long long FRAME_TIME_PLAYBACK {2};
-
-    constexpr float decay(float friction, float delta_time) {
-        return 1.0f / (1.0f + friction * delta_time);
-    }
+    static constexpr unsigned long long FRAME_TIME_PLAYBACK {4};
 
     void Application::on_start() {
         set_desired_frame_time(FRAME_TIME_DEFAULT);
@@ -171,9 +167,9 @@ namespace application {
 
         if (ImGui::BeginMenu("Build")) {
 #ifdef ALFRED_DISTRIBUTION
-            const char* DEV_TAG {""};
+            constexpr const char* DEV_TAG {""};
 #else
-            const char* DEV_TAG {" dev"};
+            constexpr const char* DEV_TAG {" dev"};
 #endif
             ImGui::Text("Version: %s%s", get_property(SDL_PROP_APP_METADATA_VERSION_STRING), DEV_TAG);
 #if defined(ALFRED_LINUX)
@@ -291,6 +287,7 @@ namespace application {
         static constexpr float HEIGHT {2.0f * 2.0f * CELL};
 
         const ImGuiStyle& style {ImGui::GetStyle()};
+        const ImColor& COLOR_TEXT {style.Colors[ImGuiCol_Text]};
         const ImColor& COLOR_INACTIVE {style.Colors[ImGuiCol_TableBorderLight]};
         const ImColor& COLOR_ACTIVE {style.Colors[ImGuiCol_PlotHistogramHovered]};
 
@@ -313,40 +310,24 @@ namespace application {
             12.0f
         );
 
-        list->AddText(base + origin + position + ui::rem(ImVec2(TEXT_OFFSET, TEXT_OFFSET)), IM_COL32_WHITE, label);
+        list->AddText(base + origin + position + ui::rem(ImVec2(TEXT_OFFSET, TEXT_OFFSET)), COLOR_TEXT, label);
     }
 
     void Application::instruments() {
         if (ImGui::Begin("Instruments", nullptr, ImGuiWindowFlags_NoResize)) {
-            constexpr const char* INSTRUMENT[] { "Bell", "Harmonica", "Drum Kick", "Drum Snare", "Drum HiHat" };  // TODO remove this; doesn't scale well
-
             ImGui::SeparatorText("Voice");
 
-            if (ImGui::BeginCombo("##voice", INSTRUMENT[m_ui.voice], ImGuiComboFlags_NoArrowButton)) {
-                for (std::size_t i {}; i < std::size(INSTRUMENT); i++) {
-                    if (ImGui::Selectable(INSTRUMENT[i], m_ui.voice == i)) {
-                        m_ui.voice = ui::Voice(i);
-                        m_composition_selected_notes.clear();
-
-                        switch (m_ui.voice) {
-                            case ui::VoiceBell:
-                                m_voice = syn::VoiceBell;
-                                break;
-                            case ui::VoiceHarmonica:
-                                m_voice = syn::VoiceHarmonica;
-                                break;
-                            case ui::VoiceDrumKick:
-                                m_voice = syn::VoiceDrumKick;
-                                break;
-                            case ui::VoiceDrumSnare:
-                                m_voice = syn::VoiceDrumSnare;
-                                break;
-                            case ui::VoiceDrumHiHat:
-                                m_voice = syn::VoiceDrumHiHat;
-                                break;
-                        }
+            if (ImGui::BeginCombo("##voice", m_synthesizer.instrument_name(m_voice), ImGuiComboFlags_NoArrowButton)) {
+                m_synthesizer.for_each_instrument([this](const syn::Instrument& instrument) {
+                    if (instrument.voice() == syn::VoiceMetronome) {
+                        return;
                     }
-                }
+
+                    if (ImGui::Selectable(instrument.name(), instrument.voice() == m_voice)) {
+                        m_voice = instrument.voice();
+                        m_composition_selected_notes.clear();
+                    }
+                });
 
                 ImGui::EndCombo();
             }
@@ -370,26 +351,6 @@ namespace application {
                     if (ImGui::Selectable(m_synthesizer.instrument_name(voice), voice == m_voice)) {
                         m_voice = voice;
                         m_composition_selected_notes.clear();
-
-                        switch (m_voice) {
-                            case syn::VoiceMetronome:
-                                break;
-                            case syn::VoiceBell:
-                                m_ui.voice = ui::VoiceBell;
-                                break;
-                            case syn::VoiceHarmonica:
-                                m_ui.voice = ui::VoiceHarmonica;
-                                break;
-                            case syn::VoiceDrumKick:
-                                m_ui.voice = ui::VoiceDrumKick;
-                                break;
-                            case syn::VoiceDrumSnare:
-                                m_ui.voice = ui::VoiceDrumSnare;
-                                break;
-                            case syn::VoiceDrumHiHat:
-                                m_ui.voice = ui::VoiceDrumHiHat;
-                                break;
-                        }
                     }
 
                     ImGui::PopStyleColor();
@@ -402,7 +363,7 @@ namespace application {
 
             ImGui::SeparatorText("Color");
 
-            if (ImGui::BeginCombo("##color", ui::COLORS[m_ui.colors.at(m_voice)].first)) {
+            if (ImGui::BeginCombo("##color", ui::COLORS[m_ui.colors.at(m_voice)].first, ImGuiComboFlags_NoArrowButton)) {
                 for (std::size_t i {}; i < std::size(ui::COLORS); i++) {
                     if (ImGui::Selectable(ui::COLORS[i].first, m_ui.colors.at(m_voice) == i)) {
                         m_ui.colors.at(m_voice) = ui::ColorIndex(i);
@@ -1396,7 +1357,7 @@ namespace application {
     }
 
     bool Application::select_note(const HoveredNote& hovered_note, NoteIter& note) {
-        auto voice {hovered_note.measure()->voices.find(m_voice)};
+        const auto voice {hovered_note.measure()->voices.find(m_voice)};
 
         if (voice == hovered_note.measure()->voices.end()) {
             return false;
