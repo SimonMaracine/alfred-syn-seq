@@ -2,11 +2,13 @@
 
 #include <algorithm>
 #include <iterator>
+#include <ranges>
+#include <utility>
 
 namespace seq {
     void Composition::validate() const {
         for (const Measure& measure : measures) {
-            for (const auto& [_, notes] : measure.voices) {
+            for (const auto& notes: measure.voices | std::views::values) {
                 for (const Note& note : notes) {
                     if (note.position + STEP / note.value > measure.time_signature.measure_steps()) {
                         throw SequencerError("Invalid note duration");
@@ -17,7 +19,7 @@ namespace seq {
     }
 
     Player::Player(synthesizer::Synthesizer& synthesizer, const Composition& composition, std::function<void()> stopped)
-        : m_synthesizer(&synthesizer), m_composition(&composition), m_stopped(stopped) {
+        : m_synthesizer(&synthesizer), m_composition(&composition), m_stopped(std::move(stopped)) {
         m_composition->validate();
         initialize(0);
     }
@@ -93,7 +95,9 @@ namespace seq {
                 if (m_position + 1 < note->position + note->duration) {
                     execution.notes_played.erase(execution.notes_played.begin(), note);
                     break;
-                } else if (m_position + 1 == note->position + note->duration) {
+                }
+
+                if (m_position + 1 == note->position + note->duration) {
                     m_synthesizer->note_off(note->id);
 
                     if (std::next(note) == execution.notes_played.end()) {
@@ -107,7 +111,9 @@ namespace seq {
                 if (m_position < note->position) {
                     execution.notes_unplayed.erase(execution.notes_unplayed.begin(), note);
                     break;
-                } else if (m_position == note->position) {
+                }
+
+                if (m_position == note->position) {
                     m_synthesizer->note_on(note->id, voice);
 
                     execution.notes_played.emplace(
@@ -162,7 +168,7 @@ namespace seq {
 
     Player::MeasureIter Player::initialize_measure(unsigned int position) const {
         unsigned int steps {};
-        MeasureIter measure {m_composition->measures.end()};
+        MeasureIter measure;
 
         for (measure = m_composition->measures.begin(); measure != m_composition->measures.end(); measure++) {
             steps += measure->time_signature.measure_steps();

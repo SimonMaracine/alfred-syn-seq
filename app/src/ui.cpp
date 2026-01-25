@@ -36,7 +36,7 @@ namespace ui {
     }
 
     ImVec2 rem(ImVec2 size) {
-        return ImVec2(ImGui::GetFontSize() * size.x, ImGui::GetFontSize() * size.y);
+        return { ImGui::GetFontSize() * size.x, ImGui::GetFontSize() * size.y };
     }
 
     void set_scale(int scale) {

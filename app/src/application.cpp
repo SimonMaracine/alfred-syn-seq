@@ -252,7 +252,7 @@ namespace application {
         }
     }
 
-    void Application::keyboard() {
+    void Application::keyboard() const {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
         if (ImGui::Begin("Keyboard", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse)) {
@@ -283,7 +283,7 @@ namespace application {
         ImGui::PopStyleVar();
     }
 
-    void Application::keyboard_key(ImDrawList* list, ImVec2 origin, char key, float x, float y, int scancode) {
+    void Application::keyboard_key(ImDrawList* list, ImVec2 origin, char key, float x, float y, int scancode) const {
         static constexpr float CELL {30.0f / ui::FONT_SIZE};
         static constexpr float PADDING {2.0f / ui::FONT_SIZE};
         static constexpr float TEXT_OFFSET {(2.0f * CELL - ui::FONT_SIZE / ui::FONT_SIZE) / 2.0f};

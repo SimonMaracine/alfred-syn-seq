@@ -52,7 +52,7 @@ namespace syn {
         }
     }
 
-    static double note_frequency(Id id) {
+    static constexpr double note_frequency(Id id) {
         static constexpr double BASE_FREQUENCY {55.0};  // A1
         static constexpr double STEP_FREQUENCY {1.059463094};  // 2.0 ** (1.0 / 12.0)
 

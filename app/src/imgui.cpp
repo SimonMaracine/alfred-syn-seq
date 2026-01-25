@@ -19,7 +19,7 @@ namespace imgui {
         ImGui::DestroyContext();
     }
 
-    void process_event(SDL_Event* event) {
+    void process_event(const SDL_Event* event) {
         ImGui_ImplSDL3_ProcessEvent(event);
     }
 

@@ -5,7 +5,6 @@
 #include <unordered_map>
 #include <flat_set>
 #include <set>
-#include <utility>
 #include <stdexcept>
 #include <chrono>
 #include <functional>
@@ -57,15 +56,15 @@ namespace seq {
             return m_beats * (STEP / m_value);
         }
 
+        constexpr double step_time(Tempo tempo) const {
+            return 1.0 / (steps_per_minute(tempo) / 60.0);
+        }
+    private:
         // Transforms tempo quarters per minute into beats per minute
-        constexpr double steps_per_minutef(Tempo tempo) const {
+        constexpr double steps_per_minute(Tempo tempo) const {
             return double(tempo) / (double(Quarter) / double(m_value)) * double(STEP / m_value);
         }
 
-        constexpr double step_time(Tempo tempo) const {
-            return 1.0 / (steps_per_minutef(tempo) / 60.0);
-        }
-    private:
         Beats m_beats {4};
         Value m_value {Quarter};
     };
@@ -78,11 +77,13 @@ namespace seq {
         bool operator<(const Note& other) const {
             if (position < other.position) {
                 return true;
-            } else if (position == other.position) {
-                return id < other.id;
-            } else {
-                return false;
             }
+
+            if (position == other.position) {
+                return id < other.id;
+            }
+
+            return false;
         }
     };
 
@@ -98,7 +99,7 @@ namespace seq {
     struct Composition {
         std::string title;
         std::string author;
-        std::chrono::year year;
+        std::chrono::year year {};
         std::vector<Measure> measures;
 
         void validate() const;

@@ -138,7 +138,7 @@ namespace syn {
     namespace instruments {  // TODO note range, name, description
         class Metronome : public Instrument {
         public:
-            const char* name() const { return "Metronome"; }
+            const char* name() const override { return "Metronome"; }
             Voice voice() const override { return VoiceMetronome; }
             const Envelope& envelope() const override { return m_envelope; }
 
@@ -155,7 +155,7 @@ namespace syn {
 
         class Bell : public Instrument {
         public:
-            const char* name() const { return "Bell"; }
+            const char* name() const override { return "Bell"; }
             Voice voice() const override { return VoiceBell; }
             const Envelope& envelope() const override { return m_envelope; }
 
@@ -172,7 +172,7 @@ namespace syn {
 
         class Harmonica : public Instrument {
         public:
-            const char* name() const { return "Harmonica"; }
+            const char* name() const override { return "Harmonica"; }
             Voice voice() const override { return VoiceHarmonica; }
             const Envelope& envelope() const override { return m_envelope; }
 
@@ -191,7 +191,7 @@ namespace syn {
 
         class DrumKick : public Instrument {
         public:
-            const char* name() const { return "Drum Kick"; }
+            const char* name() const override { return "Drum Kick"; }
             Voice voice() const override { return VoiceDrumKick; }
             const Envelope& envelope() const override { return m_envelope; }
 
@@ -208,7 +208,7 @@ namespace syn {
 
         class DrumSnare : public Instrument {
         public:
-            const char* name() const { return "Drum Snare"; }
+            const char* name() const override { return "Drum Snare"; }
             Voice voice() const override { return VoiceDrumSnare; }
             const Envelope& envelope() const override { return m_envelope; }
 
@@ -225,7 +225,7 @@ namespace syn {
 
         class DrumHiHat : public Instrument {
         public:
-            const char* name() const { return "Drum HiHat"; }
+            const char* name() const override { return "Drum HiHat"; }
             Voice voice() const override { return VoiceDrumHiHat; }
             const Envelope& envelope() const override { return m_envelope; }
 

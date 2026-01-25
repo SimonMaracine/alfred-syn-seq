@@ -22,14 +22,14 @@ namespace audio {
         using Device = std::pair<unsigned int, const char*>;
         using Devices = std::span<const Device>;
 
-        const char* driver() const;
+        static const char* driver();
         Device device() const;
         Devices devices() const;
         void query_devices();
 
         void open();
         void open(unsigned int device);
-        void close();
+        void close() const;
         void resume() const;
         void halt() const;
         void lock() const;

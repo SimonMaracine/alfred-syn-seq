@@ -8,7 +8,7 @@ namespace task {
     }
 
     void AsyncTask::finish(std::exception_ptr exception) {
-        m_exception = exception;
+        m_exception = std::move(exception);
         m_thread.request_stop();
     }
 

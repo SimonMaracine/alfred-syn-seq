@@ -54,7 +54,7 @@ namespace logging {
 
     template<typename... Args>
     struct debug {
-        debug(std::format_string<Args...> fmt, Args&&... args, const std::source_location& location = std::source_location::current()) {
+        explicit debug(std::format_string<Args...> fmt, Args&&... args, const std::source_location& location = std::source_location::current()) {
             log<Severity::Debug>(location, fmt, std::forward<Args>(args)...);
         }
     };
@@ -64,7 +64,7 @@ namespace logging {
 
     template<typename... Args>
     struct information {
-        information(std::format_string<Args...> fmt, Args&&... args, const std::source_location& location = std::source_location::current()) {
+        explicit information(std::format_string<Args...> fmt, Args&&... args, const std::source_location& location = std::source_location::current()) {
             log<Severity::Information>(location, fmt, std::forward<Args>(args)...);
         }
     };
@@ -74,7 +74,7 @@ namespace logging {
 
     template<typename... Args>
     struct warning {
-        warning(std::format_string<Args...> fmt, Args&&... args, const std::source_location& location = std::source_location::current()) {
+        explicit warning(std::format_string<Args...> fmt, Args&&... args, const std::source_location& location = std::source_location::current()) {
             log<Severity::Warning>(location, fmt, std::forward<Args>(args)...);
         }
     };
@@ -84,7 +84,7 @@ namespace logging {
 
     template<typename... Args>
     struct error {
-        error(std::format_string<Args...> fmt, Args&&... args, const std::source_location& location = std::source_location::current()) {
+        explicit error(std::format_string<Args...> fmt, Args&&... args, const std::source_location& location = std::source_location::current()) {
             log<Severity::Error>(location, fmt, std::forward<Args>(args)...);
         }
     };
@@ -94,7 +94,7 @@ namespace logging {
 
     template<typename... Args>
     struct critical {
-        critical(std::format_string<Args...> fmt, Args&&... args, const std::source_location& location = std::source_location::current()) {
+        explicit critical(std::format_string<Args...> fmt, Args&&... args, const std::source_location& location = std::source_location::current()) {
             log<Severity::Critical>(location, fmt, std::forward<Args>(args)...);
         }
     };

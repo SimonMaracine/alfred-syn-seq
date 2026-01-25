@@ -5,7 +5,6 @@
 #include <limits>
 #include <exception>
 #include <algorithm>
-#include <vector>
 #include <cmath>
 
 #include <SDL3/SDL.h>
@@ -27,7 +26,7 @@ namespace audio {
         SDL_QuitSubSystem(SDL_INIT_AUDIO);
     }
 
-    const char* Audio::driver() const {
+    const char* Audio::driver() {
         const char* driver {SDL_GetCurrentAudioDriver()};
 
         if (!driver) {
@@ -86,7 +85,7 @@ namespace audio {
     }
 
     void Audio::open(unsigned int device) {
-        const SDL_AudioSpec audio_specification {
+        constexpr SDL_AudioSpec audio_specification {
             SDL_AUDIO_S16,
             1,
             FREQUENCY
@@ -104,7 +103,7 @@ namespace audio {
         }
     }
 
-    void Audio::close() {
+    void Audio::close() const {
         SDL_DestroyAudioStream(m_stream);
     }
 
@@ -153,36 +152,36 @@ namespace audio {
     }
 
     double Audio::clamp(double value) {
-        if (value >= 0.0) {
-            return std::min(value, 1.0);
-        } else {
-            return std::max(value, -1.0);
-        }
+        return std::min(std::max(value, -1.0), 1.0);
     }
 
-    thread_local std::vector<short> g_buffer;
+    thread_local struct {
+        std::size_t size {};
+        std::unique_ptr<short[]> buffer;
+    } g_buffer;
 
     void Audio::audio_stream_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int) {
         // This code is run under an SDL internal mutex
 
         Audio& self {*static_cast<Audio*>(userdata)};
 
-        const int samples {additional_amount / int(sizeof(short))};
+        const std::size_t samples {std::size_t(additional_amount) / sizeof(short)};
 
-        if (int(g_buffer.size()) < samples) {
-            g_buffer.resize(samples);
+        if (g_buffer.size < samples) {
+            g_buffer.size = samples;
+            g_buffer.buffer = std::make_unique<short[]>(samples);
         }
 
-        for (int i {}; i < samples; i++) {
+        for (std::size_t i {}; i < samples; i++) {
             const double sound {clamp(self.sound(self.m_time))};
 
-            g_buffer[i] = short(sound * double(std::numeric_limits<short>::max()));
+            g_buffer.buffer[i] = short(sound * double(std::numeric_limits<short>::max()));
 
             self.m_time += 1.0 / double(FREQUENCY);
         }
 
         // Buffer size could be larger than the samples written!
-        (void) SDL_PutAudioStreamData(stream, g_buffer.data(), samples * int(sizeof(short)));
+        (void) SDL_PutAudioStreamData(stream, g_buffer.buffer.get(), int(samples * sizeof(short)));
     }
 
     AudioLockGuard::AudioLockGuard(const Audio* audio)

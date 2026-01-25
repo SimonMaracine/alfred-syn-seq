@@ -4,7 +4,6 @@
 #include <vector>
 #include <unordered_map>
 #include <optional>
-#include <tuple>
 
 #include <imgui.h>
 #include <alfred/synthesizer.hpp>
@@ -24,15 +23,15 @@ namespace application {
         void on_late_update() override;
         void on_event(const SDL_Event& event) override;
     private:
-        struct HoveredNote;
+        class HoveredNote;
 
         void main_menu_bar();
         void main_menu_bar_file();
         void main_menu_bar_edit();
         void main_menu_bar_options();
         void main_menu_bar_help();
-        void keyboard();
-        void keyboard_key(ImDrawList* list, ImVec2 origin, char key, float x, float y, int scancode);
+        void keyboard() const;
+        void keyboard_key(ImDrawList* list, ImVec2 origin, char key, float x, float y, int scancode) const;
         void instruments();
         void output();
         void playback();
@@ -85,7 +84,7 @@ namespace application {
             }
 
             bool operator==(const HoveredNote& other) const {
-                return std::tie(m_id, m_global_position) == std::tie(other.m_id, other.m_global_position);
+                return m_id == other.m_id && m_global_position == other.m_global_position;
             }
         private:
             syn::Id m_id {};

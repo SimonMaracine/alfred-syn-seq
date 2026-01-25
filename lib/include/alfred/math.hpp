@@ -14,11 +14,7 @@ namespace math {
     }
 
     constexpr bool less_than_eps(double x, double epsilon = 0.00001) {
-        if (x <= epsilon) {
-            return true;
-        } else {
-            return false;
-        }
+        return x <= epsilon;
     }
 
     constexpr double zero_if_less_than_eps(double x, double epsilon = 0.00001) {

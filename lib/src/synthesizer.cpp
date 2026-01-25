@@ -29,9 +29,7 @@ namespace synthesizer {
     void Synthesizer::note_on(syn::Id id, syn::Voice voice) {
         audio::AudioLockGuard guard {this};
 
-        const auto iter {find_note(id)};
-
-        if (iter == m_notes.end()) {
+        if (const auto iter {find_note(id)}; iter == m_notes.end()) {
             syn::Note& note {m_notes.emplace_back()};
             note.id = id;
             note.voice = voice;
@@ -46,9 +44,7 @@ namespace synthesizer {
     void Synthesizer::note_off(syn::Id id) {
         audio::AudioLockGuard guard {this};
 
-        const auto iter {find_note(id)};
-
-        if (iter != m_notes.end()) {
+        if (const auto iter {find_note(id)}; iter != m_notes.end()) {
             if (iter->time_on > iter->time_off) {
                 iter->time_off = time();
             }
@@ -64,9 +60,9 @@ namespace synthesizer {
     void Synthesizer::update() {
         audio::AudioLockGuard guard {this};
 
-        m_notes.erase(std::remove_if(m_notes.begin(), m_notes.end(), [this](const syn::Note& note) {
+        std::erase_if(m_notes, [this](const syn::Note& note) {
             return m_voices[note.voice].envelope().is_done(time(), note.time_on, note.time_off);
-        }), m_notes.end());
+        });
     }
 
     void Synthesizer::for_each_instrument(std::function<void(const syn::Instrument&)> function) const {

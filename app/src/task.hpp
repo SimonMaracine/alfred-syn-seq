@@ -115,11 +115,11 @@ namespace task {
         void update_continuous_tasks();
         void update_async_tasks();
 
-        void update_immediate_task(ImmediateTask& task);
-        void update_immediate_thread_safe_task(ImmediateThreadSafeTask& task);
-        bool update_repeatable_task(RepeatableTask& task);
-        bool update_delayed_task(DelayedTask& task);
-        bool update_continuous_task(ContinuousTask& task);
+        static void update_immediate_task(ImmediateTask& task);
+        static void update_immediate_thread_safe_task(ImmediateThreadSafeTask& task);
+        static bool update_repeatable_task(RepeatableTask& task);
+        static bool update_delayed_task(DelayedTask& task);
+        static bool update_continuous_task(ContinuousTask& task);
 
         std::vector<ImmediateTask> m_immediate_tasks_incoming;
         std::vector<ImmediateTask> m_immediate_tasks_active;
