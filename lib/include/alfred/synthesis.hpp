@@ -13,7 +13,7 @@ namespace syn {
         Envelope(Envelope&&) = default;
         Envelope& operator=(Envelope&&) = default;
 
-        virtual double get_amplitude(double time, double time_note_on, double time_note_off) const = 0;
+        virtual double get_value(double time, double time_note_on, double time_note_off) const = 0;
         virtual bool is_done(double time, double time_note_on, double time_note_off) const = 0;
     };
 
@@ -22,8 +22,8 @@ namespace syn {
         double time_decay {0.02};
         double time_release {0.2};
 
-        double amplitude_start {1.0};
-        double amplitude_sustain {0.8};
+        double value_start {1.0};
+        double value_sustain {0.8};
     };
 
     class EnvelopeAdsr : public Envelope {
@@ -31,7 +31,7 @@ namespace syn {
         EnvelopeAdsr(const EnvelopeAdsrDescription& description)
             : m_description(description) {}
 
-        double get_amplitude(double time, double time_note_on, double time_note_off) const override;
+        double get_value(double time, double time_note_on, double time_note_off) const override;
         bool is_done(double time, double time_note_on, double time_note_off) const override;
     private:
         double ads(double life_time) const;
@@ -51,7 +51,7 @@ namespace syn {
         EnvelopeAdr(const EnvelopeAdrDescription& description)
             : m_description(description) {}
 
-        double get_amplitude(double time, double time_note_on, double time_note_off) const override;
+        double get_value(double time, double time_note_on, double time_note_off) const override;
         bool is_done(double time, double time_note_on, double time_note_off) const override;
     private:
         double ad(double life_time) const;
@@ -94,7 +94,9 @@ namespace syn {
         VoiceHarmonica,
         VoiceDrumBass,
         VoiceDrumSnare,
-        VoiceDrumHiHat
+        VoiceDrumHiHat,
+        VoicePiano,
+        VoiceGuitar
     };
 
     namespace keyboard {
@@ -109,6 +111,9 @@ namespace syn {
         inline constexpr int OCTAVES {5};
         inline constexpr int EXTRA {4};
         inline constexpr int NOTES {OCTAVES * 12 + EXTRA};
+
+        inline constexpr Id ID_BEGIN {0};
+        inline constexpr Id ID_END {NOTES - 1};
     }
 
     struct Note {
@@ -131,16 +136,17 @@ namespace syn {
 
         virtual const char* name() const = 0;
         virtual Voice voice() const = 0;
-        virtual const Envelope& envelope() const = 0;
+        virtual const Envelope& envelope_amplitude() const = 0;
         virtual double sound(double time, const Note& note) const = 0;
+        virtual std::pair<Id, Id> range() const { return std::make_pair(keyboard::ID_BEGIN, keyboard::ID_END); }
     };
 
-    namespace instruments {  // TODO note range, name, description
+    namespace instruments {  // TODO description
         class Metronome : public Instrument {
         public:
             const char* name() const override { return "Metronome"; }
             Voice voice() const override { return VoiceMetronome; }
-            const Envelope& envelope() const override { return m_envelope; }
+            const Envelope& envelope_amplitude() const override { return m_envelope_amplitude; }
 
             double sound(double time, const Note& note) const override;
         private:
@@ -150,16 +156,17 @@ namespace syn {
                 0.007
             };
 
-            EnvelopeAdr m_envelope {ENVELOPE};
+            EnvelopeAdr m_envelope_amplitude {ENVELOPE};
         };
 
         class Bell : public Instrument {
         public:
             const char* name() const override { return "Bell"; }
             Voice voice() const override { return VoiceBell; }
-            const Envelope& envelope() const override { return m_envelope; }
+            const Envelope& envelope_amplitude() const override { return m_envelope_amplitude; }
 
             double sound(double time, const Note& note) const override;
+            std::pair<Id, Id> range() const override;
         private:
             static constexpr EnvelopeAdrDescription ENVELOPE {
                 0.01,
@@ -167,14 +174,14 @@ namespace syn {
                 0.2
             };
 
-            EnvelopeAdr m_envelope {ENVELOPE};
+            EnvelopeAdr m_envelope_amplitude {ENVELOPE};
         };
 
         class Harmonica : public Instrument {
         public:
             const char* name() const override { return "Harmonica"; }
             Voice voice() const override { return VoiceHarmonica; }
-            const Envelope& envelope() const override { return m_envelope; }
+            const Envelope& envelope_amplitude() const override { return m_envelope_amplitude; }
 
             double sound(double time, const Note& note) const override;
         private:
@@ -186,14 +193,14 @@ namespace syn {
                 0.8
             };
 
-            EnvelopeAdsr m_envelope {ENVELOPE};
+            EnvelopeAdsr m_envelope_amplitude {ENVELOPE};
         };
 
         class DrumBass : public Instrument {
         public:
             const char* name() const override { return "Drum Bass"; }
             Voice voice() const override { return VoiceDrumBass; }
-            const Envelope& envelope() const override { return m_envelope; }
+            const Envelope& envelope_amplitude() const override { return m_envelope_amplitude; }
 
             double sound(double time, const Note& note) const override;
         private:
@@ -203,14 +210,14 @@ namespace syn {
                 0.02
             };
 
-            EnvelopeAdr m_envelope {ENVELOPE};
+            EnvelopeAdr m_envelope_amplitude {ENVELOPE};
         };
 
         class DrumSnare : public Instrument {
         public:
             const char* name() const override { return "Drum Snare"; }
             Voice voice() const override { return VoiceDrumSnare; }
-            const Envelope& envelope() const override { return m_envelope; }
+            const Envelope& envelope_amplitude() const override { return m_envelope_amplitude; }
 
             double sound(double time, const Note& note) const override;
         private:
@@ -220,14 +227,14 @@ namespace syn {
                 0.04
             };
 
-            EnvelopeAdr m_envelope {ENVELOPE};
+            EnvelopeAdr m_envelope_amplitude {ENVELOPE};
         };
 
         class DrumHiHat : public Instrument {
         public:
             const char* name() const override { return "Drum Hi-Hat"; }
             Voice voice() const override { return VoiceDrumHiHat; }
-            const Envelope& envelope() const override { return m_envelope; }
+            const Envelope& envelope_amplitude() const override { return m_envelope_amplitude; }
 
             double sound(double time, const Note& note) const override;
         private:
@@ -237,7 +244,42 @@ namespace syn {
                 0.02
             };
 
-            EnvelopeAdr m_envelope {ENVELOPE};
+            EnvelopeAdr m_envelope_amplitude {ENVELOPE};
+        };
+
+        class Piano : public Instrument {
+        public:
+            const char* name() const override { return "Piano"; }
+            Voice voice() const override { return VoicePiano; }
+            const Envelope& envelope_amplitude() const override { return m_envelope_amplitude; }
+
+            double sound(double time, const Note& note) const override;
+        private:
+            static constexpr EnvelopeAdrDescription ENVELOPE {
+                0.01,
+                5.0,
+                0.2
+            };
+
+            EnvelopeAdr m_envelope_amplitude {ENVELOPE};
+        };
+
+        class Guitar : public Instrument {
+        public:
+            const char* name() const override { return "Guitar"; }
+            Voice voice() const override { return VoiceGuitar; }
+            const Envelope& envelope_amplitude() const override { return m_envelope_amplitude; }
+
+            double sound(double time, const Note& note) const override;
+            std::pair<Id, Id> range() const override;
+        private:
+            static constexpr EnvelopeAdrDescription ENVELOPE {
+                0.01,
+                5.0,
+                0.2
+            };
+
+            EnvelopeAdr m_envelope_amplitude {ENVELOPE};
         };
     }
 
@@ -249,7 +291,9 @@ namespace syn {
             instruments::Harmonica,
             instruments::DrumBass,
             instruments::DrumSnare,
-            instruments::DrumHiHat
+            instruments::DrumHiHat,
+            instruments::Piano,
+            instruments::Guitar
         >;
 
         const Storage& get() const { return m_storage; }
@@ -262,6 +306,8 @@ namespace syn {
                 case 3: return std::get<3>(m_storage);
                 case 4: return std::get<4>(m_storage);
                 case 5: return std::get<5>(m_storage);
+                case 6: return std::get<6>(m_storage);
+                case 7: return std::get<7>(m_storage);
             }
 
             std::unreachable();

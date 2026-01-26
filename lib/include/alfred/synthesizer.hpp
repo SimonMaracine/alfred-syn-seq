@@ -12,9 +12,9 @@ namespace synthesizer {
         ~Synthesizer() override;
 
         void note_on(syn::Name name, syn::Octave octave, syn::Voice voice);
-        void note_off(syn::Name name, syn::Octave octave);
+        void note_off(syn::Name name, syn::Octave octave, syn::Voice voice);
         void note_on(syn::Id id, syn::Voice voice);
-        void note_off(syn::Id id);
+        void note_off(syn::Id id, syn::Voice voice);
         void silence();
         void update();
         void for_each_instrument(std::function<void(const syn::Instrument&)> function) const;

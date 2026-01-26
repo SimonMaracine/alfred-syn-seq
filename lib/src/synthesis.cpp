@@ -1,7 +1,7 @@
 #include "alfred/synthesis.hpp"
 
-#include <cmath>
 #include <random>
+#include <cmath>
 
 #include "alfred/math.hpp"
 
@@ -9,11 +9,11 @@ namespace syn {
     namespace oscillators {
         struct LowFrequencyOscillator {
             double frequency {};
-            double amplitude {};
+            double value {};
         };
 
         static double frequency_modulation(double time, double frequency, LowFrequencyOscillator lfo = {}) {
-            return lfo.amplitude * frequency * std::sin(math::w(lfo.frequency) * time);
+            return lfo.value * frequency * std::sin(math::w(lfo.frequency) * time);
         }
 
         static double wave_sine(double time, double frequency, LowFrequencyOscillator lfo = {}) {
@@ -59,7 +59,7 @@ namespace syn {
         return BASE_FREQUENCY * std::pow(STEP_FREQUENCY, double(id));
     }
 
-    double EnvelopeAdsr::get_amplitude(double time, double time_note_on, double time_note_off) const {
+    double EnvelopeAdsr::get_value(double time, double time_note_on, double time_note_off) const {
         double amplitude {};
 
         if (time_note_on > time_note_off) {
@@ -74,9 +74,9 @@ namespace syn {
     bool EnvelopeAdsr::is_done(double time, double time_note_on, double time_note_off) const {
         if (time_note_on > time_note_off) {
             return false;
-        } else {
-            return math::less_than_eps(r(time, time_note_on, time_note_off));
         }
+
+        return math::less_than_eps(r(time, time_note_on, time_note_off));
     }
 
     double EnvelopeAdsr::ads(double life_time) const {
@@ -84,21 +84,21 @@ namespace syn {
 
         // Attack
         if (life_time <= m_description.time_attack) {
-            amplitude = life_time / m_description.time_attack * m_description.amplitude_start;
+            amplitude = life_time / m_description.time_attack * m_description.value_start;
         }
 
         // Decay
         if (life_time > m_description.time_attack && life_time <= m_description.time_attack + m_description.time_decay) {
             amplitude = (
                 (life_time - m_description.time_attack) / m_description.time_decay *
-                (m_description.amplitude_sustain - m_description.amplitude_start) +
-                m_description.amplitude_start
+                (m_description.value_sustain - m_description.value_start) +
+                m_description.value_start
             );
         }
 
         // Sustain
         if (life_time > m_description.time_attack + m_description.time_decay) {
-            amplitude = m_description.amplitude_sustain;
+            amplitude = m_description.value_sustain;
         }
 
         return amplitude;
@@ -111,7 +111,7 @@ namespace syn {
         return (time - time_note_off) / m_description.time_release * -amplitude + amplitude;
     }
 
-    double EnvelopeAdr::get_amplitude(double time, double time_note_on, double time_note_off) const {
+    double EnvelopeAdr::get_value(double time, double time_note_on, double time_note_off) const {
         double amplitude {};
 
         if (time_note_on > time_note_off) {
@@ -126,9 +126,9 @@ namespace syn {
     bool EnvelopeAdr::is_done(double time, double time_note_on, double time_note_off) const {
         if (time_note_on > time_note_off) {
             return false;
-        } else {
-            return math::less_than_eps(r(time, time_note_on, time_note_off));
         }
+
+        return math::less_than_eps(r(time, time_note_on, time_note_off));
     }
 
     double EnvelopeAdr::ad(double life_time) const {
@@ -167,7 +167,7 @@ namespace syn {
 
     namespace instruments {
         double Metronome::sound(double time, const Note& note) const {
-            return m_envelope.get_amplitude(time, note.time_on, note.time_off) * (
+            return m_envelope_amplitude.get_value(time, note.time_on, note.time_off) * (
                 1.0 * oscillators::wave_triangle(time, note_frequency(note.id)) +
                 0.5 * oscillators::wave_triangle(time, note_frequency(note.id + 12)) +
                 0.25 * oscillators::wave_triangle(time, note_frequency(note.id + 24)) +
@@ -176,15 +176,19 @@ namespace syn {
         }
 
         double Bell::sound(double time, const Note& note) const {
-            return m_envelope.get_amplitude(time, note.time_on, note.time_off) * (
+            return m_envelope_amplitude.get_value(time, note.time_on, note.time_off) * (
                 1.0 * oscillators::wave_sine(time, note_frequency(note.id), { 5.0, 0.001 }) +
                 0.5 * oscillators::wave_sine(time, note_frequency(note.id + 12)) +
                 0.25 * oscillators::wave_sine(time, note_frequency(note.id + 24))
             );
         }
 
+        std::pair<Id, Id> Bell::range() const {
+            return std::make_pair(12, 51);
+        }
+
         double Harmonica::sound(double time, const Note& note) const {
-            return m_envelope.get_amplitude(time, note.time_on, note.time_off) * (
+            return m_envelope_amplitude.get_value(time, note.time_on, note.time_off) * (
                 1.0 * oscillators::wave_square(time, note_frequency(note.id), { 5.0, 0.001 }) +
                 0.5 * oscillators::wave_square(time, note_frequency(note.id + 12)) +
                 0.25 * oscillators::wave_square(time, note_frequency(note.id + 24)) +
@@ -195,7 +199,7 @@ namespace syn {
         double DrumBass::sound(double time, const Note& note) const {
             static constexpr Id C3 {15};
 
-            return m_envelope.get_amplitude(time, note.time_on, note.time_off) * (
+            return m_envelope_amplitude.get_value(time, note.time_on, note.time_off) * (
                 1.0 * oscillators::wave_sine(time, note_frequency(C3)) +
                 0.125 * oscillators::wave_saw(time, note_frequency(C3)) +
                 0.05 * oscillators::noise()
@@ -205,7 +209,7 @@ namespace syn {
         double DrumSnare::sound(double time, const Note& note) const {
             static constexpr Id C3 {15};
 
-            return m_envelope.get_amplitude(time, note.time_on, note.time_off) * (
+            return m_envelope_amplitude.get_value(time, note.time_on, note.time_off) * (
                 1.0 * oscillators::wave_sine(time, note_frequency(C3)) +
                 0.5 * oscillators::wave_sine(time, note_frequency(C3 + 12)) +
                 0.25 * oscillators::wave_sine(time, note_frequency(C3 + 24)) +
@@ -217,11 +221,34 @@ namespace syn {
         double DrumHiHat::sound(double time, const Note& note) const {
             static constexpr Id C4 {27};
 
-            return m_envelope.get_amplitude(time, note.time_on, note.time_off) * (
+            return m_envelope_amplitude.get_value(time, note.time_on, note.time_off) * (
                 0.25 * oscillators::wave_square(time, note_frequency(C4)) +
                 0.125 * oscillators::wave_square(time, note_frequency(C4 + 12)) +
                 0.5 * oscillators::noise()
             );
+        }
+
+        double Piano::sound(double time, const Note& note) const {
+            return m_envelope_amplitude.get_value(time, note.time_on, note.time_off) * (
+                1.0 * oscillators::wave_sine(time, note_frequency(note.id), { 8.0, 0.00001 }) +
+                0.5 * oscillators::wave_sine(time, note_frequency(note.id + 12)) +
+                0.25 * oscillators::wave_sine(time, note_frequency(note.id + 24)) +
+                0.125 * oscillators::wave_sine(time, note_frequency(note.id + 36)) +
+                0.125 * oscillators::wave_saw(time, note_frequency(note.id))
+            );
+        }
+
+        double Guitar::sound(double time, const Note& note) const {
+            return m_envelope_amplitude.get_value(time, note.time_on, note.time_off) * (
+                1.0 * oscillators::wave_sine(time, note_frequency(note.id), { 10.0, 0.00001 }) +
+                0.5 * oscillators::wave_sine(time, note_frequency(note.id + 12)) +
+                0.25 * oscillators::wave_sine(time, note_frequency(note.id + 12 + 7)) +
+                0.125 * oscillators::wave_saw(time, note_frequency(note.id + 12 + 7 + 5))
+            );
+        }
+
+        std::pair<Id, Id> Guitar::range() const {
+            return std::make_pair(7, 51);
         }
     }
 }

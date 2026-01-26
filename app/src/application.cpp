@@ -52,12 +52,12 @@ namespace application {
         style.GrabRounding = 4.0f;
         style.WindowMenuButtonPosition = ImGuiDir_None;
 
-        m_player = seq::Player(m_synthesizer, m_composition, [this]() { set_desired_frame_time(FRAME_TIME_DEFAULT); });
+        m_player = seq::Player(m_synthesizer, m_composition, [this] { set_desired_frame_time(FRAME_TIME_DEFAULT); });
         m_composition_selected_measure = m_composition.measures.end();
         m_ui.volume = m_synthesizer.volume();
         m_ui.device = m_synthesizer.device().second;
 
-        m_task_manager.add_repeatable_task([this]() {
+        m_task_manager.add_repeatable_task([this] {
             m_ui.device = m_synthesizer.device().second;
             return false;
         }, 5000);
@@ -228,12 +228,12 @@ namespace application {
 
                         switch (m_ui.scale) {
                             case ui::Scale1X:
-                                m_task_manager.add_immediate_task([]() {
+                                m_task_manager.add_immediate_task([] {
                                     ui::set_scale(1);
                                 });
                                 break;
                             case ui::Scale2X:
-                                m_task_manager.add_immediate_task([]() {
+                                m_task_manager.add_immediate_task([] {
                                     ui::set_scale(2);
                                 });
                                 break;
@@ -282,7 +282,7 @@ namespace application {
     void Application::keyboard_key(ImDrawList* list, ImVec2 origin, char key, float x, float y, int scancode) const {
         static constexpr float CELL {30.0f / ui::FONT_SIZE};
         static constexpr float PADDING {2.0f / ui::FONT_SIZE};
-        static constexpr float TEXT_OFFSET {(2.0f * CELL - ui::FONT_SIZE / ui::FONT_SIZE) / 2.0f};
+        static constexpr float TEXT_OFFSET {(2.0f * CELL - 1.0f) / 2.0f};
         static constexpr float WIDTH {2.0f * 10.0f * CELL};
         static constexpr float HEIGHT {2.0f * 2.0f * CELL};
 
@@ -365,9 +365,13 @@ namespace application {
 
             if (ImGui::BeginCombo("##color", ui::COLORS[m_ui.colors.at(m_voice)].first, ImGuiComboFlags_NoArrowButton)) {
                 for (std::size_t i {}; i < std::size(ui::COLORS); i++) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(ui::COLORS[i].second));
+
                     if (ImGui::Selectable(ui::COLORS[i].first, m_ui.colors.at(m_voice) == i)) {
                         m_ui.colors.at(m_voice) = ui::ColorIndex(i);
                     }
+
+                    ImGui::PopStyleColor();
                 }
 
                 ImGui::EndCombo();
@@ -628,11 +632,11 @@ namespace application {
 
     void Application::composition_left(ImDrawList* list, ImVec2 origin) const {
         static constexpr ImVec2 CELL {COMPOSITION_LEFT, STEP_SIZE.y};
-        static constexpr ImVec2 TEXT_OFFSET {(CELL.x - ui::FONT_SIZE / ui::FONT_SIZE) / 2.0f, (CELL.y - ui::FONT_SIZE / ui::FONT_SIZE) / 2.0f};
+        static constexpr ImVec2 TEXT_OFFSET {(CELL.x - 2.0f) / 2.0f, (CELL.y - 1.0f) / 2.0f};
 
         const ImGuiStyle& style {ImGui::GetStyle()};
         const ImColor& COLOR_FOREGROUND {style.Colors[ImGuiCol_Text]};
-        const ImColor& COLOR_BACKGROUND {style.Colors[ImGuiCol_WindowBg]};
+        const ImColor COLOR_BACKGROUND {set_opacity(style.Colors[ImGuiCol_WindowBg], 1.0f)};
 
         list->AddRectFilled(
             origin + ImVec2(0.0f, 0.0f) - ImVec2(0.0f, m_composition_camera.y),
@@ -646,17 +650,22 @@ namespace application {
             COLOR_FOREGROUND
         );
 
-        constexpr const char* NOTES_OCTAVES[] { "C", "B", "A#", "A", "G#", "G", "F#", "F", "E", "D#", "D", "C#" };
-        constexpr const char* NOTES_EXTRA[] { "C", "B", "A#", "A" };
+        constexpr const char* NOTES_OCTAVES[] { "C \0", "B \0", "A #", "A \0", "G #", "G \0", "F #", "F \0", "E \0", "D #", "D \0", "C #" };
+        constexpr const char* NOTES_EXTRA[] { "C \0", "B \0", "A #", "A \0" };
 
         float position_y {};
+        int octave {7};
 
         for (int j {}; j < syn::keyboard::OCTAVES; j++) {
             for (std::size_t i {}; i < std::size(NOTES_OCTAVES); i++) {
+                char buffer[4] {};
+                std::strcpy(buffer, NOTES_OCTAVES[i]);
+                buffer[1] = char(octave + 48);
+
                 list->AddText(
                     origin + ImVec2(0.0f, position_y) + ui::rem(TEXT_OFFSET) - ImVec2(0.0f, m_composition_camera.y),
                     COLOR_FOREGROUND,
-                    NOTES_OCTAVES[i]
+                    buffer
                 );
 
                 list->AddLine(
@@ -666,14 +675,19 @@ namespace application {
                 );
 
                 position_y += ui::rem(STEP_SIZE.y);
+                octave -= i == 0 ? 1 : 0;
             }
         }
 
         for (std::size_t i {}; i < std::size(NOTES_EXTRA); i++) {
+            char buffer[4] {};
+            std::strcpy(buffer, NOTES_EXTRA[i]);
+            buffer[1] = char(octave + 48);
+
             list->AddText(
                 origin + ImVec2(0.0f, position_y) + ui::rem(TEXT_OFFSET) - ImVec2(0.0f, m_composition_camera.y),
                 COLOR_FOREGROUND,
-                NOTES_EXTRA[i]
+                buffer
             );
 
             list->AddLine(
@@ -683,12 +697,13 @@ namespace application {
             );
 
             position_y += ui::rem(STEP_SIZE.y);
+            octave -= i == 0 ? 1 : 0;
         }
     }
 
     void Application::composition_octaves(ImDrawList* list, ImVec2 origin, ImVec2 space) const {
         const ImGuiStyle& style {ImGui::GetStyle()};
-        const ImColor& COLOR {set_opacity(style.Colors[ImGuiCol_TextDisabled], 0.7f)};
+        const ImColor COLOR {set_opacity(style.Colors[ImGuiCol_TextDisabled], 0.7f)};
 
         float position_y {float(syn::keyboard::EXTRA) * ui::rem(STEP_SIZE.y)};
 
@@ -712,8 +727,8 @@ namespace application {
     void Application::composition_measures(ImDrawList* list, ImVec2 origin, ImVec2 space) const {
         const ImGuiStyle& style {ImGui::GetStyle()};
         const ImColor& COLOR_FOREGROUND {style.Colors[ImGuiCol_Text]};
-        const ImColor& COLOR_FOREGROUND2 {set_opacity(style.Colors[ImGuiCol_TextDisabled], 0.7f)};
-        const ImColor& COLOR_SELECTION {set_opacity(style.Colors[ImGuiCol_TableHeaderBg], 0.3f)};
+        const ImColor COLOR_FOREGROUND2 {set_opacity(style.Colors[ImGuiCol_TextDisabled], 0.7f)};
+        const ImColor COLOR_SELECTION {set_opacity(style.Colors[ImGuiCol_TableHeaderBg], 0.3f)};
 
         float position_x {ui::rem(COMPOSITION_LEFT)};
 
@@ -837,8 +852,8 @@ namespace application {
 
     void Application::composition_hover(ImDrawList* list, ImVec2 origin, ImVec2 space, const HoveredNote& hovered_note) const {
         const ImGuiStyle& style {ImGui::GetStyle()};
-        const ImColor& COLOR {set_opacity(style.Colors[ImGuiCol_PopupBg], 0.4f)};
-        const ImColor& COLOR2 {set_opacity(style.Colors[ImGuiCol_PopupBg], 0.6f)};
+        const ImColor COLOR {set_opacity(style.Colors[ImGuiCol_PopupBg], 0.4f)};
+        const ImColor COLOR2 {set_opacity(style.Colors[ImGuiCol_PopupBg], 0.6f)};
 
         switch (m_ui.tool) {
             case ui::ToolMeasure: {
@@ -966,7 +981,7 @@ namespace application {
     }
 
     bool Application::tempo() {
-        const unsigned int one {1};
+        constexpr unsigned int one {1};
 
         ImGui::SetNextItemWidth(ui::rem(6.0f));
 
@@ -984,7 +999,7 @@ namespace application {
         constexpr const char* BEATS[] { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16" };
         constexpr const char* VALUE[] { "1", "2", "4", "8", "16" };
 
-        const auto flags {ImGuiComboFlags_HeightSmall | ImGuiComboFlags_WidthFitPreview | ImGuiComboFlags_NoArrowButton};
+        static constexpr auto flags {ImGuiComboFlags_HeightSmall | ImGuiComboFlags_WidthFitPreview | ImGuiComboFlags_NoArrowButton};
 
         bool result {};
 
@@ -1040,7 +1055,7 @@ namespace application {
                     m_synthesizer.note_on(id + m_octave * 12, m_voice);
                 }
             } else {
-                m_synthesizer.note_off(id + m_octave * 12);
+                m_synthesizer.note_off(id + m_octave * 12, m_voice);
             }
         }};
 
@@ -1067,18 +1082,14 @@ namespace application {
     void Application::composition_mouse_pressed(ImVec2 origin) {
         switch (m_ui.tool) {
             case ui::ToolMeasure: {
-                MeasureIter hovered_measure;
-
-                if (hover_measure(composition_mouse_position(origin), hovered_measure)) {
+                if (MeasureIter hovered_measure; hover_measure(composition_mouse_position(origin), hovered_measure)) {
                     m_ui.hovered_measure = hovered_measure;
                 }
 
                 break;
             }
             case ui::ToolNote: {
-                HoveredNote hovered_note;
-
-                if (hover_note(composition_mouse_position(origin), hovered_note)) {
+                if (HoveredNote hovered_note; hover_note(composition_mouse_position(origin), hovered_note)) {
                     m_ui.hovered_note = hovered_note;
                 }
 
@@ -1091,9 +1102,7 @@ namespace application {
 
     void Application::composition_mouse_released(ImVec2 origin) {
         if (ImGui::IsKeyDown(ImGuiKey_LeftAlt) || ImGui::IsKeyDown(ImGuiKey_RightAlt)) {
-            unsigned int position {};
-
-            if (hover_position(composition_mouse_position(origin), position)) {
+            if (unsigned int position {}; hover_position(composition_mouse_position(origin), position)) {
                 m_player.seek(position);
             }
 
@@ -1103,17 +1112,13 @@ namespace application {
         switch (m_ui.tool) {
             case ui::ToolMeasure:
                 if (m_ui.hovered_measure) {
-                    MeasureIter hovered_measure;
-
-                    if (hover_measure(composition_mouse_position(origin), hovered_measure)) {
+                    if (MeasureIter hovered_measure; hover_measure(composition_mouse_position(origin), hovered_measure)) {
                         if (hovered_measure == *m_ui.hovered_measure) {
                             select_measure(hovered_measure);
                         }
                     }
                 } else if (m_ui.hovered_composition) {
-                    MeasureIter hovered_measure;
-
-                    if (!hover_measure(composition_mouse_position(origin), hovered_measure)) {
+                    if (MeasureIter hovered_measure; !hover_measure(composition_mouse_position(origin), hovered_measure)) {
                         m_composition_selected_measure = m_composition.measures.end();
                     }
                 }
@@ -1121,9 +1126,7 @@ namespace application {
                 break;
             case ui::ToolNote:
                 if (m_ui.hovered_note) {
-                    HoveredNote hovered_note;
-
-                    if (hover_note(composition_mouse_position(origin), hovered_note)) {
+                    if (HoveredNote hovered_note; hover_note(composition_mouse_position(origin), hovered_note)) {
                         if (hovered_note == *m_ui.hovered_note) {
                             do_with_note(hovered_note);
                         }
@@ -1380,7 +1383,7 @@ namespace application {
 
         if (select_note(hovered_note, note)) {
             const auto selected_note {
-                std::find_if(m_composition_selected_notes.begin(), m_composition_selected_notes.end(), [&hovered_note, note](const auto& n) {
+                std::ranges::find_if(m_composition_selected_notes, [&hovered_note, note](const auto& n) {
                     return n.measure() == hovered_note.measure() && n.note() == note;
                 })
             };
@@ -1416,7 +1419,7 @@ namespace application {
         };
 
         if (
-            ![this, &hovered_note, &new_note]() {
+            ![this, &hovered_note, &new_note] {
                 if (new_note.position + seq::STEP / new_note.value > hovered_note.measure()->time_signature.measure_steps()) {
                     return false;
                 }
@@ -1459,7 +1462,7 @@ namespace application {
         }
 
         if (
-            ![this]() {
+            ![this] {
                 for (const SelectedNote& selected_note : m_composition_selected_notes) {
                     if (!check_note_up_limit(*selected_note.note())) {
                         return false;
@@ -1505,7 +1508,7 @@ namespace application {
         }
 
         if (
-            ![this]() {
+            ![this] {
                 for (const SelectedNote& selected_note : m_composition_selected_notes) {
                     if (!check_note_down_limit(*selected_note.note())) {
                         return false;
@@ -1551,7 +1554,7 @@ namespace application {
         }
 
         if (
-            ![this]() {
+            ![this] {
                 for (const SelectedNote& selected_note : m_composition_selected_notes) {
                     if (!check_note_left_limit(*selected_note.note())) {
                         return false;
@@ -1597,7 +1600,7 @@ namespace application {
         }
 
         if (
-            ![this]() {
+            ![this] {
                 for (const SelectedNote& selected_note : m_composition_selected_notes) {
                     if (!check_note_right_limit(*selected_note.note(), *selected_note.measure())) {
                         return false;
@@ -1854,7 +1857,7 @@ namespace application {
     }
 
     bool Application::note_in_selection(NoteIter note, MeasureIter measure, const std::vector<SelectedNote>& selected_notes) {
-        return std::find_if(selected_notes.begin(), selected_notes.end(), [note, measure](const auto& n) {
+        return std::ranges::find_if(selected_notes, [note, measure](const auto& n) {
             return measure == n.measure() && note == n.note();
         }) != selected_notes.end();
     }

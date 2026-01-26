@@ -98,7 +98,7 @@ namespace seq {
                 }
 
                 if (m_position + 1 == note->position + note->duration) {
-                    m_synthesizer->note_off(note->id);
+                    m_synthesizer->note_off(note->id, voice);
 
                     if (std::next(note) == execution.notes_played.end()) {
                         execution.notes_played.erase(execution.notes_played.begin(), std::next(note));
@@ -221,7 +221,7 @@ namespace seq {
     }
 
     bool Player::no_notes() const {
-        return std::all_of(m_executions.begin(), m_executions.end(), [](const auto& execution) {
+        return std::ranges::all_of(m_executions, [](const auto& execution) {
             return execution.second.notes_unplayed.empty() && execution.second.notes_played.empty();
         });
     }

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <tuple>
 #include <exception>
+#include <ranges>
 
 namespace synthesizer {
     Synthesizer::~Synthesizer() {
@@ -22,11 +23,15 @@ namespace synthesizer {
         note_on(syn::Note::get_id(name, octave), voice);
     }
 
-    void Synthesizer::note_off(syn::Name name, syn::Octave octave) {
-        note_off(syn::Note::get_id(name, octave));
+    void Synthesizer::note_off(syn::Name name, syn::Octave octave, syn::Voice voice) {
+        note_off(syn::Note::get_id(name, octave), voice);
     }
 
     void Synthesizer::note_on(syn::Id id, syn::Voice voice) {
+        if (const auto [begin, end] {m_voices[voice].range()}; id < begin || id > end) {
+            return;
+        }
+
         audio::AudioLockGuard guard {this};
 
         if (const auto iter {find_note(id)}; iter == m_notes.end()) {
@@ -41,7 +46,11 @@ namespace synthesizer {
         }
     }
 
-    void Synthesizer::note_off(syn::Id id) {
+    void Synthesizer::note_off(syn::Id id, syn::Voice voice) {
+        if (const auto [begin, end] {m_voices[voice].range()}; id < begin || id > end) {
+            return;
+        }
+
         audio::AudioLockGuard guard {this};
 
         if (const auto iter {find_note(id)}; iter != m_notes.end()) {
@@ -61,7 +70,7 @@ namespace synthesizer {
         audio::AudioLockGuard guard {this};
 
         std::erase_if(m_notes, [this](const syn::Note& note) {
-            return m_voices[note.voice].envelope().is_done(time(), note.time_on, note.time_off);
+            return m_voices[note.voice].envelope_amplitude().is_done(time(), note.time_on, note.time_off);
         });
     }
 
@@ -86,7 +95,7 @@ namespace synthesizer {
     }
 
     std::vector<syn::Note>::iterator Synthesizer::find_note(syn::Id id) {
-        return std::find_if(m_notes.begin(), m_notes.end(),
+        return std::ranges::find_if(m_notes,
             [id](const syn::Note& note) {
                 return note.id == id;
             }
