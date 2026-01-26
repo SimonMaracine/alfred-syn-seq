@@ -28,7 +28,7 @@ namespace application {
 
         m_synthesizer.open();
         m_synthesizer.resume();
-        m_synthesizer.volume(0.5);
+        m_synthesizer.volume(0.3);
 
         ImGui::LoadIniSettingsFromMemory(SETTINGS.data(), SETTINGS.size());
         ImGui::StyleColorsClassic();

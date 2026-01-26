@@ -7,6 +7,7 @@ add_custom_command(
     COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate.py"
     ARGS "SETTINGS" "${CMAKE_CURRENT_SOURCE_DIR}/res/imgui.ini"
     DEPENDS "res/imgui.ini"
+    VERBATIM
 )
 
 add_executable(

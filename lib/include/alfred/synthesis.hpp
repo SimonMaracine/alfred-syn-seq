@@ -92,7 +92,7 @@ namespace syn {
         VoiceMetronome,
         VoiceBell,
         VoiceHarmonica,
-        VoiceDrumKick,
+        VoiceDrumBass,
         VoiceDrumSnare,
         VoiceDrumHiHat
     };
@@ -189,10 +189,10 @@ namespace syn {
             EnvelopeAdsr m_envelope {ENVELOPE};
         };
 
-        class DrumKick : public Instrument {
+        class DrumBass : public Instrument {
         public:
-            const char* name() const override { return "Drum Kick"; }
-            Voice voice() const override { return VoiceDrumKick; }
+            const char* name() const override { return "Drum Bass"; }
+            Voice voice() const override { return VoiceDrumBass; }
             const Envelope& envelope() const override { return m_envelope; }
 
             double sound(double time, const Note& note) const override;
@@ -200,7 +200,7 @@ namespace syn {
             static constexpr EnvelopeAdrDescription ENVELOPE {
                 0.01,
                 0.15,
-                0.01
+                0.02
             };
 
             EnvelopeAdr m_envelope {ENVELOPE};
@@ -216,8 +216,8 @@ namespace syn {
         private:
             static constexpr EnvelopeAdrDescription ENVELOPE {
                 0.01,
-                0.15,
-                0.01
+                0.2,
+                0.04
             };
 
             EnvelopeAdr m_envelope {ENVELOPE};
@@ -225,7 +225,7 @@ namespace syn {
 
         class DrumHiHat : public Instrument {
         public:
-            const char* name() const override { return "Drum HiHat"; }
+            const char* name() const override { return "Drum Hi-Hat"; }
             Voice voice() const override { return VoiceDrumHiHat; }
             const Envelope& envelope() const override { return m_envelope; }
 
@@ -234,7 +234,7 @@ namespace syn {
             static constexpr EnvelopeAdrDescription ENVELOPE {
                 0.01,
                 0.15,
-                0.01
+                0.02
             };
 
             EnvelopeAdr m_envelope {ENVELOPE};
@@ -247,7 +247,7 @@ namespace syn {
             instruments::Metronome,
             instruments::Bell,
             instruments::Harmonica,
-            instruments::DrumKick,
+            instruments::DrumBass,
             instruments::DrumSnare,
             instruments::DrumHiHat
         >;

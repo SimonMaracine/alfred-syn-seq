@@ -188,28 +188,39 @@ namespace syn {
                 1.0 * oscillators::wave_square(time, note_frequency(note.id), { 5.0, 0.001 }) +
                 0.5 * oscillators::wave_square(time, note_frequency(note.id + 12)) +
                 0.25 * oscillators::wave_square(time, note_frequency(note.id + 24)) +
-                0.05 * oscillators::noise()
-            );
-        }
-
-        double DrumKick::sound(double time, const Note& note) const {  // TODO note C2
-            return m_envelope.get_amplitude(time, note.time_on, note.time_off) * (
-                0.99 * oscillators::wave_sine(time, note_frequency(note.id)) +
                 0.01 * oscillators::noise()
             );
         }
 
-        double DrumSnare::sound(double time, const Note& note) const {  // TODO note A2
+        double DrumBass::sound(double time, const Note& note) const {
+            static constexpr Id C3 {15};
+
             return m_envelope.get_amplitude(time, note.time_on, note.time_off) * (
-                0.8 * oscillators::wave_sine(time, note_frequency(note.id)) +
-                0.2 * oscillators::noise()
+                1.0 * oscillators::wave_sine(time, note_frequency(C3)) +
+                0.125 * oscillators::wave_saw(time, note_frequency(C3)) +
+                0.05 * oscillators::noise()
             );
         }
 
-        double DrumHiHat::sound(double time, const Note& note) const {  // TODO note C3?
+        double DrumSnare::sound(double time, const Note& note) const {
+            static constexpr Id C3 {15};
+
             return m_envelope.get_amplitude(time, note.time_on, note.time_off) * (
-                0.2 * oscillators::wave_square(time, note_frequency(note.id)) +
-                0.8 * oscillators::noise()
+                1.0 * oscillators::wave_sine(time, note_frequency(C3)) +
+                0.5 * oscillators::wave_sine(time, note_frequency(C3 + 12)) +
+                0.25 * oscillators::wave_sine(time, note_frequency(C3 + 24)) +
+                0.125 * oscillators::wave_saw(time, note_frequency(C3)) +
+                0.1 * oscillators::noise()
+            );
+        }
+
+        double DrumHiHat::sound(double time, const Note& note) const {
+            static constexpr Id C4 {27};
+
+            return m_envelope.get_amplitude(time, note.time_on, note.time_off) * (
+                0.25 * oscillators::wave_square(time, note_frequency(C4)) +
+                0.125 * oscillators::wave_square(time, note_frequency(C4 + 12)) +
+                0.5 * oscillators::noise()
             );
         }
     }
