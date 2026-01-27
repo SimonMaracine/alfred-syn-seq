@@ -9,7 +9,7 @@
 namespace synthesizer {
     class Synthesizer : public audio::Audio {
     public:
-        ~Synthesizer() override;
+        ~Synthesizer() noexcept override;
 
         void note_on(syn::Name name, syn::Octave octave, syn::Voice voice);
         void note_off(syn::Name name, syn::Octave octave, syn::Voice voice);

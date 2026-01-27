@@ -233,7 +233,7 @@ namespace syn {
                 1.0 * oscillators::wave_sine(time, note_frequency(note.id), { 8.0, 0.00001 }) +
                 0.5 * oscillators::wave_sine(time, note_frequency(note.id + 12)) +
                 0.25 * oscillators::wave_sine(time, note_frequency(note.id + 24)) +
-                0.125 * oscillators::wave_sine(time, note_frequency(note.id + 36)) +
+                // 0.125 * oscillators::wave_sine(time, note_frequency(note.id + 36)) +
                 0.125 * oscillators::wave_saw(time, note_frequency(note.id))
             );
         }

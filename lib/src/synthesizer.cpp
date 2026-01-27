@@ -2,21 +2,18 @@
 
 #include <algorithm>
 #include <tuple>
-#include <exception>
 #include <ranges>
+#include <cmath>
+#include <numeric>
 
 namespace synthesizer {
-    Synthesizer::~Synthesizer() {
+    Synthesizer::~Synthesizer() noexcept {
         if (!*this) {
             return;
         }
 
         // Prevent audio from being processed in the base class destructor, causing pure virtual function calls
-        try {
-            halt();
-        } catch (...) {
-            std::terminate();
-        }
+        halt();
     }
 
     void Synthesizer::note_on(syn::Name name, syn::Octave octave, syn::Voice voice) {
@@ -84,14 +81,27 @@ namespace synthesizer {
         return m_voices[voice].name();
     }
 
+    thread_local std::vector<double> g_sounds;
+
     double Synthesizer::sound(double time) const {
-        double result {};
+        g_sounds.clear();
 
         for (const syn::Note& note : m_notes) {
-            result += m_voices[note.voice].sound(time, note);
+            const auto& instrument {m_voices[note.voice]};
+            g_sounds.push_back(instrument.sound(time, note) * instrument.amplitude());
         }
 
-        return result;
+        double output {std::accumulate(g_sounds.begin(), g_sounds.end(), 0.0)};
+
+        if (std::abs(output) > 1.0) {  // TODO doesn't seem to help
+            const double multiplier {1.0 / std::abs(output)};
+
+            output = std::accumulate(g_sounds.begin(), g_sounds.end(), 0.0, [multiplier](double total, const double& value) {
+                return total + value * multiplier;
+            });
+        }
+
+        return output;
     }
 
     std::vector<syn::Note>::iterator Synthesizer::find_note(syn::Id id) {

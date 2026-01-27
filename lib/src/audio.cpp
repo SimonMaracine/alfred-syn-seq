@@ -3,7 +3,6 @@
 #include <format>
 #include <memory>
 #include <limits>
-#include <exception>
 #include <algorithm>
 #include <cmath>
 
@@ -189,11 +188,7 @@ namespace audio {
         m_audio->lock();
     }
 
-    AudioLockGuard::~AudioLockGuard() {
-        try {
-            m_audio->unlock();
-        } catch (...) {
-            std::terminate();
-        }
+    AudioLockGuard::~AudioLockGuard() noexcept {
+        m_audio->unlock();
     }
 }
