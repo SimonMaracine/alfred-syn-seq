@@ -23,8 +23,12 @@ add_executable(
     "src/sequencer.hpp"
     "src/task.cpp"
     "src/task.hpp"
+    "src/image.cpp"
+    "src/image.hpp"
     "src/ui.cpp"
     "src/ui.hpp"
+    "src/utility.cpp"
+    "src/utility.hpp"
     "src/video.cpp"
     "src/video.hpp"
 )
