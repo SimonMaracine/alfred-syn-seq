@@ -12,6 +12,7 @@
 #include "sequencer.hpp"
 #include "ui.hpp"
 #include "task.hpp"
+#include "image.hpp"
 
 namespace application {
     class Application : public video::Video {
@@ -173,6 +174,9 @@ namespace application {
             int octave {ui::Octave3};
             double volume {};
             const char* device {};
+            image::Texture texture_play;
+            image::Texture texture_pause;
+            image::Texture texture_rewind;
             std::unordered_map<syn::Voice, ui::ColorIndex> colors;
             std::optional<MeasureIter> hovered_measure;
             std::optional<HoveredNote> hovered_note;

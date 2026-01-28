@@ -2,35 +2,31 @@ cmake_minimum_required(VERSION 3.20)
 
 include(cmake/imgui.cmake)
 
-add_custom_command(
-    OUTPUT "imgui.ini.hpp"
-    COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate.py"
-    ARGS "SETTINGS" "${CMAKE_CURRENT_SOURCE_DIR}/res/imgui.ini" "text"
-    DEPENDS "res/imgui.ini"
-    VERBATIM
-)
+function(add_resource variable_name file_name file_type)
+    add_custom_command(
+        OUTPUT "${file_name}.hpp"
+        COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate.py"
+        ARGS "${variable_name}" "${CMAKE_CURRENT_SOURCE_DIR}/res/${file_name}" "${file_type}"
+        DEPENDS "res/${file_name}"
+        VERBATIM
+    )
+endfunction()
 
-add_custom_command(
-    OUTPUT "icon64.png.hpp"
-    COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate.py"
-    ARGS "ICON64" "${CMAKE_CURRENT_SOURCE_DIR}/res/icon64.png" "binary"
-    DEPENDS "res/icon64.png"
-    VERBATIM
-)
-
-add_custom_command(
-    OUTPUT "icon128.png.hpp"
-    COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate.py"
-    ARGS "ICON128" "${CMAKE_CURRENT_SOURCE_DIR}/res/icon128.png" "binary"
-    DEPENDS "res/icon128.png"
-    VERBATIM
-)
+add_resource("SETTINGS" "imgui.ini" "text")
+add_resource("ICON64" "icon64.png" "binary")
+add_resource("ICON128" "icon128.png" "binary")
+add_resource("PLAY" "play.png" "binary")
+add_resource("PAUSE" "pause.png" "binary")
+add_resource("REWIND" "rewind.png" "binary")
 
 add_executable(
     alfred
     "imgui.ini.hpp"
     "icon64.png.hpp"
     "icon128.png.hpp"
+    "play.png.hpp"
+    "pause.png.hpp"
+    "rewind.png.hpp"
     "src/application.cpp"
     "src/application.hpp"
     "src/imgui.cpp"

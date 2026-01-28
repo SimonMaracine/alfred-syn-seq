@@ -27,8 +27,21 @@ namespace ui {
     static void reset_style() {
         const ImGuiStyle current_style {ImGui::GetStyle()};
 
-        ImGui::GetStyle() = ImGuiStyle();
+        ImGuiStyle& style {ImGui::GetStyle()};
+
+        style = ImGuiStyle();
+
         std::memcpy(ImGui::GetStyle().Colors, current_style.Colors, sizeof(current_style.Colors));
+
+        style.WindowBorderSize = 0.0f;
+        style.ChildBorderSize = 0.0f;
+        style.TabBarBorderSize = 0.0f;
+        style.WindowRounding = 4.0f;
+        style.ChildRounding = 4.0f;
+        style.FrameRounding = 4.0f;
+        style.PopupRounding = 4.0f;
+        style.GrabRounding = 4.0f;
+        style.WindowMenuButtonPosition = ImGuiDir_None;
     }
 
     float rem(float size) {
@@ -37,6 +50,10 @@ namespace ui {
 
     ImVec2 rem(ImVec2 size) {
         return { ImGui::GetFontSize() * size.x, ImGui::GetFontSize() * size.y };
+    }
+
+    void set_style() {
+        reset_style();
     }
 
     void set_scale(int scale) {

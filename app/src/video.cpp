@@ -103,11 +103,11 @@ namespace video {
         m_desired_frame_time = milliseconds * SDL_NS_PER_MS;
     }
 
-    void Video::set_icons(std::initializer_list<std::span<const unsigned char>> images) const {
+    void Video::set_icons(std::initializer_list<std::span<const unsigned char>> icons) const {
         std::vector<image::Surface> surfaces;
 
-        for (const auto image : images) {
-;            surfaces.emplace_back(image);
+        for (const auto icon : icons) {
+            surfaces.emplace_back(icon);
         }
 
         const image::SurfaceRef surface_first {surfaces.front()};
@@ -118,6 +118,12 @@ namespace video {
 
         if (!SDL_SetWindowIcon(m_window, surface_first.get())) {
             throw VideoError(std::format("SDL_SetWindowIcon: {}", SDL_GetError()));
+        }
+    }
+
+    void Video::set_title(std::string_view title) const {
+        if (!SDL_SetWindowTitle(m_window, title.data())) {
+            throw VideoError(std::format("SDL_SetWindowTitle: {}", SDL_GetError()));
         }
     }
 

@@ -100,5 +100,6 @@ namespace ui {
 
     float rem(float size);
     ImVec2 rem(ImVec2 size);
+    void set_style();
     void set_scale(int scale);
 }

@@ -14,6 +14,9 @@
 #include "imgui.ini.hpp"
 #include "icon64.png.hpp"
 #include "icon128.png.hpp"
+#include "play.png.hpp"
+#include "pause.png.hpp"
+#include "rewind.png.hpp"
 #include "logging.hpp"
 
 namespace application {
@@ -49,21 +52,14 @@ namespace application {
         io.ConfigWindowsMoveFromTitleBarOnly = true;
         io.IniFilename = nullptr;
 
-        auto& style {ImGui::GetStyle()};
-        style.WindowBorderSize = 0.0f;
-        style.ChildBorderSize = 0.0f;
-        style.TabBarBorderSize = 0.0f;
-        style.WindowRounding = 4.0f;
-        style.ChildRounding = 4.0f;
-        style.FrameRounding = 4.0f;
-        style.PopupRounding = 4.0f;
-        style.GrabRounding = 4.0f;
-        style.WindowMenuButtonPosition = ImGuiDir_None;
-
         m_player = seq::Player(m_synthesizer, m_composition, [this] { set_desired_frame_time(FRAME_TIME_DEFAULT); });
         m_composition_selected_measure = m_composition.measures.end();
+
         m_ui.volume = m_synthesizer.volume();
         m_ui.device = m_synthesizer.device().second;
+        m_ui.texture_play = image::Texture(m_renderer, image::Surface(PLAY));
+        m_ui.texture_pause = image::Texture(m_renderer, image::Surface(PAUSE));
+        m_ui.texture_rewind = image::Texture(m_renderer, image::Surface(REWIND));
 
         m_task_manager.add_repeatable_task([this] {
             m_ui.device = m_synthesizer.device().second;
@@ -411,19 +407,25 @@ namespace application {
     }
 
     void Application::playback() {
+        const ImVec2 SIZE {ui::rem(ImVec2(2.461538f, 2.461538f))};
+        static constexpr ImVec2 UV0 {0.0f, 0.0f};
+        static constexpr ImVec2 UV1 {1.0f, 1.0f};
+        static constexpr ImVec4 COLOR_BACKGROUND {0.0f, 0.0f, 0.0f, 0.0f};
+        const ImVec4& COLOR_FOREGROUND {ImGui::GetStyle().Colors[ImGuiCol_Text]};
+
         if (ImGui::Begin("Playback", nullptr, ImGuiWindowFlags_NoResize)) {
-            if (ImGui::Button("Rewind")) {
+            if (ImGui::ImageButton("Rewind", reinterpret_cast<ImTextureID>(m_ui.texture_rewind.get()), SIZE, UV0, UV1, COLOR_BACKGROUND, COLOR_FOREGROUND)) {
                 m_player.seek(0);
             }
 
             ImGui::SameLine();
 
             if (m_player.is_playing()) {
-                if (ImGui::Button("Stop")) {
+                if (ImGui::ImageButton("Pause", reinterpret_cast<ImTextureID>(m_ui.texture_pause.get()), SIZE, UV0, UV1, COLOR_BACKGROUND, COLOR_FOREGROUND)) {
                     stop_player();
                 }
             } else {
-                if (ImGui::Button("Start")) {
+                if (ImGui::ImageButton("Play", reinterpret_cast<ImTextureID>(m_ui.texture_play.get()), SIZE, UV0, UV1, COLOR_BACKGROUND, COLOR_FOREGROUND)) {
                     start_player();
                 }
             }

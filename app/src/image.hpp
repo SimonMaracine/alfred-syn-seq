@@ -2,7 +2,6 @@
 
 #include <span>
 #include <stdexcept>
-#include <cstdint>
 
 #include <SDL3/SDL.h>
 
@@ -34,13 +33,11 @@ namespace image {
     class TextureRef {
     public:
         TextureRef() = default;
-        TextureRef(SDL_Renderer* renderer, SDL_Texture* texture);
+        TextureRef(SDL_Texture* texture);
 
         SDL_Texture* get() const { return m_texture; }
-        std::uint64_t id() const { return m_identifier; }
     protected:
         SDL_Texture* m_texture {};
-        std::uint64_t m_identifier {};
     };
 
     class Texture : public TextureRef {
