@@ -12,6 +12,8 @@
 #include <SDL3/SDL.h>
 
 #include "imgui.ini.hpp"
+#include "icon64.png.hpp"
+#include "icon128.png.hpp"
 #include "logging.hpp"
 
 namespace application {
@@ -25,6 +27,12 @@ namespace application {
 
     void Application::on_start() {
         set_desired_frame_time(FRAME_TIME_DEFAULT);
+
+        try {
+            set_icons({ ICON64, ICON128 });
+        } catch (const video::VideoError& e) {
+            logging::error("Could not set icon: {}", e.what());
+        }
 
         m_synthesizer.open();
         m_synthesizer.resume();
@@ -1897,15 +1905,5 @@ namespace application {
     ImColor Application::set_opacity(ImColor color, float opacity) {
         color.Value.w = opacity;
         return color;
-    }
-
-    const char* Application::get_property(const char* property) {
-        const char* value {SDL_GetAppMetadataProperty(property)};
-
-        if (!value) {
-            return "";
-        }
-
-        return value;
     }
 }

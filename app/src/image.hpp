@@ -1,6 +1,6 @@
 #pragma once
 
-#include <string>
+#include <span>
 #include <stdexcept>
 #include <cstdint>
 
@@ -13,6 +13,8 @@ namespace image {
         SurfaceRef(SDL_Surface* surface);
 
         SDL_Surface* get() const { return m_surface; }
+
+        void add_alternate(SurfaceRef surface) const;
     protected:
         SDL_Surface* m_surface {};
     };
@@ -20,7 +22,7 @@ namespace image {
     class Surface : public SurfaceRef {
     public:
         Surface() = default;
-        explicit Surface(const std::string& buffer);
+        explicit Surface(std::span<const unsigned char> buffer);
         ~Surface();
 
         Surface(const Surface&) = delete;

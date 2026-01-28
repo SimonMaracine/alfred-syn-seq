@@ -5,14 +5,32 @@ include(cmake/imgui.cmake)
 add_custom_command(
     OUTPUT "imgui.ini.hpp"
     COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate.py"
-    ARGS "SETTINGS" "${CMAKE_CURRENT_SOURCE_DIR}/res/imgui.ini"
+    ARGS "SETTINGS" "${CMAKE_CURRENT_SOURCE_DIR}/res/imgui.ini" "text"
     DEPENDS "res/imgui.ini"
+    VERBATIM
+)
+
+add_custom_command(
+    OUTPUT "icon64.png.hpp"
+    COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate.py"
+    ARGS "ICON64" "${CMAKE_CURRENT_SOURCE_DIR}/res/icon64.png" "binary"
+    DEPENDS "res/icon64.png"
+    VERBATIM
+)
+
+add_custom_command(
+    OUTPUT "icon128.png.hpp"
+    COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate.py"
+    ARGS "ICON128" "${CMAKE_CURRENT_SOURCE_DIR}/res/icon128.png" "binary"
+    DEPENDS "res/icon128.png"
     VERBATIM
 )
 
 add_executable(
     alfred
     "imgui.ini.hpp"
+    "icon64.png.hpp"
+    "icon128.png.hpp"
     "src/application.cpp"
     "src/application.hpp"
     "src/imgui.cpp"

@@ -8,7 +8,13 @@ namespace image {
     SurfaceRef::SurfaceRef(SDL_Surface* surface)
         : m_surface(surface) {}
 
-    Surface::Surface(const std::string& buffer) {
+    void SurfaceRef::add_alternate(SurfaceRef surface) const {
+        if (!SDL_AddSurfaceAlternateImage(m_surface, surface.get())) {
+            throw ImageError(std::format("SDL_AddSurfaceAlternateImage: {}", SDL_GetError()));
+        }
+    }
+
+    Surface::Surface(std::span<const unsigned char> buffer) {
         SDL_IOStream* stream {SDL_IOFromConstMem(buffer.data(), buffer.size())};
 
         if (!stream) {

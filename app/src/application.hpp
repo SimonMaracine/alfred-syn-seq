@@ -149,7 +149,6 @@ namespace application {
         static Time elapsed_seconds_to_time(double elapsed_seconds);
         static seq::Value get_value(ui::Value value);
         static ImColor set_opacity(ImColor color, float opacity);
-        static const char* get_property(const char* property);
 
         task::TaskManager m_task_manager;
 

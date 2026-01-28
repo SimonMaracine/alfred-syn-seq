@@ -1,10 +1,12 @@
 #include "video.hpp"
 
 #include <format>
+#include <vector>
 
 #include <SDL3/SDL.h>
 
 #include "imgui.hpp"
+#include "image.hpp"
 
 namespace video {
     static constexpr unsigned long long IMGUI_UPDATE_INTERVAL {16 * SDL_NS_PER_MS};
@@ -99,6 +101,34 @@ namespace video {
 
     void Video::set_desired_frame_time(unsigned long long milliseconds) {
         m_desired_frame_time = milliseconds * SDL_NS_PER_MS;
+    }
+
+    void Video::set_icons(std::initializer_list<std::span<const unsigned char>> images) const {
+        std::vector<image::Surface> surfaces;
+
+        for (const auto image : images) {
+;            surfaces.emplace_back(image);
+        }
+
+        const image::SurfaceRef surface_first {surfaces.front()};
+
+        for (auto surface {std::next(surfaces.begin())}; surface != surfaces.end(); surface++) {
+            surface_first.add_alternate(*surface);
+        }
+
+        if (!SDL_SetWindowIcon(m_window, surface_first.get())) {
+            throw VideoError(std::format("SDL_SetWindowIcon: {}", SDL_GetError()));
+        }
+    }
+
+    const char* Video::get_property(const char* property) {
+        const char* value {SDL_GetAppMetadataProperty(property)};
+
+        if (!value) {
+            return "";
+        }
+
+        return value;
     }
 
     void Video::render() {
