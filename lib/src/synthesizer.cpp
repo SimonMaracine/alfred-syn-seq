@@ -64,7 +64,7 @@ namespace synthesizer {
     }
 
     void Synthesizer::update() {
-        audio::AudioLockGuard guard {this};
+         audio::AudioLockGuard guard {this};
 
         std::erase_if(m_notes, [this](const syn::Note& note) {
             return m_voices[note.voice].envelope_amplitude().is_done(time(), note.time_on, note.time_off);
@@ -81,27 +81,15 @@ namespace synthesizer {
         return m_voices[voice].name();
     }
 
-    thread_local std::vector<double> g_sounds;
-
     double Synthesizer::sound(double time) const {
-        g_sounds.clear();
+        double output {};
 
         for (const syn::Note& note : m_notes) {
             const auto& instrument {m_voices[note.voice]};
-            g_sounds.push_back(instrument.sound(time, note) * instrument.amplitude());
+            output += instrument.sound(time, note) * instrument.amplitude();
         }
 
-        double output {std::accumulate(g_sounds.begin(), g_sounds.end(), 0.0)};
-
-        if (std::abs(output) > 1.0) {  // TODO doesn't seem to help
-            const double multiplier {1.0 / std::abs(output)};
-
-            output = std::accumulate(g_sounds.begin(), g_sounds.end(), 0.0, [multiplier](double total, const double& value) {
-                return total + value * multiplier;
-            });
-        }
-
-        return output;
+        return output;  // FIXME clipping
     }
 
     std::vector<syn::Note>::iterator Synthesizer::find_note(syn::Id id) {
