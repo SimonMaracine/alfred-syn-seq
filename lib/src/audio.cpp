@@ -4,13 +4,10 @@
 #include <memory>
 #include <limits>
 #include <algorithm>
-#include <cmath>
 
 #include <SDL3/SDL.h>
 
 namespace audio {
-    static constexpr int FREQUENCY {44100};
-
     Audio::Audio() {
         if (!SDL_InitSubSystem(SDL_INIT_AUDIO)) {
             throw AudioError(std::format("SDL_InitSubSystem: {}", SDL_GetError()));
@@ -87,7 +84,7 @@ namespace audio {
         constexpr SDL_AudioSpec audio_specification {
             SDL_AUDIO_S16,
             1,
-            FREQUENCY
+            SAMPLE_FREQUENCY
         };
 
         m_stream = SDL_OpenAudioDeviceStream(
@@ -156,7 +153,7 @@ namespace audio {
 
     thread_local struct {
         std::size_t size {};
-        std::unique_ptr<short[]> buffer;
+        std::unique_ptr<Resolution[]> buffer;
     } g_buffer;
 
     void Audio::audio_stream_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int) {
@@ -164,23 +161,23 @@ namespace audio {
 
         Audio& self {*static_cast<Audio*>(userdata)};
 
-        const std::size_t samples {std::size_t(additional_amount) / sizeof(short)};
+        const std::size_t samples {std::size_t(additional_amount) / sizeof(Resolution)};
 
         if (g_buffer.size < samples) {
             g_buffer.size = samples;
-            g_buffer.buffer = std::make_unique<short[]>(samples);
+            g_buffer.buffer = std::make_unique<Resolution[]>(samples);
         }
 
         for (std::size_t i {}; i < samples; i++) {
             const double sound {clamp(self.sound(self.m_time))};
 
-            g_buffer.buffer[i] = short(sound * double(std::numeric_limits<short>::max()));
+            g_buffer.buffer[i] = Resolution(sound * double(std::numeric_limits<Resolution>::max()));
 
-            self.m_time += 1.0 / double(FREQUENCY);
+            self.m_time += 1.0 / double(SAMPLE_FREQUENCY);
         }
 
         // Buffer size could be larger than the samples written!
-        (void) SDL_PutAudioStreamData(stream, g_buffer.buffer.get(), int(samples * sizeof(short)));
+        (void) SDL_PutAudioStreamData(stream, g_buffer.buffer.get(), int(samples * sizeof(Resolution)));
     }
 
     AudioLockGuard::AudioLockGuard(const Audio* audio)

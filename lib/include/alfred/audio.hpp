@@ -5,10 +5,18 @@
 #include <utility>
 #include <vector>
 #include <atomic>
+#include <cstdint>
+
+// Nyquist criterion
+// The sampling frequency must be at least twice the highest frequency in the signal
 
 struct SDL_AudioStream;
 
 namespace audio {
+    inline constexpr int SAMPLE_FREQUENCY {44100};
+
+    using Resolution = std::int16_t;
+
     class Audio {
     public:
         Audio();

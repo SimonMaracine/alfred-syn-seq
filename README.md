@@ -2,6 +2,10 @@
 
 A free and open source cross-platform synthesizer and sequencer program.
 
+It comprises a digital additive multi-timbral synthesizer and an interface to compose and play music.
+
+The synthesized sounds are meant to be *suggestions* and *hints*, rather than realistic emulations.
+
 ![Alfred](gfx/mascot/alfred.png)
 
 ## Building
@@ -35,3 +39,9 @@ cmake --build --preset build-dist-nix
 cmake --preset conf-dist-win
 cmake --build --preset build-dist-win
 ```
+
+## Material
+
+- Sound Synthesis and Sampling Second Edition by Martin Russ
+- THE COMPLETE SYNTHESIZER: A Comprehensive Guide by David Crombie
+- Code-It-Yourself! Sound Synthesizer by javidx9
