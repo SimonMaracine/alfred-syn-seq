@@ -28,7 +28,7 @@ namespace syn {
 
     class EnvelopeAdsr : public Envelope {
     public:
-        EnvelopeAdsr(const EnvelopeAdsrDescription& description)
+        constexpr EnvelopeAdsr(const EnvelopeAdsrDescription& description)
             : m_description(description) {}
 
         double get_value(double time, double time_note_on, double time_note_off) const override;
@@ -48,7 +48,7 @@ namespace syn {
 
     class EnvelopeAdr : public Envelope {
     public:
-        EnvelopeAdr(const EnvelopeAdrDescription& description)
+        constexpr EnvelopeAdr(const EnvelopeAdrDescription& description)
             : m_description(description) {}
 
         double get_value(double time, double time_note_on, double time_note_off) const override;
@@ -157,7 +157,7 @@ namespace syn {
                 0.007
             };
 
-            EnvelopeAdr m_envelope_amplitude {ENVELOPE};
+            static constexpr EnvelopeAdr m_envelope_amplitude {ENVELOPE};
         };
 
         class Bell : public Instrument {
@@ -175,7 +175,7 @@ namespace syn {
                 0.2
             };
 
-            EnvelopeAdr m_envelope_amplitude {ENVELOPE};
+            static constexpr EnvelopeAdr m_envelope_amplitude {ENVELOPE};
         };
 
         class Harmonica : public Instrument {
@@ -194,7 +194,7 @@ namespace syn {
                 0.8
             };
 
-            EnvelopeAdsr m_envelope_amplitude {ENVELOPE};
+            static constexpr EnvelopeAdsr m_envelope_amplitude {ENVELOPE};
         };
 
         class DrumBass : public Instrument {
@@ -211,7 +211,7 @@ namespace syn {
                 0.02
             };
 
-            EnvelopeAdr m_envelope_amplitude {ENVELOPE};
+            static constexpr EnvelopeAdr m_envelope_amplitude {ENVELOPE};
         };
 
         class DrumSnare : public Instrument {
@@ -228,7 +228,7 @@ namespace syn {
                 0.04
             };
 
-            EnvelopeAdr m_envelope_amplitude {ENVELOPE};
+            static constexpr EnvelopeAdr m_envelope_amplitude {ENVELOPE};
         };
 
         class DrumHiHat : public Instrument {
@@ -245,7 +245,7 @@ namespace syn {
                 0.02
             };
 
-            EnvelopeAdr m_envelope_amplitude {ENVELOPE};
+            static constexpr EnvelopeAdr m_envelope_amplitude {ENVELOPE};
         };
 
         class Piano : public Instrument {
@@ -262,7 +262,7 @@ namespace syn {
                 0.2
             };
 
-            EnvelopeAdr m_envelope_amplitude {ENVELOPE};
+            static constexpr EnvelopeAdr m_envelope_amplitude {ENVELOPE};
         };
 
         class Guitar : public Instrument {
@@ -280,7 +280,7 @@ namespace syn {
                 0.2
             };
 
-            EnvelopeAdr m_envelope_amplitude {ENVELOPE};
+            static constexpr EnvelopeAdr m_envelope_amplitude {ENVELOPE};
         };
     }
 

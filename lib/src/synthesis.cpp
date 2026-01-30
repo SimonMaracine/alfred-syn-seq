@@ -6,35 +6,55 @@
 #include "alfred/math.hpp"
 
 namespace syn {
-    namespace oscillators {
-        struct LowFrequencyOscillator {
-            double frequency {};
-            double value {};
-        };
+    struct LowFrequencyOscillator {
+        double frequency {};
+        double deviation {};
+    };
 
-        static double frequency_modulation(double time, double frequency, LowFrequencyOscillator lfo = {}) {
-            return lfo.value * frequency * std::sin(math::w(lfo.frequency) * time);
+    static double frequency_modulation(double time, double frequency, LowFrequencyOscillator lfo = {}) {
+        return lfo.deviation * frequency * std::sin(math::w(lfo.frequency) * time);
+    }
+
+    namespace oscillators {
+        static double wave_sine(double time, double frequency) {
+            return std::sin(math::w(frequency) * time);
         }
 
-        static double wave_sine(double time, double frequency, LowFrequencyOscillator lfo = {}) {
+        static double wave_sine(double time, double frequency, LowFrequencyOscillator lfo) {
             return std::sin(math::w(frequency) * time + frequency_modulation(time, frequency, lfo));
         }
 
-        static double wave_square(double time, double frequency, LowFrequencyOscillator lfo = {}) {
-            const double value {std::sin(math::w(frequency) * time + frequency_modulation(time, frequency, lfo))};
+        static double wave_square(double time, double frequency) {
+            const double value {std::sin(math::w(frequency) * time)};
 
-            if (value >= 0.0) {
-                return 1.0;
-            } else {
-                return -1.0;
-            }
+            return value >= 0.0 ? 1.0 : -1.0;
         }
 
-        static double wave_triangle(double time, double frequency, LowFrequencyOscillator lfo = {}) {
+        static double wave_square(double time, double frequency, LowFrequencyOscillator lfo) {
+            const double value {std::sin(math::w(frequency) * time + frequency_modulation(time, frequency, lfo))};
+
+            return value >= 0.0 ? 1.0 : -1.0;
+        }
+
+        static double wave_triangle(double time, double frequency) {
+            return std::asin(std::sin(math::w(frequency) * time)) * (2.0 / math::PI);
+        }
+
+        static double wave_triangle(double time, double frequency, LowFrequencyOscillator lfo) {
             return std::asin(std::sin(math::w(frequency) * time + frequency_modulation(time, frequency, lfo))) * (2.0 / math::PI);
         }
 
-        static double wave_saw(double time, double frequency, LowFrequencyOscillator lfo = {}) {
+        static double wave_sawtooth(double time, double frequency) {
+            double result {};
+
+            for (double n {1.0}; n < 10.0; n++) {
+                result += std::sin(n * math::w(frequency) * time) / n;
+            }
+
+            return result * (2.0 / math::PI);
+        }
+
+        static double wave_sawtooth(double time, double frequency, LowFrequencyOscillator lfo) {
             double result {};
 
             for (double n {1.0}; n < 10.0; n++) {
@@ -43,13 +63,15 @@ namespace syn {
 
             return result * (2.0 / math::PI);
         }
+    }
 
-        thread_local std::mt19937_64 g_random;
-        thread_local std::uniform_real_distribution g_distribution {-1.0, 1.0};
+    thread_local struct {
+        std::mt19937_64 random;
+        std::uniform_real_distribution<> distribution {-1.0, 1.0};
+    } g_random;
 
-        static double noise() {
-            return g_distribution(g_random);
-        }
+    static double noise() {
+        return g_random.distribution(g_random.random);
     }
 
     static constexpr double note_frequency(Id id) {
@@ -171,7 +193,7 @@ namespace syn {
                 0.5 * oscillators::wave_triangle(time, note_frequency(note.id)) +
                 0.25 * oscillators::wave_triangle(time, note_frequency(note.id + 12)) +
                 0.125 * oscillators::wave_triangle(time, note_frequency(note.id + 24)) +
-                0.02 * oscillators::noise()
+                0.02 * noise()
             );
         }
 
@@ -192,7 +214,7 @@ namespace syn {
                 0.5 * oscillators::wave_square(time, note_frequency(note.id), { 5.0, 0.001 }) +
                 0.25 * oscillators::wave_square(time, note_frequency(note.id + 12)) +
                 0.125 * oscillators::wave_square(time, note_frequency(note.id + 24)) +
-                0.01 * oscillators::noise()
+                0.01 * noise()
             );
         }
 
@@ -201,8 +223,8 @@ namespace syn {
 
             return m_envelope_amplitude.get_value(time, note.time_on, note.time_off) * (
                 0.75 * oscillators::wave_sine(time, note_frequency(C3)) +
-                0.125 * oscillators::wave_saw(time, note_frequency(C3)) +
-                0.05 * oscillators::noise()
+                0.125 * oscillators::wave_sawtooth(time, note_frequency(C3)) +
+                0.05 * noise()
             );
         }
 
@@ -213,8 +235,8 @@ namespace syn {
                 0.5 * oscillators::wave_sine(time, note_frequency(C3)) +
                 0.25 * oscillators::wave_sine(time, note_frequency(C3 + 12)) +
                 0.125 * oscillators::wave_sine(time, note_frequency(C3 + 24)) +
-                0.0625 * oscillators::wave_saw(time, note_frequency(C3)) +
-                0.1 * oscillators::noise()
+                0.0625 * oscillators::wave_sawtooth(time, note_frequency(C3)) +
+                0.1 * noise()
             );
         }
 
@@ -224,7 +246,7 @@ namespace syn {
             return m_envelope_amplitude.get_value(time, note.time_on, note.time_off) * (
                 0.25 * oscillators::wave_square(time, note_frequency(C4)) +
                 0.125 * oscillators::wave_square(time, note_frequency(C4 + 12)) +
-                0.5 * oscillators::noise()
+                0.5 * noise()
             );
         }
 
@@ -233,7 +255,7 @@ namespace syn {
                 0.5 * oscillators::wave_sine(time, note_frequency(note.id), { 8.0, 0.00001 }) +
                 0.25 * oscillators::wave_sine(time, note_frequency(note.id + 12)) +
                 0.125 * oscillators::wave_sine(time, note_frequency(note.id + 24)) +
-                0.0625 * oscillators::wave_saw(time, note_frequency(note.id))
+                0.0625 * oscillators::wave_sawtooth(time, note_frequency(note.id))
             );
         }
 
@@ -242,7 +264,7 @@ namespace syn {
                 0.5 * oscillators::wave_sine(time, note_frequency(note.id), { 10.0, 0.00001 }) +
                 0.25 * oscillators::wave_sine(time, note_frequency(note.id + 12)) +
                 0.125 * oscillators::wave_sine(time, note_frequency(note.id + 12 + 7)) +
-                0.0625 * oscillators::wave_saw(time, note_frequency(note.id + 12 + 7 + 5))
+                0.0625 * oscillators::wave_sawtooth(time, note_frequency(note.id + 12 + 7 + 5))
             );
         }
 
