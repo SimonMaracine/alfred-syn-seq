@@ -66,7 +66,7 @@ namespace synthesizer {
          audio::AudioLockGuard guard {this};
 
         std::erase_if(m_notes, [this](const syn::Note& note) {
-            return m_voices[note.voice].envelope_amplitude().is_done(time(), note.time_on, note.time_off);
+            return m_voices[note.voice].overall_envelope().is_done(time(), note.time_on, note.time_off);
         });
     }
 
@@ -86,8 +86,7 @@ namespace synthesizer {
         double output {};
 
         for (const auto& [index, note] : m_notes | std::views::enumerate) {
-            const auto& instrument {m_voices[note.voice]};
-            output += instrument.sound(time, note);
+            output += m_voices[note.voice].sound(time, note);
 
             if (index == MAX_NOTES) {
                 break;  // TODO other policy
