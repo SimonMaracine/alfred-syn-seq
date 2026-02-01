@@ -4,6 +4,7 @@
 #include <ranges>
 #include <array>
 #include <cmath>
+#include <cassert>
 
 #include "alfred/math.hpp"
 
@@ -195,6 +196,8 @@ namespace syn {
 
     template<std::size_t N>
     static constexpr std::array<double, N> amplitudes(std::array<double, N> denominators) {
+        assert(denominators[0] == 1.0);
+
         for (const auto [i, denominator] : denominators | std::views::enumerate) {
             denominators[i] = 1.0 / double(denominator);
         }
@@ -270,7 +273,7 @@ namespace syn {
 
         double DrumHiHat::sound(double time, const Note& note) const {
             static constexpr Id C4 {27};
-            static constexpr auto AMP {amplitudes(std::array { 2.0, 4.0, 1.0 })};
+            static constexpr auto AMP {amplitudes(std::array { 1.0, 4.0, 0.5 })};
 
             return OVERALL_ENVELOPE.get_value(time, note.time_on, note.time_off) * (
                 AMP[0] * oscillators::wave_square(time, 1.0 * id_frequency(C4)) +
