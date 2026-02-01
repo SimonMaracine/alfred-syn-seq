@@ -10,10 +10,12 @@ set(BUILD_SHARED_LIBS OFF)
 
 include(cmake/sanity_checks.cmake)
 include(cmake/target_options.cmake)
-
 include(cmake/sdl.cmake)
+
 add_subdirectory(lib)
 add_subdirectory(app)
+
+include(cmake/install.cmake)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 

@@ -31,7 +31,7 @@ target_sources(
             "extern/imgui/backends/imgui_impl_sdlrenderer3.h"
 )
 
-target_include_directories(imgui PRIVATE ${SDL_INCLUDE_DIRECTORY})
+target_include_directories(imgui PRIVATE "${ALFRED_SDL_INCLUDE_DIRECTORY}")
 
 set_target_cpp_mode(imgui)
 

@@ -68,3 +68,6 @@ endif()
 if(UNIX)
     target_compile_options(alfred PRIVATE "-Wno-parentheses")
 endif()
+
+set(ALFRED_DESKTOP_FILE "${CMAKE_CURRENT_SOURCE_DIR}/res/alfred.desktop" PARENT_SCOPE)
+set(ALFRED_ICON_FILE "${CMAKE_CURRENT_SOURCE_DIR}/res/alfred.svg" PARENT_SCOPE)

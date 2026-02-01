@@ -13,4 +13,4 @@ set(SDL_X11_XTEST OFF)
 
 add_subdirectory(extern/SDL)
 
-set(SDL_INCLUDE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/extern/SDL/include")
+set(ALFRED_SDL_INCLUDE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/extern/SDL/include")
