@@ -250,7 +250,7 @@ namespace syn {
             );
         }
 
-        double Piano::sound(double time, const Note& note) const {
+        double Piano::sound(double time, const Note& note) const {  // FIXME this function should always return max amplitude of 1.0
             return m_envelope_amplitude.get_value(time, note.time_on, note.time_off) * (
                 0.5 * oscillators::wave_sine(time, note_frequency(note.id), { 8.0, 0.00001 }) +
                 0.25 * oscillators::wave_sine(time, note_frequency(note.id + 12)) +

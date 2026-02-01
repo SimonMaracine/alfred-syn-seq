@@ -138,7 +138,6 @@ namespace syn {
         virtual Voice voice() const = 0;
         virtual const Envelope& envelope_amplitude() const = 0;
         virtual double sound(double time, const Note& note) const = 0;
-        virtual double amplitude() const { return 0.5; }
         virtual std::pair<Id, Id> range() const { return std::make_pair(keyboard::ID_BEGIN, keyboard::ID_END); }
     };
 

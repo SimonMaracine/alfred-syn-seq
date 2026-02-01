@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <tuple>
 #include <ranges>
-#include <cmath>
 #include <numeric>
 
 namespace synthesizer {
@@ -82,14 +81,22 @@ namespace synthesizer {
     }
 
     double Synthesizer::sound(double time) const {
+        static constexpr int MAX_NOTES {12};
+
         double output {};
 
-        for (const syn::Note& note : m_notes) {
+        for (const auto& [index, note] : m_notes | std::views::enumerate) {
             const auto& instrument {m_voices[note.voice]};
-            output += instrument.sound(time, note) * instrument.amplitude();
+            output += instrument.sound(time, note);
+
+            if (index == MAX_NOTES) {
+                break;  // TODO other policy
+            }
         }
 
-        return output;  // FIXME clipping
+        output /= double(MAX_NOTES);
+
+        return output;
     }
 
     std::vector<syn::Note>::iterator Synthesizer::find_note(syn::Id id) {
