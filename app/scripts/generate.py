@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 import sys
+import os
 from typing import Iterable
 
 def _contents(file_name: str, mode: str) -> str:
@@ -40,7 +41,12 @@ def _generate(variable_name: str, file_name: str, file_type: str):
 
     output_name = file_name.split("/")[-1]
 
-    with open(f"{output_name}.hpp", "w") as file:
+    try:
+        os.mkdir("include")
+    except Exception as err:
+        print(err, file=sys.stderr)
+
+    with open(f"include/{output_name}.hpp", "w") as file:
         file.write(file_contents)
 
 

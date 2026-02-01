@@ -4,7 +4,7 @@ include(cmake/imgui.cmake)
 
 function(add_resource variable_name file_name file_type)
     add_custom_command(
-        OUTPUT "${file_name}.hpp"
+        OUTPUT "include/${file_name}.hpp"
         COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate.py"
         ARGS "${variable_name}" "${CMAKE_CURRENT_SOURCE_DIR}/res/${file_name}" "${file_type}"
         DEPENDS "res/${file_name}"
@@ -21,12 +21,12 @@ add_resource("REWIND" "rewind.png" "binary")
 
 add_executable(
     alfred
-    "imgui.ini.hpp"
-    "icon64.png.hpp"
-    "icon128.png.hpp"
-    "play.png.hpp"
-    "pause.png.hpp"
-    "rewind.png.hpp"
+    "include/imgui.ini.hpp"
+    "include/icon64.png.hpp"
+    "include/icon128.png.hpp"
+    "include/play.png.hpp"
+    "include/pause.png.hpp"
+    "include/rewind.png.hpp"
     "src/application.cpp"
     "src/application.hpp"
     "src/imgui.cpp"
@@ -47,8 +47,7 @@ add_executable(
     "src/video.hpp"
 )
 
-target_include_directories(alfred PRIVATE "src")
-target_include_directories(alfred PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
+target_include_directories(alfred PRIVATE "src" "${CMAKE_CURRENT_BINARY_DIR}/include")
 
 target_link_libraries(alfred PRIVATE SDL3::SDL3 imgui alfred_lib)
 

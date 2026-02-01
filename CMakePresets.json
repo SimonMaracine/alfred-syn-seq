@@ -3,7 +3,7 @@
     "configurePresets": [
         {
             "name": "default",
-            "binaryDir": "${sourceDir}/build",
+            "binaryDir": "${sourceDir}/build/dev",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
@@ -14,13 +14,11 @@
         },
         {
             "name": "conf-dev-nix",
-            "inherits": "default",
-            "binaryDir": "${sourceDir}/build/debug"
+            "inherits": "default"
         },
         {
             "name": "conf-dev-nix-asan",
             "inherits": "default",
-            "binaryDir": "${sourceDir}/build/debug",
             "cacheVariables": {
                 "ALFRED_ASAN": "ON"
             }
@@ -28,7 +26,6 @@
         {
             "name": "conf-dev-nix-asan-thread",
             "inherits": "default",
-            "binaryDir": "${sourceDir}/build/debug",
             "cacheVariables": {
                 "ALFRED_ASAN": "ON",
                 "ALFRED_ASAN_THREAD": "ON"
@@ -41,7 +38,7 @@
         {
             "name": "conf-dist-nix",
             "inherits": "default",
-            "binaryDir": "${sourceDir}/build/release",
+            "binaryDir": "${sourceDir}/build/dist",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "OFF",
@@ -51,6 +48,7 @@
         {
             "name": "conf-dist-win",
             "inherits": "default",
+            "binaryDir": "${sourceDir}/build/dist",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "OFF",
