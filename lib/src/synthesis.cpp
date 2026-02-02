@@ -3,6 +3,7 @@
 #include <random>
 #include <ranges>
 #include <array>
+#include <numeric>
 #include <cmath>
 #include <cassert>
 

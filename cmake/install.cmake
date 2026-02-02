@@ -1,5 +1,5 @@
 if(UNIX)
-    set(CMAKE_INSTALL_BINDIR "bin")
+    include(GNUInstallDirs)
 
     install(TARGETS alfred)
     install(FILES "${ALFRED_DESKTOP_FILE}" DESTINATION "share/applications")

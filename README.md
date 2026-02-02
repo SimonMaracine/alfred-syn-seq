@@ -8,7 +8,7 @@ The synthesized sounds are meant to be *suggestions* and *hints*, rather than re
 
 ![Alfred](gfx/mascot/alfred.png)
 
-## Building
+## Building and Installing
 
 ### Requirements
 
@@ -24,7 +24,7 @@ git clone https://github.com/SimonMaracine/alfred
 git submodule update --init
 ```
 
-### Build for Distribution
+### Build (Distribution)
 
 #### Linux
 
@@ -38,6 +38,12 @@ cmake --build --preset build-dist-nix
 ```txt
 cmake --preset conf-dist-win
 cmake --build --preset build-dist-win
+```
+
+### Install
+
+```txt
+cmake --install build/dist/
 ```
 
 ## Material
