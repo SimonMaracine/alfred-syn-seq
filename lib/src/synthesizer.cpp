@@ -3,9 +3,10 @@
 #include <algorithm>
 #include <tuple>
 #include <ranges>
-#include <numeric>
 
 namespace synthesizer {
+    static constexpr std::size_t MAX_NOTES {8};
+
     Synthesizer::~Synthesizer() noexcept {
         if (!*this) {
             return;
@@ -68,6 +69,13 @@ namespace synthesizer {
         std::erase_if(m_notes, [this](const syn::Note& note) {
             return m_voices[note.voice].overall_envelope().is_done(time(), note.time_on, note.time_off);
         });
+
+        while (m_notes.size() > MAX_NOTES) {
+            // Erase the oldest sound policy
+            m_notes.erase(std::ranges::min_element(m_notes, [](const auto& lhs, const auto& rhs) {
+                return lhs.time_on < rhs.time_on;
+            }));
+        }
     }
 
     void Synthesizer::for_each_instrument(std::function<void(const syn::Instrument&)> function) const {
@@ -80,22 +88,21 @@ namespace synthesizer {
         return m_voices[voice].name();
     }
 
-    double Synthesizer::sound(double time) const {
-        static constexpr int MAX_NOTES {12};
+    thread_local std::vector<double> g_sounds;
 
+    double Synthesizer::sound(double time) const {
         double output {};
 
-        for (const auto& [index, note] : m_notes | std::views::enumerate) {
+        for (const auto& [i, note] : m_notes | std::views::enumerate) {
             output += m_voices[note.voice].sound(time, note);
 
-            if (index == MAX_NOTES) {
-                break;  // TODO other policy
+            // The update function should take care of removing old sounds, if there are too many
+            if (i == MAX_NOTES) {
+                break;
             }
         }
 
-        output /= double(MAX_NOTES);
-
-        return output;
+        return output / double(MAX_NOTES);
     }
 
     std::vector<syn::Note>::iterator Synthesizer::find_note(syn::Id id) {
