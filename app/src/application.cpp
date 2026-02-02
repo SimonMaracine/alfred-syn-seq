@@ -611,9 +611,10 @@ namespace application {
 
             const bool item_active {ImGui::IsItemActive()};
             const bool item_hovered {ImGui::IsItemHovered()};
+            const bool allow_edit {!m_player.is_playing()};
 
             if (!(ImGui::IsKeyDown(ImGuiKey_LeftAlt) || ImGui::IsKeyDown(ImGuiKey_RightAlt))) {
-                if (HoveredNote hovered_note; item_hovered && hover_note(composition_mouse_position(origin), hovered_note)) {
+                if (HoveredNote hovered_note; item_hovered && allow_edit && hover_note(composition_mouse_position(origin), hovered_note)) {
                     composition_hover(list, origin, space, hovered_note);
                 }
             }
@@ -627,7 +628,7 @@ namespace application {
             composition_measures_labels(list, origin);
             composition_left(list, origin);
 
-            if (item_hovered) {
+            if (item_hovered && allow_edit) {
                 if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
                     composition_mouse_pressed(origin);
                 }
@@ -1241,6 +1242,10 @@ namespace application {
     }
 
     void Application::append_measures() {
+        if (m_player.is_playing()) {
+            return;
+        }
+
         const auto [tempo, time_signature] {measure_type(
             !m_composition.measures.empty() ? std::prev(m_composition.measures.end()) : m_composition.measures.end(),
             m_composition.measures
@@ -1682,14 +1687,15 @@ namespace application {
             m_composition_modified = false;
         }
 
-        m_player.start();
+        m_composition_selected_measure = m_composition.measures.end();
+        m_composition_selected_notes.clear();
 
+        m_player.start();
         set_desired_frame_time(FRAME_TIME_PLAYBACK);
     }
 
     void Application::stop_player() {
         m_player.stop();
-
         set_desired_frame_time(FRAME_TIME_DEFAULT);
     }
 
