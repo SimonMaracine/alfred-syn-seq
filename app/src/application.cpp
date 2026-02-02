@@ -4,6 +4,7 @@
 #include <ranges>
 #include <charconv>
 #include <iterator>
+#include <numeric>
 #include <cstring>
 #include <cmath>
 #include <cstdlib>
@@ -83,7 +84,6 @@ namespace application {
 
     void Application::on_imgui() {
         ImGui::DockSpaceOverViewport(0, nullptr, ImGuiDockNodeFlags_NoResize | ImGuiDockNodeFlags_NoUndocking);
-
         ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_Tab, ImGuiInputFlags_RouteGlobal);
 
         main_menu_bar();
@@ -421,6 +421,8 @@ namespace application {
                 m_player.seek(0);
             }
 
+            ImGui::SetItemTooltip("Rewind the player to the beginning (R)");
+
             ImGui::SameLine();
 
             if (m_player.is_playing()) {
@@ -432,6 +434,8 @@ namespace application {
                     start_player();
                 }
             }
+
+            ImGui::SetItemTooltip("Play/Pause the player (Space)");
 
             ImGui::SameLine();
 
@@ -474,6 +478,8 @@ namespace application {
 
             ImGui::EndGroup();
 
+            ImGui::SetItemTooltip("Change the editing tool (Ctrl+Tab)");
+
             ImGui::SameLine();
 
             ImGui::Dummy(ImVec2(ui::rem(1.0f), 0.0f));
@@ -500,9 +506,13 @@ namespace application {
             append_measures();
         }
 
+        ImGui::SetItemTooltip("Append a couple of measures to the end of the composition (Ctrl+A)");
+
         if (ImGui::Button("Insert")) {
             insert_measure();
         }
+
+        ImGui::SetItemTooltip("Insert a measure before the selected measure (Ctrl+I)");
 
         ImGui::EndGroup();
 
@@ -514,9 +524,13 @@ namespace application {
             clear_measure();
         }
 
+        ImGui::SetItemTooltip("Clear the selected measure (Backspace)");
+
         if (ImGui::Button("Delete")) {
             delete_measure();
         }
+
+        ImGui::SetItemTooltip("Completely delete the selected measure (Delete)");
 
         ImGui::EndGroup();
 
@@ -548,21 +562,29 @@ namespace application {
             shift_notes_up();
         }
 
+        ImGui::SetItemTooltip("Shift the selected notes up (Ctrl+W)");
+
         ImGui::SameLine();
 
         if (ImGui::ArrowButton("Shift Down", ImGuiDir_Down)) {
             shift_notes_down();
         }
 
+        ImGui::SetItemTooltip("Shift the selected notes down (Ctrl+S)");
+
         if (ImGui::ArrowButton("Shift Left", ImGuiDir_Left)) {
             shift_notes_left();
         }
+
+        ImGui::SetItemTooltip("Shift the selected notes left (Ctrl+A)");
 
         ImGui::SameLine();
 
         if (ImGui::ArrowButton("Shift Right", ImGuiDir_Right)) {
             shift_notes_right();
         }
+
+        ImGui::SetItemTooltip("Shift the selected notes right (Ctrl+D)");
 
         ImGui::PopItemFlag();
 
@@ -573,6 +595,8 @@ namespace application {
         if (ImGui::Button("Delete")) {
             delete_notes();
         }
+
+        ImGui::SetItemTooltip("Completely delete the selected notes (Delete)");
 
         ImGui::EndGroup();
 
@@ -597,6 +621,8 @@ namespace application {
         ImGui::RadioButton("Sixteenth", &m_ui.value, ui::ValueSixteenth);
 
         ImGui::EndGroup();
+
+        ImGui::SetItemTooltip("Change the note value (1-5)");
     }
 
     void Application::composition() {
@@ -1182,7 +1208,12 @@ namespace application {
             m_composition_camera.x += std::floor(cursor_position - space.x / 2.0f);
         }
 
+        const float width {std::accumulate(m_composition.measures.begin(), m_composition.measures.end(), 0.0f, [](const float& total, const auto& measure) {
+            return total + float(measure.time_signature.measure_steps()) * ui::rem(STEP_SIZE.x);
+        })};
+
         m_composition_camera.x = std::max(m_composition_camera.x, 0.0f);
+        m_composition_camera.x = std::min(m_composition_camera.x, width);
         m_composition_camera.y = std::max(m_composition_camera.y, 0.0f);
         m_composition_camera.y = std::min(m_composition_camera.y, ui::rem(COMPOSITION_HEIGHT) - space.y);
     }
@@ -1836,7 +1867,7 @@ namespace application {
     }
 
     bool Application::empty_except_metronome(const seq::Measure& measure) {
-        return std::all_of(measure.voices.begin(), measure.voices.end(), [](const auto& voice) {
+        return std::ranges::all_of(measure.voices, [](const auto& voice) {
             return voice.second.empty() || voice.first == syn::VoiceMetronome;
         });
     }
