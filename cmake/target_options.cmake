@@ -16,11 +16,9 @@ function(enable_target_warnings target)
 endfunction()
 
 function(enable_target_diagnostics target)
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND UNIX)
+    if(UNIX AND ALFRED_ASAN)
         target_compile_options(${target} PRIVATE "-g")
-    endif()
 
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND UNIX AND ALFRED_ASAN)
         if(ALFRED_ASAN_THREAD)
             target_compile_options(${target} PRIVATE "-fsanitize=thread" "-fno-omit-frame-pointer")
             target_link_options(${target} PRIVATE "-fsanitize=thread")

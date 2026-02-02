@@ -5,7 +5,7 @@ project(alfred)
 include(cmake/options.cmake)
 
 set(CACHE{CMAKE_BUILD_TYPE} TYPE STRING VALUE "Debug")
-set(CACHE{CMAKE_CONFIGURATION_TYPES} TYPE STRINGS VALUE "Debug;Release")
+set(CACHE{CMAKE_CONFIGURATION_TYPES} TYPE STRINGS FORCE VALUE "Debug;Release")
 set(BUILD_SHARED_LIBS OFF)
 
 include(cmake/sanity_checks.cmake)

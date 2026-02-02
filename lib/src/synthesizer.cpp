@@ -64,7 +64,7 @@ namespace synthesizer {
     }
 
     void Synthesizer::update() {
-         audio::AudioLockGuard guard {this};
+        audio::AudioLockGuard guard {this};
 
         std::erase_if(m_notes, [this](const syn::Note& note) {
             return m_voices[note.voice].overall_envelope().is_done(time(), note.time_on, note.time_off);
@@ -88,15 +88,13 @@ namespace synthesizer {
         return m_voices[voice].name();
     }
 
-    thread_local std::vector<double> g_sounds;
-
     double Synthesizer::sound(double time) const {
         double output {};
 
         for (const auto& [i, note] : m_notes | std::views::enumerate) {
             output += m_voices[note.voice].sound(time, note);
 
-            // The update function should take care of removing old sounds, if there are too many
+            // The update function should take care of removing sounds, if there are too many
             if (i == MAX_NOTES) {
                 break;
             }
@@ -106,10 +104,8 @@ namespace synthesizer {
     }
 
     std::vector<syn::Note>::iterator Synthesizer::find_note(syn::Id id) {
-        return std::ranges::find_if(m_notes,
-            [id](const syn::Note& note) {
-                return note.id == id;
-            }
-        );
+        return std::ranges::find_if(m_notes, [id](const syn::Note& note) {
+            return note.id == id;
+        });
     }
 }
