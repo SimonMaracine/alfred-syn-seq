@@ -11,13 +11,13 @@
 
 #include <SDL3/SDL.h>
 
+#include "logging.hpp"
 #include "imgui.ini.hpp"
 #include "icon64.png.hpp"
 #include "icon128.png.hpp"
 #include "play.png.hpp"
 #include "pause.png.hpp"
 #include "rewind.png.hpp"
-#include "logging.hpp"
 
 namespace application {
     static constexpr ImVec2 STEP_SIZE {4.0f / ui::FONT_SIZE, 20.0f / ui::FONT_SIZE};
@@ -330,6 +330,7 @@ namespace application {
                     if (ImGui::Selectable(instrument.name(), instrument.voice() == m_voice)) {
                         m_voice = instrument.voice();
                         m_composition_selected_notes.clear();
+                        m_synthesizer.silence();
                     }
                 });
 
@@ -342,6 +343,7 @@ namespace application {
 
             if (ImGui::SliderInt("##octave", &m_ui.octave, ui::Octave1, ui::Octave5)) {
                 m_octave = syn::keyboard::Octave(m_ui.octave - 1);
+                m_synthesizer.silence();
             }
 
             ImGui::Dummy(ui::rem(ImVec2(0.0f, 1.0f)));
@@ -355,6 +357,7 @@ namespace application {
                     if (ImGui::Selectable(m_synthesizer.instrument_name(voice), voice == m_voice)) {
                         m_voice = voice;
                         m_composition_selected_notes.clear();
+                        m_synthesizer.silence();
                     }
 
                     ImGui::PopStyleColor();
