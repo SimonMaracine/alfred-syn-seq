@@ -46,6 +46,12 @@ cmake --build --preset build-dist-win
 cmake --install build/dist/
 ```
 
+## Dependencies
+
+- [SDL](https://github.com/libsdl-org/SDL)
+- [Dear ImGui](https://github.com/ocornut/imgui)
+- [Cereal](https://github.com/USCiLab/cereal)
+
 ## Material
 
 - Sound Synthesis and Sampling Second Edition by Martin Russ

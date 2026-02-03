@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
+include(cmake/cereal.cmake)
 include(cmake/imgui.cmake)
 
 function(add_resource variable_name file_name file_type)
@@ -29,6 +30,8 @@ add_executable(
     "include/rewind.png.hpp"
     "src/application.cpp"
     "src/application.hpp"
+    "src/composition.hpp"
+    "src/composition.cpp"
     "src/imgui.cpp"
     "src/imgui.hpp"
     "src/logging.hpp"
@@ -49,7 +52,7 @@ add_executable(
 
 target_include_directories(alfred PRIVATE "src" "${CMAKE_CURRENT_BINARY_DIR}/include")
 
-target_link_libraries(alfred PRIVATE SDL3::SDL3 imgui alfred_lib)
+target_link_libraries(alfred PRIVATE SDL3::SDL3 cereal imgui alfred_lib)
 
 set_target_cpp_mode(alfred)
 enable_target_warnings(alfred)

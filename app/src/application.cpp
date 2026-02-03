@@ -108,7 +108,7 @@ namespace application {
     void Application::on_event(const SDL_Event& event) {
         switch (event.type) {
             case SDL_EVENT_KEY_DOWN:
-                keyboard_input(event.key.key, true);
+                keyboard_input(event.key.key, true);  // FIXME these shouldn't be called when typing in an input box or when calling a shortcut
                 break;
             case SDL_EVENT_KEY_UP:
                 keyboard_input(event.key.key, false);
@@ -128,6 +128,11 @@ namespace application {
                 ImGui::EndMenu();
             }
 
+            if (ImGui::BeginMenu("Composition")) {
+                main_menu_bar_composition();
+                ImGui::EndMenu();
+            }
+
             if (ImGui::BeginMenu("Options")) {
                 main_menu_bar_options();
                 ImGui::EndMenu();
@@ -143,8 +148,26 @@ namespace application {
     }
 
     void Application::main_menu_bar_file() {
-        if (ImGui::MenuItem("New")) {
+        if (ImGui::MenuItem("New", "Ctrl+N")) {
 
+        }
+
+        if (ImGui::MenuItem("Open", "Ctrl+O")) {
+
+        }
+
+        if (ImGui::MenuItem("Save", "Ctrl+S")) {
+            if (m_composition_path.empty()) {
+                SDL_ShowSaveFileDialog(&Application::composition_save_file_dialog, this, m_window, nullptr, 0, nullptr);
+            } else {
+                try {
+                    composition_save();
+                } catch (const composition::CompositionError& e) {
+                    logging::error("Could not save composition: {}", e.what());
+                } catch (const utility::FilerError& e) {
+                    logging::error("Could not save composition: {}", e.what());
+                }
+            }
         }
 
         if (ImGui::MenuItem("Quit")) {
@@ -159,6 +182,32 @@ namespace application {
         if (ImGui::MenuItem("Cut", "Ctrl+X")) {}
         if (ImGui::MenuItem("Copy", "Ctrl+C")) {}
         if (ImGui::MenuItem("Paste", "Ctrl+V")) {}
+    }
+
+    void Application::main_menu_bar_composition() {
+        if (ImGui::BeginMenu("Title")) {
+            if (ImGui::InputText("##", m_ui.title, sizeof(m_ui.title))) {
+                m_composition.title = m_ui.title;
+            }
+
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Author")) {
+            if (ImGui::InputText("##", m_ui.author, sizeof(m_ui.author))) {
+                m_composition.author = m_ui.author;
+            }
+
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Year")) {
+            if (ImGui::InputScalar("##", ImGuiDataType_U16, &m_ui.year)) {
+                m_composition.year = std::chrono::year(m_ui.year);
+            }
+
+            ImGui::EndMenu();
+        }
     }
 
     void Application::main_menu_bar_help() {
@@ -303,7 +352,7 @@ namespace application {
         ImColor color {get_keyboard_state()[scancode] ? COLOR_ACTIVE : COLOR_INACTIVE};
 
         // Just override when keyboard is disabled
-        if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl)) {
+        if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl)) {  // FIXME this solution is not good
             color = COLOR_INACTIVE;
         }
 
@@ -478,7 +527,7 @@ namespace application {
 
             ImGui::EndGroup();
 
-            ImGui::SetItemTooltip("Change the editing tool (Ctrl+Tab)");
+            ImGui::SetItemTooltip("Change the editing tool (Tab)");
 
             ImGui::SameLine();
 
@@ -506,13 +555,13 @@ namespace application {
             append_measures();
         }
 
-        ImGui::SetItemTooltip("Append a couple of measures to the end of the composition (Ctrl+A)");
+        ImGui::SetItemTooltip("Append a couple of measures to the end of the composition (Alt+A)");
 
         if (ImGui::Button("Insert")) {
             insert_measure();
         }
 
-        ImGui::SetItemTooltip("Insert a measure before the selected measure (Ctrl+I)");
+        ImGui::SetItemTooltip("Insert a measure before the selected measure (Alt+I)");
 
         ImGui::EndGroup();
 
@@ -562,7 +611,7 @@ namespace application {
             shift_notes_up();
         }
 
-        ImGui::SetItemTooltip("Shift the selected notes up (Ctrl+W)");
+        ImGui::SetItemTooltip("Shift the selected notes up (Alt+W)");
 
         ImGui::SameLine();
 
@@ -570,13 +619,13 @@ namespace application {
             shift_notes_down();
         }
 
-        ImGui::SetItemTooltip("Shift the selected notes down (Ctrl+S)");
+        ImGui::SetItemTooltip("Shift the selected notes down (Alt+S)");
 
         if (ImGui::ArrowButton("Shift Left", ImGuiDir_Left)) {
             shift_notes_left();
         }
 
-        ImGui::SetItemTooltip("Shift the selected notes left (Ctrl+A)");
+        ImGui::SetItemTooltip("Shift the selected notes left (Alt+A)");
 
         ImGui::SameLine();
 
@@ -584,7 +633,7 @@ namespace application {
             shift_notes_right();
         }
 
-        ImGui::SetItemTooltip("Shift the selected notes right (Ctrl+D)");
+        ImGui::SetItemTooltip("Shift the selected notes right (Alt+D)");
 
         ImGui::PopItemFlag();
 
@@ -943,7 +992,7 @@ namespace application {
             m_player.seek(0);
         }
 
-        if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_Tab, ImGuiInputFlags_RouteAlways)) {
+        if (ImGui::Shortcut(ImGuiKey_Tab, ImGuiInputFlags_RouteAlways)) {
             switch (m_ui.tool) {
                 case ui::ToolMeasure:
                     m_ui.tool = ui::ToolNote;
@@ -958,11 +1007,11 @@ namespace application {
 
         switch (m_ui.tool) {
             case ui::ToolMeasure:
-                if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_A, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
+                if (ImGui::Shortcut(ImGuiMod_Alt | ImGuiKey_A, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
                     append_measures();
                 }
 
-                if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_I, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
+                if (ImGui::Shortcut(ImGuiMod_Alt | ImGuiKey_I, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
                     insert_measure();
                 }
 
@@ -976,19 +1025,19 @@ namespace application {
 
                 break;
             case ui::ToolNote:
-                if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_W, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
+                if (ImGui::Shortcut(ImGuiMod_Alt | ImGuiKey_W, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
                     shift_notes_up();
                 }
 
-                if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_S, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
+                if (ImGui::Shortcut(ImGuiMod_Alt | ImGuiKey_S, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
                     shift_notes_down();
                 }
 
-                if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_A, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
+                if (ImGui::Shortcut(ImGuiMod_Alt | ImGuiKey_A, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
                     shift_notes_left();
                 }
 
-                if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_D, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
+                if (ImGui::Shortcut(ImGuiMod_Alt | ImGuiKey_D, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
                     shift_notes_right();
                 }
 
@@ -1027,7 +1076,7 @@ namespace application {
 
         bool result {};
 
-        if (ImGui::InputScalar("Tempo", ImGuiDataType_U32, &m_ui.tempo, &one)) {
+        if (ImGui::InputScalar("Tempo", ImGuiDataType_S32, &m_ui.tempo, &one)) {
             m_ui.tempo = std::min(std::max(m_ui.tempo, seq::Tempo::MIN), seq::Tempo::MAX);
             result = true;
         }
@@ -1091,7 +1140,7 @@ namespace application {
     void Application::keyboard_input(unsigned int key, bool down) {
         const auto update {[this, down](syn::Id id) {
             if (down) {
-                if (!(ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl))) {
+                if (!(ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl))) {  // FIXME this solution is not good
                     m_synthesizer.note_on(id + m_octave * 12, m_voice);
                 }
             } else {
@@ -1408,7 +1457,7 @@ namespace application {
         return false;
     }
 
-    bool Application::select_note(const HoveredNote& hovered_note, NoteIter& note) {
+    bool Application::select_note(const HoveredNote& hovered_note, NoteIter& note) const {
         const auto voice {hovered_note.measure()->voices.find(m_voice)};
 
         if (voice == hovered_note.measure()->voices.end()) {
@@ -1772,7 +1821,7 @@ namespace application {
     }
 
     const char* Application::measure_label(char* buffer, long number) {
-        std::to_chars_result result {std::to_chars(buffer, buffer + sizeof(buffer), number)};
+        const std::to_chars_result result {std::to_chars(buffer, buffer + sizeof(buffer), number)};
 
         if (result.ec != std::errc()) {
             std::strcpy(buffer, "?");
@@ -1796,7 +1845,7 @@ namespace application {
     }
 
     void Application::set_tempo(seq::Measure& measure, const ui::Tempo& tempo) {
-        measure.tempo = tempo;
+        measure.tempo = seq::Tempo(tempo);
     }
 
     void Application::set_tempo(ui::Tempo& tempo, const seq::Measure& measure) {
@@ -1947,5 +1996,41 @@ namespace application {
     ImColor Application::set_opacity(ImColor color, float opacity) {
         color.Value.w = opacity;
         return color;
+    }
+
+    void Application::composition_save_file_dialog(void* userdata, const char* const* filelist, int) {
+        Application& self {*static_cast<Application*>(userdata)};
+
+        if (!filelist) {
+            self.m_task_manager.add_immediate_thread_safe_task([error = SDL_GetError()] {
+                logging::error("An error occurred while handling the file dialog: {}", error);
+            });
+
+            return;
+        }
+
+        if (const char* file {filelist[0]}; file) {
+            self.m_task_manager.add_immediate_thread_safe_task([&self, file = std::string(file)] {
+                self.m_composition_path = std::move(file);
+
+                try {
+                    self.composition_save();
+                } catch (const composition::CompositionError& e) {
+                    logging::error("Could not save composition: {}", e.what());
+                } catch (const utility::FilerError& e) {
+                    logging::error("Could not save composition: {}", e.what());
+                }
+            });
+        }
+    }
+
+    void Application::composition_save() const {
+        assert(!m_composition_path.empty());
+
+        utility::Buffer buffer;
+        composition::export_composition(m_composition, buffer);
+        utility::write_file(m_composition_path, buffer);
+
+        logging::information("Saved composition to `{}`", m_composition_path.c_str());
     }
 }

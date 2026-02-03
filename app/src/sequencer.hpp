@@ -1,12 +1,10 @@
 #pragma once
 
-#include <string>
 #include <vector>
 #include <unordered_map>
 #include <flat_set>
 #include <set>
 #include <stdexcept>
-#include <chrono>
 #include <functional>
 
 #include <alfred/synthesizer.hpp>
@@ -35,7 +33,7 @@ namespace seq {
         static constexpr unsigned int MAX {240};
 
         constexpr Tempo() = default;
-        constexpr Tempo(unsigned int tempo)
+        constexpr explicit Tempo(unsigned int tempo)
             : m_tempo(tempo) {}
 
         constexpr operator unsigned int() const { return m_tempo; }
@@ -97,9 +95,6 @@ namespace seq {
     };
 
     struct Composition {
-        std::string title;
-        std::string author;
-        std::chrono::year year {};
         std::vector<Measure> measures;
 
         void validate() const;

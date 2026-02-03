@@ -4,12 +4,14 @@
 #include <vector>
 #include <unordered_map>
 #include <optional>
+#include <filesystem>
 
 #include <imgui.h>
 #include <alfred/synthesizer.hpp>
 
 #include "video.hpp"
 #include "sequencer.hpp"
+#include "composition.hpp"
 #include "ui.hpp"
 #include "task.hpp"
 #include "image.hpp"
@@ -30,6 +32,7 @@ namespace application {
         void main_menu_bar_file();
         void main_menu_bar_edit();
         void main_menu_bar_options();
+        void main_menu_bar_composition();
         void main_menu_bar_help();
         void keyboard() const;
         void keyboard_key(ImDrawList* list, ImVec2 origin, char key, float x, float y, int scancode) const;
@@ -117,7 +120,7 @@ namespace application {
         void set_measure_tempo();
         void set_measure_time_signature();
         bool hover_note(ImVec2 position, HoveredNote& hovered_note);
-        bool select_note(const HoveredNote& hovered_note, NoteIter& note);
+        bool select_note(const HoveredNote& hovered_note, NoteIter& note) const;
         void do_with_note(const HoveredNote& hovered_note);
         void delete_notes();
         void shift_notes_up();
@@ -150,6 +153,8 @@ namespace application {
         static Time elapsed_seconds_to_time(double elapsed_seconds);
         static seq::Value get_value(ui::Value value);
         static ImColor set_opacity(ImColor color, float opacity);
+        static void composition_save_file_dialog(void* userdata, const char* const* filelist, int filter);
+        void composition_save() const;
 
         task::TaskManager m_task_manager;
 
@@ -159,7 +164,8 @@ namespace application {
         ImVec2 m_composition_camera;
         MeasureIter m_composition_selected_measure;
         std::vector<SelectedNote> m_composition_selected_notes;
-        seq::Composition m_composition;
+        std::filesystem::path m_composition_path;
+        composition::Composition m_composition;
 
         synthesizer::Synthesizer m_synthesizer;
         seq::Player m_player;
@@ -174,6 +180,9 @@ namespace application {
             int octave {ui::Octave3};
             double volume {};
             const char* device {};
+            char title[64] {};
+            char author[64] {};
+            short year {};
             image::Texture texture_play;
             image::Texture texture_pause;
             image::Texture texture_rewind;

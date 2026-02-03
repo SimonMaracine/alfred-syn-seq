@@ -3,7 +3,7 @@
 #include <fstream>
 
 namespace utility {
-    void read_file(const std::filesystem::path& path, std::string& buffer) {
+    void read_file(const std::filesystem::path& path, Buffer& buffer) {
         std::ifstream stream {path, std::ios_base::binary};
 
         if (!stream.is_open()) {
@@ -22,7 +22,7 @@ namespace utility {
         }
     }
 
-    void write_file(const std::filesystem::path& path, const std::string& buffer) {
+    void write_file(const std::filesystem::path& path, const Buffer& buffer) {
         std::ofstream stream {path, std::ios_base::binary};
 
         if (!stream.is_open()) {
