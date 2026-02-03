@@ -153,7 +153,7 @@ namespace application {
         }
 
         if (ImGui::MenuItem("Open", "Ctrl+O")) {
-
+            SDL_ShowOpenFileDialog(&Application::composition_open_file_dialog, this, m_window, nullptr, 0, nullptr, false);
         }
 
         if (ImGui::MenuItem("Save", "Ctrl+S")) {
@@ -161,7 +161,7 @@ namespace application {
                 SDL_ShowSaveFileDialog(&Application::composition_save_file_dialog, this, m_window, nullptr, 0, nullptr);
             } else {
                 try {
-                    composition_save();
+                    composition_save(m_composition_path, m_composition);
                 } catch (const composition::CompositionError& e) {
                     logging::error("Could not save composition: {}", e.what());
                 } catch (const utility::FilerError& e) {
@@ -1961,7 +1961,7 @@ namespace application {
         }) != selected_notes.end();
     }
 
-    Application::Time Application::elapsed_seconds_to_time(double elapsed_seconds) {
+    Time Application::elapsed_seconds_to_time(double elapsed_seconds) {
         Time time;
 
         double total_seconds {};
@@ -2010,27 +2010,77 @@ namespace application {
         }
 
         if (const char* file {filelist[0]}; file) {
-            self.m_task_manager.add_immediate_thread_safe_task([&self, file = std::string(file)] {
-                self.m_composition_path = std::move(file);
-
-                try {
-                    self.composition_save();
-                } catch (const composition::CompositionError& e) {
-                    logging::error("Could not save composition: {}", e.what());
-                } catch (const utility::FilerError& e) {
-                    logging::error("Could not save composition: {}", e.what());
-                }
+            self.m_task_manager.add_immediate_thread_safe_task([&self, file = std::string(file)] mutable {
+                self.composition_save(std::move(file));
             });
         }
     }
 
-    void Application::composition_save() const {
-        assert(!m_composition_path.empty());
+    void Application::composition_open_file_dialog(void* userdata, const char* const* filelist, int) {
+        Application& self {*static_cast<Application*>(userdata)};
 
+        if (!filelist) {
+            self.m_task_manager.add_immediate_thread_safe_task([error = SDL_GetError()] {
+                logging::error("An error occurred while handling the file dialog: {}", error);
+            });
+
+            return;
+        }
+
+        if (const char* file {filelist[0]}; file) {
+            self.m_task_manager.add_immediate_thread_safe_task([&self, file = std::string(file)] mutable {
+                self.composition_open(std::move(file));
+            });
+        }
+    }
+
+    void Application::composition_save(const std::filesystem::path& path, const composition::Composition& composition) {
         utility::Buffer buffer;
-        composition::export_composition(m_composition, buffer);
-        utility::write_file(m_composition_path, buffer);
+        composition::export_composition(composition, buffer);
+        utility::write_file(path, buffer);
 
-        logging::information("Saved composition to `{}`", m_composition_path.c_str());
+        logging::information("Saved composition to `{}`", path.c_str());
+    }
+
+    void Application::composition_open(const std::filesystem::path& path, composition::Composition& composition) {
+        utility::Buffer buffer;
+        utility::read_file(path, buffer);
+        composition::import_composition(composition, buffer);
+
+        logging::information("Opened composition from `{}`", path.c_str());
+    }
+
+    void Application::composition_save(std::string&& path) {
+        try {
+            composition_save(path, m_composition);
+        } catch (const composition::CompositionError& e) {
+            logging::error("Could not save composition: {}", e.what());
+            return;
+        } catch (const utility::FilerError& e) {
+            logging::error("Could not save composition: {}", e.what());
+            return;
+        }
+
+        m_composition_path = std::move(path);
+    }
+
+    void Application::composition_open(std::string&& path) {
+        try {
+            composition_open(path, m_composition);
+        } catch (const composition::CompositionError& e) {
+            logging::error("Could not open composition: {}", e.what());
+            return;
+        } catch (const utility::FilerError& e) {
+            logging::error("Could not open composition: {}", e.what());
+            return;
+        }
+
+        m_composition_path = std::move(path);
+
+        std::strncpy(m_ui.title, m_composition.title.c_str(), sizeof(m_ui.title));
+        std::strncpy(m_ui.author, m_composition.author.c_str(), sizeof(m_ui.author));
+        m_ui.year = short(int(m_composition.year));
+
+        modify_composition();
     }
 }

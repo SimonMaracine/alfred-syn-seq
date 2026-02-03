@@ -55,7 +55,7 @@ namespace seq {
 namespace std::chrono {
     template<typename Archive>
     void save(Archive& archive, const year& self, const std::uint32_t) {
-        archive(static_cast<int>(self));
+        archive(int(self));
     }
 
     template<typename Archive>

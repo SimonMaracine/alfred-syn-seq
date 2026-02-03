@@ -17,6 +17,54 @@
 #include "image.hpp"
 
 namespace application {
+    using MeasureIter = std::vector<seq::Measure>::iterator;
+    using NoteIter = std::multiset<seq::Note>::iterator;
+
+    class SelectedNote {
+    public:
+        SelectedNote() = default;
+        SelectedNote(MeasureIter measure, NoteIter note)
+            : m_measure(measure), m_note(note) {}
+
+        MeasureIter measure() const { return m_measure; }
+        NoteIter note() const { return m_note; }
+        void note(NoteIter note) { m_note = note; }
+    private:
+        MeasureIter m_measure;
+        NoteIter m_note;
+    };
+
+    class HoveredNote {
+    public:
+        HoveredNote() = default;
+        HoveredNote(syn::Id id, MeasureIter measure, unsigned int position, unsigned int global_position)
+            : m_id(id), m_measure(measure), m_position(position), m_global_position(global_position) {}
+
+        syn::Id id() const { return m_id; }
+        MeasureIter measure() const { return m_measure; }
+        unsigned int position() const { return m_position; }
+        unsigned int global_position() const { return m_global_position; }
+
+        unsigned int measure_position() const {
+            return m_global_position - m_position;
+        }
+
+        bool operator==(const HoveredNote& other) const {
+            return m_id == other.m_id && m_global_position == other.m_global_position;
+        }
+    private:
+        syn::Id m_id {};
+        MeasureIter m_measure;
+        unsigned int m_position {};
+        unsigned int m_global_position {};
+    };
+
+    struct Time {
+        int minutes {};
+        int seconds {};
+        int deciseconds {};
+    };
+
     class Application : public video::Video {
     public:
         void on_start() override;
@@ -26,8 +74,6 @@ namespace application {
         void on_late_update() override;
         void on_event(const SDL_Event& event) override;
     private:
-        class HoveredNote;
-
         void main_menu_bar();
         void main_menu_bar_file();
         void main_menu_bar_edit();
@@ -54,54 +100,6 @@ namespace application {
         bool tempo();
         bool time_signature();
         void debug();
-
-        using MeasureIter = std::vector<seq::Measure>::iterator;
-        using NoteIter = std::multiset<seq::Note>::iterator;
-
-        class SelectedNote {
-        public:
-            SelectedNote() = default;
-            SelectedNote(MeasureIter measure, NoteIter note)
-                : m_measure(measure), m_note(note) {}
-
-            MeasureIter measure() const { return m_measure; }
-            NoteIter note() const { return m_note; }
-            void note(NoteIter note) { m_note = note; }
-        private:
-            MeasureIter m_measure;
-            NoteIter m_note;
-        };
-
-        class HoveredNote {
-        public:
-            HoveredNote() = default;
-            HoveredNote(syn::Id id, MeasureIter measure, unsigned int position, unsigned int global_position)
-                : m_id(id), m_measure(measure), m_position(position), m_global_position(global_position) {}
-
-            syn::Id id() const { return m_id; }
-            MeasureIter measure() const { return m_measure; }
-            unsigned int position() const { return m_position; }
-            unsigned int global_position() const { return m_global_position; }
-
-            unsigned int measure_position() const {
-                return m_global_position - m_position;
-            }
-
-            bool operator==(const HoveredNote& other) const {
-                return m_id == other.m_id && m_global_position == other.m_global_position;
-            }
-        private:
-            syn::Id m_id {};
-            MeasureIter m_measure;
-            unsigned int m_position {};
-            unsigned int m_global_position {};
-        };
-
-        struct Time {
-            int minutes {};
-            int seconds {};
-            int deciseconds {};
-        };
 
         void keyboard_input(unsigned int key, bool down);
         void composition_mouse_pressed(ImVec2 origin);
@@ -154,7 +152,11 @@ namespace application {
         static seq::Value get_value(ui::Value value);
         static ImColor set_opacity(ImColor color, float opacity);
         static void composition_save_file_dialog(void* userdata, const char* const* filelist, int filter);
-        void composition_save() const;
+        static void composition_open_file_dialog(void* userdata, const char* const* filelist, int filter);
+        static void composition_save(const std::filesystem::path& path, const composition::Composition& composition);
+        static void composition_open(const std::filesystem::path& path, composition::Composition& composition);
+        void composition_save(std::string&& path);
+        void composition_open(std::string&& path);
 
         task::TaskManager m_task_manager;
 
