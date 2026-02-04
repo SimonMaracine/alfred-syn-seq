@@ -32,6 +32,8 @@ add_executable(
     "src/application.hpp"
     "src/composition.hpp"
     "src/composition.cpp"
+    "src/data.cpp"
+    "src/data.hpp"
     "src/imgui.cpp"
     "src/imgui.hpp"
     "src/logging.hpp"

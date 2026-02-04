@@ -78,7 +78,7 @@ namespace composition {
         }
     };
 
-    inline constexpr std::uint32_t COMPOSITION_VERSION {1};
+    inline constexpr std::uint32_t VERSION {1};
 
     void export_composition(const Composition& composition, utility::Buffer& buffer);
     void import_composition(Composition& composition, const utility::Buffer& buffer);
@@ -88,5 +88,5 @@ namespace composition {
     };
 }
 
-CEREAL_CLASS_VERSION(composition::Composition, composition::COMPOSITION_VERSION)
+CEREAL_CLASS_VERSION(composition::Composition, composition::VERSION)
 CEREAL_SPECIALIZE_FOR_ALL_ARCHIVES(composition::Composition, cereal::specialization::member_serialize)

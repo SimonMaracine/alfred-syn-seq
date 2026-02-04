@@ -39,6 +39,16 @@ namespace application {
             logging::error("Could not set icon: {}", e.what());
         }
 
+        try {
+            utility::Buffer buffer;
+            utility::read_file(data::file_path(), buffer);
+            data::import_data(m_data, buffer);
+        } catch (const data::DataError& e) {
+            logging::warning("Could not import data: {}", e.what());
+        } catch (const utility::FilerError& e) {
+            logging::warning("Could not import data: {}", e.what());
+        }
+
         m_synthesizer.open();
         m_synthesizer.resume();
         m_synthesizer.volume(0.75);
@@ -75,7 +85,15 @@ namespace application {
     }
 
     void Application::on_stop() {
-
+        try {
+            utility::Buffer buffer;
+            data::export_data(m_data, buffer);
+            utility::write_file(data::file_path(), buffer);
+        } catch (const data::DataError& e) {
+            logging::warning("Could not export data: {}", e.what());
+        } catch (const utility::FilerError& e) {
+            logging::warning("Could not export data: {}", e.what());
+        }
     }
 
     void Application::on_update() {
@@ -2088,7 +2106,9 @@ namespace application {
         logging::information("Opened composition from `{}`", path.c_str());
     }
 
-    void Application::composition_save(std::string&& path) {
+    void Application::composition_save(std::filesystem::path path) {
+        path.replace_extension("alfred");
+
         try {
             composition_save(path, m_composition);
         } catch (const composition::CompositionError& e) {
@@ -2106,6 +2126,7 @@ namespace application {
 
     void Application::composition_save() {
         assert(!m_composition_path.empty());
+        assert(m_composition_path.extension() == ".alfred");
 
         try {
             composition_save(m_composition_path, m_composition);
@@ -2122,7 +2143,7 @@ namespace application {
         m_composition_not_saved = false;
     }
 
-    void Application::composition_open(std::string&& path) {
+    void Application::composition_open(std::filesystem::path path) {
         try {
             composition_open(path, m_composition);
         } catch (const composition::CompositionError& e) {
@@ -2158,12 +2179,37 @@ namespace application {
     }
 
     void Application::file_open() {
-        SDL_ShowOpenFileDialog(&Application::composition_open_file_dialog, this, m_window, nullptr, 0, nullptr, false);
+        constexpr SDL_DialogFileFilter filters[] {
+            { "Alfred files", "alfred" },
+            { "All files", "*" }
+        };
+
+        SDL_ShowOpenFileDialog(
+            &Application::composition_open_file_dialog,
+            this,
+            m_window,
+            filters,
+            std::size(filters),
+            nullptr,
+            false
+        );
     }
 
     void Application::file_save() {
+        constexpr SDL_DialogFileFilter filters[] {
+            { "Alfred files", "alfred" },
+            { "All files", "*" }
+        };
+
         if (m_composition_path.empty()) {
-            SDL_ShowSaveFileDialog(&Application::composition_save_file_dialog, this, m_window, nullptr, 0, nullptr);
+            SDL_ShowSaveFileDialog(
+                &Application::composition_save_file_dialog,
+                this,
+                m_window,
+                filters,
+                std::size(filters),
+                nullptr
+            );
         } else {
             composition_save();
         }

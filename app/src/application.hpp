@@ -13,6 +13,7 @@
 #include "sequencer.hpp"
 #include "composition.hpp"
 #include "ui.hpp"
+#include "data.hpp"
 #include "task.hpp"
 #include "image.hpp"
 
@@ -159,14 +160,15 @@ namespace application {
         static void composition_open_file_dialog(void* userdata, const char* const* filelist, int filter);
         static void composition_save(const std::filesystem::path& path, const composition::Composition& composition);
         static void composition_open(const std::filesystem::path& path, composition::Composition& composition);
-        void composition_save(std::string&& path);
+        void composition_save(std::filesystem::path path);
         void composition_save();
-        void composition_open(std::string&& path);
+        void composition_open(std::filesystem::path path);
         void composition_new();
         void file_new();
         void file_open();
         void file_save();
 
+        data::Data m_data;
         task::TaskManager m_task_manager;
 
         syn::Voice m_voice {syn::VoiceBell};
