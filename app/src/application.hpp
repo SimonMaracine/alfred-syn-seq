@@ -162,7 +162,7 @@ namespace application {
         static void composition_open(const std::filesystem::path& path, composition::Composition& composition);
         void composition_save(std::filesystem::path path);
         void composition_save();
-        void composition_open(std::filesystem::path path);
+        bool composition_open(std::filesystem::path path);
         void composition_new();
         void file_new();
         void file_open();

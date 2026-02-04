@@ -176,6 +176,25 @@ namespace application {
             file_new();
         }
 
+        if (ImGui::BeginMenu("Open Recent")) {
+            for (const auto& [i, file_path] : m_data.recent_compositions | std::views::enumerate) {
+                ImGui::PushID(int(i));
+
+                if (ImGui::MenuItem(file_path.c_str())) {
+                    if (!composition_open(file_path)) {
+                        m_task_manager.add_immediate_task([this, &file_path] {
+                            m_data.recent_compositions.erase(file_path);
+                            logging::information("Erased invalid composition from the list");
+                        });
+                    }
+                }
+
+                ImGui::PopID();
+            }
+
+            ImGui::EndMenu();
+        }
+
         if (ImGui::MenuItem("Open", "Ctrl+O")) {
             file_open();
         }
@@ -502,11 +521,16 @@ namespace application {
 
             ImGui::SameLine();
 
+
             if (ImGui::Checkbox("Metronome", &m_metronome)) {
-                if (m_metronome) {
-                    add_metronome();
+                if (const bool allow_edit {!m_player.is_playing()}; allow_edit) {
+                    if (m_metronome) {
+                        add_metronome();
+                    } else {
+                        remove_metronome();
+                    }
                 } else {
-                    remove_metronome();
+                    m_metronome = !m_metronome;
                 }
             }
 
@@ -2120,13 +2144,17 @@ namespace application {
         }
 
         m_composition_path = std::move(path);
+        m_data.recent_compositions.insert(m_composition_path);
 
         set_title_composition_saved();
     }
 
     void Application::composition_save() {
         assert(!m_composition_path.empty());
-        assert(m_composition_path.extension() == ".alfred");
+
+        if (m_composition_path.extension() != ".alfred") {
+            LOG_WARNING("Composition file has the wrong extension");
+        }
 
         try {
             composition_save(m_composition_path, m_composition);
@@ -2138,23 +2166,29 @@ namespace application {
             return;
         }
 
-        set_title_composition_saved();
-
         m_composition_not_saved = false;
+        m_data.recent_compositions.insert(m_composition_path);
+
+        set_title_composition_saved();
     }
 
-    void Application::composition_open(std::filesystem::path path) {
+    bool Application::composition_open(std::filesystem::path path) {
+        if (m_composition_path.extension() != ".alfred") {
+            LOG_WARNING("Composition file has the wrong extension");
+        }
+
         try {
             composition_open(path, m_composition);
         } catch (const composition::CompositionError& e) {
             logging::error("Could not open composition: {}", e.what());
-            return;
+            return false;
         } catch (const utility::FilerError& e) {
             logging::error("Could not open composition: {}", e.what());
-            return;
+            return false;
         }
 
         m_composition_path = std::move(path);
+        m_data.recent_compositions.insert(m_composition_path);
 
         std::strncpy(m_ui.composition.title, m_composition.title.c_str(), sizeof(m_ui.composition.title));
         std::strncpy(m_ui.composition.author, m_composition.author.c_str(), sizeof(m_ui.composition.author));
@@ -2163,6 +2197,8 @@ namespace application {
         reset_composition_flags();
         invalidate_composition();
         set_title_composition_saved();
+
+        return true;
     }
 
     void Application::composition_new() {

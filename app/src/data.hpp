@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vector>
+#include <set>
 #include <string>
 #include <filesystem>
 
@@ -13,7 +13,7 @@ namespace data {
     struct Data {
         ui::ColorScheme color_scheme {};
         ui::Scale scale {};
-        std::vector<std::string> recent_compositions;
+        std::set<std::string> recent_compositions;
 
         template<typename Archive>
         void serialize(Archive& archive, const std::uint32_t) {
