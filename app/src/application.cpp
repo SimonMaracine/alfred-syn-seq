@@ -16,6 +16,7 @@
 #include "imgui.ini.hpp"
 #include "icon64.png.hpp"
 #include "icon128.png.hpp"
+#include "imgui.hpp"
 #include "play.png.hpp"
 #include "pause.png.hpp"
 #include "rewind.png.hpp"
@@ -108,10 +109,15 @@ namespace application {
     void Application::on_event(const SDL_Event& event) {
         switch (event.type) {
             case SDL_EVENT_KEY_DOWN:
-                keyboard_input(event.key.key, true);  // FIXME these shouldn't be called when typing in an input box or when calling a shortcut
+                if (imgui::want_capture_keyboard()) {
+                    break;
+                }
+
+                keyboard_input(event.key.key, true);
+
                 break;
             case SDL_EVENT_KEY_UP:
-                keyboard_input(event.key.key, false);
+                keyboard_input(event.key.key, false);  // Don't block note offs
                 break;
         }
     }
@@ -342,7 +348,7 @@ namespace application {
         ImColor color {get_keyboard_state()[scancode] ? COLOR_ACTIVE : COLOR_INACTIVE};
 
         // Just override when keyboard is disabled
-        if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl)) {  // FIXME this solution is not good
+        if (imgui::want_capture_keyboard()) {
             color = COLOR_INACTIVE;
         }
 
@@ -1144,9 +1150,7 @@ namespace application {
     void Application::keyboard_input(unsigned int key, bool down) {
         const auto update {[this, down](syn::Id id) {
             if (down) {
-                if (!(ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl))) {  // FIXME this solution is not good
-                    m_synthesizer.note_on(id + m_octave * 12, m_voice);
-                }
+                m_synthesizer.note_on(id + m_octave * 12, m_voice);
             } else {
                 m_synthesizer.note_off(id + m_octave * 12, m_voice);
             }
