@@ -130,6 +130,10 @@ namespace application {
         void start_player();
         void stop_player();
         void modify_composition();
+        void invalidate_composition();
+        void reset_composition_flags();
+        void set_title_composition_not_saved() const;
+        void set_title_composition_saved() const;
         ImVec2 composition_mouse_position(ImVec2 origin) const;
         std::flat_set<syn::Voice> instruments_in_project() const;
 
@@ -156,7 +160,12 @@ namespace application {
         static void composition_save(const std::filesystem::path& path, const composition::Composition& composition);
         static void composition_open(const std::filesystem::path& path, composition::Composition& composition);
         void composition_save(std::string&& path);
+        void composition_save();
         void composition_open(std::string&& path);
+        void composition_new();
+        void file_new();
+        void file_open();
+        void file_save();
 
         task::TaskManager m_task_manager;
 
@@ -179,12 +188,10 @@ namespace application {
             ui::TimeSignature time_signature;
             ui::ColorScheme color_scheme {ui::ColorSchemeClassic};
             ui::Scale scale {ui::Scale1X};
+            ui::Composition composition;
             int octave {ui::Octave3};
             double volume {};
             const char* device {};
-            char title[64] {};
-            char author[64] {};
-            short year {};
             image::Texture texture_play;
             image::Texture texture_pause;
             image::Texture texture_rewind;
@@ -195,6 +202,7 @@ namespace application {
         } m_ui;
 
         bool m_metronome {};
-        bool m_composition_modified {};
+        bool m_composition_not_compiled {};
+        bool m_composition_not_saved {};
     };
 }

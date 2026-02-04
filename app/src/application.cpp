@@ -149,25 +149,15 @@ namespace application {
 
     void Application::main_menu_bar_file() {
         if (ImGui::MenuItem("New", "Ctrl+N")) {
-
+            file_new();
         }
 
         if (ImGui::MenuItem("Open", "Ctrl+O")) {
-            SDL_ShowOpenFileDialog(&Application::composition_open_file_dialog, this, m_window, nullptr, 0, nullptr, false);
+            file_open();
         }
 
         if (ImGui::MenuItem("Save", "Ctrl+S")) {
-            if (m_composition_path.empty()) {
-                SDL_ShowSaveFileDialog(&Application::composition_save_file_dialog, this, m_window, nullptr, 0, nullptr);
-            } else {
-                try {
-                    composition_save(m_composition_path, m_composition);
-                } catch (const composition::CompositionError& e) {
-                    logging::error("Could not save composition: {}", e.what());
-                } catch (const utility::FilerError& e) {
-                    logging::error("Could not save composition: {}", e.what());
-                }
-            }
+            file_save();
         }
 
         if (ImGui::MenuItem("Quit")) {
@@ -186,24 +176,24 @@ namespace application {
 
     void Application::main_menu_bar_composition() {
         if (ImGui::BeginMenu("Title")) {
-            if (ImGui::InputText("##", m_ui.title, sizeof(m_ui.title))) {
-                m_composition.title = m_ui.title;
+            if (ImGui::InputText("##title", m_ui.composition.title, sizeof(m_ui.composition.title))) {
+                m_composition.title = m_ui.composition.title;
             }
 
             ImGui::EndMenu();
         }
 
         if (ImGui::BeginMenu("Author")) {
-            if (ImGui::InputText("##", m_ui.author, sizeof(m_ui.author))) {
-                m_composition.author = m_ui.author;
+            if (ImGui::InputText("##author", m_ui.composition.author, sizeof(m_ui.composition.author))) {
+                m_composition.author = m_ui.composition.author;
             }
 
             ImGui::EndMenu();
         }
 
         if (ImGui::BeginMenu("Year")) {
-            if (ImGui::InputScalar("##", ImGuiDataType_U16, &m_ui.year)) {
-                m_composition.year = std::chrono::year(m_ui.year);
+            if (ImGui::InputScalar("##year", ImGuiDataType_S16, &m_ui.composition.year)) {
+                m_composition.year = std::chrono::year(m_ui.composition.year);
             }
 
             ImGui::EndMenu();
@@ -980,6 +970,18 @@ namespace application {
     }
 
     void Application::shortcuts() {
+        if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_N, ImGuiInputFlags_RouteAlways)) {
+            file_new();
+        }
+
+        if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_O, ImGuiInputFlags_RouteAlways)) {
+            file_open();
+        }
+
+        if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_S, ImGuiInputFlags_RouteAlways)) {
+            file_save();
+        }
+
         if (ImGui::Shortcut(ImGuiKey_Space, ImGuiInputFlags_RouteAlways)) {
             if (m_player.is_playing()) {
                 stop_player();
@@ -1130,7 +1132,9 @@ namespace application {
                 ImGui::SaveIniSettingsToDisk("imguid.ini");
             }
 
-            ImGui::Text("%u", m_player.get_position());
+            ImGui::Text("m_player.get_position() %u", m_player.get_position());
+            ImGui::Text("m_composition_not_compiled %d", m_composition_not_compiled);
+            ImGui::Text("m_composition_not_saved %d", m_composition_not_saved);
         }
 
         ImGui::End();
@@ -1761,10 +1765,10 @@ namespace application {
     }
 
     void Application::start_player() {
-        if (m_composition_modified) {
+        if (m_composition_not_compiled) {
             LOG_DEBUG("Compiling composition");
             m_player.prepare();
-            m_composition_modified = false;
+            m_composition_not_compiled = false;
         }
 
         m_composition_selected_measure = m_composition.measures.end();
@@ -1780,11 +1784,41 @@ namespace application {
     }
 
     void Application::modify_composition() {
-        if (!m_composition_modified) {
-            LOG_DEBUG("Composition modified");
+        if (!m_composition_not_saved) {
+            set_title_composition_not_saved();
         }
 
-        m_composition_modified = true;
+        m_composition_not_compiled = true;
+        m_composition_not_saved = true;
+    }
+
+    void Application::invalidate_composition() {
+        m_composition_not_compiled = true;
+    }
+
+    void Application::reset_composition_flags() {
+        m_composition_not_compiled = false;
+        m_composition_not_saved = false;
+    }
+
+    void Application::set_title_composition_not_saved() const {
+        if (m_composition_path.empty()) {
+            set_title("Alfred - Unsaved Composition");
+        } else {
+            set_title(std::format("Alfred - {}*", m_composition_path.filename().c_str()));
+        }
+
+        LOG_DEBUG("Changed title");
+    }
+
+    void Application::set_title_composition_saved() const {
+        if (m_composition_path.empty()) {
+            set_title("Alfred");
+        } else {
+            set_title(std::format("Alfred - {}", m_composition_path.filename().c_str()));
+        }
+
+        LOG_DEBUG("Changed title");
     }
 
     ImVec2 Application::composition_mouse_position(ImVec2 origin) const {
@@ -2062,6 +2096,26 @@ namespace application {
         }
 
         m_composition_path = std::move(path);
+
+        set_title_composition_saved();
+    }
+
+    void Application::composition_save() {
+        assert(!m_composition_path.empty());
+
+        try {
+            composition_save(m_composition_path, m_composition);
+        } catch (const composition::CompositionError& e) {
+            logging::error("Could not save composition: {}", e.what());
+            return;
+        } catch (const utility::FilerError& e) {
+            logging::error("Could not save composition: {}", e.what());
+            return;
+        }
+
+        set_title_composition_saved();
+
+        m_composition_not_saved = false;
     }
 
     void Application::composition_open(std::string&& path) {
@@ -2077,10 +2131,37 @@ namespace application {
 
         m_composition_path = std::move(path);
 
-        std::strncpy(m_ui.title, m_composition.title.c_str(), sizeof(m_ui.title));
-        std::strncpy(m_ui.author, m_composition.author.c_str(), sizeof(m_ui.author));
-        m_ui.year = short(int(m_composition.year));
+        std::strncpy(m_ui.composition.title, m_composition.title.c_str(), sizeof(m_ui.composition.title));
+        std::strncpy(m_ui.composition.author, m_composition.author.c_str(), sizeof(m_ui.composition.author));
+        m_ui.composition.year = short(int(m_composition.year));
 
-        modify_composition();
+        reset_composition_flags();
+        invalidate_composition();
+        set_title_composition_saved();
+    }
+
+    void Application::composition_new() {
+        m_composition = {};
+        m_composition_path.clear();
+        m_ui.composition = {};
+
+        reset_composition_flags();
+        set_title_composition_saved();
+    }
+
+    void Application::file_new() {
+        composition_new();
+    }
+
+    void Application::file_open() {
+        SDL_ShowOpenFileDialog(&Application::composition_open_file_dialog, this, m_window, nullptr, 0, nullptr, false);
+    }
+
+    void Application::file_save() {
+        if (m_composition_path.empty()) {
+            SDL_ShowSaveFileDialog(&Application::composition_save_file_dialog, this, m_window, nullptr, 0, nullptr);
+        } else {
+            composition_save();
+        }
     }
 }

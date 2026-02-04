@@ -98,6 +98,12 @@ namespace ui {
         { "Amber", ImColor(255, 191, 0) }
     };
 
+    struct Composition {
+        char title[64] {};
+        char author[64] {};
+        short year {};
+    };
+
     float rem(float size);
     ImVec2 rem(ImVec2 size);
     void set_style();
