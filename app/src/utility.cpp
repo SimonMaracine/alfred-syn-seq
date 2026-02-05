@@ -35,4 +35,16 @@ namespace utility {
             throw FilerError("Could not write to file");
         }
     }
+
+    std::filesystem::path data_file_path() {
+#ifdef ALFRED_DISTRIBUTION
+    #ifdef ALFRED_LINUX
+        // TODO
+    #elifdef ALFRED_WINDOWS
+        // TODO
+    #endif
+#else
+        return "./";  // Relative directory
+#endif
+    }
 }

@@ -37,16 +37,4 @@ namespace data {
             throw DataError("Unexpected error reading from stream");
         }
     }
-
-    std::filesystem::path file_path() {
-#ifdef ALFRED_DISTRIBUTION
-    #ifdef ALFRED_LINUX
-        // TODO
-    #elifdef ALFRED_WINDOWS
-        // TODO
-    #endif
-#else
-        return "alfred.dat";  // Relative directory
-#endif
-    }
 }

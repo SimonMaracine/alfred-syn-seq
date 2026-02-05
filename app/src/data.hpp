@@ -2,7 +2,6 @@
 
 #include <set>
 #include <string>
-#include <filesystem>
 
 #include <cereal/cereal.hpp>
 
@@ -25,8 +24,6 @@ namespace data {
 
     void export_data(const Data& data, utility::Buffer& buffer);
     void import_data(Data& data, const utility::Buffer& buffer);
-
-    std::filesystem::path file_path();
 
     struct DataError : std::runtime_error {
         using std::runtime_error::runtime_error;

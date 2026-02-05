@@ -1,9 +1,9 @@
 #pragma once
 
-#include <print>
 #include <source_location>
 #include <utility>
 #include <chrono>
+#include <stdexcept>
 
 namespace logging {
     enum class Severity {
@@ -31,25 +31,23 @@ namespace logging {
         std::unreachable();
     }
 
+    void initialize();
+    void uninitialize();
+
+    namespace chrono = std::chrono;
+    using TimeOfDay = chrono::hh_mm_ss<chrono::seconds>;
+
+    void console_println(Severity severity, const std::source_location& location, TimeOfDay time_of_day, const std::string& message);
+    void file_println(Severity severity, const std::source_location& location, TimeOfDay time_of_day, const std::string& message);
+
     template<Severity severity, typename... Args>
     void log(const std::source_location& location, std::format_string<Args...> fmt, Args&&... args) {
-        namespace chrono = std::chrono;
-
         const auto time {chrono::system_clock::now()};
-        const chrono::hh_mm_ss time_of_day {chrono::floor<chrono::seconds>(time - chrono::floor<chrono::days>(time))};
+        const TimeOfDay time_of_day {chrono::floor<chrono::seconds>(time - chrono::floor<chrono::days>(time))};
         const auto message {std::format(fmt, std::forward<Args>(args)...)};
 
-        std::println(
-            stderr,
-            "[{} {} {} {} {}:{}] {}",
-            severity_to_string(severity),
-            time_of_day,
-            location.file_name(),
-            location.function_name(),
-            location.line(),
-            location.column(),
-            message
-        );
+        console_println(severity, location, time_of_day, message);
+        file_println(severity, location, time_of_day, message);
     }
 
     template<typename... Args>
@@ -101,6 +99,10 @@ namespace logging {
 
     template<typename... Args>
     critical(std::format_string<Args...> fmt, Args&&... args) -> critical<Args...>;
+
+    struct LoggingError : std::runtime_error {
+        using std::runtime_error::runtime_error;
+    };
 }
 
 #ifdef ALFRED_DISTRIBUTION

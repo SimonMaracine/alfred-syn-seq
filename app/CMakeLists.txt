@@ -36,6 +36,7 @@ add_executable(
     "src/data.hpp"
     "src/imgui.cpp"
     "src/imgui.hpp"
+    "src/logging.cpp"
     "src/logging.hpp"
     "src/main.cpp"
     "src/sequencer.cpp"

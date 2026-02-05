@@ -15,10 +15,17 @@ static void show_error_message_box(const char* title, const char* message) {
 }
 
 int main(int, char**) {
+    std::atexit(logging::uninitialize);
     std::atexit(SDL_Quit);
 
+    try {
+        logging::initialize();
+    } catch (const logging::LoggingError& e) {
+        logging::error("Could not initialize logging: {}", e.what());
+    }
+
     if (!SDL_SetHint(SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES, "512")) {
-        logging::error("SDL_SetHint");
+        logging::error("SDL_SetHint(SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES)");
     }
 
     set_property(SDL_PROP_APP_METADATA_NAME_STRING, "Alfred");

@@ -41,7 +41,7 @@ namespace application {
 
         try {
             utility::Buffer buffer;
-            utility::read_file(data::file_path(), buffer);
+            utility::read_file(utility::data_file_path() / "alfred.dat", buffer);
             data::import_data(m_data, buffer);
         } catch (const data::DataError& e) {
             logging::warning("Could not import data: {}", e.what());
@@ -93,7 +93,7 @@ namespace application {
         try {
             utility::Buffer buffer;
             data::export_data(m_data, buffer);
-            utility::write_file(data::file_path(), buffer);
+            utility::write_file(utility::data_file_path() / "alfred.dat", buffer);
         } catch (const data::DataError& e) {
             logging::warning("Could not export data: {}", e.what());
         } catch (const utility::FilerError& e) {
@@ -1152,7 +1152,7 @@ namespace application {
         return result;
     }
 
-    void Application::debug() {
+    void Application::debug() const {
 #ifndef ALFRED_DISTRIBUTION
         if (ImGui::Begin("Debug")) {
             ImGui::Text("Frame time: %f", get_frame_time());
@@ -1860,6 +1860,8 @@ namespace application {
                 ImGui::StyleColorsClassic();
                 break;
         }
+
+        LOG_DEBUG("Changed color scheme");
     }
 
     void Application::set_scale(ui::Scale scale) {
@@ -1871,6 +1873,8 @@ namespace application {
                 ui::set_scale(2);
                 break;
         }
+
+        LOG_DEBUG("Changed scale");
     }
 
     ImVec2 Application::composition_mouse_position(ImVec2 origin) const {
@@ -2092,7 +2096,7 @@ namespace application {
         Application& self {*static_cast<Application*>(userdata)};
 
         if (!filelist) {
-            self.m_task_manager.add_immediate_thread_safe_task([error = SDL_GetError()] {
+            self.m_task_manager.add_immediate_thread_safe_task([error = std::string(SDL_GetError())] {
                 logging::error("An error occurred while handling the file dialog: {}", error);
             });
 
@@ -2110,7 +2114,7 @@ namespace application {
         Application& self {*static_cast<Application*>(userdata)};
 
         if (!filelist) {
-            self.m_task_manager.add_immediate_thread_safe_task([error = SDL_GetError()] {
+            self.m_task_manager.add_immediate_thread_safe_task([error = std::string(SDL_GetError())] {
                 logging::error("An error occurred while handling the file dialog: {}", error);
             });
 
@@ -2140,26 +2144,28 @@ namespace application {
         logging::information("Opened composition from `{}`", path.c_str());
     }
 
-    void Application::composition_save(std::filesystem::path path) {
+    bool Application::composition_save(std::filesystem::path path) {
         path.replace_extension("alfred");
 
         try {
             composition_save(path, m_composition);
         } catch (const composition::CompositionError& e) {
             logging::error("Could not save composition: {}", e.what());
-            return;
+            return false;
         } catch (const utility::FilerError& e) {
             logging::error("Could not save composition: {}", e.what());
-            return;
+            return false;
         }
 
         m_composition_path = std::move(path);
         m_data.recent_compositions.insert(m_composition_path);
 
         set_title_composition_saved();
+
+        return true;
     }
 
-    void Application::composition_save() {
+    bool Application::composition_save() {
         assert(!m_composition_path.empty());
 
         if (m_composition_path.extension() != ".alfred") {
@@ -2170,16 +2176,18 @@ namespace application {
             composition_save(m_composition_path, m_composition);
         } catch (const composition::CompositionError& e) {
             logging::error("Could not save composition: {}", e.what());
-            return;
+            return false;
         } catch (const utility::FilerError& e) {
             logging::error("Could not save composition: {}", e.what());
-            return;
+            return false;
         }
 
         m_composition_not_saved = false;
         m_data.recent_compositions.insert(m_composition_path);
 
         set_title_composition_saved();
+
+        return true;
     }
 
     bool Application::composition_open(std::filesystem::path path) {

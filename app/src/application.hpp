@@ -100,7 +100,7 @@ namespace application {
         void shortcuts();
         bool tempo();
         bool time_signature();
-        void debug();
+        void debug() const;
 
         void keyboard_input(unsigned int key, bool down);
         void composition_mouse_pressed(ImVec2 origin);
@@ -163,8 +163,8 @@ namespace application {
         static void composition_open_file_dialog(void* userdata, const char* const* filelist, int filter);
         static void composition_save(const std::filesystem::path& path, const composition::Composition& composition);
         static void composition_open(const std::filesystem::path& path, composition::Composition& composition);
-        void composition_save(std::filesystem::path path);
-        void composition_save();
+        bool composition_save(std::filesystem::path path);
+        bool composition_save();
         bool composition_open(std::filesystem::path path);
         void composition_new();
         void file_new();
