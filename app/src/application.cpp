@@ -132,12 +132,9 @@ namespace application {
     void Application::on_event(const SDL_Event& event) {
         switch (event.type) {
             case SDL_EVENT_KEY_DOWN:
-                if (imgui::want_capture_keyboard()) {
-                    break;
+                if (keyboard_active()) {
+                    keyboard_input(event.key.key, true);
                 }
-
-                keyboard_input(event.key.key, true);
-
                 break;
             case SDL_EVENT_KEY_UP:
                 keyboard_input(event.key.key, false);  // Don't block note offs
@@ -369,7 +366,7 @@ namespace application {
         ImColor color {get_keyboard_state()[scancode] ? COLOR_ACTIVE : COLOR_INACTIVE};
 
         // Just override when keyboard is disabled
-        if (imgui::want_capture_keyboard()) {
+        if (!keyboard_active()) {
             color = COLOR_INACTIVE;
         }
 
@@ -710,7 +707,7 @@ namespace application {
             const bool item_hovered {ImGui::IsItemHovered()};
             const bool allow_edit {!m_player.is_playing()};
 
-            if (!(ImGui::IsKeyDown(ImGuiKey_LeftAlt) || ImGui::IsKeyDown(ImGuiKey_RightAlt))) {
+            if (!ImGui::IsKeyDown(ImGuiMod_Alt)) {
                 if (HoveredNote hovered_note; item_hovered && allow_edit && hover_note(composition_mouse_position(origin), hovered_note)) {
                     composition_hover(list, origin, space, hovered_note);
                 }
@@ -1224,7 +1221,7 @@ namespace application {
     }
 
     void Application::composition_mouse_released(ImVec2 origin) {
-        if (ImGui::IsKeyDown(ImGuiKey_LeftAlt) || ImGui::IsKeyDown(ImGuiKey_RightAlt)) {
+        if (ImGui::IsKeyDown(ImGuiMod_Alt)) {
             if (unsigned int position {}; hover_position(composition_mouse_position(origin), position)) {
                 m_player.seek(position);
             }
@@ -1272,7 +1269,7 @@ namespace application {
         }
 
         if (item_hovered) {
-            if (ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift)) {
+            if (ImGui::IsKeyDown(ImGuiMod_Shift)) {
                 m_composition_camera -= ImVec2(
                     ui::rem(COMPOSITION_SCROLL_SPEED * 2.0f) * io.MouseWheel,
                     -ui::rem(COMPOSITION_SCROLL_SPEED) * io.MouseWheelH
@@ -1520,7 +1517,7 @@ namespace application {
                 })
             };
 
-            if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl)) {
+            if (ImGui::IsKeyDown(ImGuiMod_Ctrl)) {
                 if (selected_note != m_composition_selected_notes.end()) {
                     m_composition_selected_notes.erase(selected_note);
                 } else {
@@ -1894,6 +1891,10 @@ namespace application {
         instruments.erase(syn::VoiceMetronome);
 
         return instruments;
+    }
+
+    bool Application::keyboard_active() {
+        return !imgui::want_capture_keyboard() && !ImGui::IsKeyDown(ImGuiMod_Ctrl) && !ImGui::IsKeyDown(ImGuiMod_Alt) && !ImGui::IsKeyDown(ImGuiMod_Shift);
     }
 
     float Application::note_height(const seq::Note& note) {

@@ -140,6 +140,7 @@ namespace application {
         ImVec2 composition_mouse_position(ImVec2 origin) const;
         std::flat_set<syn::Voice> instruments_in_project() const;
 
+        static bool keyboard_active();
         static float note_height(const seq::Note& note);
         static ImVec4 note_rectangle(const seq::Note& note);
         static const char* measure_label(char* buffer, long number);
