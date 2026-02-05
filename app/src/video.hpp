@@ -4,6 +4,7 @@
 #include <span>
 #include <initializer_list>
 #include <string_view>
+#include <utility>
 
 union SDL_Event;
 struct SDL_Window;
@@ -32,6 +33,8 @@ namespace video {
         void set_desired_frame_time(unsigned long long milliseconds);
         void set_icons(std::initializer_list<std::span<const unsigned char>> icons) const;
         void set_title(std::string_view title) const;
+        void set_window_size(int width, int height) const;
+        std::pair<int, int> get_window_size() const;
         static const char* get_property(const char* property);
 
         const bool* get_keyboard_state() const { return m_keyboard_state; }

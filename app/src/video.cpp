@@ -16,7 +16,9 @@ namespace video {
             throw VideoError(std::format("SDL_InitSubSystem: {}", SDL_GetError()));
         }
 
-        if (!SDL_CreateWindowAndRenderer("Alfred", 1280, 720, SDL_WINDOW_RESIZABLE, &m_window, &m_renderer)) {
+        static constexpr SDL_WindowFlags flags {SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN};
+
+        if (!SDL_CreateWindowAndRenderer("Alfred", 1280, 720, flags, &m_window, &m_renderer)) {
             throw VideoError(std::format("SDL_CreateWindowAndRenderer: {}", SDL_GetError()));
         }
 
@@ -49,6 +51,10 @@ namespace video {
 
     void Video::run() {
         on_start();
+
+        if (!SDL_ShowWindow(m_window)) {
+            throw VideoError(std::format("SDL_ShowWindow: {}", SDL_GetError()));
+        }
 
         m_previous_time = SDL_GetTicksNS();
 
@@ -125,6 +131,27 @@ namespace video {
         if (!SDL_SetWindowTitle(m_window, title.data())) {
             throw VideoError(std::format("SDL_SetWindowTitle: {}", SDL_GetError()));
         }
+    }
+
+    void Video::set_window_size(int width, int height) const {
+        if (!SDL_SetWindowSize(m_window, width, height)) {
+            throw VideoError(std::format("SDL_SetWindowSize: {}", SDL_GetError()));
+        }
+
+        if (!SDL_SyncWindow(m_window)) {
+            throw VideoError(std::format("SDL_SyncWindow: {}", SDL_GetError()));
+        }
+    }
+
+    std::pair<int, int> Video::get_window_size() const {
+        int width {};
+        int height {};
+
+        if (!SDL_GetWindowSize(m_window, &width, &height)) {
+            throw VideoError(std::format("SDL_GetWindowSize: {}", SDL_GetError()));
+        }
+
+        return { width, height };
     }
 
     const char* Video::get_property(const char* property) {

@@ -54,9 +54,14 @@ namespace application {
         m_synthesizer.volume(0.75);
 
         ImGui::LoadIniSettingsFromMemory(SETTINGS.data(), SETTINGS.size());
-        ImGui::StyleColorsClassic();
 
-        ui::set_scale(1);
+        set_color_scheme(m_data.color_scheme);
+        set_scale(m_data.scale);
+
+        if (m_data.scale == ui::Scale2X) {
+            set_window_size(1920, 1080);
+            LOG_INFORMATION("Double scale");
+        }
 
         auto& io {ImGui::GetIO()};
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
@@ -258,9 +263,9 @@ namespace application {
             constexpr const char* DEV_TAG {" dev"};
 #endif
             ImGui::Text("Version: %s%s", get_property(SDL_PROP_APP_METADATA_VERSION_STRING), DEV_TAG);
-#if defined(ALFRED_LINUX)
+#ifdef ALFRED_LINUX
             ImGui::Text("Compiler: GCC %d.%d", __GNUC__, __GNUC_MINOR__);
-#elif defined(ALFRED_WINDOWS)
+#elifdef ALFRED_WINDOWS
             ImGui::Text("Compiler: MSVC %d", _MSC_VER);
 #endif
             ImGui::Text("Date: %s %s", __DATE__, __TIME__);
@@ -279,22 +284,11 @@ namespace application {
         if (ImGui::BeginMenu("Color Scheme")) {
             constexpr const char* SCHEME[] { "Dark", "Light", "Classic" };
 
-            if (ImGui::BeginCombo("##", SCHEME[m_ui.color_scheme], ImGuiComboFlags_WidthFitPreview)) {
+            if (ImGui::BeginCombo("##", SCHEME[m_data.color_scheme], ImGuiComboFlags_WidthFitPreview)) {
                 for (std::size_t i {}; i < std::size(SCHEME); i++) {
-                    if (ImGui::Selectable(SCHEME[i], m_ui.color_scheme == i)) {
-                        m_ui.color_scheme = ui::ColorScheme(i);
-
-                        switch (m_ui.color_scheme) {
-                            case ui::ColorSchemeDark:
-                                ImGui::StyleColorsDark();
-                                break;
-                            case ui::ColorSchemeLight:
-                                ImGui::StyleColorsLight();
-                                break;
-                            case ui::ColorSchemeClassic:
-                                ImGui::StyleColorsClassic();
-                                break;
-                        }
+                    if (ImGui::Selectable(SCHEME[i], m_data.color_scheme == i)) {
+                        m_data.color_scheme = ui::ColorScheme(i);
+                        set_color_scheme(m_data.color_scheme);
                     }
                 }
 
@@ -307,23 +301,13 @@ namespace application {
         if (ImGui::BeginMenu("Scale")) {
             constexpr const char* SCALE[] { "1X", "2X" };
 
-            if (ImGui::BeginCombo("##", SCALE[m_ui.scale], ImGuiComboFlags_WidthFitPreview)) {
+            if (ImGui::BeginCombo("##", SCALE[m_data.scale], ImGuiComboFlags_WidthFitPreview)) {
                 for (std::size_t i {}; i < std::size(SCALE); i++) {
-                    if (ImGui::Selectable(SCALE[i], m_ui.scale == i)) {
-                        m_ui.scale = ui::Scale(i);
-
-                        switch (m_ui.scale) {
-                            case ui::Scale1X:
-                                m_task_manager.add_immediate_task([] {
-                                    ui::set_scale(1);
-                                });
-                                break;
-                            case ui::Scale2X:
-                                m_task_manager.add_immediate_task([] {
-                                    ui::set_scale(2);
-                                });
-                                break;
-                        }
+                    if (ImGui::Selectable(SCALE[i], m_data.scale == i)) {
+                        m_data.scale = ui::Scale(i);
+                        m_task_manager.add_immediate_task([this] {
+                            set_scale(m_data.scale);
+                        });
                     }
                 }
 
@@ -1865,6 +1849,31 @@ namespace application {
         }
 
         LOG_DEBUG("Changed title");
+    }
+
+    void Application::set_color_scheme(ui::ColorScheme color_scheme) {
+        switch (color_scheme) {
+            case ui::ColorSchemeDark:
+                ImGui::StyleColorsDark();
+                break;
+            case ui::ColorSchemeLight:
+                ImGui::StyleColorsLight();
+                break;
+            case ui::ColorSchemeClassic:
+                ImGui::StyleColorsClassic();
+                break;
+        }
+    }
+
+    void Application::set_scale(ui::Scale scale) {
+        switch (scale) {
+            case ui::Scale1X:
+                ui::set_scale(1);
+                break;
+            case ui::Scale2X:
+                ui::set_scale(2);
+                break;
+        }
     }
 
     ImVec2 Application::composition_mouse_position(ImVec2 origin) const {

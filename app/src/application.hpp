@@ -135,6 +135,8 @@ namespace application {
         void reset_composition_flags();
         void set_title_composition_not_saved() const;
         void set_title_composition_saved() const;
+        static void set_color_scheme(ui::ColorScheme color_scheme);
+        static void set_scale(ui::Scale scale);
         ImVec2 composition_mouse_position(ImVec2 origin) const;
         std::flat_set<syn::Voice> instruments_in_project() const;
 
@@ -188,8 +190,6 @@ namespace application {
             int value {ui::ValueQuarter};
             ui::Tempo tempo {seq::Tempo()};
             ui::TimeSignature time_signature;
-            ui::ColorScheme color_scheme {ui::ColorSchemeClassic};
-            ui::Scale scale {ui::Scale1X};
             ui::Composition composition;
             int octave {ui::Octave3};
             double volume {};
