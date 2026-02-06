@@ -744,7 +744,7 @@ namespace application {
 
         const ImGuiStyle& style {ImGui::GetStyle()};
         const ImColor& COLOR_FOREGROUND {style.Colors[ImGuiCol_Text]};
-        const ImColor COLOR_BACKGROUND {set_opacity(style.Colors[ImGuiCol_WindowBg], 1.0f)};
+        const ImColor COLOR_BACKGROUND {color_opacity(style.Colors[ImGuiCol_WindowBg], 1.0f)};
 
         list->AddRectFilled(
             origin + ImVec2(0.0f, 0.0f) - ImVec2(0.0f, m_composition_camera.y),
@@ -811,7 +811,7 @@ namespace application {
 
     void Application::composition_octaves(ImDrawList* list, ImVec2 origin, ImVec2 space) const {
         const ImGuiStyle& style {ImGui::GetStyle()};
-        const ImColor COLOR {set_opacity(style.Colors[ImGuiCol_TextDisabled], 0.7f)};
+        const ImColor COLOR {color_opacity(style.Colors[ImGuiCol_TextDisabled], 0.7f)};
 
         float position_y {float(syn::keyboard::EXTRA) * ui::rem(STEP_SIZE.y)};
 
@@ -835,8 +835,8 @@ namespace application {
     void Application::composition_measures(ImDrawList* list, ImVec2 origin, ImVec2 space) const {
         const ImGuiStyle& style {ImGui::GetStyle()};
         const ImColor& COLOR_FOREGROUND {style.Colors[ImGuiCol_Text]};
-        const ImColor COLOR_FOREGROUND2 {set_opacity(style.Colors[ImGuiCol_TextDisabled], 0.7f)};
-        const ImColor COLOR_SELECTION {set_opacity(style.Colors[ImGuiCol_TableHeaderBg], 0.3f)};
+        const ImColor COLOR_FOREGROUND2 {color_opacity(style.Colors[ImGuiCol_TextDisabled], 0.7f)};
+        const ImColor COLOR_SELECTION {color_opacity(style.Colors[ImGuiCol_TableHeaderBg], 0.3f)};
 
         float position_x {ui::rem(COMPOSITION_LEFT)};
 
@@ -906,21 +906,16 @@ namespace application {
 
         for (auto measure {m_composition.measures.begin()}; measure != m_composition.measures.end(); measure++) {
             for (const auto& [voice, notes] : measure->voices) {
-                for (const seq::Note& note : notes) {
-                    const ImVec4 rect {note_rectangle(note)};
-
-                    const float position_x {rect.x};
-                    const float position_y {rect.y};
-                    const float width {rect.z};
-                    const float height {rect.w};
-
-                    list->AddRectFilled(
-                        origin + ImVec2(global_position_x + position_x, position_y) - m_composition_camera,
-                        origin + ImVec2(global_position_x + position_x + width, position_y + height) - m_composition_camera,
-                        ui::COLORS[m_ui.colors.at(voice)].second,
-                        ROUNDING
-                    );
+                if (voice == m_voice) {
+                    continue;
                 }
+
+                composition_notes(list, origin, voice, notes, global_position_x, ROUNDING);
+            }
+
+            // Always draw the selected voice last
+            if (auto voice {measure->voices.find(m_voice)}; voice != measure->voices.end()) {
+                composition_notes(list, origin, voice->first, voice->second, global_position_x, ROUNDING);
             }
 
             for (const SelectedNote& selected_note : m_composition_selected_notes) {
@@ -945,6 +940,24 @@ namespace application {
         }
     }
 
+    void Application::composition_notes(ImDrawList* list, ImVec2 origin, syn::Voice voice, const std::multiset<seq::Note>& notes, float global_position_x, float rounding) const {
+        for (const seq::Note& note : notes) {
+            const ImVec4 rect {note_rectangle(note)};
+
+            const float position_x {rect.x};
+            const float position_y {rect.y};
+            const float width {rect.z};
+            const float height {rect.w};
+
+            list->AddRectFilled(
+                origin + ImVec2(global_position_x + position_x, position_y) - m_composition_camera,
+                origin + ImVec2(global_position_x + position_x + width, position_y + height) - m_composition_camera,
+                ui::COLORS[m_ui.colors.at(voice)].second,
+                rounding
+            );
+        }
+    }
+
     void Application::composition_cursor(ImDrawList* list, ImVec2 origin) const {
         const ImGuiStyle& style {ImGui::GetStyle()};
         const ImColor& COLOR {style.Colors[ImGuiCol_PlotHistogramHovered]};
@@ -960,8 +973,8 @@ namespace application {
 
     void Application::composition_hover(ImDrawList* list, ImVec2 origin, ImVec2 space, const HoveredNote& hovered_note) const {
         const ImGuiStyle& style {ImGui::GetStyle()};
-        const ImColor COLOR {set_opacity(style.Colors[ImGuiCol_PopupBg], 0.4f)};
-        const ImColor COLOR2 {set_opacity(style.Colors[ImGuiCol_PopupBg], 0.6f)};
+        const ImColor COLOR {color_opacity(style.Colors[ImGuiCol_PopupBg], 0.4f)};
+        const ImColor COLOR2 {color_opacity(style.Colors[ImGuiCol_PopupBg], 0.6f)};
 
         switch (m_ui.tool) {
             case ui::ToolMeasure: {
@@ -1054,6 +1067,10 @@ namespace application {
                     delete_measure();
                 }
 
+                if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_D, ImGuiInputFlags_RouteAlways)) {
+                    delete_measure();
+                }
+
                 break;
             case ui::ToolNote:
                 if (ImGui::Shortcut(ImGuiMod_Alt | ImGuiKey_W, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
@@ -1073,6 +1090,10 @@ namespace application {
                 }
 
                 if (ImGui::Shortcut(ImGuiKey_Delete, ImGuiInputFlags_RouteAlways)) {
+                    delete_notes();
+                }
+
+                if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_D, ImGuiInputFlags_RouteAlways)) {
                     delete_notes();
                 }
 
@@ -2087,7 +2108,7 @@ namespace application {
         std::unreachable();
     }
 
-    ImColor Application::set_opacity(ImColor color, float opacity) {
+    ImColor Application::color_opacity(ImColor color, float opacity) {
         color.Value.w = opacity;
         return color;
     }

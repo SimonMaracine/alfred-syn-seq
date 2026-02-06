@@ -95,6 +95,7 @@ namespace application {
         void composition_measures(ImDrawList* list, ImVec2 origin, ImVec2 space) const;
         void composition_measures_labels(ImDrawList* list, ImVec2 origin) const;
         void composition_notes(ImDrawList* list, ImVec2 origin) const;
+        void composition_notes(ImDrawList* list, ImVec2 origin, syn::Voice voice, const std::multiset<seq::Note>& notes, float global_position_x, float rounding) const;
         void composition_cursor(ImDrawList* list, ImVec2 origin) const;
         void composition_hover(ImDrawList* list, ImVec2 origin, ImVec2 space, const HoveredNote& hovered_note) const;
         void shortcuts();
@@ -158,7 +159,7 @@ namespace application {
         static bool note_in_selection(NoteIter note, MeasureIter measure, const std::vector<SelectedNote>& selected_notes);
         static Time elapsed_seconds_to_time(double elapsed_seconds);
         static seq::Value get_value(ui::Value value);
-        static ImColor set_opacity(ImColor color, float opacity);
+        static ImColor color_opacity(ImColor color, float opacity);
         static void composition_save_file_dialog(void* userdata, const char* const* filelist, int filter);
         static void composition_open_file_dialog(void* userdata, const char* const* filelist, int filter);
         static void composition_save(const std::filesystem::path& path, const composition::Composition& composition);
