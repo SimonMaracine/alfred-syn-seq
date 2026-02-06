@@ -691,6 +691,12 @@ namespace application {
         ImGui::EndGroup();
 
         ImGui::SetItemTooltip("Change the note value (1-5)");
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Legato")) {
+            legato_notes();
+        }
     }
 
     void Application::composition() {
@@ -941,6 +947,7 @@ namespace application {
     }
 
     void Application::composition_notes(ImDrawList* list, ImVec2 origin, syn::Voice voice, const std::multiset<seq::Note>& notes, float global_position_x, float rounding) const {
+        int i {};
         for (const seq::Note& note : notes) {
             const ImVec4 rect {note_rectangle(note)};
 
@@ -955,6 +962,17 @@ namespace application {
                 ui::COLORS[m_ui.colors.at(voice)].second,
                 rounding
             );
+
+            char buffer[16] {};
+            sprintf(buffer, "%d", i);
+
+            list->AddText(
+                origin + ImVec2(global_position_x + position_x, position_y) - m_composition_camera,
+                IM_COL32_WHITE,
+                buffer
+            );
+
+            i++;
         }
     }
 
@@ -1606,6 +1624,26 @@ namespace application {
         modify_composition();
     }
 
+    void Application::legato_notes() {
+        if (m_composition_selected_notes.empty()) {
+            return;
+        }
+
+        for (SelectedNote& selected_note : m_composition_selected_notes) {
+            seq::Note note {selected_note.copy_note()};
+            note.legato = !note.legato;
+
+            if (note.legato && !check_note_has_next(selected_note.note(), selected_note.measure()->voices.at(m_voice))) {
+                note.legato = false;
+                LOG_DEBUG("Note cannot have legato");
+            }
+
+            readd_note(selected_note, note);
+        }
+
+        modify_composition();
+    }
+
     void Application::shift_notes_up() {
         if (m_composition_selected_notes.empty()) {
             return;
@@ -1625,7 +1663,7 @@ namespace application {
                             continue;
                         }
 
-                        seq::Note shifted_note {*selected_note.note()};
+                        seq::Note shifted_note {selected_note.copy_note()};
                         shifted_note.id++;
 
                         if (notes_overlapping(*note, shifted_note)) {
@@ -1642,11 +1680,17 @@ namespace application {
         }
 
         for (SelectedNote& selected_note : m_composition_selected_notes) {
-            seq::Note note {*selected_note.note()};
+            seq::Note note {selected_note.copy_note()};
             note.id++;
 
-            selected_note.measure()->voices.at(m_voice).erase(selected_note.note());
-            selected_note.note(selected_note.measure()->voices.at(m_voice).insert(note));
+            note.legato = false;
+            const bool reset_previous {check_note_has_previous(selected_note.note(), selected_note.measure()->voices.at(m_voice))};
+
+            readd_note(selected_note, note);
+
+            if (reset_previous) {
+                reset_previous_note_legato(selected_note);
+            }
         }
 
         modify_composition();
@@ -1671,7 +1715,7 @@ namespace application {
                             continue;
                         }
 
-                        seq::Note shifted_note {*selected_note.note()};
+                        seq::Note shifted_note {selected_note.copy_note()};
                         shifted_note.id--;
 
                         if (notes_overlapping(*note, shifted_note)) {
@@ -1688,11 +1732,17 @@ namespace application {
         }
 
         for (SelectedNote& selected_note : m_composition_selected_notes) {
-            seq::Note note {*selected_note.note()};
+            seq::Note note {selected_note.copy_note()};
             note.id--;
 
-            selected_note.measure()->voices.at(m_voice).erase(selected_note.note());
-            selected_note.note(selected_note.measure()->voices.at(m_voice).insert(note));
+            note.legato = false;
+            const bool reset_previous {check_note_has_previous(selected_note.note(), selected_note.measure()->voices.at(m_voice))};
+
+            readd_note(selected_note, note);
+
+            if (reset_previous) {
+                reset_previous_note_legato(selected_note);
+            }
         }
 
         modify_composition();
@@ -1717,7 +1767,7 @@ namespace application {
                             continue;
                         }
 
-                        seq::Note shifted_note {*selected_note.note()};
+                        seq::Note shifted_note {selected_note.copy_note()};
                         shifted_note.position--;
 
                         if (notes_overlapping(*note, shifted_note)) {
@@ -1734,11 +1784,13 @@ namespace application {
         }
 
         for (SelectedNote& selected_note : m_composition_selected_notes) {
-            seq::Note note {*selected_note.note()};
+            seq::Note note {selected_note.copy_note()};
             note.position--;
 
-            selected_note.measure()->voices.at(m_voice).erase(selected_note.note());
-            selected_note.note(selected_note.measure()->voices.at(m_voice).insert(note));
+            // No need to check previous
+            note.legato = false;
+
+            readd_note(selected_note, note);
         }
 
         modify_composition();
@@ -1763,7 +1815,7 @@ namespace application {
                             continue;
                         }
 
-                        seq::Note shifted_note {*selected_note.note()};
+                        seq::Note shifted_note {selected_note.copy_note()};
                         shifted_note.position++;
 
                         if (notes_overlapping(*note, shifted_note)) {
@@ -1780,11 +1832,17 @@ namespace application {
         }
 
         for (SelectedNote& selected_note : m_composition_selected_notes) {
-            seq::Note note {*selected_note.note()};
+            seq::Note note {selected_note.copy_note()};
             note.position++;
 
-            selected_note.measure()->voices.at(m_voice).erase(selected_note.note());
-            selected_note.note(selected_note.measure()->voices.at(m_voice).insert(note));
+            note.legato = false;
+            const bool reset_previous {check_note_has_previous(selected_note.note(), selected_note.measure()->voices.at(m_voice))};
+
+            readd_note(selected_note, note);
+
+            if (reset_previous) {
+                reset_previous_note_legato(selected_note);
+            }
         }
 
         modify_composition();
@@ -1918,6 +1976,18 @@ namespace application {
         return instruments;
     }
 
+    void Application::readd_note(SelectedNote& selected_note, const seq::Note& note) const {
+        selected_note.measure()->voices.at(m_voice).erase(selected_note.note());
+        selected_note.note(selected_note.measure()->voices.at(m_voice).insert(note));
+    }
+
+    void Application::reset_previous_note_legato(SelectedNote& selected_note) const {
+        seq::Note note {*std::prev(selected_note.note())};
+        note.legato = false;
+
+        readd_note(selected_note, note);
+    }
+
     bool Application::keyboard_active() {
         return !imgui::want_capture_keyboard() && !ImGui::IsKeyDown(ImGuiMod_Ctrl) && !ImGui::IsKeyDown(ImGuiMod_Alt) && !ImGui::IsKeyDown(ImGuiMod_Shift);
     }
@@ -1932,7 +2002,7 @@ namespace application {
         const float width {float(seq::STEP / note.value) * ui::rem(STEP_SIZE.x)};
         const float height {ui::rem(STEP_SIZE.y)};
 
-        return ImVec4(x, y + 1.0f, width, height - 2.0f);
+        return ImVec4(x + 1.0f, y + 1.0f, width - 2.0f, height - 2.0f);
     }
 
     const char* Application::measure_label(char* buffer, long number) {
@@ -2062,18 +2132,38 @@ namespace application {
         const auto note2_left {note2.position};
         const auto note2_right {note2.position + seq::STEP / note2.value};
 
-        return (
-            note1_left > note2_left && note1_left < note2_right ||
+        return note1_left > note2_left && note1_left < note2_right ||
             note1_right > note2_left && note1_right < note2_right ||
             note2_left > note1_left && note2_left < note1_right ||
-            note2_right > note1_left && note2_right < note1_right
-        );
+            note2_right > note1_left && note2_right < note1_right;
     }
 
     bool Application::note_in_selection(NoteIter note, MeasureIter measure, const std::vector<SelectedNote>& selected_notes) {
         return std::ranges::find_if(selected_notes, [note, measure](const auto& n) {
             return measure == n.measure() && note == n.note();
         }) != selected_notes.end();
+    }
+
+    bool Application::check_note_has_next(NoteIter note, const std::multiset<seq::Note>& notes) {
+        if (note != notes.end()) {
+            const auto next_note {std::next(note)};
+
+            if (next_note != notes.end()) {
+                return next_note->id == note->id && next_note->position == note->position + seq::STEP / note->value;
+            }
+        }
+
+        return false;
+    }
+
+    bool Application::check_note_has_previous(NoteIter note, const std::multiset<seq::Note>& notes) {
+        if (note != notes.begin()) {
+            const auto previous_note {std::prev(note)};
+
+            return previous_note->id == note->id && previous_note->position + seq::STEP / previous_note->value == note->position;
+        }
+
+        return false;
     }
 
     Time Application::elapsed_seconds_to_time(double elapsed_seconds) {

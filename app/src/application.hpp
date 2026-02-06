@@ -30,6 +30,7 @@ namespace application {
         MeasureIter measure() const { return m_measure; }
         NoteIter note() const { return m_note; }
         void note(NoteIter note) { m_note = note; }
+        seq::Note copy_note() const { return *m_note; }
     private:
         MeasureIter m_measure;
         NoteIter m_note;
@@ -123,6 +124,7 @@ namespace application {
         bool select_note(const HoveredNote& hovered_note, NoteIter& note) const;
         void do_with_note(const HoveredNote& hovered_note);
         void delete_notes();
+        void legato_notes();
         void shift_notes_up();
         void shift_notes_down();
         void shift_notes_left();
@@ -140,6 +142,8 @@ namespace application {
         static void set_scale(ui::Scale scale);
         ImVec2 composition_mouse_position(ImVec2 origin) const;
         std::flat_set<syn::Voice> instruments_in_project() const;
+        void readd_note(SelectedNote& selected_note, const seq::Note& note) const;
+        void reset_previous_note_legato(SelectedNote& selected_note) const;
 
         static bool keyboard_active();
         static float note_height(const seq::Note& note);
@@ -156,6 +160,8 @@ namespace application {
         static bool check_note_left_limit(const seq::Note& note);
         static bool check_note_right_limit(const seq::Note& note, const seq::Measure& measure);
         static bool notes_overlapping(const seq::Note& note1, const seq::Note& note2);
+        static bool check_note_has_next(NoteIter note, const std::multiset<seq::Note>& notes);
+        static bool check_note_has_previous(NoteIter note, const std::multiset<seq::Note>& notes);
         static bool note_in_selection(NoteIter note, MeasureIter measure, const std::vector<SelectedNote>& selected_notes);
         static Time elapsed_seconds_to_time(double elapsed_seconds);
         static seq::Value get_value(ui::Value value);

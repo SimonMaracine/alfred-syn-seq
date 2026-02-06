@@ -71,14 +71,16 @@ namespace seq {
         syn::Id id {};
         Value value {};
         unsigned int position {};  // Local, inside a measure
+        bool legato {};
 
+        // Order the notes in the measure bottom to top, left to right
         bool operator<(const Note& other) const {
-            if (position < other.position) {
+            if (id < other.id) {
                 return true;
             }
 
-            if (position == other.position) {
-                return id < other.id;
+            if (id == other.id) {
+                return position < other.position;
             }
 
             return false;
@@ -88,10 +90,10 @@ namespace seq {
     struct Measure {
         Tempo tempo;
         TimeSignature time_signature;
-        std::unordered_map<syn::Voice, std::multiset<Note>> voices;  // TODO erase empty voices when serializing
 
-        // Notes must always be sorted
+        // Notes must always be sorted in a very specific way
         // Use a normal set, because the iterators need to stay stable
+        std::unordered_map<syn::Voice, std::multiset<Note>> voices;  // TODO erase empty voices when serializing
     };
 
     struct Composition {
