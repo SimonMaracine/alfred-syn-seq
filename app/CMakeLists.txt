@@ -6,7 +6,7 @@ include(cmake/imgui.cmake)
 function(add_resource variable_name file_name file_type)
     add_custom_command(
         OUTPUT "include/${file_name}.hpp"
-        COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate.py"
+        COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/scripts/embed.py"
         ARGS "${variable_name}" "${CMAKE_CURRENT_SOURCE_DIR}/res/${file_name}" "${file_type}"
         DEPENDS "res/${file_name}"
         VERBATIM
