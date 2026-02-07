@@ -67,6 +67,13 @@ namespace application {
         int deciseconds {};
     };
 
+    struct Draw {
+        ImDrawList* list {};
+        ImVec2 origin;
+        ImVec2 space;
+        ImVec2 clamped_space;
+    };
+
     class Application : public video::Video {
     public:
         void on_start() override;
@@ -83,7 +90,7 @@ namespace application {
         void main_menu_bar_composition();
         void main_menu_bar_help();
         void keyboard() const;
-        void keyboard_key(ImDrawList* list, ImVec2 origin, char key, float x, float y, int scancode) const;
+        void keyboard_key(const Draw& draw, char key, float x, float y, int scancode) const;
         void instruments();
         void output();
         void playback();
@@ -91,14 +98,14 @@ namespace application {
         void tools_measure();
         void tools_note();
         void composition();
-        void composition_left(ImDrawList* list, ImVec2 origin) const;
-        void composition_octaves(ImDrawList* list, ImVec2 origin, ImVec2 space) const;
-        void composition_measures(ImDrawList* list, ImVec2 origin, ImVec2 space) const;
-        void composition_measures_labels(ImDrawList* list, ImVec2 origin) const;
-        void composition_notes(ImDrawList* list, ImVec2 origin) const;
-        void composition_notes(ImDrawList* list, ImVec2 origin, syn::Voice voice, const std::multiset<seq::Note>& notes, float global_position_x, float rounding) const;
-        void composition_cursor(ImDrawList* list, ImVec2 origin) const;
-        void composition_hover(ImDrawList* list, ImVec2 origin, ImVec2 space, const HoveredNote& hovered_note) const;
+        void composition_left(const Draw& draw) const;
+        void composition_octaves(const Draw& draw) const;
+        void composition_measures(const Draw& draw) const;
+        void composition_measures_labels(const Draw& draw) const;
+        void composition_notes(const Draw& draw) const;
+        void composition_notes(const Draw& draw, syn::Voice voice, const std::multiset<seq::Note>& notes, float global_position_x, float rounding) const;
+        void composition_cursor(const Draw& draw) const;
+        void composition_hover(const Draw& draw, const HoveredNote& hovered_note) const;
         void shortcuts();
         bool tempo();
         bool time_signature();
@@ -140,8 +147,12 @@ namespace application {
         void set_title_composition_saved() const;
         static void set_color_scheme(ui::ColorScheme color_scheme);
         static void set_scale(ui::Scale scale);
+        float composition_width() const;
+        ImVec2 composition_space(ImVec2 space) const;
         ImVec2 composition_mouse_position(ImVec2 origin) const;
         std::flat_set<syn::Voice> instruments_in_project() const;
+        bool point_x_in_camera_view(float point_x, float space_x) const;
+        bool point_y_in_camera_view(float point_y, float space_y) const;
         void readd_note(SelectedNote& selected_note, const seq::Note& note) const;
         void reset_previous_note_legato(SelectedNote& selected_note) const;
 
@@ -165,7 +176,8 @@ namespace application {
         static bool note_in_selection(NoteIter note, MeasureIter measure, const std::vector<SelectedNote>& selected_notes);
         static Time elapsed_seconds_to_time(double elapsed_seconds);
         static seq::Value get_value(ui::Value value);
-        static ImColor color_opacity(ImColor color, float opacity);
+        static const ImVec4& color(ImGuiCol color);
+        static ImColor color_opacity(ImGuiCol color, float opacity);
         static void composition_save_file_dialog(void* userdata, const char* const* filelist, int filter);
         static void composition_open_file_dialog(void* userdata, const char* const* filelist, int filter);
         static void composition_save(const std::filesystem::path& path, const composition::Composition& composition);

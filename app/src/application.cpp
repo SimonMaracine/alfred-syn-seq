@@ -319,26 +319,25 @@ namespace application {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
         if (ImGui::Begin("Keyboard", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse)) {
-            ImDrawList* list {ImGui::GetWindowDrawList()};
-            const ImVec2 origin {ImGui::GetCursorScreenPos()};
+            const Draw draw {ImGui::GetWindowDrawList(), ImGui::GetCursorScreenPos(), {}, {}};
 
-            keyboard_key(list, origin, 'S', 1.0f, 0.0f, SDL_SCANCODE_S);
-            keyboard_key(list, origin, 'F', 5.0f, 0.0f, SDL_SCANCODE_F);
-            keyboard_key(list, origin, 'G', 7.0f, 0.0f, SDL_SCANCODE_G);
-            keyboard_key(list, origin, 'J', 11.0f, 0.0f, SDL_SCANCODE_J);
-            keyboard_key(list, origin, 'K', 13.0f, 0.0f, SDL_SCANCODE_K);
-            keyboard_key(list, origin, 'L', 15.0f, 0.0f, SDL_SCANCODE_L);
+            keyboard_key(draw, 'S', 1.0f, 0.0f, SDL_SCANCODE_S);
+            keyboard_key(draw, 'F', 5.0f, 0.0f, SDL_SCANCODE_F);
+            keyboard_key(draw, 'G', 7.0f, 0.0f, SDL_SCANCODE_G);
+            keyboard_key(draw, 'J', 11.0f, 0.0f, SDL_SCANCODE_J);
+            keyboard_key(draw, 'K', 13.0f, 0.0f, SDL_SCANCODE_K);
+            keyboard_key(draw, 'L', 15.0f, 0.0f, SDL_SCANCODE_L);
 
-            keyboard_key(list, origin, 'Z', 0.0f, 2.0f, SDL_SCANCODE_Z);
-            keyboard_key(list, origin, 'X', 2.0f, 2.0f, SDL_SCANCODE_X);
-            keyboard_key(list, origin, 'C', 4.0f, 2.0f, SDL_SCANCODE_C);
-            keyboard_key(list, origin, 'V', 6.0f, 2.0f, SDL_SCANCODE_V);
-            keyboard_key(list, origin, 'B', 8.0f, 2.0f, SDL_SCANCODE_B);
-            keyboard_key(list, origin, 'N', 10.0f, 2.0f, SDL_SCANCODE_N);
-            keyboard_key(list, origin, 'M', 12.0f, 2.0f, SDL_SCANCODE_M);
-            keyboard_key(list, origin, ',', 14.0f, 2.0f, SDL_SCANCODE_COMMA);
-            keyboard_key(list, origin, '.', 16.0f, 2.0f, SDL_SCANCODE_PERIOD);
-            keyboard_key(list, origin, '/', 18.0f, 2.0f, SDL_SCANCODE_SLASH);
+            keyboard_key(draw, 'Z', 0.0f, 2.0f, SDL_SCANCODE_Z);
+            keyboard_key(draw, 'X', 2.0f, 2.0f, SDL_SCANCODE_X);
+            keyboard_key(draw, 'C', 4.0f, 2.0f, SDL_SCANCODE_C);
+            keyboard_key(draw, 'V', 6.0f, 2.0f, SDL_SCANCODE_V);
+            keyboard_key(draw, 'B', 8.0f, 2.0f, SDL_SCANCODE_B);
+            keyboard_key(draw, 'N', 10.0f, 2.0f, SDL_SCANCODE_N);
+            keyboard_key(draw, 'M', 12.0f, 2.0f, SDL_SCANCODE_M);
+            keyboard_key(draw, ',', 14.0f, 2.0f, SDL_SCANCODE_COMMA);
+            keyboard_key(draw, '.', 16.0f, 2.0f, SDL_SCANCODE_PERIOD);
+            keyboard_key(draw, '/', 18.0f, 2.0f, SDL_SCANCODE_SLASH);
         }
 
         ImGui::End();
@@ -346,17 +345,16 @@ namespace application {
         ImGui::PopStyleVar();
     }
 
-    void Application::keyboard_key(ImDrawList* list, ImVec2 origin, char key, float x, float y, int scancode) const {
+    void Application::keyboard_key(const Draw& draw, char key, float x, float y, int scancode) const {
         static constexpr float CELL {30.0f / ui::FONT_SIZE};
         static constexpr float PADDING {2.0f / ui::FONT_SIZE};
         static constexpr float TEXT_OFFSET {(2.0f * CELL - 1.0f) / 2.0f};
         static constexpr float WIDTH {2.0f * 10.0f * CELL};
         static constexpr float HEIGHT {2.0f * 2.0f * CELL};
 
-        const ImGuiStyle& style {ImGui::GetStyle()};
-        const ImColor& COLOR_TEXT {style.Colors[ImGuiCol_Text]};
-        const ImColor& COLOR_INACTIVE {style.Colors[ImGuiCol_TableBorderLight]};
-        const ImColor& COLOR_ACTIVE {style.Colors[ImGuiCol_PlotHistogramHovered]};
+        const ImColor& COLOR_TEXT {color(ImGuiCol_Text)};
+        const ImColor& COLOR_INACTIVE {color(ImGuiCol_TableBorderLight)};
+        const ImColor& COLOR_ACTIVE {color(ImGuiCol_PlotHistogramHovered)};
 
         const ImVec2 space {ImGui::GetContentRegionAvail()};
 
@@ -370,14 +368,14 @@ namespace application {
             color = COLOR_INACTIVE;
         }
 
-        list->AddRectFilled(
-            base + origin + position + ui::rem(ImVec2(PADDING, PADDING)),
-            base + origin + position + ImVec2(2.0f * ui::rem(CELL), 2.0f * ui::rem(CELL)) - ui::rem(ImVec2(PADDING, PADDING)),
+        draw.list->AddRectFilled(
+            base + draw.origin + position + ui::rem(ImVec2(PADDING, PADDING)),
+            base + draw.origin + position + ImVec2(2.0f * ui::rem(CELL), 2.0f * ui::rem(CELL)) - ui::rem(ImVec2(PADDING, PADDING)),
             color,
             12.0f
         );
 
-        list->AddText(base + origin + position + ui::rem(ImVec2(TEXT_OFFSET, TEXT_OFFSET)), COLOR_TEXT, label);
+        draw.list->AddText(base + draw.origin + position + ui::rem(ImVec2(TEXT_OFFSET, TEXT_OFFSET)), COLOR_TEXT, label);
     }
 
     void Application::instruments() {
@@ -477,7 +475,7 @@ namespace application {
         static constexpr ImVec2 UV0 {0.0f, 0.0f};
         static constexpr ImVec2 UV1 {1.0f, 1.0f};
         static constexpr ImVec4 COLOR_BACKGROUND {0.0f, 0.0f, 0.0f, 0.0f};
-        const ImVec4& COLOR_FOREGROUND {ImGui::GetStyle().Colors[ImGuiCol_Text]};
+        const ImVec4& COLOR_FOREGROUND {color(ImGuiCol_Text)};
 
         if (ImGui::Begin("Playback", nullptr, ImGuiWindowFlags_NoResize)) {
             if (ImGui::ImageButton("Rewind", reinterpret_cast<ImTextureID>(m_ui.texture_rewind.get()), SIZE, UV0, UV1, COLOR_BACKGROUND, COLOR_FOREGROUND)) {
@@ -522,8 +520,7 @@ namespace application {
             if (m_player.is_in_time()) {
                 ImGui::Text("%02d:%02d.%d", time.minutes, time.seconds, time.deciseconds);
             } else {
-                const ImGuiStyle& style {ImGui::GetStyle()};
-                const ImColor& COLOR {style.Colors[ImGuiCol_PlotLinesHovered]};
+                const ImColor& COLOR {color(ImGuiCol_PlotLinesHovered)};
 
                 ImGui::TextColored(COLOR, "%02d:%02d.%d", time.minutes, time.seconds, time.deciseconds);
             }
@@ -703,9 +700,10 @@ namespace application {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
         if (ImGui::Begin("Composition", nullptr, ImGuiWindowFlags_NoResize)) {
-            ImDrawList* list {ImGui::GetWindowDrawList()};
             const ImVec2 origin {ImGui::GetCursorScreenPos()};
             const ImVec2 space {ImGui::GetContentRegionAvail()};
+            const ImVec2 clamped_space {composition_space(space)};
+            const Draw draw {ImGui::GetWindowDrawList(), origin, space, clamped_space};
 
             (void) ImGui::InvisibleButton("Canvas", space, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight);
 
@@ -715,18 +713,17 @@ namespace application {
 
             if (!ImGui::IsKeyDown(ImGuiMod_Alt)) {
                 if (HoveredNote hovered_note; item_hovered && allow_edit && hover_note(composition_mouse_position(origin), hovered_note)) {
-                    composition_hover(list, origin, space, hovered_note);
+                    composition_hover(draw, hovered_note);
                 }
             }
 
             composition_camera(item_active, item_hovered, space);
-
-            composition_measures(list, origin, space);
-            composition_octaves(list, origin, space);
-            composition_cursor(list, origin);
-            composition_notes(list, origin);
-            composition_measures_labels(list, origin);
-            composition_left(list, origin);
+            composition_measures(draw);
+            composition_octaves(draw);
+            composition_cursor(draw);
+            composition_notes(draw);
+            composition_measures_labels(draw);
+            composition_left(draw);
 
             if (item_hovered && allow_edit) {
                 if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
@@ -744,23 +741,22 @@ namespace application {
         ImGui::PopStyleVar();
     }
 
-    void Application::composition_left(ImDrawList* list, ImVec2 origin) const {
+    void Application::composition_left(const Draw& draw) const {
         static constexpr ImVec2 CELL {COMPOSITION_LEFT, STEP_SIZE.y};
         static constexpr ImVec2 TEXT_OFFSET {(CELL.x - 2.0f) / 2.0f, (CELL.y - 1.0f) / 2.0f};
 
-        const ImGuiStyle& style {ImGui::GetStyle()};
-        const ImColor& COLOR_FOREGROUND {style.Colors[ImGuiCol_Text]};
-        const ImColor COLOR_BACKGROUND {color_opacity(style.Colors[ImGuiCol_WindowBg], 1.0f)};
+        const ImColor& COLOR_FOREGROUND {color(ImGuiCol_Text)};
+        const ImColor COLOR_BACKGROUND {color_opacity(ImGuiCol_WindowBg, 1.0f)};
 
-        list->AddRectFilled(
-            origin + ImVec2(0.0f, 0.0f) - ImVec2(0.0f, m_composition_camera.y),
-            origin + ImVec2(ui::rem(COMPOSITION_LEFT), ui::rem(COMPOSITION_HEIGHT)) - ImVec2(0.0f, m_composition_camera.y),
+        draw.list->AddRectFilled(
+            draw.origin + ImVec2(0.0f, 0.0f),
+            draw.origin + ImVec2(ui::rem(COMPOSITION_LEFT), draw.clamped_space.y),
             COLOR_BACKGROUND
         );
 
-        list->AddLine(
-            origin + ImVec2(ui::rem(COMPOSITION_LEFT), 0.0f) - ImVec2(0.0f, m_composition_camera.y),
-            origin + ImVec2(ui::rem(COMPOSITION_LEFT), ui::rem(COMPOSITION_HEIGHT)) - ImVec2(0.0f, m_composition_camera.y),
+        draw.list->AddLine(
+            draw.origin + ImVec2(ui::rem(COMPOSITION_LEFT), 0.0f),
+            draw.origin + ImVec2(ui::rem(COMPOSITION_LEFT), draw.clamped_space.y),
             COLOR_FOREGROUND
         );
 
@@ -772,21 +768,23 @@ namespace application {
 
         for (int j {}; j < syn::keyboard::OCTAVES; j++) {
             for (std::size_t i {}; i < std::size(NOTES_OCTAVES); i++) {
-                char buffer[4] {};
-                std::strcpy(buffer, NOTES_OCTAVES[i]);
-                buffer[1] = char(octave + 48);
+                if (point_y_in_camera_view(position_y + ui::rem(STEP_SIZE.y), draw.space.y + ui::rem(STEP_SIZE.y))) {
+                    char buffer[4] {};
+                    std::strcpy(buffer, NOTES_OCTAVES[i]);
+                    buffer[1] = char(octave + 48);
 
-                list->AddText(
-                    origin + ImVec2(0.0f, position_y) + ui::rem(TEXT_OFFSET) - ImVec2(0.0f, m_composition_camera.y),
-                    COLOR_FOREGROUND,
-                    buffer
-                );
+                    draw.list->AddText(
+                        draw.origin + ImVec2(0.0f, position_y) + ui::rem(TEXT_OFFSET) - ImVec2(0.0f, m_composition_camera.y),
+                        COLOR_FOREGROUND,
+                        buffer
+                    );
 
-                list->AddLine(
-                    origin + ImVec2(0.0f, position_y + ui::rem(STEP_SIZE.y)) - ImVec2(0.0f, m_composition_camera.y),
-                    origin + ImVec2(ui::rem(COMPOSITION_LEFT), position_y + ui::rem(STEP_SIZE.y)) - ImVec2(0.0f, m_composition_camera.y),
-                    COLOR_FOREGROUND
-                );
+                    draw.list->AddLine(
+                        draw.origin + ImVec2(0.0f, position_y + ui::rem(STEP_SIZE.y)) - ImVec2(0.0f, m_composition_camera.y),
+                        draw.origin + ImVec2(ui::rem(COMPOSITION_LEFT), position_y + ui::rem(STEP_SIZE.y)) - ImVec2(0.0f, m_composition_camera.y),
+                        COLOR_FOREGROUND
+                    );
+                }
 
                 position_y += ui::rem(STEP_SIZE.y);
                 octave -= i == 0 ? 1 : 0;
@@ -794,55 +792,62 @@ namespace application {
         }
 
         for (std::size_t i {}; i < std::size(NOTES_EXTRA); i++) {
-            char buffer[4] {};
-            std::strcpy(buffer, NOTES_EXTRA[i]);
-            buffer[1] = char(octave + 48);
+            if (point_y_in_camera_view(position_y + ui::rem(STEP_SIZE.y), draw.space.y + ui::rem(STEP_SIZE.y))) {
+                char buffer[4] {};
+                std::strcpy(buffer, NOTES_EXTRA[i]);
+                buffer[1] = char(octave + 48);
 
-            list->AddText(
-                origin + ImVec2(0.0f, position_y) + ui::rem(TEXT_OFFSET) - ImVec2(0.0f, m_composition_camera.y),
-                COLOR_FOREGROUND,
-                buffer
-            );
+                draw.list->AddText(
+                    draw.origin + ImVec2(0.0f, position_y) + ui::rem(TEXT_OFFSET) - ImVec2(0.0f, m_composition_camera.y),
+                    COLOR_FOREGROUND,
+                    buffer
+                );
 
-            list->AddLine(
-                origin + ImVec2(0.0f, position_y + ui::rem(STEP_SIZE.y)) - ImVec2(0.0f, m_composition_camera.y),
-                origin + ImVec2(ui::rem(COMPOSITION_LEFT), position_y + ui::rem(STEP_SIZE.y)) - ImVec2(0.0f, m_composition_camera.y),
-                COLOR_FOREGROUND
-            );
+                draw.list->AddLine(
+                    draw.origin + ImVec2(0.0f, position_y + ui::rem(STEP_SIZE.y)) - ImVec2(0.0f, m_composition_camera.y),
+                    draw.origin + ImVec2(ui::rem(COMPOSITION_LEFT), position_y + ui::rem(STEP_SIZE.y)) - ImVec2(0.0f, m_composition_camera.y),
+                    COLOR_FOREGROUND
+                );
+            }
 
             position_y += ui::rem(STEP_SIZE.y);
             octave -= i == 0 ? 1 : 0;
         }
     }
 
-    void Application::composition_octaves(ImDrawList* list, ImVec2 origin, ImVec2 space) const {
-        const ImGuiStyle& style {ImGui::GetStyle()};
-        const ImColor COLOR {color_opacity(style.Colors[ImGuiCol_TextDisabled], 0.7f)};
+    void Application::composition_octaves(const Draw& draw) const {
+        const ImColor COLOR {color_opacity(ImGuiCol_TextDisabled, 0.7f)};
 
         float position_y {float(syn::keyboard::EXTRA) * ui::rem(STEP_SIZE.y)};
 
-        list->AddLine(
-            origin + ImVec2(0.0f, position_y) - ImVec2(0.0f, m_composition_camera.y),
-            origin + ImVec2(space.x, position_y) - ImVec2(0.0f, m_composition_camera.y),
-            COLOR
-        );
+        if (point_y_in_camera_view(position_y, draw.space.y)) {
+            draw.list->AddLine(
+                draw.origin + ImVec2(ui::rem(COMPOSITION_LEFT), position_y) - ImVec2(0.0f, m_composition_camera.y),
+                draw.origin + ImVec2(ui::rem(COMPOSITION_LEFT) + draw.clamped_space.x, position_y) - ImVec2(0.0f, m_composition_camera.y),
+                COLOR
+            );
+        }
 
-        for (int i {1}; i < syn::keyboard::OCTAVES; i++) {
+        // Draw one additional line
+        for (int i {1}; i <= syn::keyboard::OCTAVES; i++) {
             position_y += 12.0f * ui::rem(STEP_SIZE.y);
 
-            list->AddLine(
-                origin + ImVec2(0.0f, position_y) - ImVec2(0.0f, m_composition_camera.y),
-                origin + ImVec2(space.x, position_y) - ImVec2(0.0f, m_composition_camera.y),
+            if (!point_y_in_camera_view(position_y, draw.space.y)) {
+                continue;
+            }
+
+            draw.list->AddLine(
+                draw.origin + ImVec2(ui::rem(COMPOSITION_LEFT), position_y) - ImVec2(0.0f, m_composition_camera.y),
+                draw.origin + ImVec2(ui::rem(COMPOSITION_LEFT) + draw.clamped_space.x, position_y) - ImVec2(0.0f, m_composition_camera.y),
                 COLOR
             );
         }
     }
 
-    void Application::composition_measures(ImDrawList* list, ImVec2 origin, ImVec2 space) const {
-        const ImGuiStyle& style {ImGui::GetStyle()};
-        const ImColor& COLOR_FOREGROUND {style.Colors[ImGuiCol_Text]};
-        const ImColor COLOR_FOREGROUND2 {color_opacity(style.Colors[ImGuiCol_TextDisabled], 0.7f)};
-        const ImColor COLOR_SELECTION {color_opacity(style.Colors[ImGuiCol_TableHeaderBg], 0.3f)};
+    void Application::composition_measures(const Draw& draw) const {
+        const ImColor& COLOR_FOREGROUND {color(ImGuiCol_Text)};
+        const ImColor COLOR_FOREGROUND2 {color_opacity(ImGuiCol_TextDisabled, 0.7f)};
+        const ImColor COLOR_SELECTION {color_opacity(ImGuiCol_TableHeaderBg, 0.3f)};
 
         float position_x {ui::rem(COMPOSITION_LEFT)};
 
@@ -850,104 +855,115 @@ namespace application {
             const float width {float(measure->time_signature.measure_steps()) * ui::rem(STEP_SIZE.x)};
 
             if (measure == m_composition_selected_measure) {
-                list->AddRectFilled(
-                    origin + ImVec2(position_x + 1.0f, 0.0f) - ImVec2(m_composition_camera.x, 0.0f),
-                    origin + ImVec2(position_x + width, space.y) - ImVec2(m_composition_camera.x, 0.0f),
+                draw.list->AddRectFilled(
+                    draw.origin + ImVec2(position_x + 1.0f, 0.0f) - ImVec2(m_composition_camera.x, 0.0f),
+                    draw.origin + ImVec2(position_x + width, draw.clamped_space.y) - ImVec2(m_composition_camera.x, 0.0f),
                     COLOR_SELECTION
                 );
             }
 
-            for (seq::Beats beat {1}; beat < measure->time_signature.beats(); beat++) {
-                const float position_x_beat {
-                    position_x +
-                    float(beat) *
-                    float(seq::STEP / measure->time_signature.value()) * ui::rem(STEP_SIZE.x)
-                };
+            const bool in_view {point_x_in_camera_view(position_x + width, draw.space.x + width)};
 
-                list->AddLine(
-                    origin + ImVec2(position_x_beat, 0.0f) - ImVec2(m_composition_camera.x, 0.0f),
-                    origin + ImVec2(position_x_beat, space.y) - ImVec2(m_composition_camera.x, 0.0f),
-                    COLOR_FOREGROUND2
-                );
-            }
+            if (in_view) {
+                for (seq::Beats beat {1}; beat < measure->time_signature.beats(); beat++) {
+                    const float position_x_beat {
+                        position_x +
+                        float(beat) *
+                        float(seq::STEP / measure->time_signature.value()) * ui::rem(STEP_SIZE.x)
+                    };
 
-            position_x += width;
-
-            list->AddLine(
-                origin + ImVec2(position_x, 0.0f) - ImVec2(m_composition_camera.x, 0.0f),
-                origin + ImVec2(position_x, space.y) - ImVec2(m_composition_camera.x, 0.0f),
-                COLOR_FOREGROUND
-            );
-        }
-    }
-
-    void Application::composition_measures_labels(ImDrawList* list, ImVec2 origin) const {
-        static constexpr ImVec2 TEXT_OFFSET {5.0f / ui::FONT_SIZE, 5.0f / ui::FONT_SIZE};
-
-        const ImGuiStyle& style {ImGui::GetStyle()};
-        const ImColor& COLOR {style.Colors[ImGuiCol_Text]};
-
-        float position_x {ui::rem(COMPOSITION_LEFT)};
-
-        for (const auto& [i, measure] : m_composition.measures | std::views::enumerate) {
-            char buffer[32] {};
-
-            list->AddText(
-                origin + ImVec2(position_x, 0.0f) + ui::rem(TEXT_OFFSET) - ImVec2(m_composition_camera.x, 0.0f),
-                COLOR,
-                measure_label(buffer, i + 1)
-            );
-
-            position_x += float(measure.time_signature.measure_steps()) * ui::rem(STEP_SIZE.x);
-        }
-    }
-
-    void Application::composition_notes(ImDrawList* list, ImVec2 origin) const {
-        static constexpr float ROUNDING {6.0f};
-
-        const ImGuiStyle& style {ImGui::GetStyle()};
-        const ImColor& COLOR {style.Colors[ImGuiCol_Text]};
-
-        float global_position_x {ui::rem(COMPOSITION_LEFT)};
-
-        for (auto measure {m_composition.measures.begin()}; measure != m_composition.measures.end(); measure++) {
-            for (const auto& [voice, notes] : measure->voices) {
-                if (voice == m_voice) {
-                    continue;
-                }
-
-                composition_notes(list, origin, voice, notes, global_position_x, ROUNDING);
-            }
-
-            // Always draw the selected voice last
-            if (auto voice {measure->voices.find(m_voice)}; voice != measure->voices.end()) {
-                composition_notes(list, origin, voice->first, voice->second, global_position_x, ROUNDING);
-            }
-
-            for (const SelectedNote& selected_note : m_composition_selected_notes) {
-                if (selected_note.measure() == measure) {
-                    const ImVec4 rect {note_rectangle(*selected_note.note())};
-
-                    const float position_x {rect.x};
-                    const float position_y {rect.y};
-                    const float width {rect.z};
-                    const float height {rect.w};
-
-                    list->AddRect(
-                        origin + ImVec2(global_position_x + position_x, position_y) - m_composition_camera,
-                        origin + ImVec2(global_position_x + position_x + width, position_y + height) - m_composition_camera,
-                        COLOR,
-                        ROUNDING
+                    draw.list->AddLine(
+                        draw.origin + ImVec2(position_x_beat, 0.0f) - ImVec2(m_composition_camera.x, 0.0f),
+                        draw.origin + ImVec2(position_x_beat, draw.clamped_space.y) - ImVec2(m_composition_camera.x, 0.0f),
+                        COLOR_FOREGROUND2
                     );
                 }
             }
 
-            global_position_x += float(measure->time_signature.measure_steps()) * ui::rem(STEP_SIZE.x);
+            position_x += width;
+
+            if (in_view) {
+                draw.list->AddLine(
+                    draw.origin + ImVec2(position_x, 0.0f) - ImVec2(m_composition_camera.x, 0.0f),
+                    draw.origin + ImVec2(position_x, draw.clamped_space.y) - ImVec2(m_composition_camera.x, 0.0f),
+                    COLOR_FOREGROUND
+                );
+            }
         }
     }
 
-    void Application::composition_notes(ImDrawList* list, ImVec2 origin, syn::Voice voice, const std::multiset<seq::Note>& notes, float global_position_x, float rounding) const {
-        int i {};
+    void Application::composition_measures_labels(const Draw& draw) const {
+        static constexpr ImVec2 TEXT_OFFSET {5.0f / ui::FONT_SIZE, 5.0f / ui::FONT_SIZE};
+
+        const ImColor& COLOR {color(ImGuiCol_Text)};
+
+        float position_x {ui::rem(COMPOSITION_LEFT)};
+
+        for (const auto& [i, measure] : m_composition.measures | std::views::enumerate) {
+            const float width {float(measure.time_signature.measure_steps()) * ui::rem(STEP_SIZE.x)};
+
+            if (point_x_in_camera_view(position_x + width, draw.space.x + width)) {
+                char buffer[32] {};
+
+                draw.list->AddText(
+                    draw.origin + ImVec2(position_x, 0.0f) + ui::rem(TEXT_OFFSET) - ImVec2(m_composition_camera.x, 0.0f),
+                    COLOR,
+                    measure_label(buffer, i + 1)
+                );
+            }
+
+            position_x += width;
+        }
+    }
+
+    void Application::composition_notes(const Draw& draw) const {
+        static constexpr float ROUNDING {6.0f};
+
+        const ImColor& COLOR {color(ImGuiCol_Text)};
+
+        float global_position_x {ui::rem(COMPOSITION_LEFT)};
+
+        for (auto measure {m_composition.measures.begin()}; measure != m_composition.measures.end(); measure++) {
+            const float width {float(measure->time_signature.measure_steps()) * ui::rem(STEP_SIZE.x)};
+
+            if (point_x_in_camera_view(global_position_x + width, draw.space.x + width)) {
+                for (const auto& [voice, notes] : measure->voices) {
+                    if (voice == m_voice) {
+                        continue;
+                    }
+
+                    composition_notes(draw, voice, notes, global_position_x, ROUNDING);
+                }
+
+                // Always draw the selected voice last
+                if (auto voice {measure->voices.find(m_voice)}; voice != measure->voices.end()) {
+                    composition_notes(draw, voice->first, voice->second, global_position_x, ROUNDING);
+                }
+
+                for (const SelectedNote& selected_note : m_composition_selected_notes) {
+                    if (selected_note.measure() == measure) {
+                        const ImVec4 rect {note_rectangle(*selected_note.note())};
+
+                        const float position_x {rect.x};
+                        const float position_y {rect.y};
+                        const float width {rect.z};
+                        const float height {rect.w};
+
+                        draw.list->AddRect(
+                            draw.origin + ImVec2(global_position_x + position_x, position_y) - m_composition_camera,
+                            draw.origin + ImVec2(global_position_x + position_x + width, position_y + height) - m_composition_camera,
+                            COLOR,
+                            ROUNDING
+                        );
+                    }
+                }
+            }
+
+            global_position_x += width;
+        }
+    }
+
+    void Application::composition_notes(const Draw& draw, syn::Voice voice, const std::multiset<seq::Note>& notes, float global_position_x, float rounding) const {
         for (const seq::Note& note : notes) {
             const ImVec4 rect {note_rectangle(note)};
 
@@ -956,52 +972,39 @@ namespace application {
             const float width {rect.z};
             const float height {rect.w};
 
-            list->AddRectFilled(
-                origin + ImVec2(global_position_x + position_x, position_y) - m_composition_camera,
-                origin + ImVec2(global_position_x + position_x + width, position_y + height) - m_composition_camera,
+            draw.list->AddRectFilled(
+                draw.origin + ImVec2(global_position_x + position_x, position_y) - m_composition_camera,
+                draw.origin + ImVec2(global_position_x + position_x + width, position_y + height) - m_composition_camera,
                 ui::COLORS[m_ui.colors.at(voice)].second,
                 rounding
             );
-
-            char buffer[16] {};
-            sprintf(buffer, "%d", i);
-
-            list->AddText(
-                origin + ImVec2(global_position_x + position_x, position_y) - m_composition_camera,
-                IM_COL32_WHITE,
-                buffer
-            );
-
-            i++;
         }
     }
 
-    void Application::composition_cursor(ImDrawList* list, ImVec2 origin) const {
-        const ImGuiStyle& style {ImGui::GetStyle()};
-        const ImColor& COLOR {style.Colors[ImGuiCol_PlotHistogramHovered]};
+    void Application::composition_cursor(const Draw& draw) const {
+        const ImColor& COLOR {color(ImGuiCol_PlotHistogramHovered)};
 
         const float position_x {ui::rem(COMPOSITION_LEFT) + float(m_player.get_position()) * ui::rem(STEP_SIZE.x)};
 
-        list->AddLine(
-            origin + ImVec2(position_x, 0.0f) - m_composition_camera,
-            origin + ImVec2(position_x, ui::rem(COMPOSITION_HEIGHT)) - m_composition_camera,
+        draw.list->AddLine(
+            draw.origin + ImVec2(position_x, 0.0f) - ImVec2(m_composition_camera.x, 0.0f),
+            draw.origin + ImVec2(position_x, draw.clamped_space.y) - ImVec2(m_composition_camera.x, 0.0f),
             COLOR
         );
     }
 
-    void Application::composition_hover(ImDrawList* list, ImVec2 origin, ImVec2 space, const HoveredNote& hovered_note) const {
-        const ImGuiStyle& style {ImGui::GetStyle()};
-        const ImColor COLOR {color_opacity(style.Colors[ImGuiCol_PopupBg], 0.4f)};
-        const ImColor COLOR2 {color_opacity(style.Colors[ImGuiCol_PopupBg], 0.6f)};
+    void Application::composition_hover(const Draw& draw, const HoveredNote& hovered_note) const {
+        const ImColor COLOR {color_opacity(ImGuiCol_PopupBg, 0.4f)};
+        const ImColor COLOR2 {color_opacity(ImGuiCol_PopupBg, 0.6f)};
 
         switch (m_ui.tool) {
             case ui::ToolMeasure: {
                 const float position_x {ui::rem(COMPOSITION_LEFT) + float(hovered_note.measure_position()) * ui::rem(STEP_SIZE.x)};
                 const float width {float(hovered_note.measure()->time_signature.measure_steps()) * ui::rem(STEP_SIZE.x)};
 
-                list->AddRectFilled(
-                    origin + ImVec2(position_x + 1.0f, 0.0f) - ImVec2(m_composition_camera.x, 0.0f),
-                    origin + ImVec2(position_x + width, space.y) - ImVec2(m_composition_camera.x, 0.0f),
+                draw.list->AddRectFilled(
+                    draw.origin + ImVec2(position_x + 1.0f, 0.0f) - ImVec2(m_composition_camera.x, 0.0f),
+                    draw.origin + ImVec2(position_x + width, draw.clamped_space.y) - ImVec2(m_composition_camera.x, 0.0f),
                     COLOR
                 );
 
@@ -1010,17 +1013,17 @@ namespace application {
             case ui::ToolNote: {
                 const float position_y {float(syn::keyboard::NOTES - 1 - hovered_note.id()) * ui::rem(STEP_SIZE.y)};
 
-                list->AddRectFilled(
-                    origin + ImVec2(0.0f, position_y) - ImVec2(0.0f, m_composition_camera.y),
-                    origin + ImVec2(space.x, position_y + ui::rem(STEP_SIZE.y)) - ImVec2(0.0f, m_composition_camera.y),
+                draw.list->AddRectFilled(
+                    draw.origin + ImVec2(0.0f, position_y) - ImVec2(0.0f, m_composition_camera.y),
+                    draw.origin + ImVec2(draw.clamped_space.x, position_y + ui::rem(STEP_SIZE.y)) - ImVec2(0.0f, m_composition_camera.y),
                     COLOR
                 );
 
                 const float position_x {ui::rem(COMPOSITION_LEFT) + float(hovered_note.global_position() / seq::DIV * seq::DIV) * ui::rem(STEP_SIZE.x)};
 
-                list->AddRectFilled(
-                    origin + ImVec2(position_x, position_y) - m_composition_camera,
-                    origin + ImVec2(position_x + ui::rem(STEP_SIZE.x) * float(seq::DIV), position_y + ui::rem(STEP_SIZE.y)) - m_composition_camera,
+                draw.list->AddRectFilled(
+                    draw.origin + ImVec2(position_x, position_y) - m_composition_camera,
+                    draw.origin + ImVec2(position_x + ui::rem(STEP_SIZE.x) * float(seq::DIV), position_y + ui::rem(STEP_SIZE.y)) - m_composition_camera,
                     COLOR2
                 );
 
@@ -1286,7 +1289,7 @@ namespace application {
             case ui::ToolNote:
                 if (m_ui.hovered_note) {
                     if (HoveredNote hovered_note; hover_note(composition_mouse_position(origin), hovered_note)) {
-                        if (hovered_note == *m_ui.hovered_note) {
+                        if (hovered_note == *m_ui.hovered_note) {  // FIXME somehow remove this restriction
                             do_with_note(hovered_note);
                         }
                     }
@@ -1327,14 +1330,10 @@ namespace application {
             m_composition_camera.x += std::floor(cursor_position - space.x / 2.0f);
         }
 
-        const float width {std::accumulate(m_composition.measures.begin(), m_composition.measures.end(), 0.0f, [](const float& total, const auto& measure) {
-            return total + float(measure.time_signature.measure_steps()) * ui::rem(STEP_SIZE.x);
-        })};
-
         m_composition_camera.x = std::max(m_composition_camera.x, 0.0f);
-        m_composition_camera.x = std::min(m_composition_camera.x, width);
+        m_composition_camera.x = std::min(m_composition_camera.x, composition_width());
         m_composition_camera.y = std::max(m_composition_camera.y, 0.0f);
-        m_composition_camera.y = std::min(m_composition_camera.y, ui::rem(COMPOSITION_HEIGHT) - space.y);
+        m_composition_camera.y = std::min(m_composition_camera.y, ui::rem(COMPOSITION_HEIGHT + STEP_SIZE.y) - space.y);
     }
 
     void Application::add_metronome() {
@@ -1493,9 +1492,11 @@ namespace application {
 
         {
             const int index {int(position.y / ui::rem(STEP_SIZE.y))};
-
             const int id {syn::keyboard::NOTES - 1 - index};
-            assert(id >= 0);
+
+            if (id < 0) {
+                return false;  // This can happen now when hovering the mouse below the lowest note
+            }
 
             result_id = syn::Id(id);
         }
@@ -1956,6 +1957,19 @@ namespace application {
         LOG_DEBUG("Changed scale");
     }
 
+    float Application::composition_width() const {
+        return std::accumulate(m_composition.measures.begin(), m_composition.measures.end(), 0.0f, [](const float& total, const auto& measure) {
+            return total + float(measure.time_signature.measure_steps()) * ui::rem(STEP_SIZE.x);
+        });
+    }
+
+    ImVec2 Application::composition_space(ImVec2 space) const {
+        const float max_width {composition_width() - m_composition_camera.x};
+        const float max_height {ui::rem(COMPOSITION_HEIGHT) - m_composition_camera.y};
+
+        return { std::min(space.x, max_width), std::min(space.y, max_height) };
+    }
+
     ImVec2 Application::composition_mouse_position(ImVec2 origin) const {
         return ImGui::GetIO().MousePos - origin - ImVec2(ui::rem(COMPOSITION_LEFT), 0.0f) + m_composition_camera;
     }
@@ -1974,6 +1988,14 @@ namespace application {
         instruments.erase(syn::VoiceMetronome);
 
         return instruments;
+    }
+
+    bool Application::point_x_in_camera_view(float point_x, float space_x) const {
+        return point_x >= m_composition_camera.x && point_x < m_composition_camera.x + space_x;
+    }
+
+    bool Application::point_y_in_camera_view(float point_y, float space_y) const {
+        return point_y >= m_composition_camera.y && point_y < m_composition_camera.y + space_y;
     }
 
     void Application::readd_note(SelectedNote& selected_note, const seq::Note& note) const {
@@ -2198,9 +2220,14 @@ namespace application {
         std::unreachable();
     }
 
-    ImColor Application::color_opacity(ImColor color, float opacity) {
-        color.Value.w = opacity;
-        return color;
+    const ImVec4& Application::color(ImGuiCol color) {
+        return ImGui::GetStyle().Colors[color];
+    }
+
+    ImColor Application::color_opacity(ImGuiCol color, float opacity) {
+        ImColor color_ {ImGui::GetStyle().Colors[color]};
+        color_.Value.w = opacity;
+        return color_;
     }
 
     void Application::composition_save_file_dialog(void* userdata, const char* const* filelist, int) {
