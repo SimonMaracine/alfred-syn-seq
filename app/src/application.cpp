@@ -729,10 +729,6 @@ namespace application {
                 if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
                     composition_mouse_pressed(origin);
                 }
-
-                if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
-                    composition_mouse_released(origin);
-                }
             }
         }
 
@@ -1020,8 +1016,8 @@ namespace application {
                 const float position_y {float(syn::keyboard::NOTES - 1 - hovered_note.id()) * ui::rem(STEP_SIZE.y)};
 
                 draw.list->AddRectFilled(
-                    draw.origin + ImVec2(0.0f, position_y) - ImVec2(0.0f, m_composition_camera.y),
-                    draw.origin + ImVec2(draw.clamped_space.x, position_y + ui::rem(STEP_SIZE.y)) - ImVec2(0.0f, m_composition_camera.y),
+                    draw.origin + ImVec2(ui::rem(COMPOSITION_LEFT), position_y) - ImVec2(0.0f, m_composition_camera.y),
+                    draw.origin + ImVec2(ui::rem(COMPOSITION_LEFT) + draw.clamped_space.x, position_y + ui::rem(STEP_SIZE.y)) - ImVec2(0.0f, m_composition_camera.y),
                     COLOR
                 );
 
@@ -1251,62 +1247,17 @@ namespace application {
         switch (m_ui.tool) {
             case ui::ToolMeasure: {
                 if (MeasureIter hovered_measure; hover_measure(composition_mouse_position(origin), hovered_measure)) {
-                    m_ui.hovered_measure = hovered_measure;
+                    select_measure(hovered_measure);
                 }
-
                 break;
             }
             case ui::ToolNote: {
                 if (HoveredNote hovered_note; hover_note(composition_mouse_position(origin), hovered_note)) {
-                    m_ui.hovered_note = hovered_note;
+                    do_with_note(hovered_note);
                 }
-
                 break;
             }
         }
-
-        m_ui.hovered_composition = true;
-    }
-
-    void Application::composition_mouse_released(ImVec2 origin) {
-        if (ImGui::IsKeyDown(ImGuiMod_Alt)) {
-            if (unsigned int position {}; hover_position(composition_mouse_position(origin), position)) {
-                m_player.seek(position);
-            }
-
-            return;
-        }
-
-        switch (m_ui.tool) {
-            case ui::ToolMeasure:
-                if (m_ui.hovered_measure) {
-                    if (MeasureIter hovered_measure; hover_measure(composition_mouse_position(origin), hovered_measure)) {
-                        if (hovered_measure == *m_ui.hovered_measure) {
-                            select_measure(hovered_measure);
-                        }
-                    }
-                } else if (m_ui.hovered_composition) {
-                    if (MeasureIter hovered_measure; !hover_measure(composition_mouse_position(origin), hovered_measure)) {
-                        m_composition_selected_measure = m_composition.measures.end();
-                    }
-                }
-
-                break;
-            case ui::ToolNote:
-                if (m_ui.hovered_note) {
-                    if (HoveredNote hovered_note; hover_note(composition_mouse_position(origin), hovered_note)) {
-                        if (hovered_note == *m_ui.hovered_note) {  // FIXME somehow remove this restriction
-                            do_with_note(hovered_note);
-                        }
-                    }
-                }
-
-                break;
-        }
-
-        m_ui.hovered_measure = std::nullopt;
-        m_ui.hovered_note = std::nullopt;
-        m_ui.hovered_composition = false;
     }
 
     void Application::composition_camera(bool item_active, bool item_hovered, ImVec2 space) {

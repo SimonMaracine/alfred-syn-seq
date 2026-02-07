@@ -3,7 +3,6 @@
 #include <utility>
 #include <vector>
 #include <unordered_map>
-#include <optional>
 #include <filesystem>
 
 #include <imgui.h>
@@ -49,10 +48,6 @@ namespace application {
 
         unsigned int measure_position() const {
             return m_global_position - m_position;
-        }
-
-        bool operator==(const HoveredNote& other) const {
-            return m_id == other.m_id && m_global_position == other.m_global_position;
         }
     private:
         syn::Id m_id {};
@@ -113,7 +108,6 @@ namespace application {
 
         void keyboard_input(unsigned int key, bool down);
         void composition_mouse_pressed(ImVec2 origin);
-        void composition_mouse_released(ImVec2 origin);
         void composition_camera(bool item_active, bool item_hovered, ImVec2 space);
         void add_metronome();
         void add_metronome(MeasureIter begin, MeasureIter end);
@@ -219,9 +213,6 @@ namespace application {
             image::Texture texture_pause;
             image::Texture texture_rewind;
             std::unordered_map<syn::Voice, ui::ColorIndex> colors;
-            std::optional<MeasureIter> hovered_measure;
-            std::optional<HoveredNote> hovered_note;
-            bool hovered_composition {};
         } m_ui;
 
         bool m_metronome {};
