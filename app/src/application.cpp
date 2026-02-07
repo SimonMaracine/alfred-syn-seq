@@ -944,14 +944,9 @@ namespace application {
                     if (selected_note.measure() == measure) {
                         const ImVec4 rect {note_rectangle(*selected_note.note())};
 
-                        const float position_x {rect.x};
-                        const float position_y {rect.y};
-                        const float width {rect.z};
-                        const float height {rect.w};
-
                         draw.list->AddRect(
-                            draw.origin + ImVec2(global_position_x + position_x, position_y) - m_composition_camera,
-                            draw.origin + ImVec2(global_position_x + position_x + width, position_y + height) - m_composition_camera,
+                            draw.origin + ImVec2(global_position_x + rect.x, rect.y) - m_composition_camera,
+                            draw.origin + ImVec2(global_position_x + rect.x + rect.z, rect.y + rect.w) - m_composition_camera,
                             COLOR,
                             ROUNDING
                         );
@@ -964,20 +959,31 @@ namespace application {
     }
 
     void Application::composition_notes(const Draw& draw, syn::Voice voice, const std::multiset<seq::Note>& notes, float global_position_x, float rounding) const {
-        for (const seq::Note& note : notes) {
-            const ImVec4 rect {note_rectangle(note)};
-
-            const float position_x {rect.x};
-            const float position_y {rect.y};
-            const float width {rect.z};
-            const float height {rect.w};
+        for (auto note {notes.begin()}; note != notes.end(); note++) {
+            const ImVec4 rect {note_rectangle(*note)};
 
             draw.list->AddRectFilled(
-                draw.origin + ImVec2(global_position_x + position_x, position_y) - m_composition_camera,
-                draw.origin + ImVec2(global_position_x + position_x + width, position_y + height) - m_composition_camera,
+                draw.origin + ImVec2(global_position_x + rect.x, rect.y) - m_composition_camera,
+                draw.origin + ImVec2(global_position_x + rect.x + rect.z, rect.y + rect.w) - m_composition_camera,
                 ui::COLORS[m_ui.colors.at(voice)].second,
                 rounding
             );
+
+            if (note->legato) {
+                assert(note != notes.end());
+                assert(std::next(note)->position == note->position + seq::STEP / note->value);
+
+                const float x {global_position_x + float(note->position + seq::STEP / note->value) * ui::rem(STEP_SIZE.x)};
+
+                draw.list->AddBezierCubic(
+                    draw.origin + ImVec2(x - ui::rem(STEP_SIZE.x) * 1.5f, rect.y + ui::rem(STEP_SIZE.y)) - m_composition_camera,
+                    draw.origin + ImVec2(x - ui::rem(STEP_SIZE.x), rect.y + ui::rem(STEP_SIZE.y) * 1.5f) - m_composition_camera,
+                    draw.origin + ImVec2(x + ui::rem(STEP_SIZE.x), rect.y + ui::rem(STEP_SIZE.y) * 1.5f) - m_composition_camera,
+                    draw.origin + ImVec2(x + ui::rem(STEP_SIZE.x) * 1.5f, rect.y + ui::rem(STEP_SIZE.y)) - m_composition_camera,
+                    ui::COLORS[m_ui.colors.at(voice)].second,
+                    1.0f
+                );
+            }
         }
     }
 
@@ -1683,15 +1689,13 @@ namespace application {
         for (SelectedNote& selected_note : m_composition_selected_notes) {
             seq::Note note {selected_note.copy_note()};
             note.id++;
-
             note.legato = false;
-            const bool reset_previous {check_note_has_previous(selected_note.note(), selected_note.measure()->voices.at(m_voice))};
 
-            readd_note(selected_note, note);
-
-            if (reset_previous) {
+            if (check_note_has_previous(selected_note.note(), selected_note.measure()->voices.at(m_voice))) {
                 reset_previous_note_legato(selected_note);
             }
+
+            readd_note(selected_note, note);
         }
 
         modify_composition();
@@ -1735,15 +1739,13 @@ namespace application {
         for (SelectedNote& selected_note : m_composition_selected_notes) {
             seq::Note note {selected_note.copy_note()};
             note.id--;
-
             note.legato = false;
-            const bool reset_previous {check_note_has_previous(selected_note.note(), selected_note.measure()->voices.at(m_voice))};
 
-            readd_note(selected_note, note);
-
-            if (reset_previous) {
+            if (check_note_has_previous(selected_note.note(), selected_note.measure()->voices.at(m_voice))) {
                 reset_previous_note_legato(selected_note);
             }
+
+            readd_note(selected_note, note);
         }
 
         modify_composition();
@@ -1787,9 +1789,7 @@ namespace application {
         for (SelectedNote& selected_note : m_composition_selected_notes) {
             seq::Note note {selected_note.copy_note()};
             note.position--;
-
-            // No need to check previous
-            note.legato = false;
+            note.legato = false;  // No need to check previous
 
             readd_note(selected_note, note);
         }
@@ -1835,15 +1835,13 @@ namespace application {
         for (SelectedNote& selected_note : m_composition_selected_notes) {
             seq::Note note {selected_note.copy_note()};
             note.position++;
-
             note.legato = false;
-            const bool reset_previous {check_note_has_previous(selected_note.note(), selected_note.measure()->voices.at(m_voice))};
 
-            readd_note(selected_note, note);
-
-            if (reset_previous) {
+            if (check_note_has_previous(selected_note.note(), selected_note.measure()->voices.at(m_voice))) {
                 reset_previous_note_legato(selected_note);
             }
+
+            readd_note(selected_note, note);
         }
 
         modify_composition();
@@ -2003,11 +2001,18 @@ namespace application {
         selected_note.note(selected_note.measure()->voices.at(m_voice).insert(note));
     }
 
-    void Application::reset_previous_note_legato(SelectedNote& selected_note) const {
-        seq::Note note {*std::prev(selected_note.note())};
+    void Application::readd_note(NoteIter note_, MeasureIter measure, const seq::Note& note) const {
+        measure->voices.at(m_voice).erase(note_);
+        measure->voices.at(m_voice).insert(note);
+    }
+
+    void Application::reset_previous_note_legato(const SelectedNote& selected_note) const {
+        const NoteIter note_ {std::prev(selected_note.note())};
+
+        seq::Note note {*note_};
         note.legato = false;
 
-        readd_note(selected_note, note);
+        readd_note(note_, selected_note.measure(), note);
     }
 
     bool Application::keyboard_active() {
@@ -2039,13 +2044,13 @@ namespace application {
         return buffer;
     }
 
-    std::pair<seq::Tempo, seq::TimeSignature> Application::measure_type(MeasureIter iter, const std::vector<seq::Measure>& measures) {
+    std::pair<seq::Tempo, seq::TimeSignature> Application::measure_type(MeasureIter measure, const std::vector<seq::Measure>& measures) {
         seq::Tempo tempo;
         seq::TimeSignature time_signature;
 
-        if (iter != measures.end()) {
-            tempo = iter->tempo;
-            time_signature = iter->time_signature;
+        if (measure != measures.end()) {
+            tempo = measure->tempo;
+            time_signature = measure->time_signature;
         }
 
         return { tempo, time_signature };

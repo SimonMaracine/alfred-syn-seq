@@ -154,13 +154,14 @@ namespace application {
         bool point_x_in_camera_view(float point_x, float space_x) const;
         bool point_y_in_camera_view(float point_y, float space_y) const;
         void readd_note(SelectedNote& selected_note, const seq::Note& note) const;
-        void reset_previous_note_legato(SelectedNote& selected_note) const;
+        void readd_note(NoteIter note_, MeasureIter measure, const seq::Note& note) const;
+        void reset_previous_note_legato(const SelectedNote& selected_note) const;
 
         static bool keyboard_active();
         static float note_height(const seq::Note& note);
         static ImVec4 note_rectangle(const seq::Note& note);
         static const char* measure_label(char* buffer, long number);
-        static std::pair<seq::Tempo, seq::TimeSignature> measure_type(MeasureIter iter, const std::vector<seq::Measure>& measures);
+        static std::pair<seq::Tempo, seq::TimeSignature> measure_type(MeasureIter measure, const std::vector<seq::Measure>& measures);
         static void set_tempo(seq::Measure& measure, const ui::Tempo& tempo);
         static void set_tempo(ui::Tempo& tempo, const seq::Measure& measure);
         static void set_time_signature(seq::Measure& measure, const ui::TimeSignature& time_signature);
