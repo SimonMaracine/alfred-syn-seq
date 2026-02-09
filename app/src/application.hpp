@@ -17,23 +17,9 @@
 #include "image.hpp"
 
 namespace application {
-    using MeasureIter = std::vector<seq::Measure>::iterator;
-    using NoteIter = std::set<seq::Note>::iterator;
-
-    class ProvenanceNote {
-    public:
-        ProvenanceNote() = default;
-        ProvenanceNote(MeasureIter measure, NoteIter note)
-            : m_measure(measure), m_note(note) {}
-
-        MeasureIter measure() const { return m_measure; }
-        NoteIter note() const { return m_note; }
-        void note(NoteIter note) { m_note = note; }
-        seq::Note copy() const { return *m_note; }
-    private:
-        MeasureIter m_measure;
-        NoteIter m_note;
-    };
+    using MeasureIter = seq::MeasureIter;
+    using NoteIter = seq::NoteIter;
+    using ProvenanceNote = seq::ProvenanceNote<>;
 
     class HoveredNote {
     public:
@@ -168,10 +154,6 @@ namespace application {
         static bool notes_overlapping(const seq::Note& note1, const seq::Note& note2);
         bool check_note_has_next(const ProvenanceNote& provenance_note, ProvenanceNote& result_next_note) const;
         bool check_note_has_previous(const ProvenanceNote& provenance_note, ProvenanceNote& result_previous_note) const;
-        static bool note_first_in_measure(const seq::Measure& measure, const seq::Note& note);
-        static bool note_last_in_measure(const seq::Measure& measure, const seq::Note& note);
-        static bool note_first_in_measure(const ProvenanceNote& provenance_note);
-        static bool note_last_in_measure(const ProvenanceNote& provenance_note);
         static bool note_in_selection(NoteIter note, MeasureIter measure, const std::vector<ProvenanceNote>& selected_notes);
         static Time elapsed_seconds_to_time(double elapsed_seconds);
         static seq::Value get_value(ui::Value value);

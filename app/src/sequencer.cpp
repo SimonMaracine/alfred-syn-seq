@@ -1,8 +1,5 @@
 #include "sequencer.hpp"
 
-#include <algorithm>
-#include <iterator>
-#include <ranges>
 #include <utility>
 
 namespace seq {
@@ -16,6 +13,14 @@ namespace seq {
                 }
             }
         }
+    }
+
+    bool Composition::note_first_in_measure(const Measure&, const Note& note) {
+        return note.position == 0;
+    }
+
+    bool Composition::note_last_in_measure(const Measure& measure, const Note& note) {
+        return note.position + steps(note.value) == measure.time_signature.measure_steps();
     }
 
     Player::Player(synthesizer::Synthesizer& synthesizer, const Composition& composition, std::function<void()> stopped)
@@ -142,25 +147,59 @@ namespace seq {
 
     exec::Executions Player::initialize_executions(unsigned int position) const {
         exec::Executions executions;
+        unsigned int steps {};
+        std::vector<ProvenanceNote<ConstMeasureIter>> processed_notes;
 
-        for (unsigned int steps {}; const Measure& measure : m_composition->measures) {
-            for (const auto& [voice, notes] : measure.voices) {
-                for (const Note& note : notes) {
-                    if (steps + note.position < position) {
+        for (auto measure {m_composition->measures.begin()}; measure != m_composition->measures.end(); measure++) {
+            for (const auto& [voice, notes] : measure->voices) {
+                for (auto note {notes.begin()}; note != notes.end(); note++) {
+                    if (steps + note->position < position) {
+                        continue;
+                    }
+
+                    if (
+                        std::ranges::find_if(processed_notes, [measure, note](const auto& provenance_note) {
+                            return provenance_note.measure() == measure && provenance_note.note() == note;
+                        }
+                    ) != processed_notes.end()) {
+                        continue;
+                    }
+
+                    if (note->legato) {
+                        ProvenanceNote<ConstMeasureIter> next_note;
+                        [[maybe_unused]] const bool result {m_composition->check_note_has_next<ConstMeasureIter>(voice, ProvenanceNote(measure, note), next_note)};
+
+                        if (
+                            measure->tempo != next_note.measure()->tempo ||
+                            measure->time_signature != next_note.measure()->time_signature ||
+                            !result
+                        ) {
+                            throw SequencerError("Invalid legato");  // FIXME this should be an assert (throw in validate)
+                        }
+
+                        executions[voice].notes_unplayed.emplace(
+                            note->id,
+                            steps + note->position,
+                            seq::steps(note->value) + seq::steps(next_note.note()->value),
+                            measure->tempo,
+                            measure->time_signature
+                        );
+
+                        processed_notes.push_back(next_note);
                         continue;
                     }
 
                     executions[voice].notes_unplayed.emplace(
-                        note.id,
-                        steps + note.position,
-                        seq::steps(note.value),  // TODO implement legatos
-                        measure.tempo,
-                        measure.time_signature
+                        note->id,
+                        steps + note->position,
+                        seq::steps(note->value),
+                        measure->tempo,
+                        measure->time_signature
                     );
                 }
             }
 
-            steps += measure.time_signature.measure_steps();
+            steps += measure->time_signature.measure_steps();
         }
 
         return executions;

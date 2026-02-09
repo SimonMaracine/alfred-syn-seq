@@ -1564,7 +1564,7 @@ namespace application {
         modify_composition();
     }
 
-    void Application::delete_notes() {
+    void Application::delete_notes() {  // FIXME reset legato to the previous note
         if (m_composition_selected_notes.empty()) {
             return;
         }
@@ -1578,7 +1578,7 @@ namespace application {
         modify_composition();
     }
 
-    void Application::legato_notes() {
+    void Application::legato_notes() {  // FIXME check that tied notes are in measures with equal tempos and time signatures
         if (m_composition_selected_notes.empty()) {
             return;
         }
@@ -1601,7 +1601,7 @@ namespace application {
         modify_composition();
     }
 
-    void Application::shift_notes_up() {
+    void Application::shift_notes_up() {  // FIXME don't reset legato if the tied notes are both shifted
         if (m_composition_selected_notes.empty()) {
             return;
         }
@@ -1651,7 +1651,7 @@ namespace application {
         modify_composition();
     }
 
-    void Application::shift_notes_down() {
+    void Application::shift_notes_down() {  // FIXME don't reset legato if the tied notes are both shifted
         if (m_composition_selected_notes.empty()) {
             return;
         }
@@ -2124,96 +2124,11 @@ namespace application {
     }
 
     bool Application::check_note_has_next(const ProvenanceNote& provenance_note, ProvenanceNote& result_next_note) const {
-        {
-            const auto& notes {provenance_note.measure()->voices.at(m_voice)};
-
-            if (provenance_note.note() != notes.end()) {
-                const auto next_note {std::next(provenance_note.note())};
-
-                if (next_note != notes.end()) {
-                    if (
-                        next_note->id == provenance_note.note()->id &&
-                        next_note->position == provenance_note.note()->position + seq::steps(provenance_note.note()->value)
-                    ) {
-                        result_next_note = ProvenanceNote(provenance_note.measure(), next_note);
-                        return true;
-                    }
-                }
-            }
-        }
-
-        if (note_last_in_measure(provenance_note)) {
-            const auto next_measure {std::next(provenance_note.measure())};
-
-            if (next_measure != m_composition.measures.end()) {
-                const auto& notes {next_measure->voices.at(m_voice)};
-
-                const auto next_note {
-                    std::ranges::find_if(next_measure->voices.at(m_voice), [&provenance_note, next_measure](const auto& note) {
-                        return note.id == provenance_note.note()->id && note_first_in_measure(*next_measure, note);
-                    })
-                };
-
-                if (next_note != notes.end()) {
-                    result_next_note = ProvenanceNote(next_measure, next_note);
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        return m_composition.check_note_has_next(m_voice, provenance_note, result_next_note);
     }
 
     bool Application::check_note_has_previous(const ProvenanceNote& provenance_note, ProvenanceNote& result_previous_note) const {
-        {
-            const auto& notes {provenance_note.measure()->voices.at(m_voice)};
-
-            if (provenance_note.note() != notes.begin()) {
-                const auto previous_note {std::prev(provenance_note.note())};
-
-                if (
-                    previous_note->id == provenance_note.note()->id &&
-                    previous_note->position + seq::steps(previous_note->value) == provenance_note.note()->position
-                ) {
-                    result_previous_note = ProvenanceNote(provenance_note.measure(), previous_note);
-                    return true;
-                }
-            }
-        }
-
-        if (note_first_in_measure(provenance_note) && provenance_note.measure() != m_composition.measures.begin()) {
-            const auto previous_measure {std::prev(provenance_note.measure())};
-            const auto& notes {previous_measure->voices.at(m_voice)};
-
-            const auto previous_note {
-                std::ranges::find_if(previous_measure->voices.at(m_voice), [&provenance_note, previous_measure](const auto& note) {
-                    return note.id == provenance_note.note()->id && note_last_in_measure(*previous_measure, note);
-                })
-            };
-
-            if (previous_note != notes.end()) {
-                result_previous_note = ProvenanceNote(previous_measure, previous_note);
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    bool Application::note_first_in_measure(const seq::Measure&, const seq::Note& note) {
-        return note.position == 0;
-    }
-
-    bool Application::note_last_in_measure(const seq::Measure& measure, const seq::Note& note) {
-        return note.position + seq::steps(note.value) == measure.time_signature.measure_steps();
-    }
-
-    bool Application::note_first_in_measure(const ProvenanceNote& provenance_note) {
-        return note_first_in_measure(*provenance_note.measure(), *provenance_note.note());
-    }
-
-    bool Application::note_last_in_measure(const ProvenanceNote& provenance_note) {
-        return note_last_in_measure(*provenance_note.measure(), *provenance_note.note());
+        return m_composition.check_note_has_previous(m_voice, provenance_note, result_previous_note);
     }
 
     Time Application::elapsed_seconds_to_time(double elapsed_seconds) {
