@@ -1369,7 +1369,7 @@ namespace application {
         modify_composition();
     }
 
-    void Application::insert_measure() {
+    void Application::insert_measure() {  // FIXME reset legato for the previous note
         if (m_composition_selected_measure == m_composition.measures.end()) {
             return;
         }
@@ -1388,7 +1388,7 @@ namespace application {
         modify_composition();
     }
 
-    void Application::clear_measure() {
+    void Application::clear_measure() {  // FIXME reset legato for the previous notes
         if (m_composition_selected_measure == m_composition.measures.end()) {
             return;
         }
@@ -1400,7 +1400,7 @@ namespace application {
         modify_composition();
     }
 
-    void Application::delete_measure() {
+    void Application::delete_measure() {  // FIXME reset legato for the previous notes
         if (m_composition_selected_measure == m_composition.measures.end()) {
             return;
         }
@@ -1564,7 +1564,7 @@ namespace application {
         modify_composition();
     }
 
-    void Application::delete_notes() {  // FIXME reset legato to the previous note
+    void Application::delete_notes() {  // FIXME reset legato for the previous note
         if (m_composition_selected_notes.empty()) {
             return;
         }
@@ -1578,7 +1578,7 @@ namespace application {
         modify_composition();
     }
 
-    void Application::legato_notes() {  // FIXME check that tied notes are in measures with equal tempos and time signatures
+    void Application::legato_notes() {
         if (m_composition_selected_notes.empty()) {
             return;
         }

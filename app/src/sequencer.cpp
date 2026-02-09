@@ -1,20 +1,9 @@
 #include "sequencer.hpp"
 
 #include <utility>
+#include <cassert>
 
 namespace seq {
-    void Composition::validate() const {
-        for (const Measure& measure : measures) {
-            for (const auto& notes: measure.voices | std::views::values) {
-                for (const Note& note : notes) {
-                    if (note.position + steps(note.value) > measure.time_signature.measure_steps()) {
-                        throw SequencerError("Invalid note duration");
-                    }
-                }
-            }
-        }
-    }
-
     bool Composition::note_first_in_measure(const Measure&, const Note& note) {
         return note.position == 0;
     }
@@ -25,7 +14,6 @@ namespace seq {
 
     Player::Player(synthesizer::Synthesizer& synthesizer, const Composition& composition, std::function<void()> stopped)
         : m_synthesizer(&synthesizer), m_composition(&composition), m_stopped(std::move(stopped)) {
-        m_composition->validate();
         initialize(0);
     }
 
@@ -52,7 +40,6 @@ namespace seq {
         m_accumulator_time = 0.0;
 
         m_executions.clear();
-        m_composition->validate();
         initialize(m_position);
 
         m_stopped();
@@ -169,13 +156,8 @@ namespace seq {
                         ProvenanceNote<ConstMeasureIter> next_note;
                         [[maybe_unused]] const bool result {m_composition->check_note_has_next<ConstMeasureIter>(voice, ProvenanceNote(measure, note), next_note)};
 
-                        if (
-                            measure->tempo != next_note.measure()->tempo ||
-                            measure->time_signature != next_note.measure()->time_signature ||
-                            !result
-                        ) {
-                            throw SequencerError("Invalid legato");  // FIXME this should be an assert (throw in validate)
-                        }
+                        assert(measure->equal_time(*next_note.measure()));
+                        assert(result);
 
                         executions[voice].notes_unplayed.emplace(
                             note->id,

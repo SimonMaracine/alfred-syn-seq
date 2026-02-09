@@ -104,37 +104,40 @@ namespace seq {
         // Notes must always be sorted in a very specific way
         // Use a normal set, because the iterators need to stay stable
         std::unordered_map<syn::Voice, std::set<Note>> voices;  // TODO erase empty voices when serializing
+
+        bool equal_time(const Measure& other) const {
+            return tempo == other.tempo && time_signature == other.time_signature;
+        }
     };
 
     using MeasureIter = std::vector<Measure>::iterator;
     using ConstMeasureIter = std::vector<Measure>::const_iterator;
     using NoteIter = std::set<Note>::iterator;
 
-    template<typename MeasureIterator = MeasureIter>
+    template<std::contiguous_iterator MeasureIter_ = MeasureIter>
     class ProvenanceNote {
     public:
         ProvenanceNote() = default;
-        ProvenanceNote(MeasureIterator measure, NoteIter note)
+        ProvenanceNote(MeasureIter_ measure, NoteIter note)
             : m_measure(measure), m_note(note) {}
 
-        MeasureIterator measure() const { return m_measure; }
+        MeasureIter_ measure() const { return m_measure; }
         NoteIter note() const { return m_note; }
         void note(NoteIter note) { m_note = note; }
         Note copy() const { return *m_note; }
     private:
-        MeasureIterator m_measure;
+        MeasureIter_ m_measure;
         NoteIter m_note;
     };
 
     struct Composition {
         std::vector<Measure> measures;
 
-        void validate() const;
         static bool note_first_in_measure(const Measure& measure, const Note& note);
         static bool note_last_in_measure(const Measure& measure, const Note& note);
 
-        template<typename MeasureIterator>
-        bool check_note_has_next(syn::Voice voice, const ProvenanceNote<MeasureIterator>& provenance_note, ProvenanceNote<MeasureIterator>& result_next_note) const {
+        template<std::contiguous_iterator MeasureIter>
+        bool check_note_has_next(syn::Voice voice, const ProvenanceNote<MeasureIter>& provenance_note, ProvenanceNote<MeasureIter>& result_next_note) const {
             {
                 const auto& notes {provenance_note.measure()->voices.at(voice)};
 
@@ -156,7 +159,7 @@ namespace seq {
             if (note_last_in_measure(provenance_note)) {
                 const auto next_measure {std::next(provenance_note.measure())};
 
-                if (next_measure != measures.end()) {
+                if (next_measure != measures.end() && next_measure->equal_time(*provenance_note.measure())) {
                     const auto& notes {next_measure->voices.at(voice)};
 
                     const auto next_note {
@@ -175,8 +178,8 @@ namespace seq {
             return false;
         }
 
-        template<typename MeasureIterator>
-        bool check_note_has_previous(syn::Voice voice, const ProvenanceNote<MeasureIterator>& provenance_note, ProvenanceNote<MeasureIterator>& result_previous_note) const {
+        template<std::contiguous_iterator MeasureIter>
+        bool check_note_has_previous(syn::Voice voice, const ProvenanceNote<MeasureIter>& provenance_note, ProvenanceNote<MeasureIter>& result_previous_note) const {
             {
                 const auto& notes {provenance_note.measure()->voices.at(voice)};
 
@@ -195,30 +198,33 @@ namespace seq {
 
             if (note_first_in_measure(provenance_note) && provenance_note.measure() != measures.begin()) {
                 const auto previous_measure {std::prev(provenance_note.measure())};
-                const auto& notes {previous_measure->voices.at(voice)};
 
-                const auto previous_note {
-                    std::ranges::find_if(previous_measure->voices.at(voice), [&provenance_note, previous_measure](const auto& note) {
-                        return note.id == provenance_note.note()->id && note_last_in_measure(*previous_measure, note);
-                    })
-                };
+                if (previous_measure->equal_time(*provenance_note.measure())) {
+                    const auto& notes {previous_measure->voices.at(voice)};
 
-                if (previous_note != notes.end()) {
-                    result_previous_note = ProvenanceNote(previous_measure, previous_note);
-                    return true;
+                    const auto previous_note {
+                        std::ranges::find_if(previous_measure->voices.at(voice), [&provenance_note, previous_measure](const auto& note) {
+                            return note.id == provenance_note.note()->id && note_last_in_measure(*previous_measure, note);
+                        })
+                    };
+
+                    if (previous_note != notes.end()) {
+                        result_previous_note = ProvenanceNote(previous_measure, previous_note);
+                        return true;
+                    }
                 }
             }
 
             return false;
         }
 
-        template<typename MeasureIterator>
-        static bool note_first_in_measure(const ProvenanceNote<MeasureIterator>& provenance_note) {
+        template<std::contiguous_iterator MeasureIter>
+        static bool note_first_in_measure(const ProvenanceNote<MeasureIter>& provenance_note) {
             return note_first_in_measure(*provenance_note.measure(), *provenance_note.note());
         }
 
-        template<typename MeasureIterator>
-        static bool note_last_in_measure(const ProvenanceNote<MeasureIterator>& provenance_note) {
+        template<std::contiguous_iterator MeasureIter>
+        static bool note_last_in_measure(const ProvenanceNote<MeasureIter>& provenance_note) {
             return note_last_in_measure(*provenance_note.measure(), *provenance_note.note());
         }
     };
