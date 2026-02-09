@@ -26,6 +26,10 @@ namespace seq {
     // A step has variable length in seconds depending on the time signature and tempo
     inline constexpr unsigned int STEP {Sixteenth * DIV};
 
+    constexpr unsigned int steps(Value value) {
+        return STEP / value;
+    }
+
     // Quarters per minute
     class Tempo {
     public:
@@ -51,7 +55,7 @@ namespace seq {
         constexpr Value value() const { return m_value; }
 
         constexpr unsigned int measure_steps() const {
-            return m_beats * (STEP / m_value);
+            return m_beats * steps(m_value);
         }
 
         constexpr double step_time(Tempo tempo) const {
@@ -60,7 +64,7 @@ namespace seq {
     private:
         // Transforms tempo quarters per minute into beats per minute
         constexpr double steps_per_minute(Tempo tempo) const {
-            return double(tempo) / (double(Quarter) / double(m_value)) * double(STEP / m_value);
+            return double(tempo) / (double(Quarter) / double(m_value)) * double(steps(m_value));
         }
 
         Beats m_beats {4};
@@ -93,7 +97,7 @@ namespace seq {
 
         // Notes must always be sorted in a very specific way
         // Use a normal set, because the iterators need to stay stable
-        std::unordered_map<syn::Voice, std::multiset<Note>> voices;  // TODO erase empty voices when serializing
+        std::unordered_map<syn::Voice, std::set<Note>> voices;  // TODO erase empty voices when serializing
     };
 
     struct Composition {

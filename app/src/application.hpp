@@ -18,18 +18,18 @@
 
 namespace application {
     using MeasureIter = std::vector<seq::Measure>::iterator;
-    using NoteIter = std::multiset<seq::Note>::iterator;
+    using NoteIter = std::set<seq::Note>::iterator;
 
-    class SelectedNote {
+    class ProvenanceNote {
     public:
-        SelectedNote() = default;
-        SelectedNote(MeasureIter measure, NoteIter note)
+        ProvenanceNote() = default;
+        ProvenanceNote(MeasureIter measure, NoteIter note)
             : m_measure(measure), m_note(note) {}
 
         MeasureIter measure() const { return m_measure; }
         NoteIter note() const { return m_note; }
         void note(NoteIter note) { m_note = note; }
-        seq::Note copy_note() const { return *m_note; }
+        seq::Note copy() const { return *m_note; }
     private:
         MeasureIter m_measure;
         NoteIter m_note;
@@ -98,7 +98,7 @@ namespace application {
         void composition_measures(const Draw& draw) const;
         void composition_measures_labels(const Draw& draw) const;
         void composition_notes(const Draw& draw) const;
-        void composition_notes(const Draw& draw, syn::Voice voice, const std::multiset<seq::Note>& notes, float global_position_x, float rounding) const;
+        void composition_notes(const Draw& draw, syn::Voice voice, const std::set<seq::Note>& notes, float global_position_x, float rounding) const;
         void composition_cursor(const Draw& draw) const;
         void composition_hover(const Draw& draw, const HoveredNote& hovered_note) const;
         void shortcuts();
@@ -147,9 +147,9 @@ namespace application {
         std::flat_set<syn::Voice> instruments_in_project() const;
         bool point_x_in_camera_view(float point_x, float space_x) const;
         bool point_y_in_camera_view(float point_y, float space_y) const;
-        void readd_note(SelectedNote& selected_note, const seq::Note& note) const;
-        void readd_note(NoteIter note_, MeasureIter measure, const seq::Note& note) const;
-        void reset_previous_note_legato(const SelectedNote& selected_note) const;
+        void readd_note(ProvenanceNote& provenance_note, const seq::Note& note) const;
+        void readd_note(NoteIter note_iter, MeasureIter measure, const seq::Note& note) const;
+        void reset_note_legato(const ProvenanceNote& provenance_note) const;
 
         static bool keyboard_active();
         static float note_height(const seq::Note& note);
@@ -166,9 +166,13 @@ namespace application {
         static bool check_note_left_limit(const seq::Note& note);
         static bool check_note_right_limit(const seq::Note& note, const seq::Measure& measure);
         static bool notes_overlapping(const seq::Note& note1, const seq::Note& note2);
-        static bool check_note_has_next(NoteIter note, const std::multiset<seq::Note>& notes);
-        static bool check_note_has_previous(NoteIter note, const std::multiset<seq::Note>& notes);
-        static bool note_in_selection(NoteIter note, MeasureIter measure, const std::vector<SelectedNote>& selected_notes);
+        bool check_note_has_next(const ProvenanceNote& provenance_note, ProvenanceNote& result_next_note) const;
+        bool check_note_has_previous(const ProvenanceNote& provenance_note, ProvenanceNote& result_previous_note) const;
+        static bool note_first_in_measure(const seq::Measure& measure, const seq::Note& note);
+        static bool note_last_in_measure(const seq::Measure& measure, const seq::Note& note);
+        static bool note_first_in_measure(const ProvenanceNote& provenance_note);
+        static bool note_last_in_measure(const ProvenanceNote& provenance_note);
+        static bool note_in_selection(NoteIter note, MeasureIter measure, const std::vector<ProvenanceNote>& selected_notes);
         static Time elapsed_seconds_to_time(double elapsed_seconds);
         static seq::Value get_value(ui::Value value);
         static const ImVec4& color(ImGuiCol color);
@@ -193,7 +197,7 @@ namespace application {
 
         ImVec2 m_composition_camera;
         MeasureIter m_composition_selected_measure;
-        std::vector<SelectedNote> m_composition_selected_notes;
+        std::vector<ProvenanceNote> m_composition_selected_notes;
         std::filesystem::path m_composition_path;
         composition::Composition m_composition;
 

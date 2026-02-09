@@ -38,7 +38,7 @@ namespace seq {
 
     template<typename Archive>
     void serialize(Archive& archive, Note& self, const std::uint32_t) {
-        archive(self.id, self.value, self.position);
+        archive(self.id, self.value, self.position, self.legato);
     }
 
     template<typename Archive>

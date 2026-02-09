@@ -10,7 +10,7 @@ namespace seq {
         for (const Measure& measure : measures) {
             for (const auto& notes: measure.voices | std::views::values) {
                 for (const Note& note : notes) {
-                    if (note.position + STEP / note.value > measure.time_signature.measure_steps()) {
+                    if (note.position + steps(note.value) > measure.time_signature.measure_steps()) {
                         throw SequencerError("Invalid note duration");
                     }
                 }
@@ -153,7 +153,7 @@ namespace seq {
                     executions[voice].notes_unplayed.emplace(
                         note.id,
                         steps + note.position,
-                        STEP / note.value,  // TODO implement legatos
+                        seq::steps(note.value),  // TODO implement legatos
                         measure.tempo,
                         measure.time_signature
                     );

@@ -865,7 +865,7 @@ namespace application {
                     const float position_x_beat {
                         position_x +
                         float(beat) *
-                        float(seq::STEP / measure->time_signature.value()) * ui::rem(STEP_SIZE.x)
+                        float(seq::steps(measure->time_signature.value())) * ui::rem(STEP_SIZE.x)
                     };
 
                     draw.list->AddLine(
@@ -936,9 +936,9 @@ namespace application {
                     composition_notes(draw, voice->first, voice->second, global_position_x, ROUNDING);
                 }
 
-                for (const SelectedNote& selected_note : m_composition_selected_notes) {
-                    if (selected_note.measure() == measure) {
-                        const ImVec4 rect {note_rectangle(*selected_note.note())};
+                for (const ProvenanceNote& provenance_note : m_composition_selected_notes) {
+                    if (provenance_note.measure() == measure) {
+                        const ImVec4 rect {note_rectangle(*provenance_note.note())};
 
                         draw.list->AddRect(
                             draw.origin + ImVec2(global_position_x + rect.x, rect.y) - m_composition_camera,
@@ -954,7 +954,7 @@ namespace application {
         }
     }
 
-    void Application::composition_notes(const Draw& draw, syn::Voice voice, const std::multiset<seq::Note>& notes, float global_position_x, float rounding) const {
+    void Application::composition_notes(const Draw& draw, syn::Voice voice, const std::set<seq::Note>& notes, float global_position_x, float rounding) const {
         for (auto note {notes.begin()}; note != notes.end(); note++) {
             const ImVec4 rect {note_rectangle(*note)};
 
@@ -966,10 +966,7 @@ namespace application {
             );
 
             if (note->legato) {
-                assert(note != notes.end());
-                assert(std::next(note)->position == note->position + seq::STEP / note->value);
-
-                const float x {global_position_x + float(note->position + seq::STEP / note->value) * ui::rem(STEP_SIZE.x)};
+                const float x {global_position_x + float(note->position + seq::steps(note->value)) * ui::rem(STEP_SIZE.x)};
 
                 draw.list->AddBezierCubic(
                     draw.origin + ImVec2(x - ui::rem(STEP_SIZE.x) * 1.5f, rect.y + ui::rem(STEP_SIZE.y)) - m_composition_camera,
@@ -1299,7 +1296,7 @@ namespace application {
 
     void Application::add_metronome(MeasureIter begin, MeasureIter end) {
         for (auto measure {begin}; measure != end; measure++) {
-            for (unsigned int i {}; i < measure->time_signature.measure_steps(); i += seq::STEP / measure->time_signature.value()) {
+            for (unsigned int i {}; i < measure->time_signature.measure_steps(); i += seq::steps(measure->time_signature.value())) {
                 measure->voices[syn::VoiceMetronome].emplace(i == 0 ? 50 : 48, seq::Sixteenth, i);
             }
         }
@@ -1494,7 +1491,7 @@ namespace application {
 
         for (auto n {voice->second.begin()}; n != voice->second.end(); n++) {
             if (hovered_note.id() == n->id) {
-                if (hovered_note.position() >= n->position && hovered_note.position() < n->position + seq::STEP / n->value) {
+                if (hovered_note.position() >= n->position && hovered_note.position() < n->position + seq::steps(n->value)) {
                     note = n;
                     return true;
                 }
@@ -1505,9 +1502,7 @@ namespace application {
     }
 
     void Application::do_with_note(const HoveredNote& hovered_note) {
-        NoteIter note;
-
-        if (select_note(hovered_note, note)) {
+        if (NoteIter note; select_note(hovered_note, note)) {
             const auto selected_note {
                 std::ranges::find_if(m_composition_selected_notes, [&hovered_note, note](const auto& n) {
                     return n.measure() == hovered_note.measure() && n.note() == note;
@@ -1541,12 +1536,13 @@ namespace application {
         const seq::Note new_note {
             hovered_note.id(),
             get_value(ui::Value(m_ui.value)),
-            hovered_note.position() / seq::DIV * seq::DIV  // Always place on groups of steps
+            hovered_note.position() / seq::DIV * seq::DIV,  // Always place on groups of steps
+            false
         };
 
         if (
             ![this, &hovered_note, &new_note] {
-                if (new_note.position + seq::STEP / new_note.value > hovered_note.measure()->time_signature.measure_steps()) {
+                if (new_note.position + seq::steps(new_note.value) > hovered_note.measure()->time_signature.measure_steps()) {
                     return false;
                 }
 
@@ -1573,7 +1569,7 @@ namespace application {
             return;
         }
 
-        for (const SelectedNote& selected_note : m_composition_selected_notes) {
+        for (const ProvenanceNote& selected_note : m_composition_selected_notes) {
             selected_note.measure()->voices.at(m_voice).erase(selected_note.note());
         }
 
@@ -1587,13 +1583,16 @@ namespace application {
             return;
         }
 
-        for (SelectedNote& selected_note : m_composition_selected_notes) {
-            seq::Note note {selected_note.copy_note()};
+        for (ProvenanceNote& selected_note : m_composition_selected_notes) {
+            seq::Note note {selected_note.copy()};
+
             note.legato = !note.legato;
 
-            if (note.legato && !check_note_has_next(selected_note.note(), selected_note.measure()->voices.at(m_voice))) {
-                note.legato = false;
-                LOG_DEBUG("Note cannot have legato");
+            if (note.legato) {
+                if (ProvenanceNote next_note; !check_note_has_next(selected_note, next_note)) {
+                    note.legato = false;
+                    LOG_DEBUG("Note cannot have legato");
+                }
             }
 
             readd_note(selected_note, note);
@@ -1609,7 +1608,7 @@ namespace application {
 
         if (
             ![this] {
-                for (const SelectedNote& selected_note : m_composition_selected_notes) {
+                for (const ProvenanceNote& selected_note : m_composition_selected_notes) {
                     if (!check_note_up_limit(*selected_note.note())) {
                         return false;
                     }
@@ -1621,7 +1620,7 @@ namespace application {
                             continue;
                         }
 
-                        seq::Note shifted_note {selected_note.copy_note()};
+                        seq::Note shifted_note {selected_note.copy()};
                         shifted_note.id++;
 
                         if (notes_overlapping(*note, shifted_note)) {
@@ -1637,13 +1636,13 @@ namespace application {
             return;
         }
 
-        for (SelectedNote& selected_note : m_composition_selected_notes) {
-            seq::Note note {selected_note.copy_note()};
+        for (ProvenanceNote& selected_note : m_composition_selected_notes) {
+            seq::Note note {selected_note.copy()};
             note.id++;
             note.legato = false;
 
-            if (check_note_has_previous(selected_note.note(), selected_note.measure()->voices.at(m_voice))) {
-                reset_previous_note_legato(selected_note);
+            if (ProvenanceNote previous_note; check_note_has_previous(selected_note, previous_note)) {
+                reset_note_legato(previous_note);
             }
 
             readd_note(selected_note, note);
@@ -1659,7 +1658,7 @@ namespace application {
 
         if (
             ![this] {
-                for (const SelectedNote& selected_note : m_composition_selected_notes) {
+                for (const ProvenanceNote& selected_note : m_composition_selected_notes) {
                     if (!check_note_down_limit(*selected_note.note())) {
                         return false;
                     }
@@ -1671,7 +1670,7 @@ namespace application {
                             continue;
                         }
 
-                        seq::Note shifted_note {selected_note.copy_note()};
+                        seq::Note shifted_note {selected_note.copy()};
                         shifted_note.id--;
 
                         if (notes_overlapping(*note, shifted_note)) {
@@ -1687,13 +1686,13 @@ namespace application {
             return;
         }
 
-        for (SelectedNote& selected_note : m_composition_selected_notes) {
-            seq::Note note {selected_note.copy_note()};
+        for (ProvenanceNote& selected_note : m_composition_selected_notes) {
+            seq::Note note {selected_note.copy()};
             note.id--;
             note.legato = false;
 
-            if (check_note_has_previous(selected_note.note(), selected_note.measure()->voices.at(m_voice))) {
-                reset_previous_note_legato(selected_note);
+            if (ProvenanceNote previous_note; check_note_has_previous(selected_note, previous_note)) {
+                reset_note_legato(previous_note);
             }
 
             readd_note(selected_note, note);
@@ -1709,7 +1708,7 @@ namespace application {
 
         if (
             ![this] {
-                for (const SelectedNote& selected_note : m_composition_selected_notes) {
+                for (const ProvenanceNote& selected_note : m_composition_selected_notes) {
                     if (!check_note_left_limit(*selected_note.note())) {
                         return false;
                     }
@@ -1721,7 +1720,7 @@ namespace application {
                             continue;
                         }
 
-                        seq::Note shifted_note {selected_note.copy_note()};
+                        seq::Note shifted_note {selected_note.copy()};
                         shifted_note.position--;
 
                         if (notes_overlapping(*note, shifted_note)) {
@@ -1737,8 +1736,8 @@ namespace application {
             return;
         }
 
-        for (SelectedNote& selected_note : m_composition_selected_notes) {
-            seq::Note note {selected_note.copy_note()};
+        for (ProvenanceNote& selected_note : m_composition_selected_notes) {
+            seq::Note note {selected_note.copy()};
             note.position--;
             note.legato = false;  // No need to check previous
 
@@ -1755,7 +1754,7 @@ namespace application {
 
         if (
             ![this] {
-                for (const SelectedNote& selected_note : m_composition_selected_notes) {
+                for (const ProvenanceNote& selected_note : m_composition_selected_notes) {
                     if (!check_note_right_limit(*selected_note.note(), *selected_note.measure())) {
                         return false;
                     }
@@ -1767,7 +1766,7 @@ namespace application {
                             continue;
                         }
 
-                        seq::Note shifted_note {selected_note.copy_note()};
+                        seq::Note shifted_note {selected_note.copy()};
                         shifted_note.position++;
 
                         if (notes_overlapping(*note, shifted_note)) {
@@ -1783,13 +1782,13 @@ namespace application {
             return;
         }
 
-        for (SelectedNote& selected_note : m_composition_selected_notes) {
-            seq::Note note {selected_note.copy_note()};
+        for (ProvenanceNote& selected_note : m_composition_selected_notes) {
+            seq::Note note {selected_note.copy()};
             note.position++;
             note.legato = false;
 
-            if (check_note_has_previous(selected_note.note(), selected_note.measure()->voices.at(m_voice))) {
-                reset_previous_note_legato(selected_note);
+            if (ProvenanceNote previous_note; check_note_has_previous(selected_note, previous_note)) {
+                reset_note_legato(previous_note);
             }
 
             readd_note(selected_note, note);
@@ -1947,23 +1946,25 @@ namespace application {
         return point_y >= m_composition_camera.y && point_y < m_composition_camera.y + space_y;
     }
 
-    void Application::readd_note(SelectedNote& selected_note, const seq::Note& note) const {
-        selected_note.measure()->voices.at(m_voice).erase(selected_note.note());
-        selected_note.note(selected_note.measure()->voices.at(m_voice).insert(note));
+    void Application::readd_note(ProvenanceNote& provenance_note, const seq::Note& note) const {
+        provenance_note.measure()->voices.at(m_voice).erase(provenance_note.note());
+        const auto [iter, inserted] {provenance_note.measure()->voices.at(m_voice).insert(note)};
+
+        assert(inserted);
+
+        provenance_note.note(iter);
     }
 
-    void Application::readd_note(NoteIter note_, MeasureIter measure, const seq::Note& note) const {
-        measure->voices.at(m_voice).erase(note_);
+    void Application::readd_note(NoteIter note_iter, MeasureIter measure, const seq::Note& note) const {
+        measure->voices.at(m_voice).erase(note_iter);
         measure->voices.at(m_voice).insert(note);
     }
 
-    void Application::reset_previous_note_legato(const SelectedNote& selected_note) const {
-        const NoteIter note_ {std::prev(selected_note.note())};
-
-        seq::Note note {*note_};
+    void Application::reset_note_legato(const ProvenanceNote& provenance_note) const {
+        seq::Note note {provenance_note.copy()};
         note.legato = false;
 
-        readd_note(note_, selected_note.measure(), note);
+        readd_note(provenance_note.note(), provenance_note.measure(), note);
     }
 
     bool Application::keyboard_active() {
@@ -1977,7 +1978,7 @@ namespace application {
     ImVec4 Application::note_rectangle(const seq::Note& note) {
         const float x {float(note.position) * ui::rem(STEP_SIZE.x)};
         const float y {note_height(note)};
-        const float width {float(seq::STEP / note.value) * ui::rem(STEP_SIZE.x)};
+        const float width {float(seq::steps(note.value)) * ui::rem(STEP_SIZE.x)};
         const float height {ui::rem(STEP_SIZE.y)};
 
         return ImVec4(x + 1.0f, y + 1.0f, width - 2.0f, height - 2.0f);
@@ -2097,7 +2098,7 @@ namespace application {
     }
 
     bool Application::check_note_right_limit(const seq::Note& note, const seq::Measure& measure) {
-        return note.position < measure.time_signature.measure_steps() - seq::STEP / note.value;
+        return note.position < measure.time_signature.measure_steps() - seq::steps(note.value);
     }
 
     bool Application::notes_overlapping(const seq::Note& note1, const seq::Note& note2) {
@@ -2106,9 +2107,9 @@ namespace application {
         }
 
         const auto note1_left {note1.position};
-        const auto note1_right {note1.position + seq::STEP / note1.value};
+        const auto note1_right {note1.position + seq::steps(note1.value)};
         const auto note2_left {note2.position};
-        const auto note2_right {note2.position + seq::STEP / note2.value};
+        const auto note2_right {note2.position + seq::steps(note2.value)};
 
         return note1_left > note2_left && note1_left < note2_right ||
             note1_right > note2_left && note1_right < note2_right ||
@@ -2116,32 +2117,103 @@ namespace application {
             note2_right > note1_left && note2_right < note1_right;
     }
 
-    bool Application::note_in_selection(NoteIter note, MeasureIter measure, const std::vector<SelectedNote>& selected_notes) {
+    bool Application::note_in_selection(NoteIter note, MeasureIter measure, const std::vector<ProvenanceNote>& selected_notes) {
         return std::ranges::find_if(selected_notes, [note, measure](const auto& n) {
             return measure == n.measure() && note == n.note();
         }) != selected_notes.end();
     }
 
-    bool Application::check_note_has_next(NoteIter note, const std::multiset<seq::Note>& notes) {
-        if (note != notes.end()) {
-            const auto next_note {std::next(note)};
+    bool Application::check_note_has_next(const ProvenanceNote& provenance_note, ProvenanceNote& result_next_note) const {
+        {
+            const auto& notes {provenance_note.measure()->voices.at(m_voice)};
 
-            if (next_note != notes.end()) {
-                return next_note->id == note->id && next_note->position == note->position + seq::STEP / note->value;
+            if (provenance_note.note() != notes.end()) {
+                const auto next_note {std::next(provenance_note.note())};
+
+                if (next_note != notes.end()) {
+                    if (
+                        next_note->id == provenance_note.note()->id &&
+                        next_note->position == provenance_note.note()->position + seq::steps(provenance_note.note()->value)
+                    ) {
+                        result_next_note = ProvenanceNote(provenance_note.measure(), next_note);
+                        return true;
+                    }
+                }
+            }
+        }
+
+        if (note_last_in_measure(provenance_note)) {
+            const auto next_measure {std::next(provenance_note.measure())};
+
+            if (next_measure != m_composition.measures.end()) {
+                const auto& notes {next_measure->voices.at(m_voice)};
+
+                const auto next_note {
+                    std::ranges::find_if(next_measure->voices.at(m_voice), [&provenance_note, next_measure](const auto& note) {
+                        return note.id == provenance_note.note()->id && note_first_in_measure(*next_measure, note);
+                    })
+                };
+
+                if (next_note != notes.end()) {
+                    result_next_note = ProvenanceNote(next_measure, next_note);
+                    return true;
+                }
             }
         }
 
         return false;
     }
 
-    bool Application::check_note_has_previous(NoteIter note, const std::multiset<seq::Note>& notes) {
-        if (note != notes.begin()) {
-            const auto previous_note {std::prev(note)};
+    bool Application::check_note_has_previous(const ProvenanceNote& provenance_note, ProvenanceNote& result_previous_note) const {
+        {
+            const auto& notes {provenance_note.measure()->voices.at(m_voice)};
 
-            return previous_note->id == note->id && previous_note->position + seq::STEP / previous_note->value == note->position;
+            if (provenance_note.note() != notes.begin()) {
+                const auto previous_note {std::prev(provenance_note.note())};
+
+                if (
+                    previous_note->id == provenance_note.note()->id &&
+                    previous_note->position + seq::steps(previous_note->value) == provenance_note.note()->position
+                ) {
+                    result_previous_note = ProvenanceNote(provenance_note.measure(), previous_note);
+                    return true;
+                }
+            }
+        }
+
+        if (note_first_in_measure(provenance_note) && provenance_note.measure() != m_composition.measures.begin()) {
+            const auto previous_measure {std::prev(provenance_note.measure())};
+            const auto& notes {previous_measure->voices.at(m_voice)};
+
+            const auto previous_note {
+                std::ranges::find_if(previous_measure->voices.at(m_voice), [&provenance_note, previous_measure](const auto& note) {
+                    return note.id == provenance_note.note()->id && note_last_in_measure(*previous_measure, note);
+                })
+            };
+
+            if (previous_note != notes.end()) {
+                result_previous_note = ProvenanceNote(previous_measure, previous_note);
+                return true;
+            }
         }
 
         return false;
+    }
+
+    bool Application::note_first_in_measure(const seq::Measure&, const seq::Note& note) {
+        return note.position == 0;
+    }
+
+    bool Application::note_last_in_measure(const seq::Measure& measure, const seq::Note& note) {
+        return note.position + seq::steps(note.value) == measure.time_signature.measure_steps();
+    }
+
+    bool Application::note_first_in_measure(const ProvenanceNote& provenance_note) {
+        return note_first_in_measure(*provenance_note.measure(), *provenance_note.note());
+    }
+
+    bool Application::note_last_in_measure(const ProvenanceNote& provenance_note) {
+        return note_last_in_measure(*provenance_note.measure(), *provenance_note.note());
     }
 
     Time Application::elapsed_seconds_to_time(double elapsed_seconds) {
@@ -2285,16 +2357,18 @@ namespace application {
     }
 
     bool Application::composition_open(std::filesystem::path path) {
-        if (m_composition_path.extension() != ".alfred") {
+        if (path.extension() != ".alfred") {
             LOG_WARNING("Composition file has the wrong extension");
         }
 
         try {
             composition_open(path, m_composition);
         } catch (const composition::CompositionError& e) {
+            m_composition = {};
             logging::error("Could not open composition: {}", e.what());
             return false;
         } catch (const utility::FilerError& e) {
+            m_composition = {};
             logging::error("Could not open composition: {}", e.what());
             return false;
         }
