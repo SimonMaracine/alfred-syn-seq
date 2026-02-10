@@ -1,6 +1,8 @@
 #pragma once
 
-#include <tuple>
+#include <array>
+#include <numeric>
+#include <ranges>
 #include <utility>
 
 namespace syn {
@@ -88,15 +90,17 @@ namespace syn {
         Octave7
     };
 
-    enum Voice : unsigned int {
-        VoiceMetronome,
-        VoiceBell,
-        VoiceHarmonica,
-        VoiceDrumBass,
-        VoiceDrumSnare,
-        VoiceDrumHiHat,
-        VoicePiano,
-        VoiceGuitar
+    using VoiceId = unsigned int;
+
+    using VoiceRange = std::pair<Id, Id>;
+
+    struct Note {
+        Id id {};
+        VoiceId voice {};
+        double time_on {};
+        double time_off {};
+
+        static Id get_id(Name name, Octave octave);
     };
 
     namespace keyboard {
@@ -116,195 +120,59 @@ namespace syn {
         inline constexpr Id ID_END {NOTES - 1};
     }
 
-    struct Note {
-        Id id {};
-        Voice voice {};
-        double time_on {};
-        double time_off {};
+    struct Voice {
+        Voice() = default;
+        virtual ~Voice() = default;
 
-        static Id get_id(Name name, Octave octave);
-    };
-
-    struct Instrument {
-        Instrument() = default;
-        virtual ~Instrument() = default;
-
-        Instrument(const Instrument&) = default;
-        Instrument& operator=(const Instrument&) = default;
-        Instrument(Instrument&&) = default;
-        Instrument& operator=(Instrument&&) = default;
+        Voice(const Voice&) = default;
+        Voice& operator=(const Voice&) = default;
+        Voice(Voice&&) = default;
+        Voice& operator=(Voice&&) = default;
 
         virtual const char* name() const = 0;
-        virtual Voice voice() const = 0;
+        virtual VoiceId id() const = 0;
         virtual const Envelope& overall_envelope() const = 0;
         virtual double sound(double time, const Note& note) const = 0;
-        virtual std::pair<Id, Id> range() const { return std::make_pair(keyboard::ID_BEGIN, keyboard::ID_END); }
+        virtual VoiceRange range() const { return std::make_pair(keyboard::ID_BEGIN, keyboard::ID_END); }
     };
 
-    namespace instruments {  // TODO description
-        class Metronome : public Instrument {
-        public:
-            const char* name() const override { return "Metronome"; }
-            Voice voice() const override { return VoiceMetronome; }
-            const Envelope& overall_envelope() const override { return OVERALL_ENVELOPE; }
-            double sound(double time, const Note& note) const override;
-        private:
-            static constexpr EnvelopeAdr OVERALL_ENVELOPE {
-                EnvelopeAdrDescription {
-                    0.007,
-                    0.15,
-                    0.007
-                }
-            };
-        };
+    struct LowFrequencyOscillator {
+        double frequency {};
+        double deviation {};
+    };
 
-        class Bell : public Instrument {
-        public:
-            const char* name() const override { return "Bell"; }
-            Voice voice() const override { return VoiceBell; }
-            const Envelope& overall_envelope() const override { return OVERALL_ENVELOPE; }
-            double sound(double time, const Note& note) const override;
-            std::pair<Id, Id> range() const override;
-        private:
-            static constexpr EnvelopeAdr OVERALL_ENVELOPE {
-                EnvelopeAdrDescription {
-                    0.01,
-                    1.2,
-                    0.2
-                }
-            };
-        };
-
-        class Harmonica : public Instrument {
-        public:
-            const char* name() const override { return "Harmonica"; }
-            Voice voice() const override { return VoiceHarmonica; }
-            const Envelope& overall_envelope() const override { return OVERALL_ENVELOPE; }
-            double sound(double time, const Note& note) const override;
-        private:
-            static constexpr EnvelopeAdsr OVERALL_ENVELOPE {
-                EnvelopeAdsrDescription {
-                    0.1,
-                    0.02,
-                    0.2,
-                    1.0,
-                    0.8
-                }
-            };
-        };
-
-        class DrumBass : public Instrument {
-        public:
-            const char* name() const override { return "Drum Bass"; }
-            Voice voice() const override { return VoiceDrumBass; }
-            const Envelope& overall_envelope() const override { return OVERALL_ENVELOPE; }
-            double sound(double time, const Note& note) const override;
-        private:
-            static constexpr EnvelopeAdr OVERALL_ENVELOPE {
-                EnvelopeAdrDescription {
-                    0.01,
-                    0.15,
-                    0.02
-                }
-            };
-        };
-
-        class DrumSnare : public Instrument {
-        public:
-            const char* name() const override { return "Drum Snare"; }
-            Voice voice() const override { return VoiceDrumSnare; }
-            const Envelope& overall_envelope() const override { return OVERALL_ENVELOPE; }
-            double sound(double time, const Note& note) const override;
-        private:
-            static constexpr EnvelopeAdr OVERALL_ENVELOPE {
-                EnvelopeAdrDescription {
-                    0.01,
-                    0.2,
-                    0.04
-                }
-            };
-        };
-
-        class DrumHiHat : public Instrument {
-        public:
-            const char* name() const override { return "Drum Hi-Hat"; }
-            Voice voice() const override { return VoiceDrumHiHat; }
-            const Envelope& overall_envelope() const override { return OVERALL_ENVELOPE; }
-            double sound(double time, const Note& note) const override;
-        private:
-            static constexpr EnvelopeAdr OVERALL_ENVELOPE {
-                EnvelopeAdrDescription {
-                    0.01,
-                    0.15,
-                    0.02
-                }
-            };
-        };
-
-        class Piano : public Instrument {
-        public:
-            const char* name() const override { return "Piano"; }
-            Voice voice() const override { return VoicePiano; }
-            const Envelope& overall_envelope() const override { return OVERALL_ENVELOPE; }
-            double sound(double time, const Note& note) const override;
-        private:
-            static constexpr EnvelopeAdr OVERALL_ENVELOPE {
-                EnvelopeAdrDescription {
-                    0.01,
-                    5.0,
-                    0.2
-                }
-            };
-        };
-
-        class Guitar : public Instrument {
-        public:
-            const char* name() const override { return "Guitar"; }
-            Voice voice() const override { return VoiceGuitar; }
-            const Envelope& overall_envelope() const override { return OVERALL_ENVELOPE; }
-            double sound(double time, const Note& note) const override;
-            std::pair<Id, Id> range() const override;
-        private:
-            static constexpr EnvelopeAdr OVERALL_ENVELOPE {
-                EnvelopeAdrDescription {
-                    0.01,
-                    5.0,
-                    0.2
-                }
-            };
-        };
+    namespace oscillator {
+        double sine(double time, double frequency);
+        double sine(double time, double frequency, LowFrequencyOscillator lfo);
+        double square(double time, double frequency);
+        double square(double time, double frequency, LowFrequencyOscillator lfo);
+        double triangle(double time, double frequency);
+        double triangle(double time, double frequency, LowFrequencyOscillator lfo);
+        double sawtooth(double time, double frequency);
+        double sawtooth(double time, double frequency, LowFrequencyOscillator lfo);
     }
 
-    class Voices {
-    public:
-        using Storage = std::tuple<
-            instruments::Metronome,
-            instruments::Bell,
-            instruments::Harmonica,
-            instruments::DrumBass,
-            instruments::DrumSnare,
-            instruments::DrumHiHat,
-            instruments::Piano,
-            instruments::Guitar
-        >;
+    double frequency_modulation(double time, double frequency, LowFrequencyOscillator lfo);
+    double noise();
+    double id_frequency(Id id);
+    double note_frequency(const Note& note);
 
-        const Storage& get() const { return m_storage; }
-
-        const Instrument& operator[](Voice voice_index) const {
-            switch (voice_index) {
-                case 0: return std::get<0>(m_storage);
-                case 1: return std::get<1>(m_storage);
-                case 2: return std::get<2>(m_storage);
-                case 3: return std::get<3>(m_storage);
-                case 4: return std::get<4>(m_storage);
-                case 5: return std::get<5>(m_storage);
-                case 6: return std::get<6>(m_storage);
-                case 7: return std::get<7>(m_storage);
-            }
-
-            std::unreachable();
+    template<std::size_t N>
+    constexpr std::array<double, N> amplitudes(std::array<double, N> denominators) {
+        for (const auto [i, denominator] : denominators | std::views::enumerate) {
+            denominators[i] = 1.0 / double(denominator);
         }
-    private:
-        Storage m_storage;
-    };
+
+        const double sum {std::accumulate(denominators.begin(), denominators.end(), 0.0)};
+
+        for (double& denominator : denominators) {
+            denominator /= sum;
+        }
+
+        return denominators;
+    }
+
+    namespace padsynth {
+
+    }
 }

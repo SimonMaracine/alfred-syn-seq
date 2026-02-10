@@ -8,15 +8,18 @@ target_sources(
         "src/audio.cpp"
         "src/synthesis.cpp"
         "src/synthesizer.cpp"
+        "src/voice.cpp"
     PUBLIC
         FILE_SET HEADERS
         BASE_DIRS
             "include"
         FILES
             "include/alfred/audio.hpp"
+            "include/alfred/hash.hpp"
             "include/alfred/math.hpp"
             "include/alfred/synthesis.hpp"
             "include/alfred/synthesizer.hpp"
+            "include/alfred/voice.hpp"
 )
 
 target_link_libraries(alfred_lib PRIVATE SDL3::SDL3)

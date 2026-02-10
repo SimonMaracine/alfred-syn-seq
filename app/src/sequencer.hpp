@@ -103,7 +103,7 @@ namespace seq {
 
         // Notes must always be sorted in a very specific way
         // Use a normal set, because the iterators need to stay stable
-        std::unordered_map<syn::Voice, std::set<Note>> voices;  // TODO erase empty voices when serializing
+        std::unordered_map<syn::VoiceId, std::set<Note>> voices;  // TODO erase empty voices when serializing
 
         bool equal_time(const Measure& other) const {
             return tempo == other.tempo && time_signature == other.time_signature;
@@ -137,7 +137,7 @@ namespace seq {
         static bool note_last_in_measure(const Measure& measure, const Note& note);
 
         template<std::contiguous_iterator MeasureIter>
-        bool check_note_has_next(syn::Voice voice, const ProvenanceNote<MeasureIter>& provenance_note, ProvenanceNote<MeasureIter>& result_next_note) const {
+        bool check_note_has_next(syn::VoiceId voice, const ProvenanceNote<MeasureIter>& provenance_note, ProvenanceNote<MeasureIter>& result_next_note) const {
             {
                 const auto& notes {provenance_note.measure()->voices.at(voice)};
 
@@ -179,7 +179,7 @@ namespace seq {
         }
 
         template<std::contiguous_iterator MeasureIter>
-        bool check_note_has_previous(syn::Voice voice, const ProvenanceNote<MeasureIter>& provenance_note, ProvenanceNote<MeasureIter>& result_previous_note) const {
+        bool check_note_has_previous(syn::VoiceId voice, const ProvenanceNote<MeasureIter>& provenance_note, ProvenanceNote<MeasureIter>& result_previous_note) const {
             {
                 const auto& notes {provenance_note.measure()->voices.at(voice)};
 
@@ -269,7 +269,7 @@ namespace seq {
             PlayedNotes notes_played;
         };
 
-        using Executions = std::unordered_map<syn::Voice, Execution>;
+        using Executions = std::unordered_map<syn::VoiceId, Execution>;
     }
 
     class Player {

@@ -84,7 +84,7 @@ namespace application {
         void composition_measures(const Draw& draw) const;
         void composition_measures_labels(const Draw& draw) const;
         void composition_notes(const Draw& draw) const;
-        void composition_notes(const Draw& draw, syn::Voice voice, const std::set<seq::Note>& notes, float global_position_x, float rounding) const;
+        void composition_notes(const Draw& draw, syn::VoiceId voice, const std::set<seq::Note>& notes, float global_position_x, float rounding) const;
         void composition_cursor(const Draw& draw) const;
         void composition_hover(const Draw& draw, const HoveredNote& hovered_note) const;
         void shortcuts();
@@ -130,7 +130,7 @@ namespace application {
         float composition_width() const;
         ImVec2 composition_space(ImVec2 space) const;
         ImVec2 composition_mouse_position(ImVec2 origin) const;
-        std::flat_set<syn::Voice> instruments_in_project() const;
+        std::flat_set<syn::VoiceId> voices_in_project() const;
         bool point_x_in_camera_view(float point_x, float space_x) const;
         bool point_y_in_camera_view(float point_y, float space_y) const;
         void readd_note(ProvenanceNote& provenance_note, const seq::Note& note) const;
@@ -174,7 +174,7 @@ namespace application {
         data::Data m_data;
         task::TaskManager m_task_manager;
 
-        syn::Voice m_voice {syn::VoiceBell};
+        syn::VoiceId m_voice {};
         syn::keyboard::Octave m_octave {syn::keyboard::Octave3};
 
         ImVec2 m_composition_camera;
@@ -198,7 +198,7 @@ namespace application {
             image::Texture texture_play;
             image::Texture texture_pause;
             image::Texture texture_rewind;
-            std::unordered_map<syn::Voice, ui::ColorIndex> colors;
+            std::unordered_map<syn::VoiceId, ui::ColorIndex> colors;
         } m_ui;
 
         bool m_metronome {};

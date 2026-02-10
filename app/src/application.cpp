@@ -11,6 +11,7 @@
 #include <cassert>
 
 #include <SDL3/SDL.h>
+#include <alfred/voice.hpp>
 
 #include "logging.hpp"
 #include "imgui.ini.hpp"
@@ -69,6 +70,7 @@ namespace application {
         io.ConfigWindowsMoveFromTitleBarOnly = true;
         io.IniFilename = nullptr;
 
+        m_voice = voice::Piano::static_id();
         m_player = seq::Player(m_synthesizer, m_composition, [this] { set_desired_frame_time(FRAME_TIME_DEFAULT); });
         m_composition_selected_measure = m_composition.measures.end();
 
@@ -83,8 +85,8 @@ namespace application {
             return false;
         }, 5000);
 
-        m_synthesizer.for_each_instrument([this, index = std::size_t()](const auto& instrument) mutable {
-            m_ui.colors[instrument.voice()] = ui::ColorIndex(index);
+        m_synthesizer.for_each_voice([this, index = std::size_t()](const auto& voice) mutable {
+            m_ui.colors[voice.id()] = ui::ColorIndex(index);
             index = (index + 1) % std::size(ui::COLORS);
         });
     }
@@ -379,17 +381,17 @@ namespace application {
     }
 
     void Application::instruments() {
-        if (ImGui::Begin("Instruments", nullptr, ImGuiWindowFlags_NoResize)) {
+        if (ImGui::Begin("Voices", nullptr, ImGuiWindowFlags_NoResize)) {
             ImGui::SeparatorText("Voice");
 
-            if (ImGui::BeginCombo("##voice", m_synthesizer.instrument_name(m_voice), ImGuiComboFlags_NoArrowButton)) {
-                m_synthesizer.for_each_instrument([this](const syn::Instrument& instrument) {
-                    if (instrument.voice() == syn::VoiceMetronome) {
+            if (ImGui::BeginCombo("##voice", m_synthesizer.voice_name(m_voice), ImGuiComboFlags_NoArrowButton)) {
+                m_synthesizer.for_each_voice([this](const syn::Voice& voice) {
+                    if (voice.id() == voice::Metronome::static_id()) {
                         return;
                     }
 
-                    if (ImGui::Selectable(instrument.name(), instrument.voice() == m_voice)) {
-                        m_voice = instrument.voice();
+                    if (ImGui::Selectable(voice.name(), voice.id() == m_voice)) {
+                        m_voice = voice.id();
                         m_composition_selected_notes.clear();
                         m_synthesizer.silence();
                     }
@@ -412,10 +414,10 @@ namespace application {
             ImGui::SeparatorText("In Project");
 
             if (ImGui::BeginListBox("##in_project")) {
-                for (const auto instruments {instruments_in_project()}; const syn::Voice voice : instruments) {
+                for (const auto instruments {voices_in_project()}; const syn::VoiceId voice : instruments) {
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(ui::COLORS[m_ui.colors.at(voice)].second));
 
-                    if (ImGui::Selectable(m_synthesizer.instrument_name(voice), voice == m_voice)) {
+                    if (ImGui::Selectable(m_synthesizer.voice_name(voice), voice == m_voice)) {
                         m_voice = voice;
                         m_composition_selected_notes.clear();
                         m_synthesizer.silence();
@@ -954,7 +956,7 @@ namespace application {
         }
     }
 
-    void Application::composition_notes(const Draw& draw, syn::Voice voice, const std::set<seq::Note>& notes, float global_position_x, float rounding) const {
+    void Application::composition_notes(const Draw& draw, syn::VoiceId voice, const std::set<seq::Note>& notes, float global_position_x, float rounding) const {
         for (auto note {notes.begin()}; note != notes.end(); note++) {
             const ImVec4 rect {note_rectangle(*note)};
 
@@ -1297,7 +1299,7 @@ namespace application {
     void Application::add_metronome(MeasureIter begin, MeasureIter end) {
         for (auto measure {begin}; measure != end; measure++) {
             for (unsigned int i {}; i < measure->time_signature.measure_steps(); i += seq::steps(measure->time_signature.value())) {
-                measure->voices[syn::VoiceMetronome].emplace(i == 0 ? 50 : 48, seq::Sixteenth, i);
+                measure->voices[voice::Metronome::static_id()].emplace(i == 0 ? 50 : 48, seq::Sixteenth, i);
             }
         }
 
@@ -1310,7 +1312,7 @@ namespace application {
 
     void Application::remove_metronome(MeasureIter begin, MeasureIter end) {
         for (auto measure {begin}; measure != end; measure++) {
-            measure->voices.erase(syn::VoiceMetronome);
+            measure->voices.erase(voice::Metronome::static_id());
         }
 
         modify_composition();
@@ -1394,7 +1396,7 @@ namespace application {
         }
 
         std::erase_if(m_composition_selected_measure->voices, [](const auto& voice) {
-            return voice.first != syn::VoiceMetronome;
+            return voice.first != voice::Metronome::static_id();
         });
 
         modify_composition();
@@ -1922,20 +1924,20 @@ namespace application {
         return ImGui::GetIO().MousePos - origin - ImVec2(ui::rem(COMPOSITION_LEFT), 0.0f) + m_composition_camera;
     }
 
-    std::flat_set<syn::Voice> Application::instruments_in_project() const {
-        std::flat_set<syn::Voice> instruments;
+    std::flat_set<syn::VoiceId> Application::voices_in_project() const {
+        std::flat_set<syn::VoiceId> voices;
 
         for (const seq::Measure& measure : m_composition.measures) {
             for (const auto& voice : measure.voices) {
                 if (!voice.second.empty()) {
-                    instruments.insert(voice.first);
+                    voices.insert(voice.first);
                 }
             }
         }
 
-        instruments.erase(syn::VoiceMetronome);
+        voices.erase(voice::Metronome::static_id());
 
-        return instruments;
+        return voices;
     }
 
     bool Application::point_x_in_camera_view(float point_x, float space_x) const {
@@ -2081,7 +2083,7 @@ namespace application {
 
     bool Application::empty_except_metronome(const seq::Measure& measure) {
         return std::ranges::all_of(measure.voices, [](const auto& voice) {
-            return voice.second.empty() || voice.first == syn::VoiceMetronome;
+            return voice.second.empty() || voice.first == voice::Metronome::static_id();
         });
     }
 
