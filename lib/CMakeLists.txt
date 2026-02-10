@@ -6,6 +6,7 @@ target_sources(
     alfred_lib
     PRIVATE
         "src/audio.cpp"
+        "src/math.cpp"
         "src/synthesis.cpp"
         "src/synthesizer.cpp"
         "src/voice.cpp"

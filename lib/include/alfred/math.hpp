@@ -1,6 +1,9 @@
 #pragma once
 
 #include <numbers>
+#include <memory>
+
+struct fftw_plan_s;
 
 namespace math {
     inline constexpr double PI {std::numbers::pi};
@@ -23,5 +26,36 @@ namespace math {
         } else {
             return x;
         }
+    }
+
+    namespace fft {
+        struct Frequencies {
+            std::unique_ptr<double[]> sine;
+            std::unique_ptr<double[]> cosine;
+        };
+
+        class Transform {
+        public:
+            explicit Transform(std::size_t size);
+            ~Transform();
+
+            void samples_to_frequencies(const double* samples, Frequencies& frequencies);
+        private:
+            std::size_t m_size {};
+            std::unique_ptr<double[]> m_temporary;
+            fftw_plan_s* m_plan {};
+        };
+
+        class InverseTransform {
+        public:
+            explicit InverseTransform(std::size_t size);
+            ~InverseTransform();
+
+            void frequencies_to_samples(const Frequencies& frequencies, double* samples);
+        private:
+            std::size_t m_size {};
+            std::unique_ptr<double[]> m_temporary;
+            fftw_plan_s* m_plan {};
+        };
     }
 }

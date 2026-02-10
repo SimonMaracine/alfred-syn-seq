@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <array>
 #include <numeric>
 #include <ranges>
@@ -154,6 +155,7 @@ namespace syn {
 
     double frequency_modulation(double time, double frequency, LowFrequencyOscillator lfo);
     double noise();
+    double random();
     double id_frequency(Id id);
     double note_frequency(const Note& note);
 
@@ -173,6 +175,14 @@ namespace syn {
     }
 
     namespace padsynth {
-
+        std::unique_ptr<double[]> padsynth(
+            const double* input_amplitudes,
+            std::size_t size,
+            int sample_rate,
+            double frequency,
+            double bandwidth,
+            int number_harmonics,
+            double* output_sample
+        );
     }
 }
