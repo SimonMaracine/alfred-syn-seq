@@ -158,6 +158,7 @@ namespace syn {
     double random();
     double id_frequency(Id id);
     double note_frequency(const Note& note);
+    double time_on(double time, const Note& note);
 
     template<std::size_t N>
     constexpr std::array<double, N> amplitudes(std::array<double, N> denominators) {

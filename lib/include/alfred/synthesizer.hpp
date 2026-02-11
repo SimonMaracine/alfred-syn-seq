@@ -20,7 +20,7 @@ namespace synthesizer {
         void note_off(syn::Id id, syn::VoiceId voice);
         void silence();
         void update();
-        void for_each_voice(const std::function<void(const syn::Voice&)> &function) const;
+        void for_each_voice(const std::function<void(const syn::Voice&)>& function) const;
         const char* voice_name(syn::VoiceId voice) const;
     private:
         double sound(double time) const override;

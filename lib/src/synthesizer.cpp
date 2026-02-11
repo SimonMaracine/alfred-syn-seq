@@ -18,7 +18,7 @@ namespace synthesizer {
         m_voices[voice::DrumHiHat::static_id()] = std::make_unique<voice::DrumHiHat>();
         m_voices[voice::Piano::static_id()] = std::make_unique<voice::Piano>();
         m_voices[voice::Guitar::static_id()] = std::make_unique<voice::Guitar>();
-        m_voices[voice::Test::static_id()] = std::make_unique<voice::Test>();
+        m_voices[voice::PadSynth::static_id()] = std::make_unique<voice::PadSynth>();
     }
 
     Synthesizer::~Synthesizer() noexcept {
@@ -92,7 +92,7 @@ namespace synthesizer {
         }
     }
 
-    void Synthesizer::for_each_voice(const std::function<void(const syn::Voice&)> &function) const {
+    void Synthesizer::for_each_voice(const std::function<void(const syn::Voice&)>& function) const {
         for (const auto& voice : m_voices | std::views::values) {
             function(*voice);
         }

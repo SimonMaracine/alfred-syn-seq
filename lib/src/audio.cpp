@@ -173,7 +173,7 @@ namespace audio {
 
             g_buffer.buffer[i] = Resolution(sound * double(std::numeric_limits<Resolution>::max()));
 
-            self.m_time += 1.0 / double(SAMPLE_FREQUENCY);
+            self.m_time += 1.0 / double(SAMPLE_FREQUENCY);  // FIXME time looses precision as it increases
         }
 
         // Buffer size could be larger than the samples written!

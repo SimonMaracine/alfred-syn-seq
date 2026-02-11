@@ -193,6 +193,12 @@ namespace syn {
         return id_frequency(note.id);
     }
 
+    double time_on(double time, const Note& note) {
+        const double result {time - note.time_on};
+        assert(result >= 0.0);
+        return result;
+    }
+
     // https://zynaddsubfx.sourceforge.io/doc/PADsynth/PADsynth.htm
 
     namespace padsynth {
@@ -201,7 +207,7 @@ namespace syn {
             return std::exp(-x * x) / bandwidth;
         }
 
-        static void inverse_fft(std::size_t size, const double* frequency_amplitudes, const double* frequency_phases, double* sample) {
+        static void inverse_ft(std::size_t size, const double* frequency_amplitudes, const double* frequency_phases, double* sample) {
             math::ft::InverseTransform transform {size};
             math::ft::Frequencies frequencies {size / 2};
 
@@ -257,7 +263,7 @@ namespace syn {
                 frequency_phases[i] = math::w(random());
             }
 
-            inverse_fft(size, frequency_amplitudes.get(), frequency_phases.get(), sample.get());
+            inverse_ft(size, frequency_amplitudes.get(), frequency_phases.get(), sample.get());
             normalize(sample.get(), size);
 
             return sample;

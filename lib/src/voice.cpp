@@ -10,9 +10,9 @@ namespace voice {
         static constexpr auto AMP {syn::amplitudes(std::array { 1.0, 2.0, 4.0, 25.0 })};
 
         return OVERALL_ENVELOPE.get_value(time, note.time_on, note.time_off) * (
-            AMP[0] * syn::oscillator::triangle(time, 1.0 * note_frequency(note)) +
-            AMP[1] * syn::oscillator::triangle(time, 2.0 * note_frequency(note)) +
-            AMP[2] * syn::oscillator::triangle(time, 4.0 * note_frequency(note)) +
+            AMP[0] * syn::oscillator::triangle(syn::time_on(time, note), 1.0 * note_frequency(note)) +
+            AMP[1] * syn::oscillator::triangle(syn::time_on(time, note), 2.0 * note_frequency(note)) +
+            AMP[2] * syn::oscillator::triangle(syn::time_on(time, note), 4.0 * note_frequency(note)) +
             AMP[3] * syn::noise()
         );
     }
@@ -21,9 +21,9 @@ namespace voice {
         static constexpr auto AMP {syn::amplitudes(std::array { 1.0, 2.0, 4.0 })};
 
         return OVERALL_ENVELOPE.get_value(time, note.time_on, note.time_off) * (
-            AMP[0] * syn::oscillator::sine(time, 1.0 * note_frequency(note), { 5.0, 0.001 }) +
-            AMP[1] * syn::oscillator::sine(time, 2.0 * note_frequency(note)) +
-            AMP[2] * syn::oscillator::sine(time, 4.0 * note_frequency(note))
+            AMP[0] * syn::oscillator::sine(syn::time_on(time, note), 1.0 * note_frequency(note), { 5.0, 0.001 }) +
+            AMP[1] * syn::oscillator::sine(syn::time_on(time, note), 2.0 * note_frequency(note)) +
+            AMP[2] * syn::oscillator::sine(syn::time_on(time, note), 4.0 * note_frequency(note))
         );
     }
 
@@ -35,9 +35,9 @@ namespace voice {
         static constexpr auto AMP {syn::amplitudes(std::array { 1.0, 2.0, 4.0, 50.0 })};
 
         return OVERALL_ENVELOPE.get_value(time, note.time_on, note.time_off) * (
-            AMP[0] * syn::oscillator::square(time, 1.0 * note_frequency(note), { 5.0, 0.001 }) +
-            AMP[1] * syn::oscillator::square(time, 2.0 * note_frequency(note)) +
-            AMP[2] * syn::oscillator::square(time, 4.0 * note_frequency(note)) +
+            AMP[0] * syn::oscillator::square(syn::time_on(time, note), 1.0 * note_frequency(note), { 5.0, 0.001 }) +
+            AMP[1] * syn::oscillator::square(syn::time_on(time, note), 2.0 * note_frequency(note)) +
+            AMP[2] * syn::oscillator::square(syn::time_on(time, note), 4.0 * note_frequency(note)) +
             AMP[3] * syn::noise()
         );
     }
@@ -47,8 +47,8 @@ namespace voice {
         static constexpr auto AMP {syn::amplitudes(std::array { 1.0, 6.0, 15.0 })};
 
         return OVERALL_ENVELOPE.get_value(time, note.time_on, note.time_off) * (
-            AMP[0] * syn::oscillator::sine(time, 1.0 * syn::id_frequency(C3)) +
-            AMP[1] * syn::oscillator::sawtooth(time, 1.0 * syn::id_frequency(C3)) +
+            AMP[0] * syn::oscillator::sine(syn::time_on(time, note), 1.0 * syn::id_frequency(C3)) +
+            AMP[1] * syn::oscillator::sawtooth(syn::time_on(time, note), 1.0 * syn::id_frequency(C3)) +
             AMP[2] * syn::noise()
         );
     }
@@ -58,9 +58,9 @@ namespace voice {
         static constexpr auto AMP {syn::amplitudes(std::array { 1.0, 2.0, 4.0, 8.0, 5.0 })};
 
         return OVERALL_ENVELOPE.get_value(time, note.time_on, note.time_off) * (
-            AMP[0] * syn::oscillator::sine(time, 1.0 * syn::id_frequency(C3)) +
-            AMP[1] * syn::oscillator::sine(time, 4.0 * syn::id_frequency(C3)) +
-            AMP[3] * syn::oscillator::sawtooth(time, 1.0 * syn::id_frequency(C3)) +
+            AMP[0] * syn::oscillator::sine(syn::time_on(time, note), 1.0 * syn::id_frequency(C3)) +
+            AMP[1] * syn::oscillator::sine(syn::time_on(time, note), 4.0 * syn::id_frequency(C3)) +
+            AMP[3] * syn::oscillator::sawtooth(syn::time_on(time, note), 1.0 * syn::id_frequency(C3)) +
             AMP[4] * syn::noise()
         );
     }
@@ -70,8 +70,8 @@ namespace voice {
         static constexpr auto AMP {syn::amplitudes(std::array { 1.0, 4.0, 0.5 })};
 
         return OVERALL_ENVELOPE.get_value(time, note.time_on, note.time_off) * (
-            AMP[0] * syn::oscillator::square(time, 1.0 * syn::id_frequency(C4)) +
-            AMP[1] * syn::oscillator::square(time, 2.0 * syn::id_frequency(C4)) +
+            AMP[0] * syn::oscillator::square(syn::time_on(time, note), 1.0 * syn::id_frequency(C4)) +
+            AMP[1] * syn::oscillator::square(syn::time_on(time, note), 2.0 * syn::id_frequency(C4)) +
             AMP[2] * syn::noise()
         );
     }
@@ -80,10 +80,10 @@ namespace voice {
         static constexpr auto AMP {syn::amplitudes(std::array { 1.0, 2.0, 4.0, 8.0 })};
 
         return OVERALL_ENVELOPE.get_value(time, note.time_on, note.time_off) * (
-            AMP[0] * syn::oscillator::sine(time, 1.0 * note_frequency(note), { 8.0, 0.00001 }) +
-            AMP[1] * syn::oscillator::sine(time, 2.0 * note_frequency(note)) +
-            AMP[2] * syn::oscillator::sine(time, 4.0 * note_frequency(note)) +
-            AMP[3] * syn::oscillator::sawtooth(time, 1.0 * note_frequency(note))
+            AMP[0] * syn::oscillator::sine(syn::time_on(time, note), 1.0 * note_frequency(note), { 8.0, 0.00001 }) +
+            AMP[1] * syn::oscillator::sine(syn::time_on(time, note), 2.0 * note_frequency(note)) +
+            AMP[2] * syn::oscillator::sine(syn::time_on(time, note), 4.0 * note_frequency(note)) +
+            AMP[3] * syn::oscillator::sawtooth(syn::time_on(time, note), 1.0 * note_frequency(note))
         );
     }
 
@@ -91,10 +91,10 @@ namespace voice {
         static constexpr auto AMP {syn::amplitudes(std::array { 1.0, 2.0, 4.0, 8.0 })};
 
         return OVERALL_ENVELOPE.get_value(time, note.time_on, note.time_off) * (
-            AMP[0] * syn::oscillator::sine(time, 1.0 * note_frequency(note), { 10.0, 0.00001 }) +
-            AMP[1] * syn::oscillator::sine(time, 2.0 * note_frequency(note)) +
-            AMP[2] * syn::oscillator::sine(time, 3.0 * note_frequency(note)) +
-            AMP[3] * syn::oscillator::sawtooth(time, 4.0 * note_frequency(note))
+            AMP[0] * syn::oscillator::sine(syn::time_on(time, note), 1.0 * note_frequency(note), { 10.0, 0.00001 }) +
+            AMP[1] * syn::oscillator::sine(syn::time_on(time, note), 2.0 * note_frequency(note)) +
+            AMP[2] * syn::oscillator::sine(syn::time_on(time, note), 3.0 * note_frequency(note)) +
+            AMP[3] * syn::oscillator::sawtooth(syn::time_on(time, note), 4.0 * note_frequency(note))
         );
     }
 
@@ -102,7 +102,7 @@ namespace voice {
         return std::make_pair(7, 51);
     }
 
-    Test::Test() {
+    PadSynth::PadSynth() {
         double amplitude_harmonics[64] {};
 
         for (std::size_t i {1}; i < std::size(amplitude_harmonics); ++i) {
@@ -114,23 +114,23 @@ namespace voice {
         }
 
         m_sample = syn::padsynth::padsynth(
-            262144,
+            SIZE,
             audio::SAMPLE_FREQUENCY,
-            261.0,
+            FREQUENCY,
             40.0,
             amplitude_harmonics,
             int(std::size(amplitude_harmonics))
         );
     }
 
-    double Test::sound(double time, const syn::Note& note) const {
-        static constexpr double SAMPLE_DURATION {262144.0 / 44100.0};
+    double PadSynth::sound(double time, const syn::Note& note) const {
+        static constexpr double SAMPLE_DURATION {double(SIZE) / double(audio::SAMPLE_FREQUENCY)};
 
+        const double pitch {syn::note_frequency(note) / FREQUENCY};
         double _;
-        const double part {std::modf(time / SAMPLE_DURATION, &_)};
+        const double part {std::modf(time * pitch / SAMPLE_DURATION, &_)};
+        const auto index {std::size_t(part * double(SIZE))};
 
-        const auto index {std::size_t(part * 262144.0)};
-
-        return m_sample[index];
+        return OVERALL_ENVELOPE.get_value(time, note.time_on, note.time_off) * m_sample[index];
     }
 }

@@ -156,11 +156,11 @@ namespace voice {  // TODO description
         };
     };
 
-    class Test : public syn::Voice {
+    class PadSynth : public syn::Voice {
     public:
-        Test();
+        PadSynth();
 
-        ALFRED_VOICE_STATIC_NAME_ID("Test")
+        ALFRED_VOICE_STATIC_NAME_ID("PADsynth")
 
         const char* name() const override { return static_name(); }
         syn::VoiceId id() const override { return static_id(); }
@@ -176,6 +176,9 @@ namespace voice {  // TODO description
                 0.8
             }
         };
+
+        static constexpr std::size_t SIZE {262144};
+        static constexpr double FREQUENCY {261.63};
 
         syn::padsynth::Sample m_sample;
     };
