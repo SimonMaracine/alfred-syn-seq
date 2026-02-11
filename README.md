@@ -2,7 +2,7 @@
 
 A free and open source cross-platform synthesizer and sequencer program.
 
-It comprises a digital additive multi-timbral synthesizer and an interface to compose and play music.
+It comprises a digital multi-timbral synthesizer using additive and wavetable methods, and an interface to compose and play music.
 
 The synthesized sounds are meant to be *suggestions* and *hints*, rather than realistic emulations.
 
@@ -51,9 +51,11 @@ cmake --install build/dist/
 - [SDL](https://github.com/libsdl-org/SDL)
 - [Dear ImGui](https://github.com/ocornut/imgui)
 - [Cereal](https://github.com/USCiLab/cereal)
+- [FFTW](https://www.fftw.org/)
 
 ## Material
 
+- PADsynth algorithm by Paul Nașca
 - Sound Synthesis and Sampling Second Edition by Martin Russ
 - THE COMPLETE SYNTHESIZER: A Comprehensive Guide by David Crombie
 - Code-It-Yourself! Sound Synthesizer by javidx9
