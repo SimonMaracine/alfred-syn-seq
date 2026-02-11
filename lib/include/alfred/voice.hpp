@@ -155,4 +155,28 @@ namespace voice {  // TODO description
             }
         };
     };
+
+    class Test : public syn::Voice {
+    public:
+        Test();
+
+        ALFRED_VOICE_STATIC_NAME_ID("Test")
+
+        const char* name() const override { return static_name(); }
+        syn::VoiceId id() const override { return static_id(); }
+        const syn::Envelope& overall_envelope() const override { return OVERALL_ENVELOPE; }
+        double sound(double time, const syn::Note& note) const override;
+    private:
+        static constexpr syn::EnvelopeAdsr OVERALL_ENVELOPE {
+            syn::EnvelopeAdsrDescription {
+                0.1,
+                0.02,
+                0.2,
+                1.0,
+                0.8
+            }
+        };
+
+        syn::padsynth::Sample m_sample;
+    };
 }

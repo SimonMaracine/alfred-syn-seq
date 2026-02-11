@@ -23,7 +23,7 @@ target_sources(
             "include/alfred/voice.hpp"
 )
 
-target_link_libraries(alfred_lib PRIVATE SDL3::SDL3)
+target_link_libraries(alfred_lib PRIVATE SDL3::SDL3 fftw3)
 
 set_target_properties(alfred_lib PROPERTIES OUTPUT_NAME "alfred")
 

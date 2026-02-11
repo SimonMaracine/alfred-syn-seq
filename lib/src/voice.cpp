@@ -1,5 +1,10 @@
 #include "alfred/voice.hpp"
 
+#include <cmath>
+
+#include "alfred/math.hpp"
+#include "alfred/audio.hpp"
+
 namespace voice {
     double Metronome::sound(double time, const syn::Note& note) const {
         static constexpr auto AMP {syn::amplitudes(std::array { 1.0, 2.0, 4.0, 25.0 })};
@@ -95,5 +100,37 @@ namespace voice {
 
     syn::VoiceRange Guitar::range() const {
         return std::make_pair(7, 51);
+    }
+
+    Test::Test() {
+        double amplitude_harmonics[64] {};
+
+        for (std::size_t i {1}; i < std::size(amplitude_harmonics); ++i) {
+            amplitude_harmonics[i] = 1.0 / double(i);
+
+            if (i % 2 == 0) {
+                amplitude_harmonics[i] *= 2.0;
+            }
+        }
+
+        m_sample = syn::padsynth::padsynth(
+            262144,
+            audio::SAMPLE_FREQUENCY,
+            261.0,
+            40.0,
+            amplitude_harmonics,
+            int(std::size(amplitude_harmonics))
+        );
+    }
+
+    double Test::sound(double time, const syn::Note& note) const {
+        static constexpr double SAMPLE_DURATION {262144.0 / 44100.0};
+
+        double _;
+        const double part {std::modf(time / SAMPLE_DURATION, &_)};
+
+        const auto index {std::size_t(part * 262144.0)};
+
+        return m_sample[index];
     }
 }

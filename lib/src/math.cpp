@@ -3,7 +3,12 @@
 #include <fftw3.h>
 
 namespace math {
-    namespace fft {
+    namespace ft {
+        Frequencies::Frequencies(std::size_t size) {
+            m_sine = std::make_unique<double[]>(size);
+            m_cosine = std::make_unique<double[]>(size);
+        }
+
         Transform::Transform(std::size_t size)
             : m_size(size) {
             m_temporary = std::make_unique<double[]>(m_size);
@@ -15,7 +20,19 @@ namespace math {
         }
 
         void Transform::samples_to_frequencies(const double* samples, Frequencies& frequencies) {
+            for (std::size_t i {}; i < m_size; i++) {
+                m_temporary[i] = samples[i];
+            }
 
+            fftw_execute(m_plan);
+
+            for (std::size_t i {}; i < m_size / 2; i++) {
+                frequencies.cosine()[i] = m_temporary[i];
+
+                if (i != 0) {
+                    frequencies.sine()[i] = m_temporary[m_size - i];
+                }
+            }
         }
 
         InverseTransform::InverseTransform(std::size_t size)
@@ -29,7 +46,21 @@ namespace math {
         }
 
         void InverseTransform::frequencies_to_samples(const Frequencies& frequencies, double* samples) {
+            for (std::size_t i {}; i < m_size / 2; i++) {
+                m_temporary[i] = frequencies.cosine()[i];
 
+                if (i != 0) {
+                    m_temporary[m_size - i] = frequencies.sine()[i];
+                }
+            }
+
+            m_temporary[m_size / 2] = 0.0;
+
+            fftw_execute(m_plan);
+
+            for (std::size_t i {}; i < m_size; i++) {
+                samples[i] = m_temporary[i];
+            }
         }
     }
 }

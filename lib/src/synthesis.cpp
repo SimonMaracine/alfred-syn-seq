@@ -193,14 +193,24 @@ namespace syn {
         return id_frequency(note.id);
     }
 
+    // https://zynaddsubfx.sourceforge.io/doc/PADsynth/PADsynth.htm
+
     namespace padsynth {
-        static double profile(double frequency, double bandwidth) {
+        static double profile(double frequency, double bandwidth) {  // TODO make customizable
             const double x {frequency / bandwidth};
             return std::exp(-x * x) / bandwidth;
         }
 
-        static void inverse_fft(std::size_t size, double* frequency_amplitude, double* frequency_phase, double* sample) {
+        static void inverse_fft(std::size_t size, const double* frequency_amplitudes, const double* frequency_phases, double* sample) {
+            math::ft::InverseTransform transform {size};
+            math::ft::Frequencies frequencies {size / 2};
 
+            for (std::size_t i {}; i < size / 2; i++) {
+                frequencies.cosine()[i] = frequency_amplitudes[i] * std::cos(frequency_phases[i]);
+                frequencies.sine()[i] = frequency_amplitudes[i] * std::sin(frequency_phases[i]);
+            }
+
+            transform.frequencies_to_samples(frequencies, sample);
         }
 
         static void normalize(double* sample, std::size_t size) {
@@ -210,14 +220,14 @@ namespace syn {
                 max = std::max(max, std::abs(sample[i]));
             }
 
-            max = std::max(max, 0.00001);
+            max = std::max(max, 1.0e-5);
 
             for (std::size_t i {}; i < size; i++) {
-                sample[i] /= max * 1.414213562;
+                sample[i] /= max;
             }
         }
 
-        std::unique_ptr<double[]> padsynth(
+        Sample padsynth(
             std::size_t size,
             int sample_rate,
             double frequency,
@@ -226,12 +236,12 @@ namespace syn {
             int number_harmonics
         ) {
             auto sample {std::make_unique<double[]>(size)};
-            auto frequency_amplitude {std::make_unique<double[]>(size / 2)};
-            auto frequency_phase {std::make_unique<double[]>(size / 2)};
+            auto frequency_amplitudes {std::make_unique<double[]>(size / 2)};
+            auto frequency_phases {std::make_unique<double[]>(size / 2)};
 
             for (int harmonic {1}; harmonic < number_harmonics; harmonic++) {
                 const double harmonic_bandwidth {
-                    (std::pow(2.0, bandwidth / 1200.0) - 1.0) * frequency * double(harmonic) / double(bandwidth)
+                    (std::pow(2.0, bandwidth / 1200.0) - 1.0) * frequency * double(harmonic)
                 };
 
                 const double bandwidth_i {harmonic_bandwidth / (2.0 * double(sample_rate))};
@@ -239,15 +249,15 @@ namespace syn {
 
                 for (std::size_t i {}; i < size / 2; i++) {
                     const double harmonic_profile {profile(double(i) / double(size) - frequency_i, bandwidth_i)};
-                    frequency_amplitude[i] += harmonic_profile * amplitude_harmonics[harmonic];
+                    frequency_amplitudes[i] += harmonic_profile * amplitude_harmonics[harmonic];
                 }
             }
 
             for (std::size_t i {}; i < size / 2; i++) {
-                frequency_phase[i] = math::w(random());
+                frequency_phases[i] = math::w(random());
             }
 
-            inverse_fft(size, frequency_amplitude.get(), frequency_phase.get(), sample.get());
+            inverse_fft(size, frequency_amplitudes.get(), frequency_phases.get(), sample.get());
             normalize(sample.get(), size);
 
             return sample;

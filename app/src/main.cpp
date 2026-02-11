@@ -24,7 +24,7 @@ int main(int, char**) {
         logging::error("Could not initialize logging: {}", e.what());
     }
 
-    if (!SDL_SetHint(SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES, "512")) {
+    if (!SDL_SetHint(SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES, "256")) {
         logging::error("SDL_SetHint(SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES)");
     }
 

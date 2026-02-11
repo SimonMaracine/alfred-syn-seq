@@ -175,14 +175,15 @@ namespace syn {
     }
 
     namespace padsynth {
-        std::unique_ptr<double[]> padsynth(
-            const double* input_amplitudes,
+        using Sample = std::unique_ptr<double[]>;
+
+        Sample padsynth(
             std::size_t size,
             int sample_rate,
             double frequency,
             double bandwidth,
-            int number_harmonics,
-            double* output_sample
+            const double* amplitude_harmonics,
+            int number_harmonics
         );
     }
 }

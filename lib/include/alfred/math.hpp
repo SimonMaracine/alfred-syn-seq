@@ -28,10 +28,18 @@ namespace math {
         }
     }
 
-    namespace fft {
-        struct Frequencies {
-            std::unique_ptr<double[]> sine;
-            std::unique_ptr<double[]> cosine;
+    namespace ft {
+        class Frequencies {
+        public:
+            explicit Frequencies(std::size_t size);
+
+            double* sine() { return m_sine.get(); }
+            double* cosine() { return m_cosine.get(); }
+            const double* sine() const { return m_sine.get(); }
+            const double* cosine() const { return m_cosine.get(); }
+        private:
+            std::unique_ptr<double[]> m_sine;
+            std::unique_ptr<double[]> m_cosine;
         };
 
         class Transform {
