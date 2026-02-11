@@ -55,7 +55,7 @@ cmake --install build/dist/
 
 ## Material
 
-- PADsynth algorithm by Paul Nașca
+- PadSynth algorithm by Paul Nașca
 - Sound Synthesis and Sampling Second Edition by Martin Russ
 - THE COMPLETE SYNTHESIZER: A Comprehensive Guide by David Crombie
 - Code-It-Yourself! Sound Synthesizer by javidx9

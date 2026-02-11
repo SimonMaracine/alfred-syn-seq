@@ -16,11 +16,11 @@ namespace math {
         return w(double(hertz));
     }
 
-    constexpr bool less_than_eps(double x, double epsilon = 0.00001) {
+    constexpr bool less_than_eps(double x, double epsilon = 1.0e-5) {
         return x <= epsilon;
     }
 
-    constexpr double zero_if_less_than_eps(double x, double epsilon = 0.00001) {
+    constexpr double zero_if_less_than_eps(double x, double epsilon = 1.0e-5) {
         if (less_than_eps(x, epsilon)) {
             return 0.0;
         } else {

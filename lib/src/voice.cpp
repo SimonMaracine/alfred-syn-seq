@@ -102,7 +102,7 @@ namespace voice {
         return std::make_pair(7, 51);
     }
 
-    PadSynth::PadSynth() {
+    Strings::Strings() {
         double amplitude_harmonics[64] {};
 
         for (std::size_t i {1}; i < std::size(amplitude_harmonics); ++i) {
@@ -123,7 +123,7 @@ namespace voice {
         );
     }
 
-    double PadSynth::sound(double time, const syn::Note& note) const {
+    double Strings::sound(double time, const syn::Note& note) const {
         static constexpr double SAMPLE_DURATION {double(SIZE) / double(audio::SAMPLE_FREQUENCY)};
 
         const double pitch {syn::note_frequency(note) / FREQUENCY};

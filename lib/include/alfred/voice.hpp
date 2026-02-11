@@ -156,11 +156,11 @@ namespace voice {  // TODO description
         };
     };
 
-    class PadSynth : public syn::Voice {
+    class Strings : public syn::Voice {
     public:
-        PadSynth();
+        Strings();
 
-        ALFRED_VOICE_STATIC_NAME_ID("PADsynth")
+        ALFRED_VOICE_STATIC_NAME_ID("Strings?")
 
         const char* name() const override { return static_name(); }
         syn::VoiceId id() const override { return static_id(); }
