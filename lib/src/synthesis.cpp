@@ -103,7 +103,7 @@ namespace syn {
         return (time - time_note_off) / m_description.time_release * -amplitude + amplitude;
     }
 
-    Id Note::get_id(Name name, Octave octave) {
+    NoteId Voice::get_note(NoteName name, NoteOctave octave) {
         const unsigned int base {name};
         const unsigned int multiplier {octave};
 
@@ -182,19 +182,19 @@ namespace syn {
         return g_random.distribution_random(g_random.engine);
     }
 
-    double id_frequency(Id id) {
+    double frequency(NoteId note) {
         static constexpr double BASE_FREQUENCY {55.0};  // A1
         static constexpr double STEP_FREQUENCY {1.059463094};  // 2.0 ** (1.0 / 12.0)
 
-        return BASE_FREQUENCY * std::pow(STEP_FREQUENCY, double(id));
+        return BASE_FREQUENCY * std::pow(STEP_FREQUENCY, double(note));
     }
 
-    double note_frequency(const Note& note) {
-        return id_frequency(note.id);
+    double frequency(const Voice& voice) {
+        return frequency(voice.note);
     }
 
-    double time_on(double time, const Note& note) {
-        const double result {time - note.time_on};
+    double time_on(double time, const Voice& voice) {
+        const double result {time - voice.time_on};
         assert(result >= 0.0);
         return result;
     }

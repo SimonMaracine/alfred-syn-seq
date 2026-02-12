@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <algorithm>
 #include <utility>
 #include <cstddef>
@@ -79,4 +80,21 @@ namespace allocator {
 
     template<typename T, typename U>
     bool operator!=(const StaticAllocator<T>&, const StaticAllocator<U>&) { return false; }
+
+    template<typename T>
+    struct StaticAllocated {
+        void* operator new(std::size_t) {
+            StaticAllocator<T> alloc;
+            using Alloc = std::allocator_traits<decltype(alloc)>;
+
+            return Alloc::allocate(alloc, 1);
+        }
+
+        void operator delete(void* ptr) {
+            StaticAllocator<T> alloc;
+            using Alloc = std::allocator_traits<decltype(alloc)>;
+
+            Alloc::deallocate(alloc, static_cast<T*>(ptr), 1);
+        }
+    };
 }

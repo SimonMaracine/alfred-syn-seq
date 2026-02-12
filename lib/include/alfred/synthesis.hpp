@@ -31,9 +31,17 @@ namespace syn {
         double value_sustain {0.8};
     };
 
-    class EnvelopeAdsr : public Envelope {
+    struct EnvelopeAdrDescription {
+        double time_attack {0.01};
+        double time_decay {1.0};
+        double time_release {0.1};
+    };
+
+    class EnvelopeAdsr : public Envelope, public allocator::StaticAllocated<EnvelopeAdsr> {
     public:
-        EnvelopeAdsr(const EnvelopeAdsrDescription& description = {})
+        using Description = EnvelopeAdsrDescription;
+
+        EnvelopeAdsr(const Description& description = {})
             : m_description(description) {}
 
         double get_value(double time, double time_note_on, double time_note_off) const override;
@@ -42,18 +50,14 @@ namespace syn {
         double ads(double life_time) const;
         double r(double time, double time_note_on, double time_note_off) const;
 
-        EnvelopeAdsrDescription m_description;
+        Description m_description;
     };
 
-    struct EnvelopeAdrDescription {
-        double time_attack {0.01};
-        double time_decay {1.0};
-        double time_release {0.1};
-    };
-
-    class EnvelopeAdr : public Envelope {
+    class EnvelopeAdr : public Envelope, public allocator::StaticAllocated<EnvelopeAdsr> {
     public:
-        EnvelopeAdr(const EnvelopeAdrDescription& description = {})
+        using Description = EnvelopeAdrDescription;
+
+        EnvelopeAdr(const Description& description = {})
             : m_description(description) {}
 
         double get_value(double time, double time_note_on, double time_note_off) const override;
@@ -62,47 +66,15 @@ namespace syn {
         double ad(double life_time) const;
         double r(double time, double time_note_on, double time_note_off) const;
 
-        EnvelopeAdrDescription m_description;
+        Description m_description;
     };
 
-    namespace envelope {
-        struct Deleter {
-            void operator()(Envelope* ptr) const {
-                allocator::StaticAllocator<Envelope> alloc;
-                using Alloc = std::allocator_traits<decltype(alloc)>;
-
-                Alloc::destroy(alloc, ptr);
-                Alloc::deallocate(alloc, ptr, 1);
-            }
-        };
-
-        template<typename T = Envelope>
-        using Ptr = std::unique_ptr<T, Deleter>;
-
-        template<typename T, typename... Args>
-        auto create(Args&&... args) -> Ptr<T> {
-            allocator::StaticAllocator<T> alloc;
-            using Alloc = std::allocator_traits<decltype(alloc)>;
-
-            T* ptr {Alloc::allocate(alloc, 1)};
-            Alloc::construct(alloc, ptr, std::forward<Args>(args)...);
-
-            return Ptr<T>(ptr, Deleter());
-        }
-
-        inline Ptr<EnvelopeAdsr> create(const EnvelopeAdsrDescription& description) {
-            return create<EnvelopeAdsr>(description);
-        }
-
-        inline Ptr<EnvelopeAdr> create(const EnvelopeAdrDescription& description) {
-            return create<EnvelopeAdr>(description);
-        }
-    }
+    using EnvelopePtr = std::unique_ptr<Envelope>;
 
     // MIDI-like note ID
-    using Id = unsigned int;
+    using NoteId = unsigned int;
 
-    enum Name : unsigned int {
+    enum NoteName : unsigned int {
         A,
         As,
         B,
@@ -117,7 +89,7 @@ namespace syn {
         Gs
     };
 
-    enum Octave : unsigned int {
+    enum NoteOctave : unsigned int {
         Octave1,
         Octave2,
         Octave3,
@@ -129,16 +101,16 @@ namespace syn {
 
     using InstrumentId = unsigned int;
 
-    using InstrumentRange = std::pair<Id, Id>;
+    using InstrumentRange = std::pair<NoteId, NoteId>;
 
-    struct Note {
-        Id id {};
+    struct Voice {
+        NoteId note {};
         InstrumentId instrument {};
-        envelope::Ptr<> envelope;  // Overall envelope
+        EnvelopePtr envelope;  // Overall envelope
         double time_on {};
         double time_off {};
 
-        static Id get_id(Name name, Octave octave);
+        static NoteId get_note(NoteName name, NoteOctave octave);
     };
 
     namespace keyboard {
@@ -154,8 +126,8 @@ namespace syn {
         inline constexpr int EXTRA {4};
         inline constexpr int NOTES {OCTAVES * 12 + EXTRA};
 
-        inline constexpr Id ID_BEGIN {0};
-        inline constexpr Id ID_END {NOTES - 1};
+        inline constexpr NoteId ID_BEGIN {0};
+        inline constexpr NoteId ID_END {NOTES - 1};
         inline constexpr InstrumentRange ID_FULL_RANGE {std::make_pair(ID_BEGIN, ID_END)};
     }
 
@@ -171,10 +143,10 @@ namespace syn {
         virtual const char* name() const = 0;
         virtual InstrumentId id() const = 0;
 
-        virtual double sound(double time, const Note& note) const = 0;
+        virtual double sound(double time, const Voice& voice) const = 0;
         virtual InstrumentRange range() const { return  keyboard::ID_FULL_RANGE; }
 
-        virtual envelope::Ptr<> new_envelope() const = 0;
+        virtual EnvelopePtr new_envelope() const = 0;
     };
 
     struct LowFrequencyOscillator {
@@ -196,9 +168,9 @@ namespace syn {
     double frequency_modulation(double time, double frequency, LowFrequencyOscillator lfo);
     double noise();
     double random();
-    double id_frequency(Id id);
-    double note_frequency(const Note& note);
-    double time_on(double time, const Note& note);
+    double frequency(NoteId note);
+    double frequency(const Voice& voice);
+    double time_on(double time, const Voice& voice);
 
     template<std::size_t N>
     constexpr std::array<double, N> amplitudes(std::array<double, N> denominators) {

@@ -6,91 +6,91 @@
 #include "alfred/audio.hpp"
 
 namespace instrument {
-    double Metronome::sound(double time, const syn::Note& note) const {
+    double Metronome::sound(double time, const syn::Voice& voice) const {
         static constexpr auto AMP {syn::amplitudes(std::array { 1.0, 2.0, 4.0, 25.0 })};
 
-        return note.envelope->get_value(time, note.time_on, note.time_off) * (
-            AMP[0] * syn::oscillator::triangle(syn::time_on(time, note), 1.0 * note_frequency(note)) +
-            AMP[1] * syn::oscillator::triangle(syn::time_on(time, note), 2.0 * note_frequency(note)) +
-            AMP[2] * syn::oscillator::triangle(syn::time_on(time, note), 4.0 * note_frequency(note)) +
+        return voice.envelope->get_value(time, voice.time_on, voice.time_off) * (
+            AMP[0] * syn::oscillator::triangle(syn::time_on(time, voice), 1.0 * syn::frequency(voice)) +
+            AMP[1] * syn::oscillator::triangle(syn::time_on(time, voice), 2.0 * syn::frequency(voice)) +
+            AMP[2] * syn::oscillator::triangle(syn::time_on(time, voice), 4.0 * syn::frequency(voice)) +
             AMP[3] * syn::noise()
         );
     }
 
-    double Bell::sound(double time, const syn::Note& note) const {
+    double Bell::sound(double time, const syn::Voice& voice) const {
         static constexpr auto AMP {syn::amplitudes(std::array { 1.0, 2.0, 4.0 })};
 
-        return note.envelope->get_value(time, note.time_on, note.time_off) * (
-            AMP[0] * syn::oscillator::sine(syn::time_on(time, note), 1.0 * note_frequency(note), { 5.0, 0.001 }) +
-            AMP[1] * syn::oscillator::sine(syn::time_on(time, note), 2.0 * note_frequency(note)) +
-            AMP[2] * syn::oscillator::sine(syn::time_on(time, note), 4.0 * note_frequency(note))
+        return voice.envelope->get_value(time, voice.time_on, voice.time_off) * (
+            AMP[0] * syn::oscillator::sine(syn::time_on(time, voice), 1.0 * syn::frequency(voice), { 5.0, 0.001 }) +
+            AMP[1] * syn::oscillator::sine(syn::time_on(time, voice), 2.0 * syn::frequency(voice)) +
+            AMP[2] * syn::oscillator::sine(syn::time_on(time, voice), 4.0 * syn::frequency(voice))
         );
     }
 
-    double Harmonica::sound(double time, const syn::Note& note) const {
+    double Harmonica::sound(double time, const syn::Voice& voice) const {
         static constexpr auto AMP {syn::amplitudes(std::array { 1.0, 2.0, 4.0, 50.0 })};
 
-        return note.envelope->get_value(time, note.time_on, note.time_off) * (
-            AMP[0] * syn::oscillator::square(syn::time_on(time, note), 1.0 * note_frequency(note), { 5.0, 0.001 }) +
-            AMP[1] * syn::oscillator::square(syn::time_on(time, note), 2.0 * note_frequency(note)) +
-            AMP[2] * syn::oscillator::square(syn::time_on(time, note), 4.0 * note_frequency(note)) +
+        return voice.envelope->get_value(time, voice.time_on, voice.time_off) * (
+            AMP[0] * syn::oscillator::square(syn::time_on(time, voice), 1.0 * syn::frequency(voice), { 5.0, 0.001 }) +
+            AMP[1] * syn::oscillator::square(syn::time_on(time, voice), 2.0 * syn::frequency(voice)) +
+            AMP[2] * syn::oscillator::square(syn::time_on(time, voice), 4.0 * syn::frequency(voice)) +
             AMP[3] * syn::noise()
         );
     }
 
-    double DrumBass::sound(double time, const syn::Note& note) const {
-        static constexpr syn::Id C3 {15};
+    double DrumBass::sound(double time, const syn::Voice& voice) const {
+        static constexpr syn::NoteId C3 {15};
         static constexpr auto AMP {syn::amplitudes(std::array { 1.0, 6.0, 15.0 })};
 
-        return note.envelope->get_value(time, note.time_on, note.time_off) * (
-            AMP[0] * syn::oscillator::sine(syn::time_on(time, note), 1.0 * syn::id_frequency(C3)) +
-            AMP[1] * syn::oscillator::sawtooth(syn::time_on(time, note), 1.0 * syn::id_frequency(C3)) +
+        return voice.envelope->get_value(time, voice.time_on, voice.time_off) * (
+            AMP[0] * syn::oscillator::sine(syn::time_on(time, voice), 1.0 * syn::frequency(C3)) +
+            AMP[1] * syn::oscillator::sawtooth(syn::time_on(time, voice), 1.0 * syn::frequency(C3)) +
             AMP[2] * syn::noise()
         );
     }
 
-    double DrumSnare::sound(double time, const syn::Note& note) const {
-        static constexpr syn::Id C3 {15};
+    double DrumSnare::sound(double time, const syn::Voice& voice) const {
+        static constexpr syn::NoteId C3 {15};
         static constexpr auto AMP {syn::amplitudes(std::array { 1.0, 2.0, 4.0, 8.0, 5.0 })};
 
-        return note.envelope->get_value(time, note.time_on, note.time_off) * (
-            AMP[0] * syn::oscillator::sine(syn::time_on(time, note), 1.0 * syn::id_frequency(C3)) +
-            AMP[1] * syn::oscillator::sine(syn::time_on(time, note), 4.0 * syn::id_frequency(C3)) +
-            AMP[3] * syn::oscillator::sawtooth(syn::time_on(time, note), 1.0 * syn::id_frequency(C3)) +
+        return voice.envelope->get_value(time, voice.time_on, voice.time_off) * (
+            AMP[0] * syn::oscillator::sine(syn::time_on(time, voice), 1.0 * syn::frequency(C3)) +
+            AMP[1] * syn::oscillator::sine(syn::time_on(time, voice), 4.0 * syn::frequency(C3)) +
+            AMP[3] * syn::oscillator::sawtooth(syn::time_on(time, voice), 1.0 * syn::frequency(C3)) +
             AMP[4] * syn::noise()
         );
     }
 
-    double DrumHiHat::sound(double time, const syn::Note& note) const {
-        static constexpr syn::Id C4 {27};
+    double DrumHiHat::sound(double time, const syn::Voice& voice) const {
+        static constexpr syn::NoteId C4 {27};
         static constexpr auto AMP {syn::amplitudes(std::array { 1.0, 4.0, 0.5 })};
 
-        return note.envelope->get_value(time, note.time_on, note.time_off) * (
-            AMP[0] * syn::oscillator::square(syn::time_on(time, note), 1.0 * syn::id_frequency(C4)) +
-            AMP[1] * syn::oscillator::square(syn::time_on(time, note), 2.0 * syn::id_frequency(C4)) +
+        return voice.envelope->get_value(time, voice.time_on, voice.time_off) * (
+            AMP[0] * syn::oscillator::square(syn::time_on(time, voice), 1.0 * syn::frequency(C4)) +
+            AMP[1] * syn::oscillator::square(syn::time_on(time, voice), 2.0 * syn::frequency(C4)) +
             AMP[2] * syn::noise()
         );
     }
 
-    double Piano::sound(double time, const syn::Note& note) const {
+    double Piano::sound(double time, const syn::Voice& voice) const {
         static constexpr auto AMP {syn::amplitudes(std::array { 1.0, 2.0, 4.0, 8.0 })};
 
-        return note.envelope->get_value(time, note.time_on, note.time_off) * (
-            AMP[0] * syn::oscillator::sine(syn::time_on(time, note), 1.0 * note_frequency(note), { 8.0, 0.00001 }) +
-            AMP[1] * syn::oscillator::sine(syn::time_on(time, note), 2.0 * note_frequency(note)) +
-            AMP[2] * syn::oscillator::sine(syn::time_on(time, note), 4.0 * note_frequency(note)) +
-            AMP[3] * syn::oscillator::sawtooth(syn::time_on(time, note), 1.0 * note_frequency(note))
+        return voice.envelope->get_value(time, voice.time_on, voice.time_off) * (
+            AMP[0] * syn::oscillator::sine(syn::time_on(time, voice), 1.0 * syn::frequency(voice), { 8.0, 0.00001 }) +
+            AMP[1] * syn::oscillator::sine(syn::time_on(time, voice), 2.0 * syn::frequency(voice)) +
+            AMP[2] * syn::oscillator::sine(syn::time_on(time, voice), 4.0 * syn::frequency(voice)) +
+            AMP[3] * syn::oscillator::sawtooth(syn::time_on(time, voice), 1.0 * syn::frequency(voice))
         );
     }
 
-    double Guitar::sound(double time, const syn::Note& note) const {
+    double Guitar::sound(double time, const syn::Voice& voice) const {
         static constexpr auto AMP {syn::amplitudes(std::array { 1.0, 2.0, 4.0, 8.0 })};
 
-        return note.envelope->get_value(time, note.time_on, note.time_off) * (
-            AMP[0] * syn::oscillator::sine(syn::time_on(time, note), 1.0 * note_frequency(note), { 10.0, 0.00001 }) +
-            AMP[1] * syn::oscillator::sine(syn::time_on(time, note), 2.0 * note_frequency(note)) +
-            AMP[2] * syn::oscillator::sine(syn::time_on(time, note), 3.0 * note_frequency(note)) +
-            AMP[3] * syn::oscillator::sawtooth(syn::time_on(time, note), 4.0 * note_frequency(note))
+        return voice.envelope->get_value(time, voice.time_on, voice.time_off) * (
+            AMP[0] * syn::oscillator::sine(syn::time_on(time, voice), 1.0 * syn::frequency(voice), { 10.0, 0.00001 }) +
+            AMP[1] * syn::oscillator::sine(syn::time_on(time, voice), 2.0 * syn::frequency(voice)) +
+            AMP[2] * syn::oscillator::sine(syn::time_on(time, voice), 3.0 * syn::frequency(voice)) +
+            AMP[3] * syn::oscillator::sawtooth(syn::time_on(time, voice), 4.0 * syn::frequency(voice))
         );
     }
 
@@ -115,14 +115,14 @@ namespace instrument {
         );
     }
 
-    double Strings::sound(double time, const syn::Note& note) const {
+    double Strings::sound(double time, const syn::Voice& voice) const {
         static constexpr double SAMPLE_DURATION {double(SIZE) / double(audio::SAMPLE_FREQUENCY)};
 
-        const double pitch {syn::note_frequency(note) / FREQUENCY};
+        const double pitch {syn::frequency(voice) / FREQUENCY};
         double _;
         const double part {std::modf(time * pitch / SAMPLE_DURATION, &_)};
         const auto index {std::size_t(part * double(SIZE))};
 
-        return note.envelope->get_value(time, note.time_on, note.time_off) * m_sample[index];
+        return voice.envelope->get_value(time, voice.time_on, voice.time_off) * m_sample[index];
     }
 }

@@ -24,10 +24,10 @@ namespace application {
     class HoveredNote {
     public:
         HoveredNote() = default;
-        HoveredNote(syn::Id id, MeasureIter measure, unsigned int position, unsigned int global_position)
+        HoveredNote(syn::NoteId id, MeasureIter measure, unsigned int position, unsigned int global_position)
             : m_id(id), m_measure(measure), m_position(position), m_global_position(global_position) {}
 
-        syn::Id id() const { return m_id; }
+        syn::NoteId id() const { return m_id; }
         MeasureIter measure() const { return m_measure; }
         unsigned int position() const { return m_position; }
         unsigned int global_position() const { return m_global_position; }
@@ -36,7 +36,7 @@ namespace application {
             return m_global_position - m_position;
         }
     private:
-        syn::Id m_id {};
+        syn::NoteId m_id {};
         MeasureIter m_measure;
         unsigned int m_position {};
         unsigned int m_global_position {};

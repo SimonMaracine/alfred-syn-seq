@@ -78,7 +78,7 @@ namespace seq {
     };
 
     struct Note {
-        syn::Id id {};
+        syn::NoteId id {};
         Value value {};
         unsigned int position {};  // Local, inside a measure
         bool legato {};
@@ -231,10 +231,10 @@ namespace seq {
 
     namespace exec {
         struct Note {
-            Note(syn::Id id, unsigned int position, unsigned int duration, Tempo tempo, TimeSignature time_signature)
+            Note(syn::NoteId id, unsigned int position, unsigned int duration, Tempo tempo, TimeSignature time_signature)
                 : id(id), position(position), duration(duration), tempo(tempo), time_signature(time_signature) {}
 
-            syn::Id id {};
+            syn::NoteId id {};
 
             unsigned int position {};  // Global, in the whole composition
             unsigned int duration {};  // Number of steps

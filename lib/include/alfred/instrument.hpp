@@ -15,11 +15,11 @@ namespace instrument {  // TODO description
         const char* name() const override { return static_name(); }
         syn::InstrumentId id() const override { return static_id(); }
 
-        double sound(double time, const syn::Note& note) const override;
+        double sound(double time, const syn::Voice& voice) const override;
 
-        syn::envelope::Ptr<> new_envelope() const override { return syn::envelope::create(OVERALL_ENVELOPE); }
+        syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
     private:
-        static constexpr syn::EnvelopeAdrDescription OVERALL_ENVELOPE {
+        static constexpr syn::EnvelopeAdrDescription ENVELOPE {
             0.007,
             0.15,
             0.007
@@ -33,12 +33,12 @@ namespace instrument {  // TODO description
         const char* name() const override { return static_name(); }
         syn::InstrumentId id() const override { return static_id(); }
 
-        double sound(double time, const syn::Note& note) const override;
+        double sound(double time, const syn::Voice& voice) const override;
         syn::InstrumentRange range() const override { return { 12, 51 }; }
 
-        syn::envelope::Ptr<> new_envelope() const override { return syn::envelope::create(OVERALL_ENVELOPE); }
+        syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
     private:
-        static constexpr syn::EnvelopeAdrDescription OVERALL_ENVELOPE {  // TODO keep only description, allocate a new envelope and store it into the note
+        static constexpr syn::EnvelopeAdrDescription ENVELOPE {
             1.01,
             1.2,
             1.2
@@ -52,11 +52,11 @@ namespace instrument {  // TODO description
         const char* name() const override { return static_name(); }
         syn::InstrumentId id() const override { return static_id(); }
 
-        double sound(double time, const syn::Note& note) const override;
+        double sound(double time, const syn::Voice& voice) const override;
 
-        syn::envelope::Ptr<> new_envelope() const override { return syn::envelope::create(OVERALL_ENVELOPE); }
+        syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdsr>(ENVELOPE); }
     private:
-        static constexpr syn::EnvelopeAdsrDescription OVERALL_ENVELOPE {
+        static constexpr syn::EnvelopeAdsrDescription ENVELOPE {
             0.1,
             0.02,
             0.2,
@@ -72,11 +72,11 @@ namespace instrument {  // TODO description
         const char* name() const override { return static_name(); }
         syn::InstrumentId id() const override { return static_id(); }
 
-        double sound(double time, const syn::Note& note) const override;
+        double sound(double time, const syn::Voice& voice) const override;
 
-        syn::envelope::Ptr<> new_envelope() const override { return syn::envelope::create(OVERALL_ENVELOPE); }
+        syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
     private:
-        static constexpr syn::EnvelopeAdrDescription OVERALL_ENVELOPE {
+        static constexpr syn::EnvelopeAdrDescription ENVELOPE {
             0.01,
             0.15,
             0.02
@@ -90,11 +90,11 @@ namespace instrument {  // TODO description
         const char* name() const override { return static_name(); }
         syn::InstrumentId id() const override { return static_id(); }
 
-        double sound(double time, const syn::Note& note) const override;
+        double sound(double time, const syn::Voice& voice) const override;
 
-        syn::envelope::Ptr<> new_envelope() const override { return syn::envelope::create(OVERALL_ENVELOPE); }
+        syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
     private:
-        static constexpr syn::EnvelopeAdrDescription OVERALL_ENVELOPE {
+        static constexpr syn::EnvelopeAdrDescription ENVELOPE {
             0.01,
             0.2,
             0.04
@@ -108,11 +108,11 @@ namespace instrument {  // TODO description
         const char* name() const override { return static_name(); }
         syn::InstrumentId id() const override { return static_id(); }
 
-        double sound(double time, const syn::Note& note) const override;
+        double sound(double time, const syn::Voice& voice) const override;
 
-        syn::envelope::Ptr<> new_envelope() const override { return syn::envelope::create(OVERALL_ENVELOPE); }
+        syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
     private:
-        static constexpr syn::EnvelopeAdrDescription OVERALL_ENVELOPE {
+        static constexpr syn::EnvelopeAdrDescription ENVELOPE {
             0.01,
             0.15,
             0.02
@@ -126,11 +126,11 @@ namespace instrument {  // TODO description
         const char* name() const override { return static_name(); }
         syn::InstrumentId id() const override { return static_id(); }
 
-        double sound(double time, const syn::Note& note) const override;
+        double sound(double time, const syn::Voice& voice) const override;
 
-        syn::envelope::Ptr<> new_envelope() const override { return syn::envelope::create(OVERALL_ENVELOPE); }
+        syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
     private:
-        static constexpr syn::EnvelopeAdrDescription OVERALL_ENVELOPE {
+        static constexpr syn::EnvelopeAdrDescription ENVELOPE {
             0.01,
             5.0,
             0.2
@@ -144,12 +144,12 @@ namespace instrument {  // TODO description
         const char* name() const override { return static_name(); }
         syn::InstrumentId id() const override { return static_id(); }
 
-        double sound(double time, const syn::Note& note) const override;
+        double sound(double time, const syn::Voice& voice) const override;
         syn::InstrumentRange range() const override { return { 7, 51 }; }
 
-        syn::envelope::Ptr<> new_envelope() const override { return syn::envelope::create(OVERALL_ENVELOPE); }
+        syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
     private:
-        static constexpr syn::EnvelopeAdrDescription OVERALL_ENVELOPE {
+        static constexpr syn::EnvelopeAdrDescription ENVELOPE {
             0.01,
             5.0,
             0.2
@@ -165,18 +165,18 @@ namespace instrument {  // TODO description
         const char* name() const override { return static_name(); }
         syn::InstrumentId id() const override { return static_id(); }
 
-        double sound(double time, const syn::Note& note) const override;
+        double sound(double time, const syn::Voice& voice) const override;
 
-        syn::envelope::Ptr<> new_envelope() const override { return syn::envelope::create(OVERALL_ENVELOPE); }
+        syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdsr>(ENVELOPE); }
     private:
-        static constexpr syn::EnvelopeAdsrDescription OVERALL_ENVELOPE {
+        static constexpr syn::EnvelopeAdsrDescription ENVELOPE {
             0.1,
             0.02,
             0.2,
             1.0,
             0.8
         };
-    private:
+
         static constexpr std::size_t SIZE {262144};
         static constexpr double FREQUENCY {261.63};
 

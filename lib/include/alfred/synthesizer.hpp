@@ -14,10 +14,10 @@ namespace synthesizer {
         Synthesizer();
         ~Synthesizer() noexcept override;
 
-        void note_on(syn::Name name, syn::Octave octave, syn::InstrumentId instrument);
-        void note_off(syn::Name name, syn::Octave octave, syn::InstrumentId instrument);
-        void note_on(syn::Id id, syn::InstrumentId instrument);
-        void note_off(syn::Id id, syn::InstrumentId instrument);
+        void note_on(syn::NoteName name, syn::NoteOctave octave, syn::InstrumentId instrument);
+        void note_off(syn::NoteName name, syn::NoteOctave octave, syn::InstrumentId instrument);
+        void note_on(syn::NoteId note, syn::InstrumentId instrument);
+        void note_off(syn::NoteId note, syn::InstrumentId instrument);
         void silence();
         void update();
         void for_each_instrument(const std::function<void(const syn::Instrument&)>& function) const;
@@ -25,9 +25,9 @@ namespace synthesizer {
     private:
         double sound(double time) const override;
 
-        std::vector<syn::Note>::iterator find_note(syn::Id id);
+        std::vector<syn::Voice>::iterator find_voice(syn::NoteId note);
 
         std::unordered_map<syn::InstrumentId, std::unique_ptr<syn::Instrument>> m_instruments;
-        std::vector<syn::Note> m_notes;
+        std::vector<syn::Voice> m_voices;
     };
 }

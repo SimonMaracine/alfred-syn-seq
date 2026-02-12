@@ -1214,7 +1214,7 @@ namespace application {
     }
 
     void Application::keyboard_input(unsigned int key, bool down) {
-        const auto update {[this, down](syn::Id id) {
+        const auto update {[this, down](syn::NoteId id) {
             if (down) {
                 m_synthesizer.note_on(id + m_octave * 12, m_instrument);
             } else {
@@ -1444,7 +1444,7 @@ namespace application {
     }
 
     bool Application::hover_note(ImVec2 position, HoveredNote& hovered_note) {
-        syn::Id result_id {};
+        syn::NoteId result_id {};
 
         {
             const int index {int(position.y / ui::rem(STEP_SIZE.y))};
@@ -1454,7 +1454,7 @@ namespace application {
                 return false;  // This can happen now when hovering the mouse below the lowest note
             }
 
-            result_id = syn::Id(id);
+            result_id = syn::NoteId(id);
         }
 
         float position_x {};
