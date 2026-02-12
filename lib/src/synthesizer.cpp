@@ -49,6 +49,7 @@ namespace synthesizer {
             syn::Note& note {m_notes.emplace_back()};
             note.id = id;
             note.instrument = instrument;
+            note.envelope = m_instruments.at(instrument)->new_envelope();
             note.time_on = time();
         } else {
             if (iter->time_off > iter->time_on) {
@@ -81,7 +82,7 @@ namespace synthesizer {
         audio::AudioLockGuard guard {this};
 
         std::erase_if(m_notes, [this](const syn::Note& note) {
-            return m_instruments.at(note.instrument)->overall_envelope().is_done(time(), note.time_on, note.time_off);
+            return note.envelope->is_done(time(), note.time_on, note.time_off);
         });
 
         while (m_notes.size() > MAX_NOTES) {

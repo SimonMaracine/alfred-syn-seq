@@ -6,6 +6,8 @@
 #include <ranges>
 #include <utility>
 
+#include "alfred/allocator.hpp"
+
 namespace syn {
     struct Envelope {
         Envelope() = default;
@@ -31,7 +33,7 @@ namespace syn {
 
     class EnvelopeAdsr : public Envelope {
     public:
-        constexpr EnvelopeAdsr(const EnvelopeAdsrDescription& description)
+        EnvelopeAdsr(const EnvelopeAdsrDescription& description = {})
             : m_description(description) {}
 
         double get_value(double time, double time_note_on, double time_note_off) const override;
@@ -51,7 +53,7 @@ namespace syn {
 
     class EnvelopeAdr : public Envelope {
     public:
-        constexpr EnvelopeAdr(const EnvelopeAdrDescription& description)
+        EnvelopeAdr(const EnvelopeAdrDescription& description = {})
             : m_description(description) {}
 
         double get_value(double time, double time_note_on, double time_note_off) const override;
@@ -62,6 +64,40 @@ namespace syn {
 
         EnvelopeAdrDescription m_description;
     };
+
+    namespace envelope {
+        struct Deleter {
+            void operator()(Envelope* ptr) const {
+                allocator::StaticAllocator<Envelope> alloc;
+                using Alloc = std::allocator_traits<decltype(alloc)>;
+
+                Alloc::destroy(alloc, ptr);
+                Alloc::deallocate(alloc, ptr, 1);
+            }
+        };
+
+        template<typename T = Envelope>
+        using Ptr = std::unique_ptr<T, Deleter>;
+
+        template<typename T, typename... Args>
+        auto create(Args&&... args) -> Ptr<T> {
+            allocator::StaticAllocator<T> alloc;
+            using Alloc = std::allocator_traits<decltype(alloc)>;
+
+            T* ptr {Alloc::allocate(alloc, 1)};
+            Alloc::construct(alloc, ptr, std::forward<Args>(args)...);
+
+            return Ptr<T>(ptr, Deleter());
+        }
+
+        inline Ptr<EnvelopeAdsr> create(const EnvelopeAdsrDescription& description) {
+            return create<EnvelopeAdsr>(description);
+        }
+
+        inline Ptr<EnvelopeAdr> create(const EnvelopeAdrDescription& description) {
+            return create<EnvelopeAdr>(description);
+        }
+    }
 
     // MIDI-like note ID
     using Id = unsigned int;
@@ -98,6 +134,7 @@ namespace syn {
     struct Note {
         Id id {};
         InstrumentId instrument {};
+        envelope::Ptr<> envelope;  // Overall envelope
         double time_on {};
         double time_off {};
 
@@ -119,6 +156,7 @@ namespace syn {
 
         inline constexpr Id ID_BEGIN {0};
         inline constexpr Id ID_END {NOTES - 1};
+        inline constexpr InstrumentRange ID_FULL_RANGE {std::make_pair(ID_BEGIN, ID_END)};
     }
 
     struct Instrument {
@@ -132,9 +170,11 @@ namespace syn {
 
         virtual const char* name() const = 0;
         virtual InstrumentId id() const = 0;
-        virtual const Envelope& overall_envelope() const = 0;
+
         virtual double sound(double time, const Note& note) const = 0;
-        virtual InstrumentRange range() const { return std::make_pair(keyboard::ID_BEGIN, keyboard::ID_END); }
+        virtual InstrumentRange range() const { return  keyboard::ID_FULL_RANGE; }
+
+        virtual envelope::Ptr<> new_envelope() const = 0;
     };
 
     struct LowFrequencyOscillator {
