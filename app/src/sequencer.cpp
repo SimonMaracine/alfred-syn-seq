@@ -82,7 +82,7 @@ namespace seq {
             m_measure++;
         }
 
-        for (auto& [voice, execution] : m_executions) {
+        for (auto& [instrument, execution] : m_executions) {
             for (auto note {execution.notes_played.begin()}; note != execution.notes_played.end(); note++) {
                 if (m_position + 1 < note->position + note->duration) {
                     execution.notes_played.erase(execution.notes_played.begin(), note);
@@ -90,7 +90,7 @@ namespace seq {
                 }
 
                 if (m_position + 1 == note->position + note->duration) {
-                    m_synthesizer->note_off(note->id, voice);
+                    m_synthesizer->note_off(note->id, instrument);
 
                     if (std::next(note) == execution.notes_played.end()) {
                         execution.notes_played.erase(execution.notes_played.begin(), std::next(note));
@@ -106,7 +106,7 @@ namespace seq {
                 }
 
                 if (m_position == note->position) {
-                    m_synthesizer->note_on(note->id, voice);
+                    m_synthesizer->note_on(note->id, instrument);
 
                     execution.notes_played.emplace(
                         note->id,
@@ -138,7 +138,7 @@ namespace seq {
         std::vector<ProvenanceNote<ConstMeasureIter>> processed_notes;
 
         for (auto measure {m_composition->measures.begin()}; measure != m_composition->measures.end(); measure++) {
-            for (const auto& [voice, notes] : measure->voices) {
+            for (const auto& [instrument, notes] : measure->instruments) {
                 for (auto note {notes.begin()}; note != notes.end(); note++) {
                     if (steps + note->position < position) {
                         continue;
@@ -154,12 +154,12 @@ namespace seq {
 
                     if (note->legato) {
                         ProvenanceNote<ConstMeasureIter> next_note;
-                        [[maybe_unused]] const bool result {m_composition->check_note_has_next<ConstMeasureIter>(voice, ProvenanceNote(measure, note), next_note)};
+                        [[maybe_unused]] const bool result {m_composition->check_note_has_next<ConstMeasureIter>(instrument, ProvenanceNote(measure, note), next_note)};
 
                         assert(measure->equal_time(*next_note.measure()));
                         assert(result);
 
-                        executions[voice].notes_unplayed.emplace(
+                        executions[instrument].notes_unplayed.emplace(
                             note->id,
                             steps + note->position,
                             seq::steps(note->value) + seq::steps(next_note.note()->value),
@@ -171,7 +171,7 @@ namespace seq {
                         continue;
                     }
 
-                    executions[voice].notes_unplayed.emplace(
+                    executions[instrument].notes_unplayed.emplace(
                         note->id,
                         steps + note->position,
                         seq::steps(note->value),

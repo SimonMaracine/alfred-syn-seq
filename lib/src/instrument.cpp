@@ -1,11 +1,11 @@
-#include "alfred/voice.hpp"
+#include "alfred/instrument.hpp"
 
 #include <cmath>
 
 #include "alfred/math.hpp"
 #include "alfred/audio.hpp"
 
-namespace voice {
+namespace instrument {
     double Metronome::sound(double time, const syn::Note& note) const {
         static constexpr auto AMP {syn::amplitudes(std::array { 1.0, 2.0, 4.0, 25.0 })};
 
@@ -27,7 +27,7 @@ namespace voice {
         );
     }
 
-    syn::VoiceRange Bell::range() const {
+    syn::InstrumentRange Bell::range() const {
         return std::make_pair(12, 51);
     }
 
@@ -98,7 +98,7 @@ namespace voice {
         );
     }
 
-    syn::VoiceRange Guitar::range() const {
+    syn::InstrumentRange Guitar::range() const {
         return std::make_pair(7, 51);
     }
 

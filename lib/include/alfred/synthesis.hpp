@@ -91,13 +91,13 @@ namespace syn {
         Octave7
     };
 
-    using VoiceId = unsigned int;
+    using InstrumentId = unsigned int;
 
-    using VoiceRange = std::pair<Id, Id>;
+    using InstrumentRange = std::pair<Id, Id>;
 
     struct Note {
         Id id {};
-        VoiceId voice {};
+        InstrumentId instrument {};
         double time_on {};
         double time_off {};
 
@@ -121,20 +121,20 @@ namespace syn {
         inline constexpr Id ID_END {NOTES - 1};
     }
 
-    struct Voice {
-        Voice() = default;
-        virtual ~Voice() = default;
+    struct Instrument {
+        Instrument() = default;
+        virtual ~Instrument() = default;
 
-        Voice(const Voice&) = default;
-        Voice& operator=(const Voice&) = default;
-        Voice(Voice&&) = default;
-        Voice& operator=(Voice&&) = default;
+        Instrument(const Instrument&) = default;
+        Instrument& operator=(const Instrument&) = default;
+        Instrument(Instrument&&) = default;
+        Instrument& operator=(Instrument&&) = default;
 
         virtual const char* name() const = 0;
-        virtual VoiceId id() const = 0;
+        virtual InstrumentId id() const = 0;
         virtual const Envelope& overall_envelope() const = 0;
         virtual double sound(double time, const Note& note) const = 0;
-        virtual VoiceRange range() const { return std::make_pair(keyboard::ID_BEGIN, keyboard::ID_END); }
+        virtual InstrumentRange range() const { return std::make_pair(keyboard::ID_BEGIN, keyboard::ID_END); }
     };
 
     struct LowFrequencyOscillator {

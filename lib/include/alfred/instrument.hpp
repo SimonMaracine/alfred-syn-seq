@@ -3,17 +3,17 @@
 #include "alfred/synthesis.hpp"
 #include "alfred/hash.hpp"
 
-#define ALFRED_VOICE_STATIC_NAME_ID(NAME_STRING) \
+#define ALFRED_INSTRUMENT_STATIC_NAME_ID(NAME_STRING) \
     static consteval auto static_name() { return NAME_STRING; } \
     static consteval auto static_id() { return hash::HashedStr32(static_name()); }
 
-namespace voice {  // TODO description
-    class Metronome : public syn::Voice {
+namespace instrument {  // TODO description
+    class Metronome : public syn::Instrument {
     public:
-        ALFRED_VOICE_STATIC_NAME_ID("Metronome")
+        ALFRED_INSTRUMENT_STATIC_NAME_ID("Metronome")
 
         const char* name() const override { return static_name(); }
-        syn::VoiceId id() const override { return static_id(); }
+        syn::InstrumentId id() const override { return static_id(); }
         const syn::Envelope& overall_envelope() const override { return OVERALL_ENVELOPE; }
         double sound(double time, const syn::Note& note) const override;
     private:
@@ -26,31 +26,31 @@ namespace voice {  // TODO description
         };
     };
 
-    class Bell : public syn::Voice {
+    class Bell : public syn::Instrument {
     public:
-        ALFRED_VOICE_STATIC_NAME_ID("Bell")
+        ALFRED_INSTRUMENT_STATIC_NAME_ID("Bell")
 
         const char* name() const override { return static_name(); }
-        syn::VoiceId id() const override { return static_id(); }
+        syn::InstrumentId id() const override { return static_id(); }
         const syn::Envelope& overall_envelope() const override { return OVERALL_ENVELOPE; }
         double sound(double time, const syn::Note& note) const override;
-        syn::VoiceRange range() const override;
+        syn::InstrumentRange range() const override;
     private:
-        static constexpr syn::EnvelopeAdr OVERALL_ENVELOPE {
+        static constexpr syn::EnvelopeAdr OVERALL_ENVELOPE {  // TODO keep only description, allocate a new envelope and store it into the note
             syn::EnvelopeAdrDescription {
-                0.01,
+                1.01,
                 1.2,
-                0.2
+                1.2
             }
         };
     };
 
-    class Harmonica : public syn::Voice {
+    class Harmonica : public syn::Instrument {
     public:
-        ALFRED_VOICE_STATIC_NAME_ID("Harmonica")
+        ALFRED_INSTRUMENT_STATIC_NAME_ID("Harmonica")
 
         const char* name() const override { return static_name(); }
-        syn::VoiceId id() const override { return static_id(); }
+        syn::InstrumentId id() const override { return static_id(); }
         const syn::Envelope& overall_envelope() const override { return OVERALL_ENVELOPE; }
         double sound(double time, const syn::Note& note) const override;
     private:
@@ -65,12 +65,12 @@ namespace voice {  // TODO description
         };
     };
 
-    class DrumBass : public syn::Voice {
+    class DrumBass : public syn::Instrument {
     public:
-        ALFRED_VOICE_STATIC_NAME_ID("Drum Bass")
+        ALFRED_INSTRUMENT_STATIC_NAME_ID("Drum Bass")
 
         const char* name() const override { return static_name(); }
-        syn::VoiceId id() const override { return static_id(); }
+        syn::InstrumentId id() const override { return static_id(); }
         const syn::Envelope& overall_envelope() const override { return OVERALL_ENVELOPE; }
         double sound(double time, const syn::Note& note) const override;
     private:
@@ -83,12 +83,12 @@ namespace voice {  // TODO description
         };
     };
 
-    class DrumSnare : public syn::Voice {
+    class DrumSnare : public syn::Instrument {
     public:
-        ALFRED_VOICE_STATIC_NAME_ID("Drum Snare")
+        ALFRED_INSTRUMENT_STATIC_NAME_ID("Drum Snare")
 
         const char* name() const override { return static_name(); }
-        syn::VoiceId id() const override { return static_id(); }
+        syn::InstrumentId id() const override { return static_id(); }
         const syn::Envelope& overall_envelope() const override { return OVERALL_ENVELOPE; }
         double sound(double time, const syn::Note& note) const override;
     private:
@@ -101,12 +101,12 @@ namespace voice {  // TODO description
         };
     };
 
-    class DrumHiHat : public syn::Voice {
+    class DrumHiHat : public syn::Instrument {
     public:
-        ALFRED_VOICE_STATIC_NAME_ID("Drum Hi-Hat")
+        ALFRED_INSTRUMENT_STATIC_NAME_ID("Drum Hi-Hat")
 
         const char* name() const override { return static_name(); }
-        syn::VoiceId id() const override { return static_id(); }
+        syn::InstrumentId id() const override { return static_id(); }
         const syn::Envelope& overall_envelope() const override { return OVERALL_ENVELOPE; }
         double sound(double time, const syn::Note& note) const override;
     private:
@@ -119,12 +119,12 @@ namespace voice {  // TODO description
         };
     };
 
-    class Piano : public syn::Voice {
+    class Piano : public syn::Instrument {
     public:
-        ALFRED_VOICE_STATIC_NAME_ID("Piano")
+        ALFRED_INSTRUMENT_STATIC_NAME_ID("Piano")
 
         const char* name() const override { return static_name(); }
-        syn::VoiceId id() const override { return static_id(); }
+        syn::InstrumentId id() const override { return static_id(); }
         const syn::Envelope& overall_envelope() const override { return OVERALL_ENVELOPE; }
         double sound(double time, const syn::Note& note) const override;
     private:
@@ -137,15 +137,15 @@ namespace voice {  // TODO description
         };
     };
 
-    class Guitar : public syn::Voice {
+    class Guitar : public syn::Instrument {
     public:
-        ALFRED_VOICE_STATIC_NAME_ID("Guitar")
+        ALFRED_INSTRUMENT_STATIC_NAME_ID("Guitar")
 
         const char* name() const override { return static_name(); }
-        syn::VoiceId id() const override { return static_id(); }
+        syn::InstrumentId id() const override { return static_id(); }
         const syn::Envelope& overall_envelope() const override { return OVERALL_ENVELOPE; }
         double sound(double time, const syn::Note& note) const override;
-        syn::VoiceRange range() const override;
+        syn::InstrumentRange range() const override;
     private:
         static constexpr syn::EnvelopeAdr OVERALL_ENVELOPE {
             syn::EnvelopeAdrDescription {
@@ -156,14 +156,14 @@ namespace voice {  // TODO description
         };
     };
 
-    class Strings : public syn::Voice {
+    class Strings : public syn::Instrument {
     public:
         Strings();
 
-        ALFRED_VOICE_STATIC_NAME_ID("Strings?")
+        ALFRED_INSTRUMENT_STATIC_NAME_ID("Strings?")
 
         const char* name() const override { return static_name(); }
-        syn::VoiceId id() const override { return static_id(); }
+        syn::InstrumentId id() const override { return static_id(); }
         const syn::Envelope& overall_envelope() const override { return OVERALL_ENVELOPE; }
         double sound(double time, const syn::Note& note) const override;
     private:

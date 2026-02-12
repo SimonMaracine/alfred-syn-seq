@@ -6,10 +6,10 @@ target_sources(
     alfred_lib
     PRIVATE
         "src/audio.cpp"
+        "src/instrument.cpp"
         "src/math.cpp"
         "src/synthesis.cpp"
         "src/synthesizer.cpp"
-        "src/voice.cpp"
     PUBLIC
         FILE_SET HEADERS
         BASE_DIRS
@@ -17,10 +17,10 @@ target_sources(
         FILES
             "include/alfred/audio.hpp"
             "include/alfred/hash.hpp"
+            "include/alfred/instrument.hpp"
             "include/alfred/math.hpp"
             "include/alfred/synthesis.hpp"
             "include/alfred/synthesizer.hpp"
-            "include/alfred/voice.hpp"
 )
 
 target_link_libraries(alfred_lib PRIVATE SDL3::SDL3 fftw3)

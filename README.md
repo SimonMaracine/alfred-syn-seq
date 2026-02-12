@@ -4,6 +4,8 @@ A free and open source cross-platform synthesizer and sequencer program.
 
 It comprises a digital multi-timbral synthesizer using additive and wavetable methods, and an interface to compose and play music.
 
+It is same instrument + pitch monophonic, otherwise it supports up to eight voices simultaneously.
+
 The synthesized sounds are meant to be *suggestions* and *hints*, rather than realistic emulations.
 
 ![Alfred](gfx/mascot/alfred.png)

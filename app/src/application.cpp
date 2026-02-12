@@ -11,7 +11,7 @@
 #include <cassert>
 
 #include <SDL3/SDL.h>
-#include <alfred/voice.hpp>
+#include <alfred/instrument.hpp>
 
 #include "logging.hpp"
 #include "imgui.ini.hpp"
@@ -70,7 +70,7 @@ namespace application {
         io.ConfigWindowsMoveFromTitleBarOnly = true;
         io.IniFilename = nullptr;
 
-        m_voice = voice::Piano::static_id();
+        m_instrument = instrument::Piano::static_id();
         m_player = seq::Player(m_synthesizer, m_composition, [this] { set_desired_frame_time(FRAME_TIME_DEFAULT); });
         m_composition_selected_measure = m_composition.measures.end();
 
@@ -85,8 +85,8 @@ namespace application {
             return false;
         }, 5000);
 
-        m_synthesizer.for_each_voice([this, index = std::size_t()](const auto& voice) mutable {
-            m_ui.colors[voice.id()] = ui::ColorIndex(index);
+        m_synthesizer.for_each_instrument([this, index = std::size_t()](const auto& instrument) mutable {
+            m_ui.colors[instrument.id()] = ui::ColorIndex(index);
             index = (index + 1) % std::size(ui::COLORS);
         });
     }
@@ -381,17 +381,17 @@ namespace application {
     }
 
     void Application::instruments() {
-        if (ImGui::Begin("Voices", nullptr, ImGuiWindowFlags_NoResize)) {
-            ImGui::SeparatorText("Voice");
+        if (ImGui::Begin("Instruments", nullptr, ImGuiWindowFlags_NoResize)) {
+            ImGui::SeparatorText("Instrument");
 
-            if (ImGui::BeginCombo("##voice", m_synthesizer.voice_name(m_voice), ImGuiComboFlags_NoArrowButton)) {
-                m_synthesizer.for_each_voice([this](const syn::Voice& voice) {
-                    if (voice.id() == voice::Metronome::static_id()) {
+            if (ImGui::BeginCombo("##instrument", m_synthesizer.instrument_name(m_instrument), ImGuiComboFlags_NoArrowButton)) {
+                m_synthesizer.for_each_instrument([this](const syn::Instrument& instrument) {
+                    if (instrument.id() == instrument::Metronome::static_id()) {
                         return;
                     }
 
-                    if (ImGui::Selectable(voice.name(), voice.id() == m_voice)) {
-                        m_voice = voice.id();
+                    if (ImGui::Selectable(instrument.name(), instrument.id() == m_instrument)) {
+                        m_instrument = instrument.id();
                         m_composition_selected_notes.clear();
                         m_synthesizer.silence();
                     }
@@ -414,11 +414,11 @@ namespace application {
             ImGui::SeparatorText("In Project");
 
             if (ImGui::BeginListBox("##in_project")) {
-                for (const auto instruments {voices_in_project()}; const syn::VoiceId voice : instruments) {
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(ui::COLORS[m_ui.colors.at(voice)].second));
+                for (const auto instruments {instruments_in_project()}; const syn::InstrumentId instrument : instruments) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(ui::COLORS[m_ui.colors.at(instrument)].second));
 
-                    if (ImGui::Selectable(m_synthesizer.voice_name(voice), voice == m_voice)) {
-                        m_voice = voice;
+                    if (ImGui::Selectable(m_synthesizer.instrument_name(instrument), instrument == m_instrument)) {
+                        m_instrument = instrument;
                         m_composition_selected_notes.clear();
                         m_synthesizer.silence();
                     }
@@ -433,12 +433,12 @@ namespace application {
 
             ImGui::SeparatorText("Color");
 
-            if (ImGui::BeginCombo("##color", ui::COLORS[m_ui.colors.at(m_voice)].first, ImGuiComboFlags_NoArrowButton)) {
+            if (ImGui::BeginCombo("##color", ui::COLORS[m_ui.colors.at(m_instrument)].first, ImGuiComboFlags_NoArrowButton)) {
                 for (std::size_t i {}; i < std::size(ui::COLORS); i++) {
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(ui::COLORS[i].second));
 
-                    if (ImGui::Selectable(ui::COLORS[i].first, m_ui.colors.at(m_voice) == i)) {
-                        m_ui.colors.at(m_voice) = ui::ColorIndex(i);
+                    if (ImGui::Selectable(ui::COLORS[i].first, m_ui.colors.at(m_instrument) == i)) {
+                        m_ui.colors.at(m_instrument) = ui::ColorIndex(i);
                     }
 
                     ImGui::PopStyleColor();
@@ -925,17 +925,17 @@ namespace application {
             const float width {float(measure->time_signature.measure_steps()) * ui::rem(STEP_SIZE.x)};
 
             if (point_x_in_camera_view(global_position_x + width, draw.space.x + width)) {
-                for (const auto& [voice, notes] : measure->voices) {
-                    if (voice == m_voice) {
+                for (const auto& [instrument, notes] : measure->instruments) {
+                    if (instrument == m_instrument) {
                         continue;
                     }
 
-                    composition_notes(draw, voice, notes, global_position_x, ROUNDING);
+                    composition_notes(draw, instrument, notes, global_position_x, ROUNDING);
                 }
 
-                // Always draw the selected voice last
-                if (auto voice {measure->voices.find(m_voice)}; voice != measure->voices.end()) {
-                    composition_notes(draw, voice->first, voice->second, global_position_x, ROUNDING);
+                // Always draw the selected instrument last
+                if (auto instrument {measure->instruments.find(m_instrument)}; instrument != measure->instruments.end()) {
+                    composition_notes(draw, instrument->first, instrument->second, global_position_x, ROUNDING);
                 }
 
                 for (const ProvenanceNote& provenance_note : m_composition_selected_notes) {
@@ -956,14 +956,14 @@ namespace application {
         }
     }
 
-    void Application::composition_notes(const Draw& draw, syn::VoiceId voice, const std::set<seq::Note>& notes, float global_position_x, float rounding) const {
+    void Application::composition_notes(const Draw& draw, syn::InstrumentId instrument, const std::set<seq::Note>& notes, float global_position_x, float rounding) const {
         for (auto note {notes.begin()}; note != notes.end(); note++) {
             const ImVec4 rect {note_rectangle(*note)};
 
             draw.list->AddRectFilled(
                 draw.origin + ImVec2(global_position_x + rect.x, rect.y) - m_composition_camera,
                 draw.origin + ImVec2(global_position_x + rect.x + rect.z, rect.y + rect.w) - m_composition_camera,
-                ui::COLORS[m_ui.colors.at(voice)].second,
+                ui::COLORS[m_ui.colors.at(instrument)].second,
                 rounding
             );
 
@@ -975,7 +975,7 @@ namespace application {
                     draw.origin + ImVec2(x - ui::rem(STEP_SIZE.x), rect.y + ui::rem(STEP_SIZE.y) * 1.5f) - m_composition_camera,
                     draw.origin + ImVec2(x + ui::rem(STEP_SIZE.x), rect.y + ui::rem(STEP_SIZE.y) * 1.5f) - m_composition_camera,
                     draw.origin + ImVec2(x + ui::rem(STEP_SIZE.x) * 1.5f, rect.y + ui::rem(STEP_SIZE.y)) - m_composition_camera,
-                    ui::COLORS[m_ui.colors.at(voice)].second,
+                    ui::COLORS[m_ui.colors.at(instrument)].second,
                     1.0f
                 );
             }
@@ -1216,9 +1216,9 @@ namespace application {
     void Application::keyboard_input(unsigned int key, bool down) {
         const auto update {[this, down](syn::Id id) {
             if (down) {
-                m_synthesizer.note_on(id + m_octave * 12, m_voice);
+                m_synthesizer.note_on(id + m_octave * 12, m_instrument);
             } else {
-                m_synthesizer.note_off(id + m_octave * 12, m_voice);
+                m_synthesizer.note_off(id + m_octave * 12, m_instrument);
             }
         }};
 
@@ -1299,7 +1299,7 @@ namespace application {
     void Application::add_metronome(MeasureIter begin, MeasureIter end) {
         for (auto measure {begin}; measure != end; measure++) {
             for (unsigned int i {}; i < measure->time_signature.measure_steps(); i += seq::steps(measure->time_signature.value())) {
-                measure->voices[voice::Metronome::static_id()].emplace(i == 0 ? 50 : 48, seq::Sixteenth, i);
+                measure->instruments[instrument::Metronome::static_id()].emplace(i == 0 ? 50 : 48, seq::Sixteenth, i);
             }
         }
 
@@ -1312,7 +1312,7 @@ namespace application {
 
     void Application::remove_metronome(MeasureIter begin, MeasureIter end) {
         for (auto measure {begin}; measure != end; measure++) {
-            measure->voices.erase(voice::Metronome::static_id());
+            measure->instruments.erase(instrument::Metronome::static_id());
         }
 
         modify_composition();
@@ -1395,8 +1395,8 @@ namespace application {
             return;
         }
 
-        std::erase_if(m_composition_selected_measure->voices, [](const auto& voice) {
-            return voice.first != voice::Metronome::static_id();
+        std::erase_if(m_composition_selected_measure->instruments, [](const auto& instrument) {
+            return instrument.first != instrument::Metronome::static_id();
         });
 
         modify_composition();
@@ -1485,13 +1485,13 @@ namespace application {
     }
 
     bool Application::select_note(const HoveredNote& hovered_note, NoteIter& note) const {
-        const auto voice {hovered_note.measure()->voices.find(m_voice)};
+        const auto instrument {hovered_note.measure()->instruments.find(m_instrument)};
 
-        if (voice == hovered_note.measure()->voices.end()) {
+        if (instrument == hovered_note.measure()->instruments.end()) {
             return false;
         }
 
-        for (auto n {voice->second.begin()}; n != voice->second.end(); n++) {
+        for (auto n {instrument->second.begin()}; n != instrument->second.end(); n++) {
             if (hovered_note.id() == n->id) {
                 if (hovered_note.position() >= n->position && hovered_note.position() < n->position + seq::steps(n->value)) {
                     note = n;
@@ -1548,7 +1548,7 @@ namespace application {
                     return false;
                 }
 
-                for (const seq::Note& note : hovered_note.measure()->voices[m_voice]) {
+                for (const seq::Note& note : hovered_note.measure()->instruments[m_instrument]) {
                     if (notes_overlapping(note, new_note)) {
                         return false;
                     }
@@ -1561,7 +1561,7 @@ namespace application {
             return;
         }
 
-        hovered_note.measure()->voices[m_voice].insert(new_note);
+        hovered_note.measure()->instruments[m_instrument].insert(new_note);
 
         modify_composition();
     }
@@ -1572,7 +1572,7 @@ namespace application {
         }
 
         for (const ProvenanceNote& selected_note : m_composition_selected_notes) {
-            selected_note.measure()->voices.at(m_voice).erase(selected_note.note());
+            selected_note.measure()->instruments.at(m_instrument).erase(selected_note.note());
         }
 
         m_composition_selected_notes.clear();
@@ -1615,7 +1615,7 @@ namespace application {
                         return false;
                     }
 
-                    const auto& notes {selected_note.measure()->voices.at(m_voice)};
+                    const auto& notes {selected_note.measure()->instruments.at(m_instrument)};
 
                     for (auto note {notes.begin()}; note != notes.end(); note++) {
                         if (note_in_selection(note, selected_note.measure(), m_composition_selected_notes)) {
@@ -1665,7 +1665,7 @@ namespace application {
                         return false;
                     }
 
-                    const auto& notes {selected_note.measure()->voices.at(m_voice)};
+                    const auto& notes {selected_note.measure()->instruments.at(m_instrument)};
 
                     for (auto note {notes.begin()}; note != notes.end(); note++) {
                         if (note_in_selection(note, selected_note.measure(), m_composition_selected_notes)) {
@@ -1715,7 +1715,7 @@ namespace application {
                         return false;
                     }
 
-                    const auto& notes {selected_note.measure()->voices.at(m_voice)};
+                    const auto& notes {selected_note.measure()->instruments.at(m_instrument)};
 
                     for (auto note {notes.begin()}; note != notes.end(); note++) {
                         if (note_in_selection(note, selected_note.measure(), m_composition_selected_notes)) {
@@ -1761,7 +1761,7 @@ namespace application {
                         return false;
                     }
 
-                    const auto& notes {selected_note.measure()->voices.at(m_voice)};
+                    const auto& notes {selected_note.measure()->instruments.at(m_instrument)};
 
                     for (auto note {notes.begin()}; note != notes.end(); note++) {
                         if (note_in_selection(note, selected_note.measure(), m_composition_selected_notes)) {
@@ -1924,20 +1924,20 @@ namespace application {
         return ImGui::GetIO().MousePos - origin - ImVec2(ui::rem(COMPOSITION_LEFT), 0.0f) + m_composition_camera;
     }
 
-    std::flat_set<syn::VoiceId> Application::voices_in_project() const {
-        std::flat_set<syn::VoiceId> voices;
+    std::flat_set<syn::InstrumentId> Application::instruments_in_project() const {
+        std::flat_set<syn::InstrumentId> instruments;
 
         for (const seq::Measure& measure : m_composition.measures) {
-            for (const auto& voice : measure.voices) {
-                if (!voice.second.empty()) {
-                    voices.insert(voice.first);
+            for (const auto& instrument : measure.instruments) {
+                if (!instrument.second.empty()) {
+                    instruments.insert(instrument.first);
                 }
             }
         }
 
-        voices.erase(voice::Metronome::static_id());
+        instruments.erase(instrument::Metronome::static_id());
 
-        return voices;
+        return instruments;
     }
 
     bool Application::point_x_in_camera_view(float point_x, float space_x) const {
@@ -1949,8 +1949,8 @@ namespace application {
     }
 
     void Application::readd_note(ProvenanceNote& provenance_note, const seq::Note& note) const {
-        provenance_note.measure()->voices.at(m_voice).erase(provenance_note.note());
-        const auto [iter, inserted] {provenance_note.measure()->voices.at(m_voice).insert(note)};
+        provenance_note.measure()->instruments.at(m_instrument).erase(provenance_note.note());
+        const auto [iter, inserted] {provenance_note.measure()->instruments.at(m_instrument).insert(note)};
 
         assert(inserted);
 
@@ -1958,8 +1958,8 @@ namespace application {
     }
 
     void Application::readd_note(NoteIter note_iter, MeasureIter measure, const seq::Note& note) const {
-        measure->voices.at(m_voice).erase(note_iter);
-        measure->voices.at(m_voice).insert(note);
+        measure->instruments.at(m_instrument).erase(note_iter);
+        measure->instruments.at(m_instrument).insert(note);
     }
 
     void Application::reset_note_legato(const ProvenanceNote& provenance_note) const {
@@ -2082,8 +2082,8 @@ namespace application {
     }
 
     bool Application::empty_except_metronome(const seq::Measure& measure) {
-        return std::ranges::all_of(measure.voices, [](const auto& voice) {
-            return voice.second.empty() || voice.first == voice::Metronome::static_id();
+        return std::ranges::all_of(measure.instruments, [](const auto& instrument) {
+            return instrument.second.empty() || instrument.first == instrument::Metronome::static_id();
         });
     }
 
@@ -2126,11 +2126,11 @@ namespace application {
     }
 
     bool Application::check_note_has_next(const ProvenanceNote& provenance_note, ProvenanceNote& result_next_note) const {
-        return m_composition.check_note_has_next(m_voice, provenance_note, result_next_note);
+        return m_composition.check_note_has_next(m_instrument, provenance_note, result_next_note);
     }
 
     bool Application::check_note_has_previous(const ProvenanceNote& provenance_note, ProvenanceNote& result_previous_note) const {
-        return m_composition.check_note_has_previous(m_voice, provenance_note, result_previous_note);
+        return m_composition.check_note_has_previous(m_instrument, provenance_note, result_previous_note);
     }
 
     Time Application::elapsed_seconds_to_time(double elapsed_seconds) {

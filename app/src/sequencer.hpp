@@ -103,7 +103,7 @@ namespace seq {
 
         // Notes must always be sorted in a very specific way
         // Use a normal set, because the iterators need to stay stable
-        std::unordered_map<syn::VoiceId, std::set<Note>> voices;  // TODO erase empty voices when serializing
+        std::unordered_map<syn::InstrumentId, std::set<Note>> instruments;  // TODO erase empty when serializing
 
         bool equal_time(const Measure& other) const {
             return tempo == other.tempo && time_signature == other.time_signature;
@@ -137,9 +137,9 @@ namespace seq {
         static bool note_last_in_measure(const Measure& measure, const Note& note);
 
         template<std::contiguous_iterator MeasureIter>
-        bool check_note_has_next(syn::VoiceId voice, const ProvenanceNote<MeasureIter>& provenance_note, ProvenanceNote<MeasureIter>& result_next_note) const {
+        bool check_note_has_next(syn::InstrumentId instrument, const ProvenanceNote<MeasureIter>& provenance_note, ProvenanceNote<MeasureIter>& result_next_note) const {
             {
-                const auto& notes {provenance_note.measure()->voices.at(voice)};
+                const auto& notes {provenance_note.measure()->instruments.at(instrument)};
 
                 if (provenance_note.note() != notes.end()) {
                     const auto next_note {std::next(provenance_note.note())};
@@ -160,10 +160,10 @@ namespace seq {
                 const auto next_measure {std::next(provenance_note.measure())};
 
                 if (next_measure != measures.end() && next_measure->equal_time(*provenance_note.measure())) {
-                    const auto& notes {next_measure->voices.at(voice)};
+                    const auto& notes {next_measure->instruments.at(instrument)};
 
                     const auto next_note {
-                        std::ranges::find_if(next_measure->voices.at(voice), [&provenance_note, next_measure](const auto& note) {
+                        std::ranges::find_if(next_measure->instruments.at(instrument), [&provenance_note, next_measure](const auto& note) {
                             return note.id == provenance_note.note()->id && note_first_in_measure(*next_measure, note);
                         })
                     };
@@ -179,9 +179,9 @@ namespace seq {
         }
 
         template<std::contiguous_iterator MeasureIter>
-        bool check_note_has_previous(syn::VoiceId voice, const ProvenanceNote<MeasureIter>& provenance_note, ProvenanceNote<MeasureIter>& result_previous_note) const {
+        bool check_note_has_previous(syn::InstrumentId instrument, const ProvenanceNote<MeasureIter>& provenance_note, ProvenanceNote<MeasureIter>& result_previous_note) const {
             {
-                const auto& notes {provenance_note.measure()->voices.at(voice)};
+                const auto& notes {provenance_note.measure()->instruments.at(instrument)};
 
                 if (provenance_note.note() != notes.begin()) {
                     const auto previous_note {std::prev(provenance_note.note())};
@@ -200,10 +200,10 @@ namespace seq {
                 const auto previous_measure {std::prev(provenance_note.measure())};
 
                 if (previous_measure->equal_time(*provenance_note.measure())) {
-                    const auto& notes {previous_measure->voices.at(voice)};
+                    const auto& notes {previous_measure->instruments.at(instrument)};
 
                     const auto previous_note {
-                        std::ranges::find_if(previous_measure->voices.at(voice), [&provenance_note, previous_measure](const auto& note) {
+                        std::ranges::find_if(previous_measure->instruments.at(instrument), [&provenance_note, previous_measure](const auto& note) {
                             return note.id == provenance_note.note()->id && note_last_in_measure(*previous_measure, note);
                         })
                     };
@@ -269,7 +269,7 @@ namespace seq {
             PlayedNotes notes_played;
         };
 
-        using Executions = std::unordered_map<syn::VoiceId, Execution>;
+        using Executions = std::unordered_map<syn::InstrumentId, Execution>;
     }
 
     class Player {
