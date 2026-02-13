@@ -19,7 +19,7 @@ namespace instrument {  // TODO description
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
     private:
-        static constexpr syn::EnvelopeAdrDescription ENVELOPE {
+        static constexpr syn::DescriptionAdr ENVELOPE {
             0.007,
             0.15,
             0.007
@@ -38,7 +38,7 @@ namespace instrument {  // TODO description
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
     private:
-        static constexpr syn::EnvelopeAdrDescription ENVELOPE {
+        static constexpr syn::DescriptionAdr ENVELOPE {
             1.01,
             1.2,
             1.2
@@ -56,7 +56,7 @@ namespace instrument {  // TODO description
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdsr>(ENVELOPE); }
     private:
-        static constexpr syn::EnvelopeAdsrDescription ENVELOPE {
+        static constexpr syn::DescriptionAdsr ENVELOPE {
             0.1,
             0.02,
             0.2,
@@ -76,7 +76,7 @@ namespace instrument {  // TODO description
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
     private:
-        static constexpr syn::EnvelopeAdrDescription ENVELOPE {
+        static constexpr syn::DescriptionAdr ENVELOPE {
             0.01,
             0.15,
             0.02
@@ -94,7 +94,7 @@ namespace instrument {  // TODO description
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
     private:
-        static constexpr syn::EnvelopeAdrDescription ENVELOPE {
+        static constexpr syn::DescriptionAdr ENVELOPE {
             0.01,
             0.2,
             0.04
@@ -112,7 +112,7 @@ namespace instrument {  // TODO description
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
     private:
-        static constexpr syn::EnvelopeAdrDescription ENVELOPE {
+        static constexpr syn::DescriptionAdr ENVELOPE {
             0.01,
             0.15,
             0.02
@@ -130,7 +130,7 @@ namespace instrument {  // TODO description
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
     private:
-        static constexpr syn::EnvelopeAdrDescription ENVELOPE {
+        static constexpr syn::DescriptionAdr ENVELOPE {
             0.01,
             5.0,
             0.2
@@ -149,7 +149,7 @@ namespace instrument {  // TODO description
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
     private:
-        static constexpr syn::EnvelopeAdrDescription ENVELOPE {
+        static constexpr syn::DescriptionAdr ENVELOPE {
             0.01,
             5.0,
             0.2
@@ -169,7 +169,7 @@ namespace instrument {  // TODO description
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdsr>(ENVELOPE); }
     private:
-        static constexpr syn::EnvelopeAdsrDescription ENVELOPE {
+        static constexpr syn::DescriptionAdsr ENVELOPE {
             0.1,
             0.02,
             0.2,

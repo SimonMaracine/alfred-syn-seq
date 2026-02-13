@@ -22,7 +22,7 @@ namespace syn {
         virtual bool is_done(double time, double time_note_on, double time_note_off) const = 0;
     };
 
-    struct EnvelopeAdsrDescription {
+    struct DescriptionAdsr {
         double time_attack {0.1};
         double time_decay {0.02};
         double time_release {0.2};
@@ -31,7 +31,7 @@ namespace syn {
         double value_sustain {0.8};
     };
 
-    struct EnvelopeAdrDescription {
+    struct DescriptionAdr {
         double time_attack {0.01};
         double time_decay {1.0};
         double time_release {0.1};
@@ -39,9 +39,7 @@ namespace syn {
 
     class EnvelopeAdsr : public Envelope, public allocator::StaticAllocated<EnvelopeAdsr> {
     public:
-        using Description = EnvelopeAdsrDescription;
-
-        EnvelopeAdsr(const Description& description = {})
+        EnvelopeAdsr(const DescriptionAdsr& description = {})
             : m_description(description) {}
 
         double get_value(double time, double time_note_on, double time_note_off) const override;
@@ -50,14 +48,12 @@ namespace syn {
         double ads(double life_time) const;
         double r(double time, double time_note_on, double time_note_off) const;
 
-        Description m_description;
+        DescriptionAdsr m_description;
     };
 
-    class EnvelopeAdr : public Envelope, public allocator::StaticAllocated<EnvelopeAdsr> {
+    class EnvelopeAdr : public Envelope, public allocator::StaticAllocated<EnvelopeAdr> {
     public:
-        using Description = EnvelopeAdrDescription;
-
-        EnvelopeAdr(const Description& description = {})
+        EnvelopeAdr(const DescriptionAdr& description = {})
             : m_description(description) {}
 
         double get_value(double time, double time_note_on, double time_note_off) const override;
@@ -66,7 +62,7 @@ namespace syn {
         double ad(double life_time) const;
         double r(double time, double time_note_on, double time_note_off) const;
 
-        Description m_description;
+        DescriptionAdr m_description;
     };
 
     using EnvelopePtr = std::unique_ptr<Envelope>;
