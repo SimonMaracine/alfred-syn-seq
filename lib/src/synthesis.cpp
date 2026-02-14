@@ -19,7 +19,7 @@ namespace syn {
     void EnvelopeAdsr::note_off() {
         m_segment = Segment::Release;
 
-        m_release_increment = m_current_value / (m_description.time_release * audio::SAMPLE_FREQUENCY);
+        m_release_increment = m_description.value_sustain / (m_description.time_release * audio::SAMPLE_FREQUENCY);
     }
 
     void EnvelopeAdsr::update() {
@@ -51,7 +51,7 @@ namespace syn {
             case Segment::Release:
                 m_current_value -= m_release_increment;
 
-                if (math::zero_if_less_than_eps(m_current_value) <= 0.0) {
+                if (m_current_value <= 0.0) {
                     m_current_value = 0.0;
                     m_segment = Segment::None;
                 }
@@ -61,7 +61,7 @@ namespace syn {
     }
 
     double EnvelopeAdsr::value() const {
-        return math::zero_if_less_than_eps(m_current_value);
+        return math::clamp(m_current_value);
     }
 
     bool EnvelopeAdsr::done() const {
@@ -78,7 +78,7 @@ namespace syn {
     void EnvelopeAdr::note_off() {
         m_segment = Segment::Release;
 
-        m_release_increment = m_current_value / (m_description.time_release * audio::SAMPLE_FREQUENCY);
+        m_release_increment = 1.0 / (m_description.time_release * audio::SAMPLE_FREQUENCY);
     }
 
     void EnvelopeAdr::update() {
@@ -97,7 +97,7 @@ namespace syn {
             case Segment::Decay:
                 m_current_value -= m_decay_increment;
 
-                if (math::zero_if_less_than_eps(m_current_value) <= 0.0) {
+                if (m_current_value <= 0.0) {
                     m_current_value = 0.0;
                     m_segment = Segment::None;
                 }
@@ -106,7 +106,7 @@ namespace syn {
             case Segment::Release:
                 m_current_value -= m_release_increment;
 
-                if (math::zero_if_less_than_eps(m_current_value) <= 0.0) {
+                if (m_current_value <= 0.0) {
                     m_current_value = 0.0;
                     m_segment = Segment::None;
                 }
@@ -116,7 +116,7 @@ namespace syn {
     }
 
     double EnvelopeAdr::value() const {
-        return math::zero_if_less_than_eps(m_current_value);
+        return math::clamp(m_current_value);
     }
 
     bool EnvelopeAdr::done() const {

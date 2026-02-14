@@ -1,6 +1,7 @@
 #pragma once
 
 #include <numbers>
+#include <algorithm>
 #include <memory>
 
 struct fftw_plan_s;
@@ -16,16 +17,8 @@ namespace math {
         return w(double(hertz));
     }
 
-    constexpr bool less_than_eps(double x, double epsilon = 1.0e-5) {
-        return x <= epsilon;
-    }
-
-    constexpr double zero_if_less_than_eps(double x, double epsilon = 1.0e-5) {
-        if (less_than_eps(x, epsilon)) {
-            return 0.0;
-        } else {
-            return x;
-        }
+    constexpr double clamp(double x) {
+        return std::min(std::max(x, 0.0), 1.0);
     }
 
     template<typename T>
@@ -52,6 +45,11 @@ namespace math {
             explicit Transform(std::size_t size);
             ~Transform();
 
+            Transform(const Transform&) = delete;
+            Transform& operator=(const Transform&) = delete;
+            Transform(Transform&&) = delete;
+            Transform& operator=(Transform&&) = delete;
+
             void samples_to_frequencies(const double* samples, Frequencies& frequencies);
         private:
             std::size_t m_size {};
@@ -63,6 +61,11 @@ namespace math {
         public:
             explicit InverseTransform(std::size_t size);
             ~InverseTransform();
+
+            InverseTransform(const InverseTransform&) = delete;
+            InverseTransform& operator=(const InverseTransform&) = delete;
+            InverseTransform(InverseTransform&&) = delete;
+            InverseTransform& operator=(InverseTransform&&) = delete;
 
             void frequencies_to_samples(const Frequencies& frequencies, double* samples);
         private:
