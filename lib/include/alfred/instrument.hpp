@@ -28,7 +28,7 @@ namespace instrument {  // TODO description
 
     class Bell : public syn::Instrument {
     public:
-        ALFRED_INSTRUMENT_STATIC_NAME_ID("Bell")
+        ALFRED_INSTRUMENT_STATIC_NAME_ID("Bell?")
 
         const char* name() const override { return static_name(); }
         syn::InstrumentId id() const override { return static_id(); }
@@ -39,9 +39,9 @@ namespace instrument {  // TODO description
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
     private:
         static constexpr syn::DescriptionAdr ENVELOPE {
-            1.01,
-            1.2,
-            1.2
+            0.5,
+            1.0,
+            0.7
         };
     };
 
@@ -57,10 +57,10 @@ namespace instrument {  // TODO description
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdsr>(ENVELOPE); }
     private:
         static constexpr syn::DescriptionAdsr ENVELOPE {
-            0.1,
+            0.08,
             0.02,
-            0.2,
-            0.8
+            0.12,
+            0.7
         };
     };
 
@@ -96,7 +96,7 @@ namespace instrument {  // TODO description
         static constexpr syn::DescriptionAdr ENVELOPE {
             0.01,
             0.2,
-            0.04
+            0.03
         };
     };
 
@@ -132,7 +132,7 @@ namespace instrument {  // TODO description
         static constexpr syn::DescriptionAdr ENVELOPE {
             0.01,
             5.0,
-            0.2
+            0.15
         };
     };
 
@@ -149,9 +149,9 @@ namespace instrument {  // TODO description
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
     private:
         static constexpr syn::DescriptionAdr ENVELOPE {
-            0.01,
-            5.0,
-            0.2
+            0.03,
+            4.0,
+            0.17
         };
     };
 
@@ -169,10 +169,10 @@ namespace instrument {  // TODO description
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdsr>(ENVELOPE); }
     private:
         static constexpr syn::DescriptionAdsr ENVELOPE {
-            0.1,
-            0.02,
-            0.2,
-            0.8
+            0.12,
+            0.03,
+            0.3,
+            0.9
         };
 
         static constexpr std::size_t SIZE {262144};
