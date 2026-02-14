@@ -13,7 +13,7 @@ namespace allocator {
 
     class StaticAllocatorStorage {
         static constexpr std::size_t STORAGE_SIZE {64};
-        static constexpr std::size_t OBJECT_SIZE {48};
+        static constexpr std::size_t OBJECT_SIZE {88};
         static constexpr std::size_t OBJECT_ALIGNMENT {8};
 
         alignas(OBJECT_ALIGNMENT) unsigned char m_base[STORAGE_SIZE * OBJECT_SIZE] {};

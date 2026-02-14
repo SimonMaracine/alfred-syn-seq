@@ -60,7 +60,6 @@ namespace instrument {  // TODO description
             0.1,
             0.02,
             0.2,
-            1.0,
             0.8
         };
     };
@@ -173,7 +172,6 @@ namespace instrument {  // TODO description
             0.1,
             0.02,
             0.2,
-            1.0,
             0.8
         };
 

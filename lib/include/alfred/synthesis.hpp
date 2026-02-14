@@ -4,6 +4,7 @@
 #include <array>
 #include <numeric>
 #include <ranges>
+#include <limits>
 #include <utility>
 
 #include "alfred/allocator.hpp"
@@ -18,16 +19,17 @@ namespace syn {
         Envelope(Envelope&&) = default;
         Envelope& operator=(Envelope&&) = default;
 
-        virtual double get_value(double time, double time_note_on, double time_note_off) const = 0;
-        virtual bool is_done(double time, double time_note_on, double time_note_off) const = 0;
+        virtual void note_on() = 0;
+        virtual void note_off() = 0;
+        virtual void update() = 0;
+        virtual double value() const = 0;
+        virtual bool done() const = 0;
     };
 
     struct DescriptionAdsr {
         double time_attack {0.1};
         double time_decay {0.02};
         double time_release {0.2};
-
-        double value_start {1.0};
         double value_sustain {0.8};
     };
 
@@ -42,13 +44,25 @@ namespace syn {
         EnvelopeAdsr(const DescriptionAdsr& description = {})
             : m_description(description) {}
 
-        double get_value(double time, double time_note_on, double time_note_off) const override;
-        bool is_done(double time, double time_note_on, double time_note_off) const override;
+        void note_on() override;
+        void note_off() override;
+        void update() override;
+        double value() const override;
+        bool done() const override;
     private:
-        double ads(double life_time) const;
-        double r(double time, double time_note_on, double time_note_off) const;
+        enum class Segment {
+            None,
+            Attack,
+            Decay,
+            Sustain,
+            Release
+        } m_segment {};
 
         DescriptionAdsr m_description;
+        double m_current_value {};
+        double m_attack_increment {};
+        double m_decay_increment {};
+        double m_release_increment {};
     };
 
     class EnvelopeAdr : public Envelope, public allocator::StaticAllocated<EnvelopeAdr> {
@@ -56,20 +70,29 @@ namespace syn {
         EnvelopeAdr(const DescriptionAdr& description = {})
             : m_description(description) {}
 
-        double get_value(double time, double time_note_on, double time_note_off) const override;
-        bool is_done(double time, double time_note_on, double time_note_off) const override;
+        void note_on() override;
+        void note_off() override;
+        void update() override;
+        double value() const override;
+        bool done() const override;
     private:
-        double ad(double life_time) const;
-        double r(double time, double time_note_on, double time_note_off) const;
+        enum class Segment {
+            None,
+            Attack,
+            Decay,
+            Release
+        } m_segment {};
 
         DescriptionAdr m_description;
+        double m_current_value {};
+        double m_attack_increment {};
+        double m_decay_increment {};
+        double m_release_increment {};
     };
 
     using EnvelopePtr = std::unique_ptr<Envelope>;
 
-    // MIDI-like note ID
-    using NoteId = unsigned int;
-
+    // TODO use these for conversion from ID
     enum NoteName : unsigned int {
         A,
         As,
@@ -95,6 +118,9 @@ namespace syn {
         Octave7
     };
 
+    // MIDI-like note ID
+    using NoteId = unsigned int;
+
     using InstrumentId = unsigned int;
 
     using InstrumentRange = std::pair<NoteId, NoteId>;
@@ -104,9 +130,7 @@ namespace syn {
         InstrumentId instrument {};
         EnvelopePtr envelope;  // Overall envelope
         double time_on {};
-        double time_off {};
-
-        static NoteId get_note(NoteName name, NoteOctave octave);
+        double time_off {-std::numeric_limits<double>::infinity()};
     };
 
     namespace keyboard {
@@ -166,7 +190,6 @@ namespace syn {
     double random();
     double frequency(NoteId note);
     double frequency(const Voice& voice);
-    double time_on(double time, const Voice& voice);
 
     template<std::size_t N>
     constexpr std::array<double, N> amplitudes(std::array<double, N> denominators) {

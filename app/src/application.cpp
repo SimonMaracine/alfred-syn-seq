@@ -105,7 +105,7 @@ namespace application {
 
     void Application::on_update() {
         m_player.update(get_frame_time());
-        m_synthesizer.update();
+        m_synthesizer.update_voices();
     }
 
     void Application::on_imgui() {

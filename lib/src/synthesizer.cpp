@@ -30,14 +30,6 @@ namespace synthesizer {
         halt();
     }
 
-    void Synthesizer::note_on(syn::NoteName name, syn::NoteOctave octave, syn::InstrumentId instrument) {
-        note_on(syn::Voice::get_note(name, octave), instrument);
-    }
-
-    void Synthesizer::note_off(syn::NoteName name, syn::NoteOctave octave, syn::InstrumentId instrument) {
-        note_off(syn::Voice::get_note(name, octave), instrument);
-    }
-
     void Synthesizer::note_on(syn::NoteId note, syn::InstrumentId instrument) {
         if (const auto [begin, end] {m_instruments.at(instrument)->range()}; note < begin || note > end) {
             return;
@@ -45,15 +37,17 @@ namespace synthesizer {
 
         audio::AudioLockGuard guard {this};
 
-        if (const auto iter {find_voice(note)}; iter == m_voices.end()) {
-            syn::Voice& voice {m_voices.emplace_back()};
-            voice.note = note;
-            voice.instrument = instrument;
-            voice.envelope = m_instruments.at(instrument)->new_envelope();
-            voice.time_on = time();
+        if (const auto voice {find_voice(note)}; voice == m_voices.end()) {
+            syn::Voice& new_voice {m_voices.emplace_back()};
+            new_voice.note = note;
+            new_voice.instrument = instrument;
+            new_voice.envelope = m_instruments.at(instrument)->new_envelope();
+            new_voice.time_on = time();
+            new_voice.envelope->note_on();
         } else {
-            if (iter->time_off > iter->time_on) {
-                iter->time_on = time();
+            if (voice->time_off > voice->time_on) {
+                voice->time_on = time();
+                voice->envelope->note_on();
             }
         }
     }
@@ -68,6 +62,7 @@ namespace synthesizer {
         if (const auto voice {find_voice(note)}; voice != m_voices.end()) {
             if (voice->time_on > voice->time_off) {
                 voice->time_off = time();
+                voice->envelope->note_off();
             }
         }
     }
@@ -78,11 +73,11 @@ namespace synthesizer {
         m_voices.clear();
     }
 
-    void Synthesizer::update() {
+    void Synthesizer::update_voices() {
         audio::AudioLockGuard guard {this};
 
-        std::erase_if(m_voices, [this](const syn::Voice& voice) {
-            return voice.envelope->is_done(time(), voice.time_on, voice.time_off);
+        std::erase_if(m_voices, [](const syn::Voice& voice) {
+            return voice.envelope->done();
         });
 
         while (m_voices.size() > MAX_VOICES) {
@@ -103,11 +98,17 @@ namespace synthesizer {
         return m_instruments.at(instrument)->name();
     }
 
-    double Synthesizer::sound(double time) const {
+    void Synthesizer::update() {
+        for (const syn::Voice& voice : m_voices) {
+            voice.envelope->update();
+        }
+    }
+
+    double Synthesizer::sound() const {
         double output {};
 
         for (const auto& [i, voice] : m_voices | std::views::enumerate) {
-            output += m_instruments.at(voice.instrument)->sound(time, voice);
+            output += m_instruments.at(voice.instrument)->sound(time(), voice);
 
             // The update function should take care of removing voices, if there are too many
             if (i == MAX_VOICES) {

@@ -48,10 +48,11 @@ namespace audio {
         operator bool() const { return m_stream; }
         double time() const { return m_time; }
 
-        virtual double sound(double time) const = 0;
+        virtual void update() = 0;
+        virtual double sound() const = 0;
     private:
         static double clamp(double value);
-        static void audio_stream_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int total_amount);
+        static void stream_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int total_amount);
 
         SDL_AudioStream* m_stream {};
         std::atomic<double> m_time {0.0};

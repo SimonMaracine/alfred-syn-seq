@@ -90,7 +90,7 @@ namespace audio {
         m_stream = SDL_OpenAudioDeviceStream(
             device,
             &audio_specification,
-            &Audio::audio_stream_callback,
+            &Audio::stream_callback,
             this
         );
 
@@ -156,7 +156,7 @@ namespace audio {
         std::unique_ptr<Resolution[]> buffer;
     } g_buffer;
 
-    void Audio::audio_stream_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int) {
+    void Audio::stream_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int) {
         // This code is run under an SDL internal mutex
 
         Audio& self {*static_cast<Audio*>(userdata)};
@@ -169,7 +169,8 @@ namespace audio {
         }
 
         for (std::size_t i {}; i < samples; i++) {
-            const double sound {clamp(self.sound(self.m_time))};
+            self.update();
+            const double sound {clamp(self.sound())};
 
             g_buffer.buffer[i] = Resolution(sound * double(std::numeric_limits<Resolution>::max()));
 
