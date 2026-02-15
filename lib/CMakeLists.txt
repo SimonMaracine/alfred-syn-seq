@@ -5,7 +5,6 @@ add_library(alfred_lib STATIC)
 target_sources(
     alfred_lib
     PRIVATE
-        "src/allocator.cpp"
         "src/audio.cpp"
         "src/instrument.cpp"
         "src/math.cpp"

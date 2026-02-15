@@ -10,6 +10,8 @@
 #include "alfred/allocator.hpp"
 
 namespace syn {
+    using EnvelopeStorage = allocator::StaticAllocatorStorage<64, 88, 8>;
+
     struct Envelope {
         Envelope() = default;
         virtual ~Envelope() = default;
@@ -39,7 +41,7 @@ namespace syn {
         double time_release {0.1};
     };
 
-    class EnvelopeAdsr : public Envelope, public allocator::StaticAllocated<EnvelopeAdsr> {
+    class EnvelopeAdsr : public Envelope, public allocator::StaticAllocated<EnvelopeAdsr, EnvelopeStorage> {
     public:
         EnvelopeAdsr(const DescriptionAdsr& description = {})
             : m_description(description) {}
@@ -65,7 +67,7 @@ namespace syn {
         double m_release_increment {};
     };
 
-    class EnvelopeAdr : public Envelope, public allocator::StaticAllocated<EnvelopeAdr> {
+    class EnvelopeAdr : public Envelope, public allocator::StaticAllocated<EnvelopeAdr, EnvelopeStorage> {
     public:
         EnvelopeAdr(const DescriptionAdr& description = {})
             : m_description(description) {}
