@@ -2206,7 +2206,7 @@ namespace application {
 
         if (const char* file {filelist[0]}; file) {
             self.m_task_manager.add_immediate_thread_safe_task([&self, file = std::string(file)] mutable {
-                self.composition_open(std::move(file));
+                (void) self.composition_open(std::move(file));
             });
         }
     }
@@ -2297,6 +2297,8 @@ namespace application {
         std::strncpy(m_ui.composition.author, m_composition.author.c_str(), sizeof(m_ui.composition.author));
         m_ui.composition.year = short(int(m_composition.year));
 
+        m_player.seek(0);
+
         reset_composition_flags();
         invalidate_composition();
         set_title_composition_saved();
@@ -2308,6 +2310,7 @@ namespace application {
         m_composition = {};
         m_composition_path.clear();
         m_ui.composition = {};
+        m_player.seek(0);
 
         reset_composition_flags();
         set_title_composition_saved();
