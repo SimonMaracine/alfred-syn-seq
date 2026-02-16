@@ -134,7 +134,7 @@ namespace application {
     void Application::on_event(const SDL_Event& event) {
         switch (event.type) {
             case SDL_EVENT_KEY_DOWN:
-                if (keyboard_active()) {
+                if (keyboard_active() && !event.key.repeat) {
                     keyboard_input(event.key.key, true);
                 }
                 break;
