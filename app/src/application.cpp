@@ -12,6 +12,7 @@
 
 #include <SDL3/SDL.h>
 #include <alfred/instrument.hpp>
+#include <alfred/math.hpp>
 
 #include "logging.hpp"
 #include "imgui.ini.hpp"
@@ -1580,6 +1581,7 @@ namespace application {
         }
 
         hovered_note.measure()->instruments[m_instrument].insert(new_note);
+        play_note(new_note);
 
         modify_composition();
     }
@@ -1609,7 +1611,7 @@ namespace application {
             note.legato = !note.legato;
 
             if (note.legato) {
-                if (ProvenanceNote next_note; !check_note_has_next(selected_note, next_note)) {
+                if (!check_note_has_next(selected_note)) {
                     note.legato = false;
                     LOG_DEBUG("Note cannot have legato");
                 }
@@ -1661,11 +1663,12 @@ namespace application {
             note.id++;
             note.legato = false;
 
-            if (ProvenanceNote previous_note; check_note_has_previous(selected_note, previous_note)) {
-                reset_note_legato(previous_note);
+            if (const auto previous_note {check_note_has_previous(selected_note)}; previous_note) {
+                reset_note_legato(*previous_note);
             }
 
             readd_note(selected_note, note);
+            play_note(note);
         }
 
         modify_composition();
@@ -1711,11 +1714,12 @@ namespace application {
             note.id--;
             note.legato = false;
 
-            if (ProvenanceNote previous_note; check_note_has_previous(selected_note, previous_note)) {
-                reset_note_legato(previous_note);
+            if (const auto previous_note {check_note_has_previous(selected_note)}; previous_note) {
+                reset_note_legato(*previous_note);
             }
 
             readd_note(selected_note, note);
+            play_note(note);
         }
 
         modify_composition();
@@ -1807,8 +1811,8 @@ namespace application {
             note.position += seq::DIVISION;
             note.legato = false;
 
-            if (ProvenanceNote previous_note; check_note_has_previous(selected_note, previous_note)) {
-                reset_note_legato(previous_note);
+            if (const auto previous_note {check_note_has_previous(selected_note)}; previous_note) {
+                reset_note_legato(*previous_note);
             }
 
             readd_note(selected_note, note);
@@ -1963,6 +1967,14 @@ namespace application {
         note.legato = false;
 
         readd_note(provenance_note.note(), provenance_note.measure(), note);
+    }
+
+    void Application::play_note(const seq::Note& note) {
+        m_synthesizer.note_on(note.id, m_instrument);
+
+        m_task_manager.add_delayed_task([this, id = note.id] {
+            m_synthesizer.note_off(id, m_instrument);
+        }, math::seconds_to_milliseconds(m_synthesizer.get_instrument(m_instrument).attack_time()) + 100);
     }
 
     bool Application::keyboard_active() {
@@ -2121,12 +2133,12 @@ namespace application {
         }) != selected_notes.end();
     }
 
-    bool Application::check_note_has_next(const ProvenanceNote& provenance_note, ProvenanceNote& result_next_note) const {
-        return m_composition.check_note_has_next(m_instrument, provenance_note, result_next_note);
+    std::optional<ProvenanceNote> Application::check_note_has_next(const ProvenanceNote& provenance_note) const {
+        return m_composition.check_note_has_next(m_instrument, provenance_note);
     }
 
-    bool Application::check_note_has_previous(const ProvenanceNote& provenance_note, ProvenanceNote& result_previous_note) const {
-        return m_composition.check_note_has_previous(m_instrument, provenance_note, result_previous_note);
+    std::optional<ProvenanceNote> Application::check_note_has_previous(const ProvenanceNote& provenance_note) const {
+        return m_composition.check_note_has_previous(m_instrument, provenance_note);
     }
 
     Time Application::elapsed_seconds_to_time(double elapsed_seconds) {

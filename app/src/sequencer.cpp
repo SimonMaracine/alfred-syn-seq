@@ -157,19 +157,17 @@ namespace seq {
                     unsigned int duration {seq::steps(current_note->value)};
 
                     while (current_note->legato) {
-                        ProvenanceNote<ConstMeasureIter> next_note;
-
-                        [[maybe_unused]] const bool result {
-                            m_composition->check_note_has_next<ConstMeasureIter>(instrument, ProvenanceNote(measure, current_note), next_note)
+                        const auto next_note {
+                            m_composition->check_note_has_next<ConstMeasureIter>(instrument, ProvenanceNote(measure, current_note))
                         };
 
-                        assert(measure->equal_time(*next_note.measure()));
-                        assert(result);
+                        assert(next_note);
+                        assert(measure->equal_time(*next_note->measure()));
 
-                        duration += seq::steps(next_note.note()->value);
+                        duration += seq::steps(next_note->note()->value);
 
-                        processed_notes.push_back(next_note);
-                        current_note = next_note.note();
+                        processed_notes.push_back(*next_note);
+                        current_note = next_note->note();
                     }
 
                     executions[instrument].notes_unplayed.emplace(

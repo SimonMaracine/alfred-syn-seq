@@ -15,8 +15,8 @@ static void show_error_message_box(const char* title, const char* message) {
 }
 
 int main(int, char**) {
-    std::atexit(logging::uninitialize);
-    std::atexit(SDL_Quit);
+    (void) std::atexit(logging::uninitialize);
+    (void) std::atexit(SDL_Quit);
 
     try {
         logging::initialize();

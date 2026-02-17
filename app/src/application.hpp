@@ -137,6 +137,7 @@ namespace application {
         void readd_note(ProvenanceNote& provenance_note, const seq::Note& note) const;
         void readd_note(NoteIter note_iter, MeasureIter measure, const seq::Note& note) const;
         void reset_note_legato(const ProvenanceNote& provenance_note) const;
+        void play_note(const seq::Note& note);
 
         static bool keyboard_active();
         static float note_height(const seq::Note& note);
@@ -153,9 +154,9 @@ namespace application {
         static bool check_note_left_limit(const seq::Note& note);
         static bool check_note_right_limit(const seq::Note& note, const seq::Measure& measure);
         static bool notes_overlapping(const seq::Note& note1, const seq::Note& note2);
-        bool check_note_has_next(const ProvenanceNote& provenance_note, ProvenanceNote& result_next_note) const;
-        bool check_note_has_previous(const ProvenanceNote& provenance_note, ProvenanceNote& result_previous_note) const;
         static bool note_in_selection(NoteIter note, MeasureIter measure, const std::vector<ProvenanceNote>& selected_notes);
+        std::optional<ProvenanceNote> check_note_has_next(const ProvenanceNote& provenance_note) const;
+        std::optional<ProvenanceNote> check_note_has_previous(const ProvenanceNote& provenance_note) const;
         static Time elapsed_seconds_to_time(double elapsed_seconds);
         static seq::Value get_value(ui::Value value);
         static const ImVec4& color(ImGuiCol color);
