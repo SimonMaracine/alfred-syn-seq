@@ -94,8 +94,8 @@ namespace synthesizer {
         }
     }
 
-    const char* Synthesizer::instrument_name(syn::InstrumentId instrument) const {
-        return m_instruments.at(instrument)->name();
+    const syn::Instrument& Synthesizer::get_instrument(syn::InstrumentId instrument) const {
+        return *m_instruments.at(instrument);
     }
 
     void Synthesizer::update() {

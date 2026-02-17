@@ -18,11 +18,13 @@ namespace instrument {  // TODO description
         double sound(double time, const syn::Voice& voice) const override;
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
+        double attack_time() const override { return ENVELOPE.time_attack; }
+        double release_time() const override { return ENVELOPE.time_release; }
     private:
         static constexpr syn::DescriptionAdr ENVELOPE {
-            0.007,
-            0.15,
-            0.007
+            .time_attack = 0.007,
+            .time_decay = 0.15,
+            .time_release = 0.007
         };
     };
 
@@ -37,11 +39,13 @@ namespace instrument {  // TODO description
         syn::InstrumentRange range() const override { return { 12, 51 }; }
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
+        double attack_time() const override { return ENVELOPE.time_attack; }
+        double release_time() const override { return ENVELOPE.time_release; }
     private:
         static constexpr syn::DescriptionAdr ENVELOPE {
-            0.5,
-            1.0,
-            0.7
+            .time_attack = 0.5,
+            .time_decay = 1.0,
+            .time_release = 0.7
         };
     };
 
@@ -55,12 +59,14 @@ namespace instrument {  // TODO description
         double sound(double time, const syn::Voice& voice) const override;
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdsr>(ENVELOPE); }
+        double attack_time() const override { return ENVELOPE.time_attack; }
+        double release_time() const override { return ENVELOPE.time_release; }
     private:
         static constexpr syn::DescriptionAdsr ENVELOPE {
-            0.08,
-            0.02,
-            0.12,
-            0.7
+            .time_attack = 0.08,
+            .time_decay = 0.02,
+            .time_release = 0.12,
+            .value_sustain = 0.7
         };
     };
 
@@ -74,11 +80,13 @@ namespace instrument {  // TODO description
         double sound(double time, const syn::Voice& voice) const override;
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
+        double attack_time() const override { return ENVELOPE.time_attack; }
+        double release_time() const override { return ENVELOPE.time_release; }
     private:
         static constexpr syn::DescriptionAdr ENVELOPE {
-            0.01,
-            0.15,
-            0.02
+            .time_attack = 0.01,
+            .time_decay = 0.15,
+            .time_release = 0.02
         };
     };
 
@@ -92,11 +100,13 @@ namespace instrument {  // TODO description
         double sound(double time, const syn::Voice& voice) const override;
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
+        double attack_time() const override { return ENVELOPE.time_attack; }
+        double release_time() const override { return ENVELOPE.time_release; }
     private:
         static constexpr syn::DescriptionAdr ENVELOPE {
-            0.01,
-            0.2,
-            0.03
+            .time_attack = 0.01,
+            .time_decay = 0.2,
+            .time_release = 0.03
         };
     };
 
@@ -110,11 +120,13 @@ namespace instrument {  // TODO description
         double sound(double time, const syn::Voice& voice) const override;
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
+        double attack_time() const override { return ENVELOPE.time_attack; }
+        double release_time() const override { return ENVELOPE.time_release; }
     private:
         static constexpr syn::DescriptionAdr ENVELOPE {
-            0.01,
-            0.15,
-            0.02
+            .time_attack = 0.01,
+            .time_decay = 0.15,
+            .time_release = 0.02
         };
     };
 
@@ -128,11 +140,13 @@ namespace instrument {  // TODO description
         double sound(double time, const syn::Voice& voice) const override;
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
+        double attack_time() const override { return ENVELOPE.time_attack; }
+        double release_time() const override { return ENVELOPE.time_release; }
     private:
         static constexpr syn::DescriptionAdr ENVELOPE {
-            0.01,
-            5.0,
-            0.15
+            .time_attack = 0.01,
+            .time_decay = 5.0,
+            .time_release = 0.15
         };
     };
 
@@ -147,11 +161,13 @@ namespace instrument {  // TODO description
         syn::InstrumentRange range() const override { return { 7, 51 }; }
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
+        double attack_time() const override { return ENVELOPE.time_attack; }
+        double release_time() const override { return ENVELOPE.time_release; }
     private:
         static constexpr syn::DescriptionAdr ENVELOPE {
-            0.03,
-            4.0,
-            0.17
+            .time_attack = 0.03,
+            .time_decay = 4.0,
+            .time_release = 0.17
         };
     };
 
@@ -167,12 +183,14 @@ namespace instrument {  // TODO description
         double sound(double time, const syn::Voice& voice) const override;
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdsr>(ENVELOPE); }
+        double attack_time() const override { return ENVELOPE.time_attack; }
+        double release_time() const override { return ENVELOPE.time_release; }
     private:
         static constexpr syn::DescriptionAdsr ENVELOPE {
-            0.12,
-            0.03,
-            0.3,
-            0.9
+            .time_attack = 0.12,
+            .time_decay = 0.03,
+            .time_release = 0.3,
+            .value_sustain = 0.9
         };
 
         static constexpr std::size_t SIZE {262144};

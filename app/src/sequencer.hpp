@@ -23,14 +23,15 @@ namespace seq {
         Sixteenth = 16
     };
 
-    // A sixteenth divided by three is the step size
-    inline constexpr unsigned int DIV {3};
-
+    // A sixteenth divided by this is the step size
     // A step has variable length in seconds depending on the time signature and tempo
-    inline constexpr unsigned int STEP {Sixteenth * DIV};
+    inline constexpr unsigned int DIVISION {3 * 5};
+
+    // Chosen semi-arbitrarily :P
+    inline constexpr unsigned int MIN_DURATION {3};
 
     constexpr unsigned int steps(Value value) {
-        return STEP / value;
+        return Sixteenth * DIVISION / value;
     }
 
     // Quarters per minute
@@ -289,13 +290,12 @@ namespace seq {
 
         void update(double dt);
     private:
-        using MeasureIter = std::vector<Measure>::const_iterator;
-
         void initialize(unsigned int position);
         exec::Executions initialize_executions(unsigned int position) const;
-        MeasureIter initialize_measure(unsigned int position) const;
+        ConstMeasureIter initialize_measure(unsigned int position) const;
         double initialize_elapsed_time(unsigned int position) const;
         unsigned int initialize_measure_position(unsigned int position) const;
+        unsigned int calculate_note_duration(ConstMeasureIter measure, syn::InstrumentId instrument, unsigned int duration) const;
         bool finished() const;
         bool no_notes() const;
 
@@ -304,7 +304,7 @@ namespace seq {
         std::function<void()> m_stopped;
 
         exec::Executions m_executions;
-        MeasureIter m_measure;
+        ConstMeasureIter m_measure;
         double m_accumulator_time {};
         double m_elapsed_time {};
         unsigned int m_position {};  // Like a cursor

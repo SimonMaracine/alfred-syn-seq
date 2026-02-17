@@ -19,7 +19,7 @@ namespace synthesizer {
         void silence();
         void update_voices();
         void for_each_instrument(const std::function<void(const syn::Instrument&)>& function) const;
-        const char* instrument_name(syn::InstrumentId instrument) const;
+        const syn::Instrument& get_instrument(syn::InstrumentId instrument) const;
     private:
         void update() override;
         double sound() const override;

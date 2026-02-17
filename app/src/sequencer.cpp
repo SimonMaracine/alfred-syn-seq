@@ -1,6 +1,7 @@
 #include "sequencer.hpp"
 
 #include <utility>
+#include <cmath>
 #include <cassert>
 
 namespace seq {
@@ -84,12 +85,12 @@ namespace seq {
 
         for (auto& [instrument, execution] : m_executions) {
             for (auto note {execution.notes_played.begin()}; note != execution.notes_played.end(); note++) {
-                if (m_position + 1 < note->position + note->duration) {
+                if (m_position < note->position + note->duration) {
                     execution.notes_played.erase(execution.notes_played.begin(), note);
                     break;
                 }
 
-                if (m_position + 1 == note->position + note->duration) {
+                if (m_position == note->position + note->duration) {
                     m_synthesizer->note_off(note->id, instrument);
 
                     if (std::next(note) == execution.notes_played.end()) {
@@ -174,7 +175,7 @@ namespace seq {
                     executions[instrument].notes_unplayed.emplace(
                         note->id,
                         steps + note->position,
-                        duration,
+                        calculate_note_duration(measure, instrument, duration),
                         measure->tempo,
                         measure->time_signature
                     );
@@ -187,9 +188,9 @@ namespace seq {
         return executions;
     }
 
-    Player::MeasureIter Player::initialize_measure(unsigned int position) const {
+    ConstMeasureIter Player::initialize_measure(unsigned int position) const {
         unsigned int steps {};
-        MeasureIter measure;
+        ConstMeasureIter measure;
 
         for (measure = m_composition->measures.begin(); measure != m_composition->measures.end(); measure++) {
             steps += measure->time_signature.measure_steps();
@@ -235,6 +236,18 @@ namespace seq {
         }
 
         return steps;
+    }
+
+    unsigned int Player::calculate_note_duration(ConstMeasureIter measure, syn::InstrumentId instrument, unsigned int duration) const {
+        const double step_time {measure->time_signature.step_time(measure->tempo)};
+        const double release_time {m_synthesizer->get_instrument(instrument).release_time()};
+        const unsigned int release_duration {static_cast<unsigned int>(std::ceil(release_time / step_time))};
+
+        if (release_duration > duration) {
+            return MIN_DURATION;
+        }
+
+        return std::max(duration - release_duration, MIN_DURATION);
     }
 
     bool Player::finished() const {

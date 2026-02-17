@@ -23,7 +23,7 @@
 #include "rewind.png.hpp"
 
 namespace application {
-    static constexpr ImVec2 STEP_SIZE {4.0f / ui::FONT_SIZE, 20.0f / ui::FONT_SIZE};
+    static constexpr ImVec2 STEP_SIZE {1.0f / ui::FONT_SIZE, 20.0f / ui::FONT_SIZE};
     static constexpr float COMPOSITION_LEFT {40.0f / ui::FONT_SIZE};
     static constexpr float COMPOSITION_HEIGHT {STEP_SIZE.y * 12.0f * float(syn::keyboard::OCTAVES) + STEP_SIZE.y * float(syn::keyboard::EXTRA)};
     static constexpr float COMPOSITION_SCROLL_SPEED {40.0f / ui::FONT_SIZE};
@@ -384,7 +384,7 @@ namespace application {
         if (ImGui::Begin("Instruments", nullptr, ImGuiWindowFlags_NoResize)) {
             ImGui::SeparatorText("Instrument");
 
-            if (ImGui::BeginCombo("##instrument", m_synthesizer.instrument_name(m_instrument), ImGuiComboFlags_NoArrowButton)) {
+            if (ImGui::BeginCombo("##instrument", m_synthesizer.get_instrument(m_instrument).name(), ImGuiComboFlags_NoArrowButton)) {
                 m_synthesizer.for_each_instrument([this](const syn::Instrument& instrument) {
                     if (instrument.id() == instrument::Metronome::static_id()) {
                         return;
@@ -417,7 +417,7 @@ namespace application {
                 for (const auto instruments {instruments_in_project()}; const syn::InstrumentId instrument : instruments) {
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(ui::COLORS[m_ui.colors.at(instrument)].second));
 
-                    if (ImGui::Selectable(m_synthesizer.instrument_name(instrument), instrument == m_instrument)) {
+                    if (ImGui::Selectable(m_synthesizer.get_instrument(instrument).name(), instrument == m_instrument)) {
                         m_instrument = instrument;
                         m_composition_selected_notes.clear();
                         m_synthesizer.silence();
@@ -971,10 +971,10 @@ namespace application {
                 const float x {global_position_x + float(note->position + seq::steps(note->value)) * ui::rem(STEP_SIZE.x)};
 
                 draw.list->AddBezierCubic(
-                    draw.origin + ImVec2(x - ui::rem(STEP_SIZE.x) * 1.5f, rect.y + ui::rem(STEP_SIZE.y)) - m_composition_camera,
-                    draw.origin + ImVec2(x - ui::rem(STEP_SIZE.x), rect.y + ui::rem(STEP_SIZE.y) * 1.5f) - m_composition_camera,
-                    draw.origin + ImVec2(x + ui::rem(STEP_SIZE.x), rect.y + ui::rem(STEP_SIZE.y) * 1.5f) - m_composition_camera,
-                    draw.origin + ImVec2(x + ui::rem(STEP_SIZE.x) * 1.5f, rect.y + ui::rem(STEP_SIZE.y)) - m_composition_camera,
+                    draw.origin + ImVec2(x - ui::rem(STEP_SIZE.x) * 6.0f, rect.y + ui::rem(STEP_SIZE.y)) - m_composition_camera,
+                    draw.origin + ImVec2(x - ui::rem(STEP_SIZE.x) * 3.0f, rect.y + ui::rem(STEP_SIZE.y) * 1.5f) - m_composition_camera,
+                    draw.origin + ImVec2(x + ui::rem(STEP_SIZE.x) * 3.0f, rect.y + ui::rem(STEP_SIZE.y) * 1.5f) - m_composition_camera,
+                    draw.origin + ImVec2(x + ui::rem(STEP_SIZE.x) * 6.0f, rect.y + ui::rem(STEP_SIZE.y)) - m_composition_camera,
                     ui::COLORS[m_ui.colors.at(instrument)].second,
                     1.0f
                 );
@@ -1020,11 +1020,11 @@ namespace application {
                     COLOR
                 );
 
-                const float position_x {ui::rem(COMPOSITION_LEFT) + float(hovered_note.global_position() / seq::DIV * seq::DIV) * ui::rem(STEP_SIZE.x)};
+                const float position_x {ui::rem(COMPOSITION_LEFT) + float(hovered_note.global_position() / seq::DIVISION * seq::DIVISION) * ui::rem(STEP_SIZE.x)};
 
                 draw.list->AddRectFilled(
                     draw.origin + ImVec2(position_x, position_y) - m_composition_camera,
-                    draw.origin + ImVec2(position_x + ui::rem(STEP_SIZE.x) * float(seq::DIV), position_y + ui::rem(STEP_SIZE.y)) - m_composition_camera,
+                    draw.origin + ImVec2(position_x + ui::rem(STEP_SIZE.x) * float(seq::DIVISION), position_y + ui::rem(STEP_SIZE.y)) - m_composition_camera,
                     COLOR2
                 );
 
@@ -1538,7 +1538,7 @@ namespace application {
         const seq::Note new_note {
             hovered_note.id(),
             get_value(ui::Value(m_ui.value)),
-            hovered_note.position() / seq::DIV * seq::DIV,  // Always place on groups of steps
+            hovered_note.position() / seq::DIVISION * seq::DIVISION,  // Always place on groups of steps
             false
         };
 
@@ -1740,7 +1740,7 @@ namespace application {
 
         for (ProvenanceNote& selected_note : m_composition_selected_notes) {
             seq::Note note {selected_note.copy()};
-            note.position--;
+            note.position -= seq::DIVISION;
             note.legato = false;  // No need to check previous
 
             readd_note(selected_note, note);
@@ -1786,7 +1786,7 @@ namespace application {
 
         for (ProvenanceNote& selected_note : m_composition_selected_notes) {
             seq::Note note {selected_note.copy()};
-            note.position++;
+            note.position += seq::DIVISION;
             note.legato = false;
 
             if (ProvenanceNote previous_note; check_note_has_previous(selected_note, previous_note)) {

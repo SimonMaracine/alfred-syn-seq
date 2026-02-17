@@ -166,9 +166,11 @@ namespace syn {
         virtual InstrumentId id() const = 0;
 
         virtual double sound(double time, const Voice& voice) const = 0;
-        virtual InstrumentRange range() const { return  keyboard::ID_FULL_RANGE; }
+        virtual InstrumentRange range() const { return keyboard::ID_FULL_RANGE; }
 
         virtual EnvelopePtr new_envelope() const = 0;
+        virtual double attack_time() const = 0;
+        virtual double release_time() const = 0;
     };
 
     struct LowFrequencyOscillator {
