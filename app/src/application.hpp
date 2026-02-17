@@ -4,6 +4,7 @@
 #include <vector>
 #include <unordered_map>
 #include <filesystem>
+#include <optional>
 
 #include <imgui.h>
 #include <alfred/synthesizer.hpp>
@@ -99,7 +100,6 @@ namespace application {
         void add_metronome(MeasureIter begin, MeasureIter end);
         void remove_metronome();
         void remove_metronome(MeasureIter begin, MeasureIter end);
-        bool hover_measure(ImVec2 position, MeasureIter& hovered_measure);
         void select_measure(MeasureIter hovered_measure);
         void append_measures();
         void insert_measure();
@@ -107,8 +107,10 @@ namespace application {
         void delete_measure();
         void set_measure_tempo();
         void set_measure_time_signature();
-        bool hover_note(ImVec2 position, HoveredNote& hovered_note);
-        bool select_note(const HoveredNote& hovered_note, NoteIter& note) const;
+        std::optional<MeasureIter> hover_measure(ImVec2 position);
+        std::optional<HoveredNote> hover_note(ImVec2 position);
+        std::optional<NoteIter> select_note(const HoveredNote& hovered_note) const;
+        std::optional<unsigned int> hover_position(ImVec2 position) const;
         void do_with_note(const HoveredNote& hovered_note);
         void delete_notes();
         void legato_notes();
@@ -116,7 +118,6 @@ namespace application {
         void shift_notes_down();
         void shift_notes_left();
         void shift_notes_right();
-        bool hover_position(ImVec2 position, unsigned int& position_) const;
 
         void start_player();
         void stop_player();

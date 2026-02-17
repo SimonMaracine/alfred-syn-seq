@@ -714,8 +714,8 @@ namespace application {
             const bool allow_edit {!m_player.is_playing()};
 
             if (!ImGui::IsKeyDown(ImGuiMod_Alt)) {
-                if (HoveredNote hovered_note; item_hovered && allow_edit && hover_note(composition_mouse_position(origin), hovered_note)) {
-                    composition_hover(draw, hovered_note);
+                if (const auto hovered_note {hover_note(composition_mouse_position(origin))}; item_hovered && allow_edit && hovered_note) {
+                    composition_hover(draw, *hovered_note);
                 }
             }
 
@@ -1245,14 +1245,14 @@ namespace application {
     void Application::composition_mouse_pressed(ImVec2 origin) {
         switch (m_ui.tool) {
             case ui::ToolMeasure: {
-                if (MeasureIter hovered_measure; hover_measure(composition_mouse_position(origin), hovered_measure)) {
-                    select_measure(hovered_measure);
+                if (const auto hovered_measure {hover_measure(composition_mouse_position(origin))}; hovered_measure) {
+                    select_measure(*hovered_measure);
                 }
                 break;
             }
             case ui::ToolNote: {
-                if (HoveredNote hovered_note; hover_note(composition_mouse_position(origin), hovered_note)) {
-                    do_with_note(hovered_note);
+                if (const auto hovered_note {hover_note(composition_mouse_position(origin))}; hovered_note) {
+                    do_with_note(*hovered_note);
                 }
                 break;
             }
@@ -1316,23 +1316,6 @@ namespace application {
         }
 
         modify_composition();
-    }
-
-    bool Application::hover_measure(ImVec2 position, MeasureIter& hovered_measure) {
-        float position_x {};
-
-        for (auto measure {m_composition.measures.begin()}; measure != m_composition.measures.end(); measure++) {
-            const float right {float(measure->time_signature.measure_steps()) * ui::rem(STEP_SIZE.x)};
-
-            if (position.x >= position_x && position.x < position_x + right) {
-                hovered_measure = measure;
-                return true;
-            }
-
-            position_x += right;
-        }
-
-        return false;
     }
 
     void Application::select_measure(MeasureIter hovered_measure) {
@@ -1443,7 +1426,23 @@ namespace application {
         }
     }
 
-    bool Application::hover_note(ImVec2 position, HoveredNote& hovered_note) {
+    std::optional<MeasureIter> Application::hover_measure(ImVec2 position) {
+        float position_x {};
+
+        for (auto measure {m_composition.measures.begin()}; measure != m_composition.measures.end(); measure++) {
+            const float right {float(measure->time_signature.measure_steps()) * ui::rem(STEP_SIZE.x)};
+
+            if (position.x >= position_x && position.x < position_x + right) {
+                return std::make_optional(measure);
+            }
+
+            position_x += right;
+        }
+
+        return std::nullopt;
+    }
+
+    std::optional<HoveredNote> Application::hover_note(ImVec2 position) {
         syn::NoteId result_id {};
 
         {
@@ -1451,7 +1450,7 @@ namespace application {
             const int id {syn::keyboard::NOTES - 1 - index};
 
             if (id < 0) {
-                return false;  // This can happen now when hovering the mouse below the lowest note
+                return std::nullopt;  // This can happen now when hovering the mouse below the lowest note
             }
 
             result_id = syn::NoteId(id);
@@ -1467,44 +1466,63 @@ namespace application {
                 const float offset {position.x - position_x};
                 const unsigned int result_position {static_cast<unsigned int>(offset / ui::rem(STEP_SIZE.x))};
 
-                hovered_note = HoveredNote(
+                return std::make_optional<HoveredNote>(
                     result_id,
                     measure,
                     result_position,
                     global_position + result_position
                 );
-
-                return true;
             }
 
             position_x += right;
             global_position += measure->time_signature.measure_steps();
         }
 
-        return false;
+        return std::nullopt;
     }
 
-    bool Application::select_note(const HoveredNote& hovered_note, NoteIter& note) const {
+    std::optional<NoteIter> Application::select_note(const HoveredNote& hovered_note) const {
         const auto instrument {hovered_note.measure()->instruments.find(m_instrument)};
 
         if (instrument == hovered_note.measure()->instruments.end()) {
-            return false;
+            return std::nullopt;
         }
 
         for (auto n {instrument->second.begin()}; n != instrument->second.end(); n++) {
             if (hovered_note.id() == n->id) {
                 if (hovered_note.position() >= n->position && hovered_note.position() < n->position + seq::steps(n->value)) {
-                    note = n;
-                    return true;
+                    return std::make_optional(n);
                 }
             }
         }
 
-        return false;
+        return std::nullopt;
     }
 
+    std::optional<unsigned int> Application::hover_position(ImVec2 position) const {
+        unsigned int result {};
+
+        for (float position_x {}; const seq::Measure& measure : m_composition.measures) {
+            const float right {float(measure.time_signature.measure_steps()) * ui::rem(STEP_SIZE.x)};
+
+            if (position.x >= position_x && position.x < position_x + right) {
+                const float offset {position.x - position_x};
+
+                result += static_cast<unsigned int>(offset / ui::rem(STEP_SIZE.x));
+
+                return std::make_optional(result);
+            }
+
+            position_x += right;
+            result += measure.time_signature.measure_steps();
+        }
+
+        return std::nullopt;
+    }
+
+
     void Application::do_with_note(const HoveredNote& hovered_note) {
-        if (NoteIter note; select_note(hovered_note, note)) {
+        if (auto note {select_note(hovered_note)}; note) {
             const auto selected_note {
                 std::ranges::find_if(m_composition_selected_notes, [&hovered_note, note](const auto& n) {
                     return n.measure() == hovered_note.measure() && n.note() == note;
@@ -1515,7 +1533,7 @@ namespace application {
                 if (selected_note != m_composition_selected_notes.end()) {
                     m_composition_selected_notes.erase(selected_note);
                 } else {
-                    m_composition_selected_notes.emplace_back(hovered_note.measure(), note);
+                    m_composition_selected_notes.emplace_back(hovered_note.measure(), *note);
                 }
             } else {
                 const bool exists {selected_note != m_composition_selected_notes.end()};
@@ -1523,7 +1541,7 @@ namespace application {
                 m_composition_selected_notes.clear();
 
                 if (!exists) {
-                    m_composition_selected_notes.emplace_back(hovered_note.measure(), note);
+                    m_composition_selected_notes.emplace_back(hovered_note.measure(), *note);
                 }
             }
 
@@ -1797,28 +1815,6 @@ namespace application {
         }
 
         modify_composition();
-    }
-
-    bool Application::hover_position(ImVec2 position, unsigned int& position_) const {
-        unsigned int result {};
-
-        for (float position_x {}; const seq::Measure& measure : m_composition.measures) {
-            const float right {float(measure.time_signature.measure_steps()) * ui::rem(STEP_SIZE.x)};
-
-            if (position.x >= position_x && position.x < position_x + right) {
-                const float offset {position.x - position_x};
-
-                result += static_cast<unsigned int>(offset / ui::rem(STEP_SIZE.x));
-                position_ = result;
-
-                return true;
-            }
-
-            position_x += right;
-            result += measure.time_signature.measure_steps();
-        }
-
-        return false;
     }
 
     void Application::start_player() {
