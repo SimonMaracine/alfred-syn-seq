@@ -26,8 +26,6 @@ target_sources(
 
 target_link_libraries(alfred_lib PRIVATE SDL3::SDL3 fftw3)
 
-set_target_properties(alfred_lib PROPERTIES OUTPUT_NAME "alfred")
-
 set_target_cpp_mode(alfred_lib)
 enable_target_warnings(alfred_lib)
 enable_target_diagnostics(alfred_lib)
@@ -35,3 +33,5 @@ enable_target_diagnostics(alfred_lib)
 if(ALFRED_DISTRIBUTION)
     target_compile_definitions(alfred_lib PRIVATE "NDEBUG")
 endif()
+
+set_target_properties(alfred_lib PROPERTIES OUTPUT_NAME "alfred")

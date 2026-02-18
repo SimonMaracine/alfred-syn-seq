@@ -14,11 +14,11 @@
 #include <alfred/instrument.hpp>
 #include <alfred/math.hpp>
 
+#include "imgui.hpp"
 #include "logging.hpp"
 #include "imgui.ini.hpp"
 #include "icon64.png.hpp"
 #include "icon128.png.hpp"
-#include "imgui.hpp"
 #include "play.png.hpp"
 #include "pause.png.hpp"
 #include "rewind.png.hpp"

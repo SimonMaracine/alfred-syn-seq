@@ -21,7 +21,7 @@ add_resource("PAUSE" "pause.png" "binary")
 add_resource("REWIND" "rewind.png" "binary")
 
 add_executable(
-    alfred
+    alfred_app
     "include/imgui.ini.hpp"
     "include/icon64.png.hpp"
     "include/icon128.png.hpp"
@@ -53,27 +53,29 @@ add_executable(
     "src/video.hpp"
 )
 
-target_include_directories(alfred PRIVATE "src" "${CMAKE_CURRENT_BINARY_DIR}/include")
+target_include_directories(alfred_app PRIVATE "src" "${CMAKE_CURRENT_BINARY_DIR}/include")
 
-target_link_libraries(alfred PRIVATE SDL3::SDL3 cereal imgui alfred_lib)
+target_link_libraries(alfred_app PRIVATE SDL3::SDL3 cereal imgui alfred_lib)
 
-set_target_cpp_mode(alfred)
-enable_target_warnings(alfred)
-enable_target_diagnostics(alfred)
+set_target_cpp_mode(alfred_app)
+enable_target_warnings(alfred_app)
+enable_target_diagnostics(alfred_app)
 
 if(ALFRED_DISTRIBUTION)
-    target_compile_definitions(alfred PRIVATE "NDEBUG" "ALFRED_DISTRIBUTION")
+    target_compile_definitions(alfred_app PRIVATE "NDEBUG" "ALFRED_DISTRIBUTION")
 endif()
 
 if(UNIX)
-    target_compile_definitions(alfred PRIVATE "ALFRED_LINUX")
+    target_compile_definitions(alfred_app PRIVATE "ALFRED_LINUX")
 elseif(WIN32)
-    target_compile_definitions(alfred PRIVATE "ALFRED_WINDOWS")
+    target_compile_definitions(alfred_app PRIVATE "ALFRED_WINDOWS")
 endif()
 
 if(UNIX)
-    target_compile_options(alfred PRIVATE "-Wno-parentheses")
+    target_compile_options(alfred_app PRIVATE "-Wno-parentheses")
 endif()
+
+set_target_properties(alfred_app PROPERTIES OUTPUT_NAME "alfred")
 
 set(ALFRED_DESKTOP_FILE "${CMAKE_CURRENT_SOURCE_DIR}/res/alfred.desktop" PARENT_SCOPE)
 set(ALFRED_ICON_FILE "${CMAKE_CURRENT_SOURCE_DIR}/res/alfred.svg" PARENT_SCOPE)
