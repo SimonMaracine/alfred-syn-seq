@@ -35,7 +35,7 @@ namespace allocator {
         value_type* allocate(size_type n) {
             auto& storage {Storage::get()};
 
-            const auto try_allocate {
+            auto try_allocate {
                 [&](size_type i) {
                     if (std::all_of(storage.m_objects + i, storage.m_objects + i + n, [](const bool& object) { return !object; })) {
                         std::for_each(storage.m_objects + i, storage.m_objects + i + n, [](bool& object) { object = true; });
@@ -50,24 +50,28 @@ namespace allocator {
 
             for (size_type i {storage.m_pointer}; i < storage.STORAGE_SIZE - n + 1; i++) {
                 if (try_allocate(i)) {
-                    return reinterpret_cast<value_type*>(storage.m_base) + i;
+                    return reinterpret_cast<value_type*>(storage.m_base + Storage::OBJECT_SIZE * i);
                 }
             }
 
             for (size_type i {}; i < storage.m_pointer - n + 1; i++) {
                 if (try_allocate(i)) {
-                    return reinterpret_cast<value_type*>(storage.m_base) + i;
+                    return reinterpret_cast<value_type*>(storage.m_base + Storage::OBJECT_SIZE * i);
                 }
             }
 
+#ifdef ALLOCATOR_THROW_ON_FAILURE
+            throw std::bad_alloc();
+#else
             std::unreachable();
+#endif
         }
 
         void deallocate(value_type* p, size_type n) {
             auto& storage {Storage::get()};
 
             const size_type object_pointer {reinterpret_cast<size_type>(p) - reinterpret_cast<size_type>(storage.m_base)};
-            const size_type index {object_pointer / sizeof(value_type)};
+            const size_type index {object_pointer / Storage::OBJECT_SIZE};
 
             std::for_each(storage.m_objects + index, storage.m_objects + index + n, [](bool& object) { object = false; });
         }

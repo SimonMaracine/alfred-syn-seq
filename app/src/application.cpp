@@ -1921,7 +1921,13 @@ namespace application {
     }
 
     ImVec2 Application::composition_mouse_position(ImVec2 origin) const {
-        return ImGui::GetIO().MousePos - origin - ImVec2(ui::rem(COMPOSITION_LEFT), 0.0f) + m_composition_camera;
+        const ImVec2 mouse_position {ImGui::GetIO().MousePos};
+
+        if (!ImGui::IsMousePosValid(&mouse_position)) {
+            return ImVec2(0.0f, 0.0f);
+        }
+
+        return mouse_position - origin - ImVec2(ui::rem(COMPOSITION_LEFT), 0.0f) + m_composition_camera;
     }
 
     std::flat_set<syn::InstrumentId> Application::instruments_in_project() const {
