@@ -2255,6 +2255,7 @@ namespace application {
         }
 
         m_composition_path = std::move(path);
+        m_composition_not_saved = false;
         m_data.recent_compositions.insert(m_composition_path);
 
         set_title_composition_saved();
