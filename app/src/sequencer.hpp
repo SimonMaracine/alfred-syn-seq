@@ -166,7 +166,11 @@ namespace seq {
                 const auto next_measure {std::next(measure)};
 
                 if (next_measure != measures.end() && next_measure->equal_time(*measure)) {
-                    const auto& notes {next_measure->instruments.at(instrument)};
+                    const auto notes {next_measure->instruments.find(instrument)};
+
+                    if (notes == next_measure->instruments.end()) {
+                        return std::nullopt;
+                    }
 
                     const auto next_note {
                         std::ranges::find_if(next_measure->instruments.at(instrument), [next_measure, note](const auto& note_) {
@@ -174,7 +178,7 @@ namespace seq {
                         })
                     };
 
-                    if (next_note != notes.end()) {
+                    if (next_note != notes->second.end()) {
                         return std::make_optional<ProvenanceNote<MeasureIter>>(next_measure, next_note);
                     }
                 }
@@ -209,7 +213,11 @@ namespace seq {
                 const auto previous_measure {std::prev(measure)};
 
                 if (previous_measure->equal_time(*measure)) {
-                    const auto& notes {previous_measure->instruments.at(instrument)};
+                    const auto notes {previous_measure->instruments.find(instrument)};
+
+                    if (notes == previous_measure->instruments.end()) {
+                        return std::nullopt;
+                    }
 
                     const auto previous_note {
                         std::ranges::find_if(previous_measure->instruments.at(instrument), [previous_measure, note](const auto& note_) {
@@ -217,7 +225,7 @@ namespace seq {
                         })
                     };
 
-                    if (previous_note != notes.end()) {
+                    if (previous_note != notes->second.end()) {
                         return std::make_optional<ProvenanceNote<MeasureIter>>(previous_measure, previous_note);
                     }
                 }

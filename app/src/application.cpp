@@ -503,6 +503,7 @@ namespace application {
 
             ImGui::SameLine();
 
+            ImGui::BeginDisabled(m_player.is_playing());
 
             if (ImGui::Checkbox("Metronome", &m_metronome)) {
                 if (const bool allow_edit {!m_player.is_playing()}; allow_edit) {
@@ -515,6 +516,8 @@ namespace application {
                     m_metronome = !m_metronome;
                 }
             }
+
+            ImGui::EndDisabled();
 
             ImGui::SameLine();
 
@@ -568,6 +571,8 @@ namespace application {
     }
 
     void Application::tools_measure() {
+        ImGui::BeginDisabled(m_player.is_playing());
+
         ImGui::BeginGroup();
 
         if (ImGui::Button("Append")) {
@@ -576,17 +581,23 @@ namespace application {
 
         ImGui::SetItemTooltip("Append a couple of measures to the end of the composition (Alt+A)");
 
+        ImGui::BeginDisabled(m_composition_selected_measure == m_composition.measures.end());
+
         if (ImGui::Button("Insert")) {
             insert_measure();
         }
 
         ImGui::SetItemTooltip("Insert a measure before the selected measure (Alt+I)");
 
+        ImGui::EndDisabled();
+
         ImGui::EndGroup();
 
         ImGui::SameLine();
 
         ImGui::BeginGroup();
+
+        ImGui::BeginDisabled(m_composition_selected_measure == m_composition.measures.end());
 
         if (ImGui::Button("Clear")) {
             clear_measure();
@@ -600,15 +611,21 @@ namespace application {
 
         ImGui::SetItemTooltip("Completely delete the selected measure (Delete)");
 
+        ImGui::EndDisabled();
+
         ImGui::EndGroup();
 
         ImGui::SameLine();
 
         ImGui::BeginGroup();
 
+        ImGui::BeginDisabled(m_composition_selected_measure == m_composition.measures.end());
+
         if (time_signature()) {
             set_measure_time_signature();
         }
+
+        ImGui::EndDisabled();
 
         ImGui::SameLine();
 
@@ -617,9 +634,13 @@ namespace application {
         }
 
         ImGui::EndGroup();
+
+        ImGui::EndDisabled();
     }
 
     void Application::tools_note() {
+        ImGui::BeginDisabled(m_player.is_playing() || m_composition_selected_notes.empty());
+
         ImGui::BeginGroup();
 
         ImGui::BeginGroup();
@@ -666,7 +687,17 @@ namespace application {
 
         ImGui::SetItemTooltip("Completely delete the selected notes (Delete)");
 
+        ImGui::SameLine();
+
+        if (ImGui::Button("Legato")) {
+            legato_notes();
+        }
+
+        ImGui::SetItemTooltip("Toggle the selected notes' legato");
+
         ImGui::EndGroup();
+
+        ImGui::EndDisabled();
 
         ImGui::SameLine();
 
@@ -691,12 +722,6 @@ namespace application {
         ImGui::EndGroup();
 
         ImGui::SetItemTooltip("Change the note value (1-5)");
-
-        ImGui::SameLine();
-
-        if (ImGui::Button("Legato")) {
-            legato_notes();
-        }
     }
 
     void Application::composition() {
@@ -1331,9 +1356,7 @@ namespace application {
     }
 
     void Application::append_measures() {
-        if (m_player.is_playing()) {
-            return;
-        }
+        assert(!m_player.is_playing());
 
         const auto [tempo, time_signature] {measure_type(
             !m_composition.measures.empty() ? std::prev(m_composition.measures.end()) : m_composition.measures.end(),
@@ -1356,9 +1379,8 @@ namespace application {
     }
 
     void Application::insert_measure() {
-        if (m_composition_selected_measure == m_composition.measures.end()) {
-            return;
-        }
+        assert(!m_player.is_playing());
+        assert(m_composition_selected_measure != m_composition.measures.end());
 
         const auto [tempo, time_signature] {measure_type(
             m_composition_selected_measure,
@@ -1377,9 +1399,8 @@ namespace application {
     }
 
     void Application::clear_measure() {
-        if (m_composition_selected_measure == m_composition.measures.end()) {
-            return;
-        }
+        assert(!m_player.is_playing());
+        assert(m_composition_selected_measure != m_composition.measures.end());
 
         reset_note_legato_previous_measure(m_composition_selected_measure);
 
@@ -1391,9 +1412,8 @@ namespace application {
     }
 
     void Application::delete_measure() {
-        if (m_composition_selected_measure == m_composition.measures.end()) {
-            return;
-        }
+        assert(!m_player.is_playing());
+        assert(m_composition_selected_measure != m_composition.measures.end());
 
         reset_note_legato_previous_measure(m_composition_selected_measure);
 
@@ -1409,9 +1429,8 @@ namespace application {
     }
 
     void Application::set_measure_tempo() {
-        if (m_composition_selected_measure == m_composition.measures.end()) {
-            return;
-        }
+        assert(!m_player.is_playing());
+        assert(m_composition_selected_measure != m_composition.measures.end());
 
         set_measure_tempo(m_composition_selected_measure);
     }
@@ -1423,9 +1442,8 @@ namespace application {
     }
 
     void Application::set_measure_time_signature() {
-        if (m_composition_selected_measure == m_composition.measures.end()) {
-            return;
-        }
+        assert(!m_player.is_playing());
+        assert(m_composition_selected_measure != m_composition.measures.end());
 
         if (empty_except_metronome(*m_composition_selected_measure)) {
             set_time_signature(*m_composition_selected_measure, m_ui.time_signature);
@@ -1603,9 +1621,8 @@ namespace application {
     }
 
     void Application::delete_notes() {
-        if (m_composition_selected_notes.empty()) {
-            return;
-        }
+        assert(!m_player.is_playing());
+        assert(!m_composition_selected_notes.empty());
 
         for (const ProvenanceNote& selected_note : m_composition_selected_notes) {
             if (auto previous_note {check_note_has_previous(selected_note)}; previous_note) {
@@ -1621,9 +1638,8 @@ namespace application {
     }
 
     void Application::legato_notes() {
-        if (m_composition_selected_notes.empty()) {
-            return;
-        }
+        assert(!m_player.is_playing());
+        assert(!m_composition_selected_notes.empty());
 
         for (ProvenanceNote& selected_note : m_composition_selected_notes) {
             seq::Note note {selected_note.copy()};
@@ -1643,9 +1659,8 @@ namespace application {
     }
 
     void Application::shift_notes_up() {  // FIXME don't reset legato if the tied notes are both shifted
-        if (m_composition_selected_notes.empty()) {
-            return;
-        }
+        assert(!m_player.is_playing());
+        assert(!m_composition_selected_notes.empty());
 
         if (
             ![this] {
@@ -1694,9 +1709,8 @@ namespace application {
     }
 
     void Application::shift_notes_down() {  // FIXME don't reset legato if the tied notes are both shifted
-        if (m_composition_selected_notes.empty()) {
-            return;
-        }
+        assert(!m_player.is_playing());
+        assert(!m_composition_selected_notes.empty());
 
         if (
             ![this] {
@@ -1745,9 +1759,8 @@ namespace application {
     }
 
     void Application::shift_notes_left() {
-        if (m_composition_selected_notes.empty()) {
-            return;
-        }
+        assert(!m_player.is_playing());
+        assert(!m_composition_selected_notes.empty());
 
         if (
             ![this] {
@@ -1791,9 +1804,8 @@ namespace application {
     }
 
     void Application::shift_notes_right() {
-        if (m_composition_selected_notes.empty()) {
-            return;
-        }
+        assert(!m_player.is_playing());
+        assert(!m_composition_selected_notes.empty());
 
         if (
             ![this] {
