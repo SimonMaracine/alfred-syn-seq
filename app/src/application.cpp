@@ -613,7 +613,7 @@ namespace application {
         ImGui::SameLine();
 
         if (tempo()) {
-            set_measure_tempo();
+            set_measures_tempo();
         }
 
         ImGui::EndGroup();
@@ -1355,7 +1355,7 @@ namespace application {
         modify_composition();
     }
 
-    void Application::insert_measure() {  // FIXME reset legato for the previous notes
+    void Application::insert_measure() {
         if (m_composition_selected_measure == m_composition.measures.end()) {
             return;
         }
@@ -1364,6 +1364,8 @@ namespace application {
             m_composition_selected_measure,
             m_composition.measures
         )};
+
+        reset_note_legato_previous_measure(m_composition_selected_measure);
 
         m_composition_selected_measure = m_composition.measures.emplace(m_composition_selected_measure, tempo, time_signature);
 
@@ -1400,14 +1402,24 @@ namespace application {
         modify_composition();
     }
 
+    void Application::set_measure_tempo(MeasureIter measure) {
+        set_tempo(*measure, m_ui.tempo);
+
+        modify_composition();
+    }
+
     void Application::set_measure_tempo() {
         if (m_composition_selected_measure == m_composition.measures.end()) {
             return;
         }
 
-        set_tempo(*m_composition_selected_measure, m_ui.tempo);
+        set_measure_tempo(m_composition_selected_measure);
+    }
 
-        modify_composition();
+    void Application::set_measures_tempo() {
+        for (auto measure {m_composition.measures.begin()}; measure != m_composition.measures.end(); measure++) {
+            set_measure_tempo(measure);
+        }
     }
 
     void Application::set_measure_time_signature() {

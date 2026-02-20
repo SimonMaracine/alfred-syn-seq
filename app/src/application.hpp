@@ -105,7 +105,9 @@ namespace application {
         void insert_measure();
         void clear_measure();
         void delete_measure();
+        void set_measure_tempo(MeasureIter measure);
         void set_measure_tempo();
+        void set_measures_tempo();
         void set_measure_time_signature();
         std::optional<MeasureIter> hover_measure(ImVec2 position);
         std::optional<HoveredNote> hover_note(ImVec2 position);
