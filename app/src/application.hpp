@@ -137,6 +137,7 @@ namespace application {
         void readd_note(ProvenanceNote& provenance_note, const seq::Note& note) const;
         void readd_note(NoteIter note_iter, MeasureIter measure, const seq::Note& note) const;
         void reset_note_legato(const ProvenanceNote& provenance_note) const;
+        void reset_note_legato_previous_measure(MeasureIter measure) const;
         void play_note(const seq::Note& note);
 
         static bool keyboard_active();

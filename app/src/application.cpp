@@ -1355,7 +1355,7 @@ namespace application {
         modify_composition();
     }
 
-    void Application::insert_measure() {  // FIXME reset legato for the previous note
+    void Application::insert_measure() {  // FIXME reset legato for the previous notes
         if (m_composition_selected_measure == m_composition.measures.end()) {
             return;
         }
@@ -1374,10 +1374,12 @@ namespace application {
         modify_composition();
     }
 
-    void Application::clear_measure() {  // FIXME reset legato for the previous notes
+    void Application::clear_measure() {
         if (m_composition_selected_measure == m_composition.measures.end()) {
             return;
         }
+
+        reset_note_legato_previous_measure(m_composition_selected_measure);
 
         std::erase_if(m_composition_selected_measure->instruments, [](const auto& instrument) {
             return instrument.first != instrument::Metronome::static_id();
@@ -1386,10 +1388,12 @@ namespace application {
         modify_composition();
     }
 
-    void Application::delete_measure() {  // FIXME reset legato for the previous notes
+    void Application::delete_measure() {
         if (m_composition_selected_measure == m_composition.measures.end()) {
             return;
         }
+
+        reset_note_legato_previous_measure(m_composition_selected_measure);
 
         m_composition_selected_measure = m_composition.measures.erase(m_composition_selected_measure);
 
@@ -1586,12 +1590,16 @@ namespace application {
         modify_composition();
     }
 
-    void Application::delete_notes() {  // FIXME reset legato for the previous note
+    void Application::delete_notes() {
         if (m_composition_selected_notes.empty()) {
             return;
         }
 
         for (const ProvenanceNote& selected_note : m_composition_selected_notes) {
+            if (auto previous_note {check_note_has_previous(selected_note)}; previous_note) {
+                reset_note_legato(*previous_note);
+            }
+
             selected_note.measure()->instruments.at(m_instrument).erase(selected_note.note());
         }
 
@@ -1607,7 +1615,6 @@ namespace application {
 
         for (ProvenanceNote& selected_note : m_composition_selected_notes) {
             seq::Note note {selected_note.copy()};
-
             note.legato = !note.legato;
 
             if (note.legato) {
@@ -1973,6 +1980,18 @@ namespace application {
         note.legato = false;
 
         readd_note(provenance_note.note(), provenance_note.measure(), note);
+    }
+
+    void Application::reset_note_legato_previous_measure(MeasureIter measure) const {
+        for (const auto& [instrument, notes] : measure->instruments) {
+            for (auto note {notes.begin()}; note != notes.end(); note++) {
+                if (seq::Composition::note_first_in_measure(*measure, *note)) {
+                    if (auto previous_note {m_composition.check_note_has_previous(instrument, measure, note)}; previous_note) {
+                        reset_note_legato(*previous_note);
+                    }
+                }
+            }
+        }
     }
 
     void Application::play_note(const seq::Note& note) {
