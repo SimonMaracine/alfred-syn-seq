@@ -7,6 +7,7 @@
 
 #include "imgui.hpp"
 #include "image.hpp"
+#include "logging.hpp"
 
 namespace video {
     static constexpr unsigned long long IMGUI_UPDATE_INTERVAL {16 * SDL_NS_PER_MS};
@@ -21,6 +22,9 @@ namespace video {
         if (!SDL_CreateWindowAndRenderer("Alfred", 1280, 720, flags, &m_window, &m_renderer)) {
             throw VideoError(std::format("SDL_CreateWindowAndRenderer: {}", SDL_GetError()));
         }
+
+        logging::information("Video driver: {}", SDL_GetCurrentVideoDriver());
+        logging::information("Render driver: {}", SDL_GetRendererName(m_renderer));
 
         // We really don't want VSync
         if (!SDL_SetRenderVSync(m_renderer, 0)) {

@@ -517,6 +517,8 @@ namespace application {
                 }
             }
 
+            ImGui::SetItemTooltip("The metronome is a pseudo-instrument not part of the composition");
+
             ImGui::EndDisabled();
 
             ImGui::SameLine();
@@ -1181,6 +1183,8 @@ namespace application {
             result = true;
         }
 
+        ImGui::SetItemTooltip("Change the tempo of the composition");
+
         return result;
     }
 
@@ -1217,6 +1221,8 @@ namespace application {
         }
 
         ImGui::EndGroup();
+
+        ImGui::SetItemTooltip("Change the time signature of the selected measure");
 
         return result;
     }
