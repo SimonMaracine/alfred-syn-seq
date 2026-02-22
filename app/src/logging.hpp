@@ -37,8 +37,8 @@ namespace logging {
     namespace chrono = std::chrono;
     using TimeOfDay = chrono::hh_mm_ss<chrono::seconds>;
 
-    void console_println(Severity severity, const std::source_location& location, TimeOfDay time_of_day, const std::string& message);
-    void file_println(Severity severity, const std::source_location& location, TimeOfDay time_of_day, const std::string& message);
+    void println_console(Severity severity, const std::source_location& location, TimeOfDay time_of_day, const std::string& message);
+    void println_file(Severity severity, const std::source_location& location, TimeOfDay time_of_day, const std::string& message);
 
     template<Severity severity, typename... Args>
     void log(const std::source_location& location, std::format_string<Args...> fmt, Args&&... args) {
@@ -46,8 +46,8 @@ namespace logging {
         const TimeOfDay time_of_day {chrono::floor<chrono::seconds>(time - chrono::floor<chrono::days>(time))};
         const auto message {std::format(fmt, std::forward<Args>(args)...)};
 
-        console_println(severity, location, time_of_day, message);
-        file_println(severity, location, time_of_day, message);
+        println_console(severity, location, time_of_day, message);
+        println_file(severity, location, time_of_day, message);
     }
 
     template<typename... Args>

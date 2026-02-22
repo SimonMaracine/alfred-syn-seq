@@ -8,26 +8,30 @@
 #include "utility.hpp"
 
 namespace logging {
-    static std::ofstream g_stream;
-    static std::mutex g_stream_mutex;
+    static struct {
+        std::ofstream stream;
+        std::mutex mutex;
+    } g_stream;
 
     void initialize() {
-        std::lock_guard guard {g_stream_mutex};
+        std::lock_guard guard {g_stream.mutex};
 
-        g_stream.open(utility::data_file_path() / "alfred.log", std::ios_base::app);
+        g_stream.stream.open(utility::data_file_path() / "alfred.log", std::ios_base::app);
 
-        if (!g_stream.is_open()) {
+        if (!g_stream.stream.is_open()) {
             throw LoggingError("Could not open log file");
         }
     }
 
     void uninitialize() {
-        std::lock_guard guard {g_stream_mutex};
+        std::lock_guard guard {g_stream.mutex};
 
-        g_stream.close();
+        g_stream.stream.close();
     }
 
-    void console_println(Severity severity, const std::source_location& location, TimeOfDay time_of_day, const std::string& message) {
+    void println_console(Severity severity, const std::source_location& location, TimeOfDay time_of_day, const std::string& message) {
+        // This is already thread safe
+
         std::println(
             stderr,
             "[{} {} {} {} {}:{}] {}",
@@ -41,15 +45,15 @@ namespace logging {
         );
     }
 
-    void file_println(Severity severity, const std::source_location& location, TimeOfDay time_of_day, const std::string& message) {
-        std::lock_guard guard {g_stream_mutex};
+    void println_file(Severity severity, const std::source_location& location, TimeOfDay time_of_day, const std::string& message) {
+        std::lock_guard guard {g_stream.mutex};
 
-        if (!g_stream.is_open()) {
+        if (!g_stream.stream.is_open()) {
             return;
         }
 
         std::println(
-            g_stream,
+            g_stream.stream,
             "[{} {} {} {} {}:{}] {}",
             severity_to_string(severity),
             time_of_day,
