@@ -145,11 +145,11 @@ namespace syn {
         }
 
         double triangle(double time, double frequency) {
-            return std::asin(std::sin(math::w(frequency) * time)) * (2.0 / math::PI);
+            return std::asin(std::sin(math::w(frequency) * time)) * math::TWO_PI;
         }
 
         double triangle(double time, double frequency, LowFrequencyOscillator lfo) {
-            return std::asin(std::sin(math::w(frequency) * time + frequency_modulation(time, frequency, lfo))) * (2.0 / math::PI);
+            return std::asin(std::sin(math::w(frequency) * time + frequency_modulation(time, frequency, lfo))) * math::TWO_PI;
         }
 
         double sawtooth(double time, double frequency) {
@@ -159,7 +159,7 @@ namespace syn {
                 result += std::sin(n * math::w(frequency) * time) / n;
             }
 
-            return result * (2.0 / math::PI);
+            return result * math::TWO_PI;
         }
 
         double sawtooth(double time, double frequency, LowFrequencyOscillator lfo) {
@@ -169,7 +169,7 @@ namespace syn {
                 result += std::sin(n * math::w(frequency) * time + frequency_modulation(time, frequency, lfo)) / n;
             }
 
-            return result * (2.0 / math::PI);
+            return result * math::TWO_PI;
         }
     }
 

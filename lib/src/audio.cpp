@@ -7,6 +7,8 @@
 
 #include <SDL3/SDL.h>
 
+#include "alfred/math.hpp"
+
 namespace audio {
     Audio::Audio() {
         if (!SDL_InitSubSystem(SDL_INIT_AUDIO)) {
@@ -132,7 +134,7 @@ namespace audio {
     }
 
     void Audio::volume(double volume) const {
-        if (!SDL_SetAudioStreamGain(m_stream, std::min(std::max(float(volume), 0.0f), 1.0f))) {
+        if (!SDL_SetAudioStreamGain(m_stream, std::clamp(float(volume), 0.0f, 1.0f))) {
             throw AudioError(std::format("SDL_SetAudioStreamGain: {}", SDL_GetError()));
         }
     }
@@ -148,7 +150,7 @@ namespace audio {
     }
 
     double Audio::clamp(double value) {
-        return std::min(std::max(value, -1.0), 1.0);
+        return std::clamp(value, -1.0, 1.0);
     }
 
     thread_local struct {
@@ -157,7 +159,7 @@ namespace audio {
     } g_buffer;
 
     void Audio::stream_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int) {
-        // This code is run under an SDL internal mutex
+        // This code is run under an internal SDL mutex
 
         Audio& self {*static_cast<Audio*>(userdata)};
 
@@ -174,7 +176,12 @@ namespace audio {
 
             g_buffer.buffer[i] = Resolution(sound * double(std::numeric_limits<Resolution>::max()));
 
-            self.m_time += 1.0 / double(SAMPLE_FREQUENCY);  // FIXME time looses precision as it increases
+            self.m_time += 1.0 / double(SAMPLE_FREQUENCY);
+
+            // Don't lose precision
+            if (self.m_time > 10'000.0 * math::TWO_PI) {
+                self.m_time -= 10'000.0 * math::TWO_PI;
+            }
         }
 
         // Buffer size could be larger than the samples written!

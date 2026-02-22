@@ -8,6 +8,7 @@ struct fftw_plan_s;
 
 namespace math {
     inline constexpr double PI {std::numbers::pi};
+    inline constexpr double TWO_PI {2.0 * std::numbers::pi};
 
     constexpr double w(double hertz) {
         return hertz * 2.0 * std::numbers::pi;
@@ -18,7 +19,7 @@ namespace math {
     }
 
     constexpr double clamp(double x) {
-        return std::min(std::max(x, 0.0), 1.0);
+        return std::clamp(x, 0.0, 1.0);
     }
 
     template<typename T>

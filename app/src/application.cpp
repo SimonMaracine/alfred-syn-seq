@@ -1179,7 +1179,7 @@ namespace application {
         bool result {};
 
         if (ImGui::InputScalar("Tempo", ImGuiDataType_S32, &m_ui.tempo, &one)) {
-            m_ui.tempo = std::min(std::max(m_ui.tempo, seq::Tempo::MIN), seq::Tempo::MAX);
+            m_ui.tempo = std::clamp(m_ui.tempo, seq::Tempo::MIN, seq::Tempo::MAX);
             result = true;
         }
 
