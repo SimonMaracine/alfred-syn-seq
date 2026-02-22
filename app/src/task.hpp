@@ -10,7 +10,6 @@
 
 namespace task {
     class AsyncTask;
-    class CoroutineTask;
     class TaskManager;
 
     using ImmediateTaskFunction = std::function<void()>;

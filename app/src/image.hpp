@@ -9,7 +9,7 @@ namespace image {
     class SurfaceRef {
     public:
         SurfaceRef() = default;
-        SurfaceRef(SDL_Surface* surface);
+        explicit SurfaceRef(SDL_Surface* surface);
 
         SDL_Surface* get() const { return m_surface; }
 
@@ -26,14 +26,14 @@ namespace image {
 
         Surface(const Surface&) = delete;
         Surface& operator=(const Surface&) = delete;
-        Surface(Surface&& other);
-        Surface& operator=(Surface&& other);
+        Surface(Surface&& other) noexcept;
+        Surface& operator=(Surface&& other) noexcept;
     };
 
     class TextureRef {
     public:
         TextureRef() = default;
-        TextureRef(SDL_Texture* texture);
+        explicit TextureRef(SDL_Texture* texture);
 
         SDL_Texture* get() const { return m_texture; }
     protected:
@@ -48,8 +48,8 @@ namespace image {
 
         Texture(const Texture&) = delete;
         Texture& operator=(const Texture&) = delete;
-        Texture(Texture&& other);
-        Texture& operator=(Texture&& other);
+        Texture(Texture&& other) noexcept;
+        Texture& operator=(Texture&& other) noexcept;
     };
 
     struct ImageError : std::runtime_error {

@@ -31,10 +31,10 @@ namespace image {
         SDL_DestroySurface(m_surface);
     }
 
-    Surface::Surface(Surface&& other)
+    Surface::Surface(Surface&& other) noexcept
         : SurfaceRef(std::exchange(other.m_surface, nullptr)) {}
 
-    Surface& Surface::operator=(Surface&& other) {
+    Surface& Surface::operator=(Surface&& other) noexcept {
         SDL_DestroySurface(m_surface);
         m_surface = std::exchange(other.m_surface, nullptr);
         return *this;
@@ -58,11 +58,11 @@ namespace image {
         }
     }
 
-    Texture::Texture(Texture&& other)
+    Texture::Texture(Texture&& other) noexcept
         : TextureRef(std::exchange(other.m_texture, nullptr)) {
     }
 
-    Texture& Texture::operator=(Texture&& other) {
+    Texture& Texture::operator=(Texture&& other) noexcept {
         SDL_DestroyTexture(m_texture);
         m_texture = std::exchange(other.m_texture, nullptr);
         return *this;
