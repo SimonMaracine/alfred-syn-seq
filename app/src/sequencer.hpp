@@ -31,6 +31,9 @@ namespace seq {
     // Chosen semi-arbitrarily :P
     inline constexpr unsigned int MIN_DURATION {3};
 
+    inline constexpr unsigned int DELAY_INCREMENT {1};
+    inline constexpr unsigned int MAX_DELAY {6};
+
     constexpr unsigned int steps(Value value) {
         return Sixteenth * DIVISION / value;
     }
@@ -83,6 +86,7 @@ namespace seq {
         syn::NoteId id {};
         Value value {};
         unsigned int position {};  // Local, inside a measure
+        unsigned int delay {};  // Used for arpeggios
         bool legato {};
 
         // Order the notes in the measure bottom to top, left to right

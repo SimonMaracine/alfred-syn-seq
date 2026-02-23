@@ -683,19 +683,41 @@ namespace application {
 
         ImGui::SameLine();
 
+        ImGui::BeginGroup();
+
         if (ImGui::Button("Delete")) {
             delete_notes();
         }
 
         ImGui::SetItemTooltip("Completely delete the selected notes (Delete)");
 
-        ImGui::SameLine();
-
         if (ImGui::Button("Legato")) {
             legato_notes();
         }
 
         ImGui::SetItemTooltip("Toggle the selected notes' legato (Alt+L)");
+
+        ImGui::EndGroup();
+
+        ImGui::SameLine();
+
+        ImGui::PushItemFlag(ImGuiItemFlags_ButtonRepeat, true);
+
+        if (ImGui::ArrowButton("Remove Delay", ImGuiDir_Left)) {
+            remove_delay_notes();
+        }
+
+        ImGui::SetItemTooltip("Remove delay from the selected notes ()");
+
+        ImGui::SameLine();
+
+        if (ImGui::ArrowButton("Add Delay", ImGuiDir_Right)) {
+            add_delay_notes();
+        }
+
+        ImGui::SetItemTooltip("Add delay to the selected notes ()");
+
+        ImGui::PopItemFlag();
 
         ImGui::EndGroup();
 
@@ -1181,6 +1203,14 @@ namespace application {
 
                 if (ImGui::Shortcut(ImGuiMod_Alt | ImGuiKey_L, ImGuiInputFlags_RouteAlways)) {
                     legato_notes();
+                }
+
+                if (ImGui::Shortcut(ImGuiMod_Alt | ImGuiKey_Q, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
+                    remove_delay_notes();
+                }
+
+                if (ImGui::Shortcut(ImGuiMod_Alt | ImGuiKey_E, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
+                    add_delay_notes();
                 }
 
                 break;
@@ -1676,7 +1706,12 @@ namespace application {
             note.legato = !note.legato;
 
             if (note.legato) {
-                if (!check_note_has_next(selected_note)) {
+                if (const auto next_note {check_note_has_next(selected_note)}; next_note) {
+                    if (next_note->note()->delay > 0) {
+                        note.legato = false;
+                        LOG_DEBUG("Note cannot have legato");
+                    }
+                } else {
                     note.legato = false;
                     LOG_DEBUG("Note cannot have legato");
                 }
@@ -1882,6 +1917,51 @@ namespace application {
         modify_composition();
     }
 
+    void Application::add_delay_notes() {
+        assert(!m_player.is_playing());
+        assert(!m_composition_selected_notes.empty());
+
+        for (ProvenanceNote& selected_note : m_composition_selected_notes) {
+            if (selected_note.note()->delay == seq::MAX_DELAY) {
+                LOG_DEBUG("Cannot add any more delay to note");
+                continue;
+            }
+
+            if (const auto previous_note {check_note_has_previous(selected_note)}; previous_note) {
+                if (previous_note->note()->legato) {
+                    LOG_DEBUG("Cannot add delay to note");
+                    continue;
+                }
+            }
+
+            seq::Note note {selected_note.copy()};
+            note.delay += seq::DELAY_INCREMENT;
+
+            readd_note(selected_note, note);
+        }
+
+        modify_composition();
+    }
+
+    void Application::remove_delay_notes() {
+        assert(!m_player.is_playing());
+        assert(!m_composition_selected_notes.empty());
+
+        for (ProvenanceNote& selected_note : m_composition_selected_notes) {
+            if (selected_note.note()->delay == 0) {
+                LOG_DEBUG("Cannot remove any more delay from note");
+                continue;
+            }
+
+            seq::Note note {selected_note.copy()};
+            note.delay -= seq::DELAY_INCREMENT;
+
+            readd_note(selected_note, note);
+        }
+
+        modify_composition();
+    }
+
     void Application::start_player() {
         if (m_composition_not_compiled) {
             LOG_DEBUG("Compiling composition");
@@ -2065,9 +2145,9 @@ namespace application {
     }
 
     ImVec4 Application::note_rectangle(const seq::Note& note) {
-        const float x {float(note.position) * ui::rem(STEP_SIZE.x)};
+        const float x {float(note.position + note.delay) * ui::rem(STEP_SIZE.x)};
         const float y {note_height(note)};
-        const float width {float(seq::steps(note.value)) * ui::rem(STEP_SIZE.x)};
+        const float width {float(seq::steps(note.value) - note.delay) * ui::rem(STEP_SIZE.x)};
         const float height {ui::rem(STEP_SIZE.y)};
 
         return ImVec4(x + 1.0f, y + 2.0f, width - 2.0f, height - 4.0f);

@@ -154,7 +154,7 @@ namespace seq {
                     }
 
                     NoteIter current_note {note};
-                    unsigned int duration {seq::steps(current_note->value)};
+                    unsigned int duration {seq::steps(current_note->value) - current_note->delay};
 
                     while (current_note->legato) {
                         const auto next_note {
@@ -172,7 +172,7 @@ namespace seq {
 
                     executions[instrument].notes_unplayed.emplace(
                         note->id,
-                        steps + note->position,
+                        steps + note->position + note->delay,
                         calculate_note_duration(measure, instrument, duration),
                         measure->tempo,
                         measure->time_signature

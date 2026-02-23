@@ -120,6 +120,8 @@ namespace application {
         void shift_notes_down();
         void shift_notes_left();
         void shift_notes_right();
+        void add_delay_notes();
+        void remove_delay_notes();
 
         void start_player();
         void stop_player();
