@@ -73,6 +73,17 @@ namespace ui {
         Octave5
     };
 
+    enum Loudness : int {
+        Pianississimo = 1,
+        Pianissimo,
+        Piano,
+        MezzoPiano,
+        MezzoForte,
+        Forte,
+        Fortissimo,
+        Fortississimo
+    };
+
     // https://www.colorhexa.com/color-names
 
     using ColorIndex = unsigned int;

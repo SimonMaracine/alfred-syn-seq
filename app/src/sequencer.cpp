@@ -107,10 +107,11 @@ namespace seq {
                 }
 
                 if (m_position == note->position) {
-                    m_synthesizer->note_on(note->id, instrument);
+                    m_synthesizer->note_on(note->id, instrument, note->loudness);
 
                     execution.notes_played.emplace(
                         note->id,
+                        note->loudness,
                         note->position,
                         note->duration
                     );
@@ -169,6 +170,7 @@ namespace seq {
 
                     executions[instrument].notes_unplayed.emplace(
                         note->id,
+                        loudness(note->loudness),
                         steps + note->position + note->delay,
                         calculate_note_duration(measure, instrument, duration)
                     );

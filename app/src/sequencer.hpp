@@ -12,6 +12,7 @@
 #include <ranges>
 
 #include <alfred/synthesizer.hpp>
+#include "alfred/math.hpp"
 
 namespace seq {
     using Beats = unsigned int;
@@ -82,9 +83,25 @@ namespace seq {
         Value m_value {Quarter};
     };
 
+    enum class Loudness {
+        Pianississimo,
+        Pianissimo,
+        Piano,
+        MezzoPiano,
+        MezzoForte,
+        Forte,
+        Fortissimo,
+        Fortississimo
+    };
+
+    constexpr double loudness(Loudness loudness) {
+        return math::map(double(loudness), double(Loudness::Pianississimo), double(Loudness::Fortississimo), 0.1, 1.0);
+    }
+
     struct Note {
         syn::NoteId id {};
         Value value {};
+        Loudness loudness {};
         unsigned int position {};  // Local, inside a measure
         unsigned int delay {};  // Used for arpeggios
         bool legato {};
@@ -241,10 +258,11 @@ namespace seq {
 
     namespace exec {
         struct Note {
-            Note(syn::NoteId id, unsigned int position, unsigned int duration)
-                : id(id), position(position), duration(duration) {}
+            Note(syn::NoteId id, double loudness, unsigned int position, unsigned int duration)
+                : id(id), loudness(loudness), position(position), duration(duration) {}
 
             syn::NoteId id {};
+            double loudness {};
             unsigned int position {};  // Global, in the whole composition
             unsigned int duration {};  // Number of steps
         };

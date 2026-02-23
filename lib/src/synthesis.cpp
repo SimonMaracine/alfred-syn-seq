@@ -198,10 +198,6 @@ namespace syn {
         return BASE_FREQUENCY * std::pow(STEP_FREQUENCY, double(note));
     }
 
-    double frequency(const Voice& voice) {
-        return frequency(voice.note);
-    }
-
     // https://zynaddsubfx.sourceforge.io/doc/PADsynth/PADsynth.htm
 
     namespace padsynth {

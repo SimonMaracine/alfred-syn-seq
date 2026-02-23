@@ -184,6 +184,7 @@ namespace application {
 
         syn::InstrumentId m_instrument {};
         syn::keyboard::Octave m_octave {syn::keyboard::Octave3};
+        seq::Loudness m_loudness {seq::Loudness::MezzoForte};
 
         ImVec2 m_composition_camera;
         MeasureIter m_composition_selected_measure;
@@ -201,6 +202,7 @@ namespace application {
             ui::TimeSignature time_signature;
             ui::Composition composition;
             int octave {ui::Octave3};
+            int loudness {ui::MezzoForte};
             double volume {};
             const char* device {};
             image::Texture texture_play;

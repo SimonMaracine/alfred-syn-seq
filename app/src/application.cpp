@@ -53,7 +53,7 @@ namespace application {
 
         m_synthesizer.open();
         m_synthesizer.resume();
-        m_synthesizer.volume(0.75);
+        m_synthesizer.volume(0.9);
 
         ImGui::LoadIniSettingsFromMemory(SETTINGS.data(), SETTINGS.size());
 
@@ -407,6 +407,15 @@ namespace application {
 
             if (ImGui::SliderInt("##octave", &m_ui.octave, ui::Octave1, ui::Octave5)) {
                 m_octave = syn::keyboard::Octave(m_ui.octave - 1);
+                m_synthesizer.silence();
+            }
+
+            ImGui::Dummy(ui::rem(ImVec2(0.0f, 1.0f)));
+
+            ImGui::SeparatorText("Loudness");
+
+            if (ImGui::SliderInt("##loudness", &m_ui.loudness, ui::Pianississimo, ui::Fortississimo)) {
+                m_loudness = seq::Loudness(m_ui.loudness - 1);
                 m_synthesizer.silence();
             }
 
@@ -1294,7 +1303,7 @@ namespace application {
     void Application::keyboard_input(unsigned int key, bool down) {
         const auto update {[this, down](syn::NoteId id) {
             if (down) {
-                m_synthesizer.note_on(id + m_octave * 12, m_instrument);
+                m_synthesizer.note_on(id + m_octave * 12, m_instrument, seq::loudness(m_loudness));
             } else {
                 m_synthesizer.note_off(id + m_octave * 12, m_instrument);
             }
@@ -1385,7 +1394,12 @@ namespace application {
     void Application::add_metronome(MeasureIter begin, MeasureIter end) {
         for (auto measure {begin}; measure != end; measure++) {
             for (unsigned int i {}; i < measure->time_signature.measure_steps(); i += seq::steps(measure->time_signature.value())) {
-                measure->instruments[instrument::Metronome::static_id()].emplace(i == 0 ? 50 : 48, seq::Sixteenth, i);
+                measure->instruments[instrument::Metronome::static_id()].emplace(
+                    i == 0 ? syn::note(syn::B, syn::Octave5) : syn::note(syn::A, syn::Octave5),
+                    seq::Sixteenth,
+                    seq::Loudness::Fortississimo,
+                    i
+                );
             }
         }
 
@@ -1651,8 +1665,8 @@ namespace application {
         const seq::Note new_note {
             hovered_note.id(),
             get_value(ui::Value(m_ui.value)),
+            seq::Loudness::MezzoForte,
             hovered_note.position() / seq::DIVISION * seq::DIVISION,  // Always place on groups of steps
-            false
         };
 
         if (
@@ -2135,7 +2149,7 @@ namespace application {
     }
 
     void Application::play_note(const seq::Note& note) {
-        m_synthesizer.note_on(note.id, m_instrument);
+        m_synthesizer.note_on(note.id, m_instrument, seq::loudness(seq::Loudness::MezzoForte));
 
         m_task_manager.add_delayed_task([this, id = note.id] {
             m_synthesizer.note_off(id, m_instrument);

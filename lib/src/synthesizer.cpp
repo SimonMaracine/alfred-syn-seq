@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <tuple>
 #include <ranges>
+#include <cassert>
 
 #include "alfred/instrument.hpp"
 
@@ -30,7 +31,9 @@ namespace synthesizer {
         halt();
     }
 
-    void Synthesizer::note_on(syn::NoteId note, syn::InstrumentId instrument) {
+    void Synthesizer::note_on(syn::NoteId note, syn::InstrumentId instrument, double loudness) {
+        assert(loudness >= 0.0 && loudness <= 1.0);
+
         if (const auto [begin, end] {m_instruments.at(instrument)->range()}; note < begin || note > end) {
             return;
         }
@@ -42,10 +45,12 @@ namespace synthesizer {
             new_voice.note = note;
             new_voice.instrument = instrument;
             new_voice.envelope = m_instruments.at(instrument)->new_envelope();
+            new_voice.loudness = loudness;
             new_voice.time_on = time();
             new_voice.envelope->note_on();
         } else {
             if (voice->time_off > voice->time_on) {
+                voice->loudness = loudness;
                 voice->time_on = time();
                 voice->envelope->note_on();
             }
@@ -108,7 +113,7 @@ namespace synthesizer {
         double output {};
 
         for (const auto& [i, voice] : m_voices | std::views::enumerate) {
-            output += m_instruments.at(voice.instrument)->sound(time(), voice);
+            output += voice.loudness * voice.envelope->value() * m_instruments.at(voice.instrument)->sound(time(), voice.note);
 
             // The update function should take care of removing voices, if there are too many
             if (i == MAX_VOICES) {

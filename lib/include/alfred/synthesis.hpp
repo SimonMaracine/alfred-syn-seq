@@ -43,7 +43,7 @@ namespace syn {
 
     class EnvelopeAdsr : public Envelope, public allocator::StaticAllocated<EnvelopeAdsr, EnvelopeStorage> {
     public:
-        EnvelopeAdsr(const DescriptionAdsr& description = {})
+        explicit EnvelopeAdsr(const DescriptionAdsr& description = {})
             : m_description(description) {}
 
         void note_on() override;
@@ -69,7 +69,7 @@ namespace syn {
 
     class EnvelopeAdr : public Envelope, public allocator::StaticAllocated<EnvelopeAdr, EnvelopeStorage> {
     public:
-        EnvelopeAdr(const DescriptionAdr& description = {})
+        explicit EnvelopeAdr(const DescriptionAdr& description = {})
             : m_description(description) {}
 
         void note_on() override;
@@ -94,7 +94,6 @@ namespace syn {
 
     using EnvelopePtr = std::unique_ptr<Envelope>;
 
-    // TODO use these for conversion from ID
     enum NoteName : unsigned int {
         A,
         As,
@@ -127,10 +126,26 @@ namespace syn {
 
     using InstrumentRange = std::pair<NoteId, NoteId>;
 
+    constexpr NoteId note(NoteName name, NoteOctave octave) {
+        const unsigned int base {name};
+        const unsigned int multiplier {octave};
+
+        if (base < 3) {
+            return base + 12 * multiplier;
+        }
+
+        return base + 12 * (multiplier - 1);
+    }
+
+    static_assert(note(A, Octave5) == 48);
+    static_assert(note(B, Octave5) == 50);
+    static_assert(note(C, Octave2) == 3);
+
     struct Voice {
         NoteId note {};
         InstrumentId instrument {};
         EnvelopePtr envelope;  // Overall envelope
+        double loudness {};
         double time_on {};
         double time_off {-std::numeric_limits<double>::infinity()};
     };
@@ -165,7 +180,7 @@ namespace syn {
         virtual const char* name() const = 0;
         virtual InstrumentId id() const = 0;
 
-        virtual double sound(double time, const Voice& voice) const = 0;
+        virtual double sound(double time, NoteId note) const = 0;
         virtual InstrumentRange range() const { return keyboard::ID_FULL_RANGE; }
 
         virtual EnvelopePtr new_envelope() const = 0;
@@ -193,7 +208,6 @@ namespace syn {
     double noise();
     double random();
     double frequency(NoteId note);
-    double frequency(const Voice& voice);
 
     template<std::size_t N>
     constexpr std::array<double, N> amplitudes(std::array<double, N> denominators) {

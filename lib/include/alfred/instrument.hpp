@@ -15,7 +15,7 @@ namespace instrument {  // TODO description
         const char* name() const override { return static_name(); }
         syn::InstrumentId id() const override { return static_id(); }
 
-        double sound(double time, const syn::Voice& voice) const override;
+        double sound(double time, syn::NoteId note) const override;
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
         double attack_time() const override { return ENVELOPE.time_attack; }
@@ -35,7 +35,7 @@ namespace instrument {  // TODO description
         const char* name() const override { return static_name(); }
         syn::InstrumentId id() const override { return static_id(); }
 
-        double sound(double time, const syn::Voice& voice) const override;
+        double sound(double time, syn::NoteId note) const override;
         syn::InstrumentRange range() const override { return { 12, 51 }; }
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
@@ -56,7 +56,7 @@ namespace instrument {  // TODO description
         const char* name() const override { return static_name(); }
         syn::InstrumentId id() const override { return static_id(); }
 
-        double sound(double time, const syn::Voice& voice) const override;
+        double sound(double time, syn::NoteId note) const override;
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdsr>(ENVELOPE); }
         double attack_time() const override { return ENVELOPE.time_attack; }
@@ -77,7 +77,7 @@ namespace instrument {  // TODO description
         const char* name() const override { return static_name(); }
         syn::InstrumentId id() const override { return static_id(); }
 
-        double sound(double time, const syn::Voice& voice) const override;
+        double sound(double time, syn::NoteId note) const override;
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
         double attack_time() const override { return ENVELOPE.time_attack; }
@@ -97,7 +97,7 @@ namespace instrument {  // TODO description
         const char* name() const override { return static_name(); }
         syn::InstrumentId id() const override { return static_id(); }
 
-        double sound(double time, const syn::Voice& voice) const override;
+        double sound(double time, syn::NoteId note) const override;
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
         double attack_time() const override { return ENVELOPE.time_attack; }
@@ -117,7 +117,7 @@ namespace instrument {  // TODO description
         const char* name() const override { return static_name(); }
         syn::InstrumentId id() const override { return static_id(); }
 
-        double sound(double time, const syn::Voice& voice) const override;
+        double sound(double time, syn::NoteId note) const override;
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
         double attack_time() const override { return ENVELOPE.time_attack; }
@@ -137,7 +137,7 @@ namespace instrument {  // TODO description
         const char* name() const override { return static_name(); }
         syn::InstrumentId id() const override { return static_id(); }
 
-        double sound(double time, const syn::Voice& voice) const override;
+        double sound(double time, syn::NoteId note) const override;
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
         double attack_time() const override { return ENVELOPE.time_attack; }
@@ -157,7 +157,7 @@ namespace instrument {  // TODO description
         const char* name() const override { return static_name(); }
         syn::InstrumentId id() const override { return static_id(); }
 
-        double sound(double time, const syn::Voice& voice) const override;
+        double sound(double time, syn::NoteId note) const override;
         syn::InstrumentRange range() const override { return { 7, 51 }; }
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
@@ -180,7 +180,7 @@ namespace instrument {  // TODO description
         const char* name() const override { return static_name(); }
         syn::InstrumentId id() const override { return static_id(); }
 
-        double sound(double time, const syn::Voice& voice) const override;
+        double sound(double time, syn::NoteId note) const override;
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdsr>(ENVELOPE); }
         double attack_time() const override { return ENVELOPE.time_attack; }

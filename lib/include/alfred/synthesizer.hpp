@@ -14,7 +14,7 @@ namespace synthesizer {
         Synthesizer();
         ~Synthesizer() noexcept override;
 
-        void note_on(syn::NoteId note, syn::InstrumentId instrument);
+        void note_on(syn::NoteId note, syn::InstrumentId instrument, double loudness);
         void note_off(syn::NoteId note, syn::InstrumentId instrument);
         void silence();
         void update_voices();
