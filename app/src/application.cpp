@@ -1101,8 +1101,16 @@ namespace application {
 
         switch (m_ui.tool) {
             case ui::ToolMeasure:
+                if (m_player.is_playing()) {
+                    break;
+                }
+
                 if (ImGui::Shortcut(ImGuiMod_Alt | ImGuiKey_A, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
                     append_measures();
+                }
+
+                if (m_composition_selected_measure == m_composition.measures.end()) {
+                    break;
                 }
 
                 if (ImGui::Shortcut(ImGuiMod_Alt | ImGuiKey_I, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
@@ -1123,6 +1131,30 @@ namespace application {
 
                 break;
             case ui::ToolNote:
+                if (ImGui::Shortcut(ImGuiKey_1, ImGuiInputFlags_RouteAlways)) {
+                    m_ui.value = ui::ValueWhole;
+                }
+
+                if (ImGui::Shortcut(ImGuiKey_2, ImGuiInputFlags_RouteAlways)) {
+                    m_ui.value = ui::ValueHalf;
+                }
+
+                if (ImGui::Shortcut(ImGuiKey_3, ImGuiInputFlags_RouteAlways)) {
+                    m_ui.value = ui::ValueQuarter;
+                }
+
+                if (ImGui::Shortcut(ImGuiKey_4, ImGuiInputFlags_RouteAlways)) {
+                    m_ui.value = ui::ValueEighth;
+                }
+
+                if (ImGui::Shortcut(ImGuiKey_5, ImGuiInputFlags_RouteAlways)) {
+                    m_ui.value = ui::ValueSixteenth;
+                }
+
+                if (m_player.is_playing() || m_composition_selected_notes.empty()) {
+                    break;
+                }
+
                 if (ImGui::Shortcut(ImGuiMod_Alt | ImGuiKey_W, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
                     shift_notes_up();
                 }
@@ -1149,26 +1181,6 @@ namespace application {
 
                 if (ImGui::Shortcut(ImGuiMod_Alt | ImGuiKey_L, ImGuiInputFlags_RouteAlways)) {
                     legato_notes();
-                }
-
-                if (ImGui::Shortcut(ImGuiKey_1, ImGuiInputFlags_RouteAlways)) {
-                    m_ui.value = ui::ValueWhole;
-                }
-
-                if (ImGui::Shortcut(ImGuiKey_2, ImGuiInputFlags_RouteAlways)) {
-                    m_ui.value = ui::ValueHalf;
-                }
-
-                if (ImGui::Shortcut(ImGuiKey_3, ImGuiInputFlags_RouteAlways)) {
-                    m_ui.value = ui::ValueQuarter;
-                }
-
-                if (ImGui::Shortcut(ImGuiKey_4, ImGuiInputFlags_RouteAlways)) {
-                    m_ui.value = ui::ValueEighth;
-                }
-
-                if (ImGui::Shortcut(ImGuiKey_5, ImGuiInputFlags_RouteAlways)) {
-                    m_ui.value = ui::ValueSixteenth;
                 }
 
                 break;
@@ -1279,6 +1291,14 @@ namespace application {
     }
 
     void Application::composition_mouse_pressed(ImVec2 origin) {
+        if (ImGui::IsKeyDown(ImGuiMod_Alt)) {
+            if (const auto position {hover_position(composition_mouse_position(origin))}; position) {
+                m_player.seek(*position);
+            }
+
+            return;
+        }
+
         switch (m_ui.tool) {
             case ui::ToolMeasure: {
                 if (const auto hovered_measure {hover_measure(composition_mouse_position(origin))}; hovered_measure) {
