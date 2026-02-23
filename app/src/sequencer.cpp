@@ -112,9 +112,7 @@ namespace seq {
                     execution.notes_played.emplace(
                         note->id,
                         note->position,
-                        note->duration,
-                        note->tempo,
-                        note->time_signature
+                        note->duration
                     );
 
                     if (std::next(note) == execution.notes_unplayed.end()) {
@@ -162,7 +160,6 @@ namespace seq {
                         };
 
                         assert(next_note);
-                        assert(measure->equal_time(*next_note->measure()));
 
                         duration += seq::steps(next_note->note()->value);
 
@@ -173,9 +170,7 @@ namespace seq {
                     executions[instrument].notes_unplayed.emplace(
                         note->id,
                         steps + note->position + note->delay,
-                        calculate_note_duration(measure, instrument, duration),
-                        measure->tempo,
-                        measure->time_signature
+                        calculate_note_duration(measure, instrument, duration)
                     );
                 }
             }

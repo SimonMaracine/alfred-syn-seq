@@ -241,17 +241,12 @@ namespace seq {
 
     namespace exec {
         struct Note {
-            Note(syn::NoteId id, unsigned int position, unsigned int duration, Tempo tempo, TimeSignature time_signature)
-                : id(id), position(position), duration(duration), tempo(tempo), time_signature(time_signature) {}
+            Note(syn::NoteId id, unsigned int position, unsigned int duration)
+                : id(id), position(position), duration(duration) {}
 
             syn::NoteId id {};
-
             unsigned int position {};  // Global, in the whole composition
             unsigned int duration {};  // Number of steps
-
-            // Needed to know how fast to play the note
-            Tempo tempo;
-            TimeSignature time_signature;
         };
 
         struct UnplayedNote : Note {
