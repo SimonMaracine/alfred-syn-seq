@@ -41,7 +41,7 @@ namespace seq {
     // Quarters per minute
     class Tempo {
     public:
-        static constexpr unsigned int MIN {4};
+        static constexpr unsigned int MIN {30};
         static constexpr unsigned int MAX {240};
 
         constexpr Tempo() = default;

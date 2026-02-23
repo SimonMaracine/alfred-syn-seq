@@ -128,6 +128,7 @@ namespace application {
         void modify_composition();
         void invalidate_composition();
         void reset_composition_flags();
+        void reset_player_and_composition_selection();
         void set_title_composition_not_saved() const;
         void set_title_composition_saved() const;
         static void set_color_scheme(ui::ColorScheme color_scheme);

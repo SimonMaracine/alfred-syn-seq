@@ -485,7 +485,7 @@ namespace application {
                 m_player.seek(0);
             }
 
-            ImGui::SetItemTooltip("Rewind the player to the beginning (R)");
+            ImGui::SetItemTooltip("Rewind the player to the beginning (Backspace)");
 
             ImGui::SameLine();
 
@@ -605,13 +605,13 @@ namespace application {
             clear_measure();
         }
 
-        ImGui::SetItemTooltip("Clear the selected measure (Backspace)");
+        ImGui::SetItemTooltip("Clear the selected measure (Alt+C)");
 
         if (ImGui::Button("Delete")) {
             delete_measure();
         }
 
-        ImGui::SetItemTooltip("Completely delete the selected measure (Delete)");
+        ImGui::SetItemTooltip("Completely delete the selected measure (Alt+D)");
 
         ImGui::EndDisabled();
 
@@ -653,7 +653,7 @@ namespace application {
             shift_notes_up();
         }
 
-        ImGui::SetItemTooltip("Shift the selected notes up (Alt+W)");
+        ImGui::SetItemTooltip("Shift the selected notes up (Up)");
 
         ImGui::SameLine();
 
@@ -661,13 +661,13 @@ namespace application {
             shift_notes_down();
         }
 
-        ImGui::SetItemTooltip("Shift the selected notes down (Alt+S)");
+        ImGui::SetItemTooltip("Shift the selected notes down (Down)");
 
         if (ImGui::ArrowButton("Shift Left", ImGuiDir_Left)) {
             shift_notes_left();
         }
 
-        ImGui::SetItemTooltip("Shift the selected notes left (Alt+A)");
+        ImGui::SetItemTooltip("Shift the selected notes left (Left)");
 
         ImGui::SameLine();
 
@@ -675,7 +675,7 @@ namespace application {
             shift_notes_right();
         }
 
-        ImGui::SetItemTooltip("Shift the selected notes right (Alt+D)");
+        ImGui::SetItemTooltip("Shift the selected notes right (Right)");
 
         ImGui::PopItemFlag();
 
@@ -689,7 +689,7 @@ namespace application {
             delete_notes();
         }
 
-        ImGui::SetItemTooltip("Completely delete the selected notes (Delete)");
+        ImGui::SetItemTooltip("Completely delete the selected notes (Alt+D)");
 
         if (ImGui::Button("Legato")) {
             legato_notes();
@@ -707,7 +707,7 @@ namespace application {
             remove_delay_notes();
         }
 
-        ImGui::SetItemTooltip("Remove delay from the selected notes ()");
+        ImGui::SetItemTooltip("Remove delay from the selected notes (Alt+,)");
 
         ImGui::SameLine();
 
@@ -715,7 +715,7 @@ namespace application {
             add_delay_notes();
         }
 
-        ImGui::SetItemTooltip("Add delay to the selected notes ()");
+        ImGui::SetItemTooltip("Add delay to the selected notes (Alt+.)");
 
         ImGui::PopItemFlag();
 
@@ -1104,7 +1104,7 @@ namespace application {
             }
         }
 
-        if (ImGui::Shortcut(ImGuiKey_R, ImGuiInputFlags_RouteAlways)) {
+        if (ImGui::Shortcut(ImGuiKey_Backspace, ImGuiInputFlags_RouteAlways)) {
             m_player.seek(0);
         }
 
@@ -1139,7 +1139,7 @@ namespace application {
                     insert_measure();
                 }
 
-                if (ImGui::Shortcut(ImGuiKey_Backspace, ImGuiInputFlags_RouteAlways)) {
+                if (ImGui::Shortcut(ImGuiMod_Alt | ImGuiKey_C, ImGuiInputFlags_RouteAlways)) {
                     clear_measure();
                 }
 
@@ -1147,7 +1147,7 @@ namespace application {
                     delete_measure();
                 }
 
-                if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_D, ImGuiInputFlags_RouteAlways)) {
+                if (ImGui::Shortcut(ImGuiMod_Alt | ImGuiKey_D, ImGuiInputFlags_RouteAlways)) {
                     delete_measure();
                 }
 
@@ -1177,19 +1177,19 @@ namespace application {
                     break;
                 }
 
-                if (ImGui::Shortcut(ImGuiMod_Alt | ImGuiKey_W, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
+                if (ImGui::Shortcut(ImGuiKey_UpArrow, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
                     shift_notes_up();
                 }
 
-                if (ImGui::Shortcut(ImGuiMod_Alt | ImGuiKey_S, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
+                if (ImGui::Shortcut(ImGuiKey_DownArrow, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
                     shift_notes_down();
                 }
 
-                if (ImGui::Shortcut(ImGuiMod_Alt | ImGuiKey_A, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
+                if (ImGui::Shortcut(ImGuiKey_LeftArrow, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
                     shift_notes_left();
                 }
 
-                if (ImGui::Shortcut(ImGuiMod_Alt | ImGuiKey_D, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
+                if (ImGui::Shortcut(ImGuiKey_RightArrow, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
                     shift_notes_right();
                 }
 
@@ -1197,7 +1197,7 @@ namespace application {
                     delete_notes();
                 }
 
-                if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_D, ImGuiInputFlags_RouteAlways)) {
+                if (ImGui::Shortcut(ImGuiMod_Alt | ImGuiKey_D, ImGuiInputFlags_RouteAlways)) {
                     delete_notes();
                 }
 
@@ -1205,11 +1205,11 @@ namespace application {
                     legato_notes();
                 }
 
-                if (ImGui::Shortcut(ImGuiMod_Alt | ImGuiKey_Q, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
+                if (ImGui::Shortcut(ImGuiMod_Alt | ImGuiKey_Comma, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
                     remove_delay_notes();
                 }
 
-                if (ImGui::Shortcut(ImGuiMod_Alt | ImGuiKey_E, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
+                if (ImGui::Shortcut(ImGuiMod_Alt | ImGuiKey_Period, ImGuiInputFlags_RouteAlways | ImGuiInputFlags_Repeat)) {
                     add_delay_notes();
                 }
 
@@ -1229,7 +1229,7 @@ namespace application {
             result = true;
         }
 
-        ImGui::SetItemTooltip("Change the tempo of the composition");
+        ImGui::SetItemTooltip("Change the tempo of the composition in quarters per minute");
 
         return result;
     }
@@ -1999,6 +1999,12 @@ namespace application {
         m_composition_not_saved = false;
     }
 
+    void Application::reset_player_and_composition_selection() {
+        m_player.seek(0);
+        m_composition_selected_measure = m_composition.measures.end();
+        m_composition_selected_notes.clear();
+    }
+
     void Application::set_title_composition_not_saved() const {
         if (m_composition_path.empty()) {
             set_title("Alfred - Unsaved Composition");
@@ -2465,8 +2471,7 @@ namespace application {
         std::strncpy(m_ui.composition.author, m_composition.author.c_str(), sizeof(m_ui.composition.author));
         m_ui.composition.year = short(int(m_composition.year));
 
-        m_player.seek(0);
-
+        reset_player_and_composition_selection();
         reset_composition_flags();
         invalidate_composition();
         set_title_composition_saved();
@@ -2475,11 +2480,11 @@ namespace application {
     }
 
     void Application::composition_new() {
-        m_composition = {};
         m_composition_path.clear();
+        m_composition = {};
         m_ui.composition = {};
-        m_player.seek(0);
 
+        reset_player_and_composition_selection();
         reset_composition_flags();
         set_title_composition_saved();
     }
