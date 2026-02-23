@@ -999,10 +999,10 @@ namespace application {
                 const float x {global_position_x + float(note->position + seq::steps(note->value)) * ui::rem(STEP_SIZE.x)};
 
                 draw.list->AddBezierCubic(
-                    draw.origin + ImVec2(x - ui::rem(STEP_SIZE.x) * 6.0f, rect.y + ui::rem(STEP_SIZE.y)) - m_composition_camera,
-                    draw.origin + ImVec2(x - ui::rem(STEP_SIZE.x) * 3.0f, rect.y + ui::rem(STEP_SIZE.y) * 1.5f) - m_composition_camera,
-                    draw.origin + ImVec2(x + ui::rem(STEP_SIZE.x) * 3.0f, rect.y + ui::rem(STEP_SIZE.y) * 1.5f) - m_composition_camera,
-                    draw.origin + ImVec2(x + ui::rem(STEP_SIZE.x) * 6.0f, rect.y + ui::rem(STEP_SIZE.y)) - m_composition_camera,
+                    draw.origin + ImVec2(x - ui::rem(STEP_SIZE.x) * 6.0f, rect.y + ui::rem(STEP_SIZE.y) - 4.0f) - m_composition_camera,
+                    draw.origin + ImVec2(x - ui::rem(STEP_SIZE.x) * 3.0f, rect.y + ui::rem(STEP_SIZE.y) * 1.5f - 4.0f) - m_composition_camera,
+                    draw.origin + ImVec2(x + ui::rem(STEP_SIZE.x) * 3.0f, rect.y + ui::rem(STEP_SIZE.y) * 1.5f - 4.0f) - m_composition_camera,
+                    draw.origin + ImVec2(x + ui::rem(STEP_SIZE.x) * 6.0f, rect.y + ui::rem(STEP_SIZE.y) - 4.0f) - m_composition_camera,
                     ui::COLORS[m_ui.colors.at(instrument)].second,
                     1.0f
                 );
@@ -2046,7 +2046,7 @@ namespace application {
         const float width {float(seq::steps(note.value)) * ui::rem(STEP_SIZE.x)};
         const float height {ui::rem(STEP_SIZE.y)};
 
-        return ImVec4(x + 1.0f, y + 1.0f, width - 2.0f, height - 2.0f);
+        return ImVec4(x + 1.0f, y + 2.0f, width - 2.0f, height - 4.0f);
     }
 
     const char* Application::measure_label(char* buffer, long number) {
