@@ -695,7 +695,7 @@ namespace application {
             legato_notes();
         }
 
-        ImGui::SetItemTooltip("Toggle the selected notes' legato");
+        ImGui::SetItemTooltip("Toggle the selected notes' legato (Alt+L)");
 
         ImGui::EndGroup();
 
@@ -1145,6 +1145,10 @@ namespace application {
 
                 if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_D, ImGuiInputFlags_RouteAlways)) {
                     delete_notes();
+                }
+
+                if (ImGui::Shortcut(ImGuiMod_Alt | ImGuiKey_L, ImGuiInputFlags_RouteAlways)) {
+                    legato_notes();
                 }
 
                 if (ImGui::Shortcut(ImGuiKey_1, ImGuiInputFlags_RouteAlways)) {
