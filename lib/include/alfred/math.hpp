@@ -2,6 +2,7 @@
 
 #include <numbers>
 #include <algorithm>
+#include <limits>
 #include <memory>
 
 struct fftw_plan_s;
@@ -14,12 +15,24 @@ namespace math {
         return hertz * 2.0 * std::numbers::pi;
     }
 
-    consteval double operator""_hz(long double hertz) {
-        return w(double(hertz));
+    namespace literals {
+        consteval double operator""_hz(long double hertz) {
+            return w(double(hertz));
+        }
     }
 
     constexpr double clamp(double x) {
         return std::clamp(x, 0.0, 1.0);
+    }
+
+    constexpr double clamp_sample(double sample) {
+        return std::clamp(sample, -1.0, 1.0);
+    }
+
+    template<typename Resolution>
+    constexpr Resolution encode_sample(double sample) {
+        static_assert(std::numeric_limits<Resolution>::is_integer && std::numeric_limits<Resolution>::is_signed);
+        return Resolution(sample * double(std::numeric_limits<Resolution>::max()));
     }
 
     template<typename T>

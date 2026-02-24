@@ -34,6 +34,8 @@ add_executable(
     "src/composition.cpp"
     "src/data.cpp"
     "src/data.hpp"
+    "src/encoder.cpp"
+    "src/encoder.hpp"
     "src/imgui.cpp"
     "src/imgui.hpp"
     "src/logging.cpp"

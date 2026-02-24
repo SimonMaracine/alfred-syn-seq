@@ -14,6 +14,7 @@ struct SDL_AudioStream;
 
 namespace audio {
     inline constexpr int SAMPLE_FREQUENCY {44100};
+    inline constexpr int BITS_PER_SAMPLE {16};
 
     using Resolution = std::int16_t;
 
@@ -51,7 +52,6 @@ namespace audio {
         virtual void update() = 0;
         virtual double sound() const = 0;
     private:
-        static double clamp(double value);
         static void stream_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int total_amount);
 
         SDL_AudioStream* m_stream {};

@@ -2,8 +2,6 @@
 
 #include <format>
 #include <memory>
-#include <limits>
-#include <algorithm>
 
 #include <SDL3/SDL.h>
 
@@ -149,10 +147,6 @@ namespace audio {
         return double(gain);
     }
 
-    double Audio::clamp(double value) {
-        return std::clamp(value, -1.0, 1.0);
-    }
-
     thread_local struct {
         std::size_t size {};
         std::unique_ptr<Resolution[]> buffer;
@@ -172,9 +166,9 @@ namespace audio {
 
         for (std::size_t i {}; i < samples; i++) {
             self.update();
-            const double sound {clamp(self.sound())};
+            const double sound {self.sound()};
 
-            g_buffer.buffer[i] = Resolution(sound * double(std::numeric_limits<Resolution>::max()));
+            g_buffer.buffer[i] = math::encode_sample<Resolution>(math::clamp_sample(sound));
 
             self.m_time += 1.0 / double(SAMPLE_FREQUENCY);
 
