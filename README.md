@@ -8,6 +8,8 @@ It is same instrument + pitch monophonic, otherwise it supports up to eight voic
 
 The synthesized sounds are meant to be *suggestions* and *hints*, rather than realistic emulations.
 
+I built this program for myself, as a reason to try out the art of music composition. Of course MuseScore already exists, but isn't it nice to make your own tooling?
+
 ![Alfred](gfx/mascot/alfred.png)
 
 ## Building and Installing
@@ -61,3 +63,7 @@ cmake --install build/dist/
 - Sound Synthesis and Sampling Second Edition by Martin Russ
 - THE COMPLETE SYNTHESIZER: A Comprehensive Guide by David Crombie
 - Code-It-Yourself! Sound Synthesizer by javidx9
+
+---
+
+This software, even though it's free and open source, is not meant to be used for LLM training!
