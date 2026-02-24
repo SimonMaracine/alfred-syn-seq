@@ -21,7 +21,7 @@ namespace task {
 
     class ImmediateTask {
     public:
-        explicit ImmediateTask(ImmediateTaskFunction&& task_function)
+        explicit ImmediateTask(ImmediateTaskFunction task_function)
             : m_task_function(std::move(task_function)) {}
     private:
         ImmediateTaskFunction m_task_function;
@@ -31,7 +31,7 @@ namespace task {
 
     class ImmediateThreadSafeTask {
     public:
-        explicit ImmediateThreadSafeTask(ImmediateThreadSafeTaskFunction&& task_function)
+        explicit ImmediateThreadSafeTask(ImmediateThreadSafeTaskFunction task_function)
             : m_task_function(std::move(task_function)) {}
     private:
         ImmediateThreadSafeTaskFunction m_task_function;
@@ -41,7 +41,7 @@ namespace task {
 
     class RepeatableTask {
     public:
-        RepeatableTask(RepeatableTaskFunction&& task_function, unsigned long long interval)
+        RepeatableTask(RepeatableTaskFunction task_function, unsigned long long interval)
             : m_task_function(std::move(task_function)), m_interval(interval) {}
     private:
         RepeatableTaskFunction m_task_function;
@@ -55,7 +55,7 @@ namespace task {
 
     class DelayedTask {
     public:
-        DelayedTask(DelayedTaskFunction&& task_function, unsigned long long delay)
+        DelayedTask(DelayedTaskFunction task_function, unsigned long long delay)
             : m_task_function(std::move(task_function)), m_delay(delay) {}
     private:
         DelayedTaskFunction m_task_function;
@@ -69,7 +69,7 @@ namespace task {
 
     class ContinuousTask {
     public:
-        ContinuousTask(ContinuousTaskFunction&& task_function, unsigned long long interval)
+        ContinuousTask(ContinuousTaskFunction task_function, unsigned long long interval)
             : m_task_function(std::move(task_function)), m_interval(interval) {}
     private:
         ContinuousTaskFunction m_task_function;
@@ -83,7 +83,7 @@ namespace task {
 
     class AsyncTask {
     public:
-        explicit AsyncTask(AsyncTaskFunction&& task_function)
+        explicit AsyncTask(AsyncTaskFunction task_function)
             : m_thread(std::move(task_function), std::ref(*this)) {}
 
         void finish();
@@ -97,12 +97,12 @@ namespace task {
 
     class TaskManager {
     public:
-        void add_immediate_task(ImmediateTaskFunction&& task_function);
-        void add_immediate_thread_safe_task(ImmediateThreadSafeTaskFunction&& task_function);
-        void add_repeatable_task(RepeatableTaskFunction&& task_function, unsigned long long interval);
-        void add_delayed_task(DelayedTaskFunction&& task_function, unsigned long long delay);
-        void add_continuous_task(ContinuousTaskFunction&& task_function, unsigned long long interval);
-        void add_async_task(AsyncTaskFunction&& task_function);
+        void add_immediate_task(ImmediateTaskFunction task_function);
+        void add_immediate_thread_safe_task(ImmediateThreadSafeTaskFunction task_function);
+        void add_repeatable_task(RepeatableTaskFunction task_function, unsigned long long interval);
+        void add_delayed_task(DelayedTaskFunction task_function, unsigned long long delay);
+        void add_continuous_task(ContinuousTaskFunction task_function, unsigned long long interval);
+        void add_async_task(AsyncTaskFunction task_function);
 
         void clear();
         void update();

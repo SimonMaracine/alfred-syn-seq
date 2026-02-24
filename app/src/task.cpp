@@ -12,32 +12,32 @@ namespace task {
         m_thread.request_stop();
     }
 
-    void TaskManager::add_immediate_task(ImmediateTaskFunction&& task_function) {
+    void TaskManager::add_immediate_task(ImmediateTaskFunction task_function) {
         m_immediate_tasks_incoming.emplace_back(std::move(task_function));
     }
 
-    void TaskManager::add_immediate_thread_safe_task(ImmediateThreadSafeTaskFunction&& task_function) {
+    void TaskManager::add_immediate_thread_safe_task(ImmediateThreadSafeTaskFunction task_function) {
         std::lock_guard guard {m_mutex};
 
         m_immediate_thread_safe_tasks_incoming.emplace_back(std::move(task_function));
     }
 
-    void TaskManager::add_repeatable_task(RepeatableTaskFunction&& task_function, unsigned long long interval) {
+    void TaskManager::add_repeatable_task(RepeatableTaskFunction task_function, unsigned long long interval) {
         RepeatableTask& task {m_repeatable_tasks_incoming.emplace_back(std::move(task_function), interval * SDL_NS_PER_MS)};
         task.m_last_time = SDL_GetTicksNS();
     }
 
-    void TaskManager::add_delayed_task(DelayedTaskFunction&& task_function, unsigned long long delay) {
+    void TaskManager::add_delayed_task(DelayedTaskFunction task_function, unsigned long long delay) {
         DelayedTask& task {m_delayed_tasks_incoming.emplace_back(std::move(task_function), delay * SDL_NS_PER_MS)};
         task.m_last_time = SDL_GetTicksNS();
     }
 
-    void TaskManager::add_continuous_task(ContinuousTaskFunction&& task_function, unsigned long long interval) {
+    void TaskManager::add_continuous_task(ContinuousTaskFunction task_function, unsigned long long interval) {
         ContinuousTask& task {m_continuous_tasks_incoming.emplace_back(std::move(task_function), interval * SDL_NS_PER_MS)};
         task.m_last_time = SDL_GetTicksNS();
     }
 
-    void TaskManager::add_async_task(AsyncTaskFunction&& task_function) {
+    void TaskManager::add_async_task(AsyncTaskFunction task_function) {
         m_async_tasks.emplace_front(std::move(task_function));
     }
 
