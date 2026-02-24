@@ -2544,10 +2544,11 @@ namespace application {
     void Application::undo() {
         assert(!m_composition_history.undo.empty());
 
-        m_composition_history.redo.push(m_composition);
+        m_composition_history.redo.emplace(m_composition, m_composition_camera);
 
         seq::Composition& composition {m_composition};
-        composition = std::move(m_composition_history.undo.top());
+        composition = std::move(m_composition_history.undo.top().composition);
+        m_composition_camera = m_composition_history.undo.top().camera;
 
         m_composition_history.undo.pop();
 
@@ -2557,10 +2558,11 @@ namespace application {
     void Application::redo() {
         assert(!m_composition_history.redo.empty());
 
-        m_composition_history.undo.push(m_composition);
+        m_composition_history.undo.emplace(m_composition, m_composition_camera);
 
         seq::Composition& composition {m_composition};
-        composition = std::move(m_composition_history.redo.top());
+        composition = std::move(m_composition_history.redo.top().composition);
+        m_composition_camera = m_composition_history.redo.top().camera;
 
         m_composition_history.redo.pop();
 
@@ -2568,7 +2570,7 @@ namespace application {
     }
 
     void Application::remember_composition() {
-        m_composition_history.undo.push(m_composition);
+        m_composition_history.undo.emplace(m_composition, m_composition_camera);
 
         while (!m_composition_history.redo.empty()) {
             m_composition_history.redo.pop();

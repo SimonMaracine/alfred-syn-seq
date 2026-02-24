@@ -58,7 +58,12 @@ namespace application {
     };
 
     struct CompositionHistory {
-        using Stack = std::stack<seq::Composition, std::vector<seq::Composition>>;
+        struct Point {
+            seq::Composition composition;
+            ImVec2 camera;
+        };
+
+        using Stack = std::stack<Point, std::vector<Point>>;
 
         Stack undo;
         Stack redo;
