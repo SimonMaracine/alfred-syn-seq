@@ -4,6 +4,8 @@
 #include <cmath>
 #include <cassert>
 
+#include "alfred/instrument.hpp"
+
 namespace seq {
     bool Composition::note_first_in_measure(const Measure&, const Note& note) {
         return note.position == 0;
@@ -135,9 +137,32 @@ namespace seq {
     exec::Executions Player::initialize_executions(unsigned int position) const {
         exec::Executions executions;
         unsigned int steps {};
-        std::vector<ProvenanceNote<ConstMeasureIter>> processed_notes;
 
-        for (auto measure {m_composition->measures.begin()}; measure != m_composition->measures.end(); measure++) {
+        std::vector<ProvenanceNote<ConstMeasureIter>> processed_notes;
+        Composition cloned_composition;
+
+        // By default, simply reference the composition pointer
+        const Composition* composition {m_composition};
+
+        // Make a full copy of the composition, add metronome and use a reference to the copied
+        if (m_metronome) {
+            cloned_composition = *m_composition;
+
+            for (auto measure {cloned_composition.measures.begin()}; measure != cloned_composition.measures.end(); measure++) {
+                for (unsigned int i {}; i < measure->time_signature.measure_steps(); i += seq::steps(measure->time_signature.value())) {
+                    measure->instruments[instrument::Metronome::static_id()].emplace(
+                        i == 0 ? syn::note(syn::B, syn::Octave5) : syn::note(syn::A, syn::Octave5),
+                        Sixteenth,
+                        Loudness::Fortississimo,
+                        i
+                    );
+                }
+            }
+
+            composition = &cloned_composition;
+        }
+
+        for (auto measure {composition->measures.begin()}; measure != composition->measures.end(); measure++) {
             for (const auto& [instrument, notes] : measure->instruments) {
                 for (auto note {notes.begin()}; note != notes.end(); note++) {
                     if (steps + note->position < position) {
@@ -157,7 +182,7 @@ namespace seq {
 
                     while (current_note->legato) {
                         const auto next_note {
-                            m_composition->check_note_has_next<ConstMeasureIter>(instrument, ProvenanceNote(measure, current_note))
+                            composition->check_note_has_next<ConstMeasureIter>(instrument, ProvenanceNote(measure, current_note))
                         };
 
                         assert(next_note);

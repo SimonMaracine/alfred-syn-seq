@@ -128,8 +128,8 @@ namespace seq {
         // Use a normal set, because the iterators need to stay stable
         std::unordered_map<syn::InstrumentId, std::set<Note>> instruments;  // TODO erase empty when serializing
 
-        bool equal_time(const Measure& other) const {
-            return tempo == other.tempo && time_signature == other.time_signature;
+        bool equal_signature(const Measure& other) const {
+            return time_signature == other.time_signature;
         }
     };
 
@@ -186,7 +186,7 @@ namespace seq {
             if (note_last_in_measure(*measure, *note)) {
                 const auto next_measure {std::next(measure)};
 
-                if (next_measure != measures.end() && next_measure->equal_time(*measure)) {
+                if (next_measure != measures.end() && next_measure->equal_signature(*measure)) {
                     const auto notes {next_measure->instruments.find(instrument)};
 
                     if (notes == next_measure->instruments.end()) {
@@ -233,7 +233,7 @@ namespace seq {
             if (note_first_in_measure(*measure, *note) && measure != measures.begin()) {
                 const auto previous_measure {std::prev(measure)};
 
-                if (previous_measure->equal_time(*measure)) {
+                if (previous_measure->equal_signature(*measure)) {
                     const auto notes {previous_measure->instruments.find(instrument)};
 
                     if (notes == previous_measure->instruments.end()) {
@@ -310,6 +310,8 @@ namespace seq {
         bool is_playing() const { return m_playing; }
         bool is_in_time() const { return m_in_time; }
 
+        void set_metronome(bool metronome) { m_metronome = metronome; }
+
         void update(double dt);
     private:
         void initialize(unsigned int position);
@@ -329,10 +331,11 @@ namespace seq {
         ConstMeasureIter m_measure;
         double m_accumulator_time {};
         double m_elapsed_time {};
-        unsigned int m_position {};  // Like a cursor
-        unsigned int m_measure_position {};
+        unsigned int m_position {};  // Global position, like a cursor
+        unsigned int m_measure_position {};  // Local position in current measure
         bool m_playing {};
-        bool m_in_time {true};  // Is the player able to keep up with the piece
+        bool m_metronome {};
+        bool m_in_time {true};  // If the player is able to keep up with the piece
     };
 
     struct SequencerError : std::runtime_error {

@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <filesystem>
 #include <optional>
+#include <stack>
 
 #include <imgui.h>
 #include <alfred/synthesizer.hpp>
@@ -56,6 +57,13 @@ namespace application {
         ImVec2 clamped_space;
     };
 
+    struct CompositionHistory {
+        using Stack = std::stack<seq::Composition, std::vector<seq::Composition>>;
+
+        Stack undo;
+        Stack redo;
+    };
+
     class Application : public video::Video {
     public:
         void on_start() override;
@@ -96,16 +104,11 @@ namespace application {
         void keyboard_input(unsigned int key, bool down);
         void composition_mouse_pressed(ImVec2 origin);
         void composition_camera(bool item_active, bool item_hovered, ImVec2 space);
-        void add_metronome();
-        void add_metronome(MeasureIter begin, MeasureIter end);
-        void remove_metronome();
-        void remove_metronome(MeasureIter begin, MeasureIter end);
         void select_measure(MeasureIter hovered_measure);
         void append_measures();
         void insert_measure();
         void clear_measure();
         void delete_measure();
-        void set_measure_tempo(MeasureIter measure);
         void set_measure_tempo();
         void set_measures_tempo();
         void set_measure_time_signature();
@@ -154,7 +157,7 @@ namespace application {
         static void set_tempo(ui::Tempo& tempo, const seq::Measure& measure);
         static void set_time_signature(seq::Measure& measure, const ui::TimeSignature& time_signature);
         static void set_time_signature(ui::TimeSignature& time_signature, const seq::Measure& measure);
-        static bool empty_except_metronome(const seq::Measure& measure);
+        static bool measure_empty(const seq::Measure& measure);
         static bool check_note_up_limit(const seq::Note& note);
         static bool check_note_down_limit(const seq::Note& note);
         static bool check_note_left_limit(const seq::Note& note);
@@ -178,6 +181,9 @@ namespace application {
         void file_new();
         void file_open();
         void file_save();
+        void undo();
+        void redo();
+        void remember_composition();
 
         data::Data m_data;
         task::TaskManager m_task_manager;
@@ -190,12 +196,14 @@ namespace application {
         MeasureIter m_composition_selected_measure;
         std::vector<ProvenanceNote> m_composition_selected_notes;
         std::filesystem::path m_composition_path;
+        CompositionHistory m_composition_history;
         composition::Composition m_composition;
 
         synthesizer::Synthesizer m_synthesizer;
         seq::Player m_player;
 
         struct {
+            bool metronome {};
             int tool {ui::ToolMeasure};
             int value {ui::ValueQuarter};
             ui::Tempo tempo {seq::Tempo()};
@@ -211,7 +219,6 @@ namespace application {
             std::unordered_map<syn::InstrumentId, ui::ColorIndex> colors;
         } m_ui;
 
-        bool m_metronome {};
         bool m_composition_not_compiled {};
         bool m_composition_not_saved {};
     };

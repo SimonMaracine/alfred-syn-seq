@@ -214,9 +214,16 @@ namespace application {
     }
 
     void Application::main_menu_bar_edit() {
-        if (ImGui::MenuItem("Undo", "Ctrl+Z")) {}
-        if (ImGui::MenuItem("Redo", "Ctrl+Y", false, false)) {} // Disabled item
+        if (ImGui::MenuItem("Undo", "Ctrl+Z", false, !m_composition_history.undo.empty())) {
+            undo();
+        }
+
+        if (ImGui::MenuItem("Redo", "Ctrl+Y", false, !m_composition_history.redo.empty())) {
+            redo();
+        }
+
         ImGui::Separator();
+
         if (ImGui::MenuItem("Cut", "Ctrl+X")) {}
         if (ImGui::MenuItem("Copy", "Ctrl+C")) {}
         if (ImGui::MenuItem("Paste", "Ctrl+V")) {}
@@ -387,9 +394,9 @@ namespace application {
 
             if (ImGui::BeginCombo("##instrument", m_synthesizer.get_instrument(m_instrument).name(), ImGuiComboFlags_NoArrowButton)) {
                 m_synthesizer.for_each_instrument([this](const syn::Instrument& instrument) {
-                    if (instrument.id() == instrument::Metronome::static_id()) {
-                        return;
-                    }
+                    // if (instrument.id() == instrument::Metronome::static_id()) {
+                    //     return;
+                    // }
 
                     if (ImGui::Selectable(instrument.name(), instrument.id() == m_instrument)) {
                         m_instrument = instrument.id();
@@ -514,15 +521,12 @@ namespace application {
 
             ImGui::BeginDisabled(m_player.is_playing());
 
-            if (ImGui::Checkbox("Metronome", &m_metronome)) {
+            if (ImGui::Checkbox("Metronome", &m_ui.metronome)) {
                 if (const bool allow_edit {!m_player.is_playing()}; allow_edit) {
-                    if (m_metronome) {
-                        add_metronome();
-                    } else {
-                        remove_metronome();
-                    }
+                    m_player.set_metronome(m_ui.metronome);
+                    m_composition_not_compiled = true;
                 } else {
-                    m_metronome = !m_metronome;
+                    m_ui.metronome = !m_ui.metronome;
                 }
             }
 
@@ -1105,6 +1109,18 @@ namespace application {
             file_save();
         }
 
+        if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_Z, ImGuiInputFlags_RouteAlways)) {
+            if (!m_composition_history.undo.empty()) {
+                undo();
+            }
+        }
+
+        if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_Y, ImGuiInputFlags_RouteAlways)) {
+            if (!m_composition_history.redo.empty()) {
+                redo();
+            }
+        }
+
         if (ImGui::Shortcut(ImGuiKey_Space, ImGuiInputFlags_RouteAlways)) {
             if (m_player.is_playing()) {
                 stop_player();
@@ -1387,37 +1403,6 @@ namespace application {
         m_composition_camera.y = std::min(m_composition_camera.y, ui::rem(COMPOSITION_HEIGHT + STEP_SIZE.y) - space.y);
     }
 
-    void Application::add_metronome() {
-        add_metronome(m_composition.measures.begin(), m_composition.measures.end());
-    }
-
-    void Application::add_metronome(MeasureIter begin, MeasureIter end) {
-        for (auto measure {begin}; measure != end; measure++) {
-            for (unsigned int i {}; i < measure->time_signature.measure_steps(); i += seq::steps(measure->time_signature.value())) {
-                measure->instruments[instrument::Metronome::static_id()].emplace(
-                    i == 0 ? syn::note(syn::B, syn::Octave5) : syn::note(syn::A, syn::Octave5),
-                    seq::Sixteenth,
-                    seq::Loudness::Fortississimo,
-                    i
-                );
-            }
-        }
-
-        modify_composition();
-    }
-
-    void Application::remove_metronome() {
-        remove_metronome(m_composition.measures.begin(), m_composition.measures.end());
-    }
-
-    void Application::remove_metronome(MeasureIter begin, MeasureIter end) {
-        for (auto measure {begin}; measure != end; measure++) {
-            measure->instruments.erase(instrument::Metronome::static_id());
-        }
-
-        modify_composition();
-    }
-
     void Application::select_measure(MeasureIter hovered_measure) {
         if (m_composition_selected_measure == hovered_measure) {
             m_composition_selected_measure = m_composition.measures.end();
@@ -1432,6 +1417,8 @@ namespace application {
     void Application::append_measures() {
         assert(!m_player.is_playing());
 
+        remember_composition();
+
         const auto [tempo, time_signature] {measure_type(
             !m_composition.measures.empty() ? std::prev(m_composition.measures.end()) : m_composition.measures.end(),
             m_composition.measures
@@ -1442,19 +1429,14 @@ namespace application {
             m_composition_selected_measure = m_composition.measures.end();
         }
 
-        if (m_metronome) {
-            const auto begin {std::prev(m_composition.measures.end(), ADD_MEASURES)};
-            const auto end {m_composition.measures.end()};
-
-            add_metronome(begin, end);
-        }
-
         modify_composition();
     }
 
     void Application::insert_measure() {
         assert(!m_player.is_playing());
         assert(m_composition_selected_measure != m_composition.measures.end());
+
+        remember_composition();
 
         const auto [tempo, time_signature] {measure_type(
             m_composition_selected_measure,
@@ -1465,10 +1447,6 @@ namespace application {
 
         m_composition_selected_measure = m_composition.measures.emplace(m_composition_selected_measure, tempo, time_signature);
 
-        if (m_metronome) {
-            add_metronome(m_composition_selected_measure, std::next(m_composition_selected_measure));
-        }
-
         modify_composition();
     }
 
@@ -1476,11 +1454,11 @@ namespace application {
         assert(!m_player.is_playing());
         assert(m_composition_selected_measure != m_composition.measures.end());
 
+        remember_composition();
+
         reset_note_legato_previous_measure(m_composition_selected_measure);
 
-        std::erase_if(m_composition_selected_measure->instruments, [](const auto& instrument) {
-            return instrument.first != instrument::Metronome::static_id();
-        });
+        m_composition_selected_measure->instruments.clear();
 
         modify_composition();
     }
@@ -1489,15 +1467,11 @@ namespace application {
         assert(!m_player.is_playing());
         assert(m_composition_selected_measure != m_composition.measures.end());
 
+        remember_composition();
+
         reset_note_legato_previous_measure(m_composition_selected_measure);
 
         m_composition_selected_measure = m_composition.measures.erase(m_composition_selected_measure);
-
-        modify_composition();
-    }
-
-    void Application::set_measure_tempo(MeasureIter measure) {
-        set_tempo(*measure, m_ui.tempo);
 
         modify_composition();
     }
@@ -1506,26 +1480,31 @@ namespace application {
         assert(!m_player.is_playing());
         assert(m_composition_selected_measure != m_composition.measures.end());
 
-        set_measure_tempo(m_composition_selected_measure);
+        remember_composition();
+
+        set_tempo(*m_composition_selected_measure, m_ui.tempo);
+
+        modify_composition();
     }
 
     void Application::set_measures_tempo() {
+        remember_composition();
+
         for (auto measure {m_composition.measures.begin()}; measure != m_composition.measures.end(); measure++) {
-            set_measure_tempo(measure);
+            set_tempo(*measure, m_ui.tempo);
         }
+
+        modify_composition();
     }
 
     void Application::set_measure_time_signature() {
         assert(!m_player.is_playing());
         assert(m_composition_selected_measure != m_composition.measures.end());
 
-        if (empty_except_metronome(*m_composition_selected_measure)) {
-            set_time_signature(*m_composition_selected_measure, m_ui.time_signature);
+        if (measure_empty(*m_composition_selected_measure)) {
+            remember_composition();
 
-            if (m_metronome) {
-                remove_metronome(m_composition_selected_measure, std::next(m_composition_selected_measure));
-                add_metronome(m_composition_selected_measure, std::next(m_composition_selected_measure));
-            }
+            set_time_signature(*m_composition_selected_measure, m_ui.time_signature);
 
             modify_composition();
         } else {
@@ -1688,6 +1667,8 @@ namespace application {
             return;
         }
 
+        remember_composition();
+
         hovered_note.measure()->instruments[m_instrument].insert(new_note);
         play_note(new_note);
 
@@ -1697,6 +1678,8 @@ namespace application {
     void Application::delete_notes() {
         assert(!m_player.is_playing());
         assert(!m_composition_selected_notes.empty());
+
+        remember_composition();
 
         for (const ProvenanceNote& selected_note : m_composition_selected_notes) {
             if (auto previous_note {check_note_has_previous(selected_note)}; previous_note) {
@@ -1715,6 +1698,8 @@ namespace application {
         assert(!m_player.is_playing());
         assert(!m_composition_selected_notes.empty());
 
+        remember_composition();
+
         for (ProvenanceNote& selected_note : m_composition_selected_notes) {
             seq::Note note {selected_note.copy()};
             note.legato = !note.legato;
@@ -1722,12 +1707,12 @@ namespace application {
             if (note.legato) {
                 if (const auto next_note {check_note_has_next(selected_note)}; next_note) {
                     if (next_note->note()->delay > 0) {
-                        note.legato = false;
                         LOG_DEBUG("Note cannot have legato");
+                        continue;
                     }
                 } else {
-                    note.legato = false;
                     LOG_DEBUG("Note cannot have legato");
+                    continue;
                 }
             }
 
@@ -1770,6 +1755,8 @@ namespace application {
             LOG_DEBUG("Cannot shift notes here");
             return;
         }
+
+        remember_composition();
 
         for (ProvenanceNote& selected_note : m_composition_selected_notes) {
             seq::Note note {selected_note.copy()};
@@ -1821,6 +1808,8 @@ namespace application {
             return;
         }
 
+        remember_composition();
+
         for (ProvenanceNote& selected_note : m_composition_selected_notes) {
             seq::Note note {selected_note.copy()};
             note.id--;
@@ -1871,6 +1860,8 @@ namespace application {
             return;
         }
 
+        remember_composition();
+
         for (ProvenanceNote& selected_note : m_composition_selected_notes) {
             seq::Note note {selected_note.copy()};
             note.position -= seq::DIVISION;
@@ -1916,6 +1907,8 @@ namespace application {
             return;
         }
 
+        remember_composition();
+
         for (ProvenanceNote& selected_note : m_composition_selected_notes) {
             seq::Note note {selected_note.copy()};
             note.position += seq::DIVISION;
@@ -1934,6 +1927,8 @@ namespace application {
     void Application::add_delay_notes() {
         assert(!m_player.is_playing());
         assert(!m_composition_selected_notes.empty());
+
+        remember_composition();
 
         for (ProvenanceNote& selected_note : m_composition_selected_notes) {
             if (selected_note.note()->delay == seq::MAX_DELAY) {
@@ -1960,6 +1955,8 @@ namespace application {
     void Application::remove_delay_notes() {
         assert(!m_player.is_playing());
         assert(!m_composition_selected_notes.empty());
+
+        remember_composition();
 
         for (ProvenanceNote& selected_note : m_composition_selected_notes) {
             if (selected_note.note()->delay == 0) {
@@ -2102,7 +2099,7 @@ namespace application {
             }
         }
 
-        instruments.erase(instrument::Metronome::static_id());
+        // instruments.erase(instrument::Metronome::static_id());
 
         return instruments;
     }
@@ -2268,9 +2265,9 @@ namespace application {
         }
     }
 
-    bool Application::empty_except_metronome(const seq::Measure& measure) {
+    bool Application::measure_empty(const seq::Measure& measure) {
         return std::ranges::all_of(measure.instruments, [](const auto& instrument) {
-            return instrument.second.empty() || instrument.first == instrument::Metronome::static_id();
+            return instrument.second.empty()/* || instrument.first == instrument::Metronome::static_id()*/;
         });
     }
 
@@ -2541,6 +2538,40 @@ namespace application {
             );
         } else {
             composition_save();
+        }
+    }
+
+    void Application::undo() {
+        assert(!m_composition_history.undo.empty());
+
+        m_composition_history.redo.push(m_composition);
+
+        seq::Composition& composition {m_composition};
+        composition = std::move(m_composition_history.undo.top());
+
+        m_composition_history.undo.pop();
+
+        reset_player_and_composition_selection();
+    }
+
+    void Application::redo() {
+        assert(!m_composition_history.redo.empty());
+
+        m_composition_history.undo.push(m_composition);
+
+        seq::Composition& composition {m_composition};
+        composition = std::move(m_composition_history.redo.top());
+
+        m_composition_history.redo.pop();
+
+        reset_player_and_composition_selection();
+    }
+
+    void Application::remember_composition() {
+        m_composition_history.undo.push(m_composition);
+
+        while (!m_composition_history.redo.empty()) {
+            m_composition_history.redo.pop();
         }
     }
 }
