@@ -212,9 +212,8 @@ namespace application {
             file_save();
         }
 
-        if (ImGui::MenuItem("Render Composition", "Ctrl+R")) {
-            m_ui.render_progress = 0.0f;
-            m_render_composition_menu = true;
+        if (ImGui::MenuItem("Render", "Ctrl+R")) {
+            open_render_composition();
         }
 
         if (ImGui::MenuItem("Quit")) {
@@ -1130,6 +1129,10 @@ namespace application {
             }
         }
 
+        if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_R, ImGuiInputFlags_RouteAlways)) {
+            open_render_composition();
+        }
+
         if (ImGui::Shortcut(ImGuiKey_Space, ImGuiInputFlags_RouteAlways)) {
             if (m_player.is_playing()) {
                 stop_player();
@@ -1317,18 +1320,24 @@ namespace application {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
 
         if (ImGui::Begin("Render Composition", &m_render_composition_menu, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDocking)) {
-            ImGui::SetNextItemWidth(ui::rem(16.0f));
+            ImGui::Text("Render and export to a raw WAV file:");
+
+            ImGui::Dummy(ui::rem(ImVec2(0.0f, 0.5f)));
+
+            ImGui::SetNextItemWidth(ui::rem(30.0f));
 
             ImGui::InputText("File Path", m_ui.render_file_path, sizeof(m_ui.render_file_path));
+
+            ImGui::Dummy(ui::rem(ImVec2(0.0f, 0.5f)));
 
             ImGui::ProgressBar(m_ui.render_progress, ImVec2(0.0f, 0.0f));
 
             ImGui::SameLine();
 
-            ImGui::BeginDisabled(m_render_in_progress);
+            ImGui::BeginDisabled(m_render_in_progress || *m_ui.render_file_path == 0);
 
             if (ImGui::Button("Render")) {
-                start_render_composition(m_ui.render_file_path);
+                start_render_composition();
             }
 
             ImGui::EndDisabled();
@@ -2580,12 +2589,34 @@ namespace application {
         }
     }
 
-    void Application::start_render_composition(std::filesystem::path file_path) {
+    void Application::open_render_composition() {
+        if (!m_render_in_progress) {
+            reset_render_composition();
+        }
+
+        m_render_composition_menu = true;
+    }
+
+    void Application::reset_render_composition() {
+        if (!m_composition_path.empty()) {
+            std::strncpy(m_ui.render_file_path, std::filesystem::path(m_composition_path).replace_extension().c_str(), sizeof(m_ui.render_file_path));
+        } else {
+            std::strncpy(m_ui.render_file_path, (std::filesystem::path(m_working_directory) / "unsaved_composition").c_str(), sizeof(m_ui.render_file_path));
+        }
+
+        m_ui.render_progress = 0.0f;
+    }
+
+    void Application::start_render_composition() {
+        assert(*m_ui.render_file_path != 0);
+
         m_render_in_progress = true;
 
-        m_task_manager.add_async_task([this, file_path = std::move(file_path), composition = m_composition](task::AsyncTask& task) mutable {
+        m_task_manager.add_async_task([this, path = std::filesystem::path(m_ui.render_file_path), composition = m_composition](task::AsyncTask& task) mutable {
+            path.replace_extension("wav");
+
             try {
-                do_render_composition(std::move(file_path), std::move(composition));
+                do_render_composition(task, std::move(path), std::move(composition));
             } catch (const seq::SequencerError& e) {
                 logging::error("Error rendering composition: {}", e.what());
             } catch (const encoder::EncoderError& e) {
@@ -2610,7 +2641,7 @@ namespace application {
         });
     }
 
-    void Application::do_render_composition(std::filesystem::path&& file_path, seq::Composition&& composition) {
+    void Application::do_render_composition(const task::AsyncTask& task, std::filesystem::path&& file_path, seq::Composition&& composition) {
         using namespace std::chrono_literals;
         using TimePoint = std::chrono::time_point<std::chrono::system_clock>;
 
@@ -2632,6 +2663,11 @@ namespace application {
             synthesizer.update();
 
             assert(player.is_in_time());
+
+            if (task.stop_requested()) {
+                logging::information("Interrupted rendering composition");
+                return;
+            }
 
             const TimePoint time_now {std::chrono::system_clock::now()};
 

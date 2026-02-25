@@ -12,6 +12,10 @@ namespace task {
         m_thread.request_stop();
     }
 
+    bool AsyncTask::stop_requested() const {
+        return m_thread.get_stop_token().stop_requested();
+    }
+
     void TaskManager::add_immediate_task(ImmediateTaskFunction task_function) {
         m_immediate_tasks_incoming.emplace_back(std::move(task_function));
     }

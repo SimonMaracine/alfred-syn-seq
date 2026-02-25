@@ -88,6 +88,7 @@ namespace task {
 
         void finish();
         void finish(std::exception_ptr exception);
+        bool stop_requested() const;
     private:
         std::exception_ptr m_exception;
         std::jthread m_thread;
