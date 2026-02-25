@@ -397,15 +397,11 @@ namespace application {
     }
 
     void Application::instruments() {
-        if (ImGui::Begin("Instruments", nullptr, ImGuiWindowFlags_NoResize)) {
+        if (ImGui::Begin("Instruments", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::SeparatorText("Instrument");
 
             if (ImGui::BeginCombo("##instrument", m_synthesizer.get_instrument(m_instrument).name(), ImGuiComboFlags_NoArrowButton)) {
                 m_synthesizer.for_each_instrument([this](const syn::Instrument& instrument) {
-                    // if (instrument.id() == instrument::Metronome::static_id()) {
-                    //     return;
-                    // }
-
                     if (ImGui::Selectable(instrument.name(), instrument.id() == m_instrument)) {
                         m_instrument = instrument.id();
                         m_composition_selected_notes.clear();
@@ -480,7 +476,7 @@ namespace application {
         constexpr double zero {0.0};
         constexpr double one {1.0};
 
-        if (ImGui::Begin("Output", nullptr, ImGuiWindowFlags_NoResize)) {
+        if (ImGui::Begin("Output", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::SeparatorText("Volume");
 
             if (ImGui::SliderScalar("##volume", ImGuiDataType_Double, &m_ui.volume, &zero, &one, "%.2f")) {
@@ -504,7 +500,7 @@ namespace application {
         static constexpr ImVec4 COLOR_BACKGROUND {0.0f, 0.0f, 0.0f, 0.0f};
         const ImVec4& COLOR_FOREGROUND {color(ImGuiCol_Text)};
 
-        if (ImGui::Begin("Playback", nullptr, ImGuiWindowFlags_NoResize)) {
+        if (ImGui::Begin("Playback", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize)) {
             if (ImGui::ImageButton("Rewind", reinterpret_cast<ImTextureID>(m_ui.texture_rewind.get()), SIZE, UV0, UV1, COLOR_BACKGROUND, COLOR_FOREGROUND)) {
                 m_player.seek(0);
             }
@@ -559,7 +555,7 @@ namespace application {
     }
 
     void Application::tools() {
-        if (ImGui::Begin("Tools", nullptr, ImGuiWindowFlags_NoResize)) {
+        if (ImGui::Begin("Tools", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::BeginGroup();
 
             if (ImGui::RadioButton("Measure", &m_ui.tool, ui::ToolMeasure)) {
@@ -1315,16 +1311,18 @@ namespace application {
             return;
         }
 
-        ImGui::SetNextWindowPos(ImVec2(float(m_render_output_width / 2), float(m_render_output_height / 2)), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowPos(ImVec2(float(m_render_output_width / 2), float(m_render_output_height / 2)), ImGuiCond_Once, ImVec2(0.5f, 0.5f));
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
 
-        if (ImGui::Begin("Render Composition", &m_render_composition_menu, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDocking)) {
+        static constexpr auto flags {ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDocking};
+
+        if (ImGui::Begin("Render Composition", &m_render_composition_menu, flags)) {
             ImGui::Text("Render and export to a raw WAV file:");
 
             ImGui::Dummy(ui::rem(ImVec2(0.0f, 0.5f)));
 
-            ImGui::SetNextItemWidth(ui::rem(30.0f));
+            ImGui::SetNextItemWidth(ui::rem(32.0f));
 
             ImGui::InputText("File Path", m_ui.render_file_path, sizeof(m_ui.render_file_path));
 
@@ -2146,8 +2144,6 @@ namespace application {
                 }
             }
         }
-
-        // instruments.erase(instrument::Metronome::static_id());
 
         return instruments;
     }
