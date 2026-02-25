@@ -7,6 +7,16 @@
 #include "alfred/instrument.hpp"
 
 namespace seq {
+    unsigned int Composition::size() const {
+        unsigned int steps {};
+
+        for (const Measure& measure : measures) {
+            steps += measure.time_signature.measure_steps();
+        }
+
+        return steps;
+    }
+
     bool Composition::note_first_in_measure(const Measure&, const Note& note) {
         return note.position == 0;
     }

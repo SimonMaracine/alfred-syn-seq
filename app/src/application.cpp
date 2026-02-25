@@ -4,7 +4,7 @@
 #include <ranges>
 #include <charconv>
 #include <iterator>
-#include <numeric>
+#include <chrono>
 #include <cstring>
 #include <cmath>
 #include <cstdlib>
@@ -16,6 +16,9 @@
 
 #include "imgui.hpp"
 #include "logging.hpp"
+#include "encoder.hpp"
+#include "utility.hpp"
+
 #include "imgui.ini.hpp"
 #include "icon64.png.hpp"
 #include "icon128.png.hpp"
@@ -106,7 +109,7 @@ namespace application {
 
     void Application::on_update() {
         m_player.update(get_frame_time());
-        m_synthesizer.update_voices();
+        m_synthesizer.update();
     }
 
     void Application::on_imgui() {
@@ -210,6 +213,7 @@ namespace application {
         }
 
         if (ImGui::MenuItem("Render Composition", "Ctrl+R")) {
+            m_ui.render_progress = 0.0f;
             m_render_composition_menu = true;
         }
 
@@ -1317,13 +1321,17 @@ namespace application {
 
             ImGui::InputText("File Path", m_ui.render_file_path, sizeof(m_ui.render_file_path));
 
-            ImGui::ProgressBar(0.1f, ImVec2(0.0f, 0.0f));
+            ImGui::ProgressBar(m_ui.render_progress, ImVec2(0.0f, 0.0f));
 
             ImGui::SameLine();
 
+            ImGui::BeginDisabled(m_render_in_progress);
+
             if (ImGui::Button("Render")) {
-                logging::debug("Render to {}", m_ui.render_file_path);
+                start_render_composition(m_ui.render_file_path);
             }
+
+            ImGui::EndDisabled();
         }
 
         ImGui::End();
@@ -2099,9 +2107,7 @@ namespace application {
     }
 
     float Application::composition_width() const {
-        return std::accumulate(m_composition.measures.begin(), m_composition.measures.end(), 0.0f, [](const float& total, const auto& measure) {
-            return total + float(measure.time_signature.measure_steps()) * ui::rem(STEP_SIZE.x);
-        });
+        return float(m_composition.size()) * ui::rem(STEP_SIZE.x);
     }
 
     ImVec2 Application::composition_space(ImVec2 space) const {
@@ -2572,6 +2578,81 @@ namespace application {
         } else {
             composition_save();
         }
+    }
+
+    void Application::start_render_composition(std::filesystem::path file_path) {
+        m_render_in_progress = true;
+
+        m_task_manager.add_async_task([this, file_path = std::move(file_path), composition = m_composition](task::AsyncTask& task) mutable {
+            try {
+                do_render_composition(std::move(file_path), std::move(composition));
+            } catch (const seq::SequencerError& e) {
+                logging::error("Error rendering composition: {}", e.what());
+            } catch (const encoder::EncoderError& e) {
+                logging::error("Error rendering composition: {}", e.what());
+            } catch (const utility::FilerError& e) {
+                logging::error("Error rendering composition: {}", e.what());
+            } catch (...) {
+                m_task_manager.add_immediate_thread_safe_task([this] {
+                    m_render_in_progress = false;
+                });
+
+                task.finish(std::current_exception());
+
+                return;
+            }
+
+            m_task_manager.add_immediate_thread_safe_task([this] {
+                m_render_in_progress = false;
+            });
+
+            task.finish();
+        });
+    }
+
+    void Application::do_render_composition(std::filesystem::path&& file_path, seq::Composition&& composition) {
+        using namespace std::chrono_literals;
+        using TimePoint = std::chrono::time_point<std::chrono::system_clock>;
+
+        const unsigned int size {composition.size()};
+        bool rendering {true};
+
+        synthesizer::VirtualSynthesizer synthesizer;
+        seq::Player player {synthesizer, composition, [&] { rendering = false; }};
+
+        logging::debug("Starting rendering composition to `{}`", file_path.c_str());
+
+        player.start();
+
+        const TimePoint time_start {std::chrono::system_clock::now()};
+        TimePoint time_last_update {time_start};
+
+        while (rendering) {
+            player.update(1.0 / double(audio::SAMPLE_FREQUENCY));
+            synthesizer.update();
+
+            assert(player.is_in_time());
+
+            const TimePoint time_now {std::chrono::system_clock::now()};
+
+            if (time_now - time_last_update > 0.1s) {
+                time_last_update = time_now;
+
+                m_task_manager.add_immediate_thread_safe_task([this, position = player.get_position(), size] {
+                    m_ui.render_progress = math::map(float(position), 0.0f, float(size), 0.0f, 0.9f);
+                });
+            }
+        }
+
+        const TimePoint time_stop {std::chrono::system_clock::now()};
+
+        utility::write_file(std::move(file_path), encoder::encode_wav(synthesizer.get_buffer_size(), synthesizer.get_buffer_data()));
+
+        m_task_manager.add_immediate_thread_safe_task([this] {
+            m_ui.render_progress = 1.0f;
+        });
+
+        logging::information("Done rendering composition in {}", std::chrono::duration_cast<std::chrono::seconds>(time_stop - time_start));
     }
 
     void Application::undo() {

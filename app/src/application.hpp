@@ -187,6 +187,8 @@ namespace application {
         void file_new();
         void file_open();
         void file_save();
+        void start_render_composition(std::filesystem::path file_path);
+        void do_render_composition(std::filesystem::path&& file_path, seq::Composition&& composition);
         void undo();
         void redo();
         void remember_composition();
@@ -205,7 +207,7 @@ namespace application {
         CompositionHistory m_composition_history;
         composition::Composition m_composition;
 
-        synthesizer::Synthesizer m_synthesizer;
+        synthesizer::RealSynthesizer m_synthesizer;
         seq::Player m_player;
 
         struct {
@@ -219,6 +221,7 @@ namespace application {
             int loudness {ui::MezzoForte};
             double volume {};
             const char* device {};
+            float render_progress {};
             char render_file_path[256] {};
             image::Texture texture_play;
             image::Texture texture_pause;
@@ -229,5 +232,6 @@ namespace application {
         bool m_composition_not_compiled {};
         bool m_composition_not_saved {};
         bool m_render_composition_menu {};
+        bool m_render_in_progress {};
     };
 }

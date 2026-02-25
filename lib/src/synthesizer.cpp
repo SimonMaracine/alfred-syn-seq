@@ -6,6 +6,7 @@
 #include <cassert>
 
 #include "alfred/instrument.hpp"
+#include "alfred/math.hpp"
 
 namespace synthesizer {
     static constexpr std::size_t MAX_VOICES {8};
@@ -22,23 +23,12 @@ namespace synthesizer {
         m_instruments[instrument::Strings::static_id()] = std::make_unique<instrument::Strings>();
     }
 
-    Synthesizer::~Synthesizer() noexcept {
-        if (!*this) {
-            return;
-        }
-
-        // Prevent audio from being processed in the base class destructor, causing pure virtual function calls
-        halt();
-    }
-
-    void Synthesizer::note_on(syn::NoteId note, syn::InstrumentId instrument, double loudness) {
+    void Synthesizer::note_on(double time, syn::NoteId note, syn::InstrumentId instrument, double loudness) {
         assert(loudness >= 0.0 && loudness <= 1.0);
 
         if (const auto [begin, end] {m_instruments.at(instrument)->range()}; note < begin || note > end) {
             return;
         }
-
-        audio::AudioLockGuard guard {this};
 
         if (const auto voice {find_voice(note)}; voice == m_voices.end()) {
             syn::Voice& new_voice {m_voices.emplace_back()};
@@ -46,50 +36,27 @@ namespace synthesizer {
             new_voice.instrument = instrument;
             new_voice.envelope = m_instruments.at(instrument)->new_envelope();
             new_voice.loudness = loudness;
-            new_voice.time_on = time();
+            new_voice.time_on = time;
             new_voice.envelope->note_on();
         } else {
             if (voice->time_off > voice->time_on) {
                 voice->loudness = loudness;
-                voice->time_on = time();
+                voice->time_on = time;
                 voice->envelope->note_on();
             }
         }
     }
 
-    void Synthesizer::note_off(syn::NoteId note, syn::InstrumentId instrument) {
+    void Synthesizer::note_off(double time, syn::NoteId note, syn::InstrumentId instrument) {
         if (const auto [begin, end] {m_instruments.at(instrument)->range()}; note < begin || note > end) {
             return;
         }
 
-        audio::AudioLockGuard guard {this};
-
         if (const auto voice {find_voice(note)}; voice != m_voices.end()) {
             if (voice->time_on > voice->time_off) {
-                voice->time_off = time();
+                voice->time_off = time;
                 voice->envelope->note_off();
             }
-        }
-    }
-
-    void Synthesizer::silence() {
-        audio::AudioLockGuard guard {this};
-
-        m_voices.clear();
-    }
-
-    void Synthesizer::update_voices() {
-        audio::AudioLockGuard guard {this};
-
-        std::erase_if(m_voices, [](const syn::Voice& voice) {
-            return voice.envelope->done();
-        });
-
-        while (m_voices.size() > MAX_VOICES) {
-            // Replace the oldest voice policy
-            m_voices.erase(std::ranges::min_element(m_voices, [](const auto& lhs, const auto& rhs) {
-                return lhs.time_on < rhs.time_on;
-            }));
         }
     }
 
@@ -103,17 +70,36 @@ namespace synthesizer {
         return *m_instruments.at(instrument);
     }
 
-    void Synthesizer::update() {
+    void Synthesizer::update_voices() {
+        std::erase_if(m_voices, [](const syn::Voice& voice) {
+            return voice.envelope->done();
+        });
+
+        while (m_voices.size() > MAX_VOICES) {
+            // Replace the oldest voice policy
+            m_voices.erase(std::ranges::min_element(m_voices, [](const auto& lhs, const auto& rhs) {
+                return lhs.time_on < rhs.time_on;
+            }));
+        }
+    }
+
+    std::vector<syn::Voice>::iterator Synthesizer::find_voice(syn::NoteId note) {
+        return std::ranges::find_if(m_voices, [note](const syn::Voice& voice) {
+            return voice.note == note;
+        });
+    }
+
+    void Synthesizer::mix_update() const {
         for (const syn::Voice& voice : m_voices) {
             voice.envelope->update();
         }
     }
 
-    double Synthesizer::sound() const {
+    double Synthesizer::mix_sound(double time) const {
         double output {};
 
         for (const auto& [i, voice] : m_voices | std::views::enumerate) {
-            output += voice.loudness * voice.envelope->value() * m_instruments.at(voice.instrument)->sound(time(), voice.note);
+            output += voice.loudness * voice.envelope->value() * m_instruments.at(voice.instrument)->sound(time, voice.note);
 
             // The update function should take care of removing voices, if there are too many
             if (i == MAX_VOICES) {
@@ -124,9 +110,75 @@ namespace synthesizer {
         return output / double(MAX_VOICES);
     }
 
-    std::vector<syn::Voice>::iterator Synthesizer::find_voice(syn::NoteId note) {
-        return std::ranges::find_if(m_voices, [note](const syn::Voice& voice) {
-            return voice.note == note;
-        });
+    RealSynthesizer::~RealSynthesizer() noexcept {
+        if (!*this) {
+            return;
+        }
+
+        // Prevent audio from being processed in the base class destructor, causing pure virtual function calls
+        halt();
+    }
+
+    void RealSynthesizer::note_on(syn::NoteId note, syn::InstrumentId instrument, double loudness) {
+        audio::AudioLockGuard guard {this};
+
+        Synthesizer::note_on(m_time, note, instrument, loudness);
+    }
+
+    void RealSynthesizer::note_off(syn::NoteId note, syn::InstrumentId instrument) {
+        audio::AudioLockGuard guard {this};
+
+        Synthesizer::note_off(m_time, note, instrument);
+    }
+
+    void RealSynthesizer::update() {
+        audio::AudioLockGuard guard {this};
+
+        update_voices();
+    }
+
+    void RealSynthesizer::silence() {
+        audio::AudioLockGuard guard {this};
+
+        m_time = 0.0;
+        m_voices.clear();
+    }
+
+    void RealSynthesizer::callback_update() {
+        mix_update();
+    }
+
+    double RealSynthesizer::callback_sound() const {
+        return mix_sound(m_time);
+    }
+
+    void VirtualSynthesizer::note_on(syn::NoteId note, syn::InstrumentId instrument, double loudness) {
+        Synthesizer::note_on(m_time, note, instrument, loudness);
+    }
+
+    void VirtualSynthesizer::note_off(syn::NoteId note, syn::InstrumentId instrument) {
+        Synthesizer::note_off(m_time, note, instrument);
+    }
+
+    void VirtualSynthesizer::update() {
+        update_voices();
+
+        mix_update();
+        const double sound {mix_sound(m_time)};
+
+        m_buffer.push_back(math::clamp_sample(sound));
+
+        m_time += 1.0 / double(audio::SAMPLE_FREQUENCY);
+    }
+
+    void VirtualSynthesizer::silence() {
+        m_time = 0.0;
+        m_voices.clear();
+    }
+
+    void VirtualSynthesizer::reset() {
+        m_time = 0.0;
+        m_buffer.clear();
+        m_voices.clear();
     }
 }

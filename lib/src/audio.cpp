@@ -165,17 +165,12 @@ namespace audio {
         }
 
         for (std::size_t i {}; i < samples; i++) {
-            self.update();
-            const double sound {self.sound()};
+            self.callback_update();
+            const double sound {self.callback_sound()};
 
             g_buffer.buffer[i] = math::encode_sample<Resolution>(math::clamp_sample(sound));
 
             self.m_time += 1.0 / double(SAMPLE_FREQUENCY);
-
-            // Don't lose precision
-            if (self.m_time > 10'000.0 * math::TWO_PI) {
-                self.m_time -= 10'000.0 * math::TWO_PI;
-            }
         }
 
         // Buffer size could be larger than the samples written!

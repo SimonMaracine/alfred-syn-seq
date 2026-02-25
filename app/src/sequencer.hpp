@@ -156,6 +156,9 @@ namespace seq {
     struct Composition {
         std::vector<Measure> measures;
 
+        // In steps
+        unsigned int size() const;
+
         static bool note_first_in_measure(const Measure& measure, const Note& note);
         static bool note_last_in_measure(const Measure& measure, const Note& note);
 

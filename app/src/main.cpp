@@ -28,6 +28,10 @@ int main(int, char**) {
         logging::error("SDL_SetHint(SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES)");
     }
 
+    if (!SDL_SetHint(SDL_HINT_AUDIO_DEVICE_RAW_STREAM, "1")) {  // TODO ?
+        logging::error("SDL_SetHint(SDL_HINT_AUDIO_DEVICE_RAW_STREAM)");
+    }
+
     set_property(SDL_PROP_APP_METADATA_NAME_STRING, "Alfred");
     set_property(SDL_PROP_APP_METADATA_VERSION_STRING, "0.1.0");
     set_property(SDL_PROP_APP_METADATA_IDENTIFIER_STRING, "dev.simonmara.alfred");

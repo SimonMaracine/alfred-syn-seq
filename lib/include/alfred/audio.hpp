@@ -47,15 +47,16 @@ namespace audio {
         double volume() const;
 
         operator bool() const { return m_stream; }
-        double time() const { return m_time; }
 
-        virtual void update() = 0;
-        virtual double sound() const = 0;
+        virtual void callback_update() = 0;
+        virtual double callback_sound() const = 0;
+    protected:
+        std::atomic<double> m_time {0.0};
     private:
         static void stream_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int total_amount);
 
         SDL_AudioStream* m_stream {};
-        std::atomic<double> m_time {0.0};
+
         std::vector<Device> m_devices;
     };
 
