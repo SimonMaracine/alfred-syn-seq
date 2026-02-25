@@ -13,6 +13,7 @@
 #include <SDL3/SDL.h>
 #include <alfred/instrument.hpp>
 #include <alfred/math.hpp>
+#include <imgui_internal.h>
 
 #include "imgui.hpp"
 #include "logging.hpp"
@@ -58,7 +59,7 @@ namespace application {
         m_synthesizer.resume();
         m_synthesizer.volume(0.9);
 
-        ImGui::LoadIniSettingsFromMemory(SETTINGS.data(), SETTINGS.size());
+        // ImGui::LoadIniSettingsFromMemory(SETTINGS.data(), SETTINGS.size());
 
         set_color_scheme(m_data.color_scheme);
         set_scale(m_data.scale);
@@ -113,7 +114,53 @@ namespace application {
     }
 
     void Application::on_imgui() {
-        ImGui::DockSpaceOverViewport(0, nullptr, ImGuiDockNodeFlags_NoResize | ImGuiDockNodeFlags_NoUndocking);
+        ImGuiID dockspace_id = ImGui::GetID("Dockspace");
+        const ImGuiViewport* viewport {ImGui::GetMainViewport()};
+
+        ImGui::DockBuilderRemoveNode(dockspace_id);
+
+        // Create settings
+        if (!ImGui::DockBuilderGetNode(dockspace_id)) {
+            logging::debug("Build");
+
+            ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
+            ImGui::DockBuilderSetNodeSize(dockspace_id, viewport->Size);
+
+            ImGuiID dock_id_left = 0;
+            ImGuiID dock_id_right = dockspace_id;
+
+            ImGui::DockBuilderSplitNode(dock_id_right, ImGuiDir_Left, 0.1f, &dock_id_left, &dock_id_right);
+
+            ImGuiID dock_id_left_top = 0;
+            ImGuiID dock_id_left_bottom = 0;
+
+            ImGui::DockBuilderSplitNode(dock_id_left, ImGuiDir_Up, 0.7f, &dock_id_left_top, &dock_id_left_bottom);
+
+            ImGuiID dock_id_right_top = 0;
+            ImGuiID dock_id_right_bottom = dock_id_right;
+
+            ImGui::DockBuilderSplitNode(dock_id_right, ImGuiDir_Up, 0.1f, &dock_id_right_top, &dock_id_right_bottom);
+
+            ImGuiID dock_id_right_top_left = 0;
+            ImGuiID dock_id_right_top_right = 0;
+
+            ImGui::DockBuilderSplitNode(dock_id_right_top, ImGuiDir_Left, 0.4f, &dock_id_right_top_left, &dock_id_right_top_right);
+
+            ImGuiID dock_id_right_top2 = dock_id_right_bottom;
+            ImGuiID dock_id_right_bottom2 = 0;
+
+            ImGui::DockBuilderSplitNode(dock_id_right_bottom, ImGuiDir_Down, 0.1f, &dock_id_right_bottom2, &dock_id_right_top2);
+
+            ImGui::DockBuilderDockWindow("Instruments", dock_id_left_top);
+            ImGui::DockBuilderDockWindow("Output", dock_id_left_bottom);
+            ImGui::DockBuilderDockWindow("Playback", dock_id_right_top_left);
+            ImGui::DockBuilderDockWindow("Tools", dock_id_right_top_right);
+            ImGui::DockBuilderDockWindow("Keyboard", dock_id_right_bottom2);
+            ImGui::DockBuilderDockWindow("Composition", dock_id_right_top2);
+            ImGui::DockBuilderFinish(dockspace_id);
+        }
+
+        ImGui::DockSpaceOverViewport(dockspace_id, viewport/*, ImGuiDockNodeFlags_NoResize | ImGuiDockNodeFlags_NoUndocking*/);
         ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_Tab, ImGuiInputFlags_RouteGlobal);
 
         main_menu_bar();
