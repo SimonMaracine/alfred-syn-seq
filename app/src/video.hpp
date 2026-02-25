@@ -42,6 +42,9 @@ namespace video {
 
         SDL_Window* m_window {};
         SDL_Renderer* m_renderer {};
+        char* m_working_directory {};
+        int m_render_output_width {};
+        int m_render_output_height {};
         bool m_running {true};
     private:
         void render();

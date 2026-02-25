@@ -36,10 +36,15 @@ namespace video {
         }
 
         imgui::initialize(m_window, m_renderer);
+
+        m_working_directory = SDL_GetCurrentDirectory();
+
         set_desired_frame_time(16);
     }
 
     Video::~Video() {
+        SDL_free(m_working_directory);
+
         imgui::uninitialize();
 
         if (m_renderer) {
@@ -78,6 +83,10 @@ namespace video {
             }
 
             m_keyboard_state = SDL_GetKeyboardState(nullptr);
+
+            if (!SDL_GetRenderOutputSize(m_renderer, &m_render_output_width, &m_render_output_height)) {
+                throw VideoError(std::format("SDL_GetRenderOutputSize: {}", SDL_GetError()));
+            }
 
             on_update();
 

@@ -104,6 +104,7 @@ namespace application {
         void shortcuts();
         bool tempo();
         bool time_signature();
+        void render_composition();
         void debug() const;
 
         void keyboard_input(unsigned int key, bool down);
@@ -218,6 +219,7 @@ namespace application {
             int loudness {ui::MezzoForte};
             double volume {};
             const char* device {};
+            char render_file_path[256] {};
             image::Texture texture_play;
             image::Texture texture_pause;
             image::Texture texture_rewind;
@@ -226,5 +228,6 @@ namespace application {
 
         bool m_composition_not_compiled {};
         bool m_composition_not_saved {};
+        bool m_render_composition_menu {};
     };
 }

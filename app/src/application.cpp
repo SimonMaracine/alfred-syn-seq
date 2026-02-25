@@ -120,6 +120,7 @@ namespace application {
         playback();
         tools();
         composition();
+        render_composition();
         shortcuts();
 
 #ifndef ALFRED_DISTRIBUTION
@@ -206,6 +207,10 @@ namespace application {
 
         if (ImGui::MenuItem("Save", "Ctrl+S")) {
             file_save();
+        }
+
+        if (ImGui::MenuItem("Render Composition", "Ctrl+R")) {
+            m_render_composition_menu = true;
         }
 
         if (ImGui::MenuItem("Quit")) {
@@ -1298,9 +1303,37 @@ namespace application {
         return result;
     }
 
+    void Application::render_composition() {
+        if (!m_render_composition_menu) {
+            return;
+        }
+
+        ImGui::SetNextWindowPos(ImVec2(float(m_render_output_width / 2), float(m_render_output_height / 2)), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
+
+        if (ImGui::Begin("Render Composition", &m_render_composition_menu, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDocking)) {
+            ImGui::SetNextItemWidth(ui::rem(16.0f));
+
+            ImGui::InputText("File Path", m_ui.render_file_path, sizeof(m_ui.render_file_path));
+
+            ImGui::ProgressBar(0.1f, ImVec2(0.0f, 0.0f));
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Render")) {
+                logging::debug("Render to {}", m_ui.render_file_path);
+            }
+        }
+
+        ImGui::End();
+
+        ImGui::PopStyleVar();
+    }
+
     void Application::debug() const {
 #ifndef ALFRED_DISTRIBUTION
-        if (ImGui::Begin("Debug")) {
+        if (ImGui::Begin("Debug", nullptr, ImGuiWindowFlags_NoDocking)) {
             ImGui::Text("Frame time: %f", get_frame_time());
 
             if (ImGui::SmallButton("Write Settings")) {
