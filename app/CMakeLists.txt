@@ -81,3 +81,6 @@ set_target_properties(alfred_app PROPERTIES OUTPUT_NAME "alfred")
 
 set(ALFRED_DESKTOP_FILE "${CMAKE_CURRENT_SOURCE_DIR}/res/alfred.desktop" PARENT_SCOPE)
 set(ALFRED_ICON_FILE "${CMAKE_CURRENT_SOURCE_DIR}/res/alfred.svg" PARENT_SCOPE)
+
+# Takes care of doing the right stuff on any platform
+copy_fftw3_dll(alfred_app)

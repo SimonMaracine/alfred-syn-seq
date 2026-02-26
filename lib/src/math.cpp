@@ -2,6 +2,8 @@
 
 #include <fftw3.h>
 
+// https://fftw.org/
+
 namespace math {
     namespace ft {
         Frequencies::Frequencies(std::size_t size) {

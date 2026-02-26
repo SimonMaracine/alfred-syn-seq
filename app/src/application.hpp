@@ -7,6 +7,18 @@
 #include <optional>
 #include <stack>
 
+#ifdef __cpp_lib_flat_set
+    #include <flat_set>
+
+    template<typename T>
+    using std_flat_set = std::flat_set<T>;
+#else
+    #include <set>
+
+    template<typename T>
+    using std_flat_set = std::set<T>;
+#endif
+
 #include <imgui.h>
 #include <alfred/synthesizer.hpp>
 
@@ -145,7 +157,7 @@ namespace application {
         float composition_width() const;
         ImVec2 composition_space(ImVec2 space) const;
         ImVec2 composition_mouse_position(ImVec2 origin) const;
-        std::flat_set<syn::InstrumentId> instruments_in_project() const;
+        std_flat_set<syn::InstrumentId> instruments_in_project() const;
         bool point_x_in_camera_view(float point_x, float space_x) const;
         bool point_y_in_camera_view(float point_y, float space_y) const;
         void readd_note(ProvenanceNote& provenance_note, const seq::Note& note) const;

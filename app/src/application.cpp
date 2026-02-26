@@ -2068,7 +2068,7 @@ namespace application {
         if (m_composition_path.empty()) {
             set_title("Alfred - Unsaved Composition");
         } else {
-            set_title(std::format("Alfred - {}*", m_composition_path.filename().c_str()));
+            set_title(std::format("Alfred - {}*", m_composition_path.filename().string().c_str()));
         }
 
         LOG_DEBUG("Changed title");
@@ -2078,7 +2078,7 @@ namespace application {
         if (m_composition_path.empty()) {
             set_title("Alfred");
         } else {
-            set_title(std::format("Alfred - {}", m_composition_path.filename().c_str()));
+            set_title(std::format("Alfred - {}", m_composition_path.filename().string().c_str()));
         }
 
         LOG_DEBUG("Changed title");
@@ -2134,8 +2134,8 @@ namespace application {
         return mouse_position - origin - ImVec2(ui::rem(COMPOSITION_LEFT), 0.0f) + m_composition_camera;
     }
 
-    std::flat_set<syn::InstrumentId> Application::instruments_in_project() const {
-        std::flat_set<syn::InstrumentId> instruments;
+    std_flat_set<syn::InstrumentId> Application::instruments_in_project() const {
+        std_flat_set<syn::InstrumentId> instruments;
 
         for (const seq::Measure& measure : m_composition.measures) {
             for (const auto& instrument : measure.instruments) {
@@ -2444,7 +2444,7 @@ namespace application {
         composition::export_composition(composition, buffer);
         utility::write_file(path, buffer);
 
-        logging::information("Saved composition to `{}`", path.c_str());
+        logging::information("Saved composition to `{}`", path.string().c_str());
     }
 
     void Application::composition_open(const std::filesystem::path& path, composition::Composition& composition) {
@@ -2452,7 +2452,7 @@ namespace application {
         utility::read_file(path, buffer);
         composition::import_composition(composition, buffer);
 
-        logging::information("Opened composition from `{}`", path.c_str());
+        logging::information("Opened composition from `{}`", path.string().c_str());
     }
 
     bool Application::composition_save(std::filesystem::path path) {
@@ -2470,7 +2470,7 @@ namespace application {
 
         m_composition_path = std::move(path);
         m_composition_not_saved = false;
-        m_data.recent_compositions.insert(m_composition_path);
+        m_data.recent_compositions.insert(m_composition_path.string());
 
         set_title_composition_saved();
 
@@ -2495,7 +2495,7 @@ namespace application {
         }
 
         m_composition_not_saved = false;
-        m_data.recent_compositions.insert(m_composition_path);
+        m_data.recent_compositions.insert(m_composition_path.string());
 
         set_title_composition_saved();
 
@@ -2520,7 +2520,7 @@ namespace application {
         }
 
         m_composition_path = std::move(path);
-        m_data.recent_compositions.insert(m_composition_path);
+        m_data.recent_compositions.insert(m_composition_path.string());
 
         std::strncpy(m_ui.composition.title, m_composition.title.c_str(), sizeof(m_ui.composition.title));
         std::strncpy(m_ui.composition.author, m_composition.author.c_str(), sizeof(m_ui.composition.author));
@@ -2595,9 +2595,9 @@ namespace application {
 
     void Application::reset_render_composition() {
         if (!m_composition_path.empty()) {
-            std::strncpy(m_ui.render_file_path, std::filesystem::path(m_composition_path).replace_extension().c_str(), sizeof(m_ui.render_file_path));
+            std::strncpy(m_ui.render_file_path, std::filesystem::path(m_composition_path).replace_extension().string().c_str(), sizeof(m_ui.render_file_path));
         } else {
-            std::strncpy(m_ui.render_file_path, (std::filesystem::path(m_working_directory) / "unsaved_composition").c_str(), sizeof(m_ui.render_file_path));
+            std::strncpy(m_ui.render_file_path, (std::filesystem::path(m_working_directory) / "unsaved_composition").string().c_str(), sizeof(m_ui.render_file_path));
         }
 
         m_ui.render_progress = 0.0f;
@@ -2647,7 +2647,7 @@ namespace application {
         synthesizer::VirtualSynthesizer synthesizer;
         seq::Player player {synthesizer, composition, [&] { rendering = false; }};
 
-        logging::debug("Starting rendering composition to `{}`", file_path.c_str());
+        logging::debug("Starting rendering composition to `{}`", file_path.string().c_str());
 
         player.start();
 
