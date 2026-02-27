@@ -13,7 +13,6 @@ function(add_resource variable_name file_name file_type)
     )
 endfunction()
 
-add_resource("SETTINGS" "imgui.ini" "text")
 add_resource("ICON64" "icon64.png" "binary")
 add_resource("ICON128" "icon128.png" "binary")
 add_resource("PLAY" "play.png" "binary")

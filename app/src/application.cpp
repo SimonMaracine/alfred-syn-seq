@@ -20,7 +20,6 @@
 #include "encoder.hpp"
 #include "utility.hpp"
 
-#include "imgui.ini.hpp"
 #include "icon64.png.hpp"
 #include "icon128.png.hpp"
 #include "play.png.hpp"
@@ -58,8 +57,6 @@ namespace application {
         m_synthesizer.open();
         m_synthesizer.resume();
         m_synthesizer.volume(0.9);
-
-        // ImGui::LoadIniSettingsFromMemory(SETTINGS.data(), SETTINGS.size());
 
         set_color_scheme(m_data.color_scheme);
         set_scale(m_data.scale);
