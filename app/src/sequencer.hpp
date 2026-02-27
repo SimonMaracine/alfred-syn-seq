@@ -8,22 +8,10 @@
 #include <functional>
 #include <algorithm>
 #include <iterator>
-#include <ranges>
-
-#ifdef __cpp_lib_flat_set
-    #include <flat_set>
-
-    template<typename T>
-    using std_flat_multiset = std::flat_multiset<T>;
-#else
-    #include <set>
-
-    template<typename T>
-    using std_flat_multiset = std::multiset<T>;
-#endif
 
 #include <alfred/synthesizer.hpp>
 #include "alfred/math.hpp"
+#include "flat_set.hpp"
 
 namespace seq {
     using Beats = unsigned int;

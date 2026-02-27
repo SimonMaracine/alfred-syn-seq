@@ -7,18 +7,6 @@
 #include <optional>
 #include <stack>
 
-#ifdef __cpp_lib_flat_set
-    #include <flat_set>
-
-    template<typename T>
-    using std_flat_set = std::flat_set<T>;
-#else
-    #include <set>
-
-    template<typename T>
-    using std_flat_set = std::set<T>;
-#endif
-
 #include <imgui.h>
 #include <alfred/synthesizer.hpp>
 
@@ -29,6 +17,7 @@
 #include "data.hpp"
 #include "task.hpp"
 #include "image.hpp"
+#include "flat_set.hpp"
 
 namespace application {
     using MeasureIter = seq::MeasureIter;
@@ -110,7 +99,7 @@ namespace application {
         void composition_measures(const Draw& draw) const;
         void composition_measures_labels(const Draw& draw) const;
         void composition_notes(const Draw& draw) const;
-        void composition_notes(const Draw& draw, syn::InstrumentId instrument, const std::set<seq::Note>& notes, float global_position_x, float rounding) const;
+        void composition_notes(const Draw& draw, syn::InstrumentId instrument, const seq::Notes& notes, float global_position_x, float rounding) const;
         void composition_cursor(const Draw& draw) const;
         void composition_hover(const Draw& draw, const HoveredNote& hovered_note) const;
         void shortcuts();

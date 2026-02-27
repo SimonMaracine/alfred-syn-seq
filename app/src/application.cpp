@@ -1083,7 +1083,7 @@ namespace application {
         }
     }
 
-    void Application::composition_notes(const Draw& draw, syn::InstrumentId instrument, const std::set<seq::Note>& notes, float global_position_x, float rounding) const {
+    void Application::composition_notes(const Draw& draw, syn::InstrumentId instrument, const seq::Notes& notes, float global_position_x, float rounding) const {
         for (auto note {notes.begin()}; note != notes.end(); note++) {
             const ImVec4 rect {note_rectangle(*note)};
 
