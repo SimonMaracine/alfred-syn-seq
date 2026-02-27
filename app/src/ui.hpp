@@ -1,6 +1,7 @@
 #pragma once
 
 #include <utility>
+#include <stdexcept>
 
 #include <imgui.h>
 
@@ -14,8 +15,11 @@ namespace ui {
     };
 
     enum Scale : unsigned int {
-        Scale1X,
-        Scale2X
+        Scale100,
+        Scale125,
+        Scale150,
+        Scale175,
+        Scale200
     };
 
     enum Tool : int {
@@ -118,5 +122,27 @@ namespace ui {
     float rem(float size);
     ImVec2 rem(ImVec2 size);
     void set_style();
-    void set_scale(int scale);
+    void set_scale(float scale);
+    void set_color_scheme(ColorScheme color_scheme);
+
+    constexpr float scale(Scale scale) {
+        switch (scale) {
+            case Scale100:
+                return 1.0f;
+            case Scale125:
+                return 1.25f;;
+            case Scale150:
+                return 1.5f;
+            case Scale175:
+                return 1.75f;
+            case Scale200:
+                return 2.0f;
+        }
+
+        std::unreachable();
+    }
+
+    struct UiError : std::runtime_error {
+        using std::runtime_error::runtime_error;
+    };
 }

@@ -19,7 +19,7 @@ namespace video {
 
         static constexpr SDL_WindowFlags flags {SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN};
 
-        if (!SDL_CreateWindowAndRenderer("Alfred", 1280, 720, flags, &m_window, &m_renderer)) {
+        if (!SDL_CreateWindowAndRenderer("Alfred", DEFAULT_WIDTH, DEFAULT_HEIGHT, flags, &m_window, &m_renderer)) {
             throw VideoError(std::format("SDL_CreateWindowAndRenderer: {}", SDL_GetError()));
         }
 

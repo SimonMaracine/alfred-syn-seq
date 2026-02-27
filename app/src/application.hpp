@@ -141,7 +141,7 @@ namespace application {
         void set_title_composition_not_saved() const;
         void set_title_composition_saved() const;
         static void set_color_scheme(ui::ColorScheme color_scheme);
-        static void set_scale(ui::Scale scale);
+        void set_scale(ui::Scale scale);
         float composition_width() const;
         ImVec2 composition_space(ImVec2 space) const;
         ImVec2 composition_mouse_position(ImVec2 origin) const;
@@ -235,5 +235,6 @@ namespace application {
         bool m_composition_not_saved {};
         bool m_render_composition_menu {};
         bool m_render_in_progress {};
+        bool m_invalidate_ui_dock_builder {};
     };
 }

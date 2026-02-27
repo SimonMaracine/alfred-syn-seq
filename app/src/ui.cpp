@@ -1,12 +1,11 @@
 #include "ui.hpp"
 
-#include <stdexcept>
 #include <cmath>
 #include <cstring>
 
 namespace ui {
-    static void set_font(int scale) {
-        const float font_size {std::floor(FONT_SIZE * float(scale))};
+    static void set_font(float scale) {
+        const float font_size {std::floor(FONT_SIZE * scale)};
 
         ImGuiIO& io {ImGui::GetIO()};
 
@@ -18,7 +17,7 @@ namespace ui {
         const auto font {io.Fonts->AddFontDefaultBitmap(&config)};
 
         if (!font) {
-            throw std::runtime_error("Could not add font");
+            throw UiError("Could not add font");
         }
 
         io.FontDefault = font;
@@ -56,10 +55,23 @@ namespace ui {
         reset_style();
     }
 
-    void set_scale(int scale) {
+    void set_scale(float scale) {
         set_font(scale);
         reset_style();
+        ImGui::GetStyle().ScaleAllSizes(scale);
+    }
 
-        ImGui::GetStyle().ScaleAllSizes(float(scale));
+    void set_color_scheme(ColorScheme color_scheme) {
+        switch (color_scheme) {
+            case ColorSchemeDark:
+                ImGui::StyleColorsDark();
+                break;
+            case ColorSchemeLight:
+                ImGui::StyleColorsLight();
+                break;
+            case ColorSchemeClassic:
+                ImGui::StyleColorsClassic();
+                break;
+        }
     }
 }

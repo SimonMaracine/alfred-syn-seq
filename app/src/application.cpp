@@ -64,9 +64,19 @@ namespace application {
         set_color_scheme(m_data.color_scheme);
         set_scale(m_data.scale);
 
-        if (m_data.scale == ui::Scale2X) {
-            set_window_size(1920, 1080);
-            LOG_INFORMATION("Double scale");
+        switch (m_data.scale) {
+            case ui::Scale100:
+            case ui::Scale125:
+                break;
+            case ui::Scale150:
+            case ui::Scale175:
+                set_window_size(1920, 1080);
+                LOG_INFORMATION("Set a higher window size");
+                break;
+            case ui::Scale200:
+                set_window_size(2560, 1440);
+                LOG_INFORMATION("Set a higher window size");
+                break;
         }
 
         auto& io {ImGui::GetIO()};
@@ -114,42 +124,47 @@ namespace application {
     }
 
     void Application::on_imgui() {
-        ImGuiID dockspace_id = ImGui::GetID("Dockspace");
+        const ImGuiID dockspace_id {ImGui::GetID("Dockspace")};
         const ImGuiViewport* viewport {ImGui::GetMainViewport()};
 
-        ImGui::DockBuilderRemoveNode(dockspace_id);
+        if (m_invalidate_ui_dock_builder) {
+            m_invalidate_ui_dock_builder = false;
+            ImGui::DockBuilderRemoveNode(dockspace_id);
+        }
 
-        // Create settings
         if (!ImGui::DockBuilderGetNode(dockspace_id)) {
-            logging::debug("Build");
+            logging::debug("Configuring the dock");
+
+            const float width {video::DEFAULT_WIDTH * ui::scale(m_data.scale)};
+            const float height {video::DEFAULT_HEIGHT * ui::scale(m_data.scale)};
 
             ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
-            ImGui::DockBuilderSetNodeSize(dockspace_id, viewport->Size);
+            ImGui::DockBuilderSetNodeSize(dockspace_id, ImVec2(width, height));
 
-            ImGuiID dock_id_left = 0;
-            ImGuiID dock_id_right = dockspace_id;
+            ImGuiID dock_id_left {};
+            ImGuiID dock_id_right {dockspace_id};
 
-            ImGui::DockBuilderSplitNode(dock_id_right, ImGuiDir_Left, 0.1f, &dock_id_left, &dock_id_right);
+            ImGui::DockBuilderSplitNode(dock_id_right, ImGuiDir_Left, 0.18f, &dock_id_left, &dock_id_right);
 
-            ImGuiID dock_id_left_top = 0;
-            ImGuiID dock_id_left_bottom = 0;
+            ImGuiID dock_id_left_top {};
+            ImGuiID dock_id_left_bottom {};
 
             ImGui::DockBuilderSplitNode(dock_id_left, ImGuiDir_Up, 0.7f, &dock_id_left_top, &dock_id_left_bottom);
 
-            ImGuiID dock_id_right_top = 0;
-            ImGuiID dock_id_right_bottom = dock_id_right;
+            ImGuiID dock_id_right_top {};
+            ImGuiID dock_id_right_bottom {dock_id_right};
 
-            ImGui::DockBuilderSplitNode(dock_id_right, ImGuiDir_Up, 0.1f, &dock_id_right_top, &dock_id_right_bottom);
+            ImGui::DockBuilderSplitNode(dock_id_right, ImGuiDir_Up, 0.13f, &dock_id_right_top, &dock_id_right_bottom);
 
-            ImGuiID dock_id_right_top_left = 0;
-            ImGuiID dock_id_right_top_right = 0;
+            ImGuiID dock_id_right_top_left {};
+            ImGuiID dock_id_right_top_right {};
 
-            ImGui::DockBuilderSplitNode(dock_id_right_top, ImGuiDir_Left, 0.4f, &dock_id_right_top_left, &dock_id_right_top_right);
+            ImGui::DockBuilderSplitNode(dock_id_right_top, ImGuiDir_Left, 0.35f, &dock_id_right_top_left, &dock_id_right_top_right);
 
-            ImGuiID dock_id_right_top2 = dock_id_right_bottom;
-            ImGuiID dock_id_right_bottom2 = 0;
+            ImGuiID dock_id_right_top2 {dock_id_right_bottom};
+            ImGuiID dock_id_right_bottom2 {};
 
-            ImGui::DockBuilderSplitNode(dock_id_right_bottom, ImGuiDir_Down, 0.1f, &dock_id_right_bottom2, &dock_id_right_top2);
+            ImGui::DockBuilderSplitNode(dock_id_right_bottom, ImGuiDir_Down, 0.3f, &dock_id_right_bottom2, &dock_id_right_top2);
 
             ImGui::DockBuilderDockWindow("Instruments", dock_id_left_top);
             ImGui::DockBuilderDockWindow("Output", dock_id_left_bottom);
@@ -160,7 +175,8 @@ namespace application {
             ImGui::DockBuilderFinish(dockspace_id);
         }
 
-        ImGui::DockSpaceOverViewport(dockspace_id, viewport/*, ImGuiDockNodeFlags_NoResize | ImGuiDockNodeFlags_NoUndocking*/);
+        ImGui::DockSpaceOverViewport(dockspace_id, viewport, ImGuiDockNodeFlags_NoResize | ImGuiDockNodeFlags_NoUndocking);
+
         ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_Tab, ImGuiInputFlags_RouteGlobal);
 
         main_menu_bar();
@@ -361,7 +377,7 @@ namespace application {
         }
 
         if (ImGui::BeginMenu("Scale")) {
-            constexpr const char* SCALE[] { "1X", "2X" };
+            constexpr const char* SCALE[] { "100", "125", "150", "175", "200" };
 
             if (ImGui::BeginCombo("##", SCALE[m_data.scale], ImGuiComboFlags_WidthFitPreview)) {
                 for (std::size_t i {}; i < std::size(SCALE); i++) {
@@ -2132,30 +2148,14 @@ namespace application {
     }
 
     void Application::set_color_scheme(ui::ColorScheme color_scheme) {
-        switch (color_scheme) {
-            case ui::ColorSchemeDark:
-                ImGui::StyleColorsDark();
-                break;
-            case ui::ColorSchemeLight:
-                ImGui::StyleColorsLight();
-                break;
-            case ui::ColorSchemeClassic:
-                ImGui::StyleColorsClassic();
-                break;
-        }
+        ui::set_color_scheme(color_scheme);
 
         LOG_DEBUG("Changed color scheme");
     }
 
     void Application::set_scale(ui::Scale scale) {
-        switch (scale) {
-            case ui::Scale1X:
-                ui::set_scale(1);
-                break;
-            case ui::Scale2X:
-                ui::set_scale(2);
-                break;
-        }
+        ui::set_scale(ui::scale(scale));
+        m_invalidate_ui_dock_builder = true;
 
         LOG_DEBUG("Changed scale");
     }
