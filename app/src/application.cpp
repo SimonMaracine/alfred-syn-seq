@@ -1033,7 +1033,7 @@ namespace application {
                 draw.list->AddText(
                     draw.origin + ImVec2(position_x, 0.0f) + ui::rem(TEXT_OFFSET) - ImVec2(m_composition_camera.x, 0.0f),
                     COLOR,
-                    measure_label(buffer, i + 1)
+                    measure_label(buffer, long(i + 1))
                 );
             }
 

@@ -21,8 +21,6 @@ endif()
 
 macro(copy_fftw3_dll target)
     if(WIN32)
-        message(STATUS "WAIT A BIT, ${ALFRED_FFTW_DLL}")
-
         add_custom_command(
             TARGET ${target} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
