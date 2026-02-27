@@ -27,7 +27,7 @@ namespace synthesizer {
     protected:
         void update_voices();
         std::vector<syn::Voice>::iterator find_voice(syn::NoteId note);
-        void mix_update() const;
+        void mix_update(double time) const;
         double mix_sound(double time) const;
 
         std::unordered_map<syn::InstrumentId, std::unique_ptr<syn::Instrument>> m_instruments;

@@ -21,7 +21,6 @@ add_resource("REWIND" "rewind.png" "binary")
 
 add_executable(
     alfred_app
-    "include/imgui.ini.hpp"
     "include/icon64.png.hpp"
     "include/icon128.png.hpp"
     "include/play.png.hpp"

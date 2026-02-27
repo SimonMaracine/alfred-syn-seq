@@ -37,12 +37,12 @@ namespace synthesizer {
             new_voice.envelope = m_instruments.at(instrument)->new_envelope();
             new_voice.loudness = loudness;
             new_voice.time_on = time;
-            new_voice.envelope->note_on();
+            new_voice.envelope->note_on(time);
         } else {
             if (voice->time_off > voice->time_on) {
                 voice->loudness = loudness;
                 voice->time_on = time;
-                voice->envelope->note_on();
+                voice->envelope->note_on(time);
             }
         }
     }
@@ -55,7 +55,7 @@ namespace synthesizer {
         if (const auto voice {find_voice(note)}; voice != m_voices.end()) {
             if (voice->time_on > voice->time_off) {
                 voice->time_off = time;
-                voice->envelope->note_off();
+                voice->envelope->note_off(time);
             }
         }
     }
@@ -89,9 +89,9 @@ namespace synthesizer {
         });
     }
 
-    void Synthesizer::mix_update() const {
+    void Synthesizer::mix_update(double time) const {
         for (const syn::Voice& voice : m_voices) {
-            voice.envelope->update();
+            voice.envelope->update(time);
         }
     }
 
@@ -145,7 +145,7 @@ namespace synthesizer {
     }
 
     void RealSynthesizer::callback_update() {
-        mix_update();
+        mix_update(m_time);
     }
 
     double RealSynthesizer::callback_sound() const {
@@ -163,7 +163,7 @@ namespace synthesizer {
     void VirtualSynthesizer::update() {
         update_voices();
 
-        mix_update();
+        mix_update(m_time);
         const double sound {mix_sound(m_time)};
 
         m_buffer.push_back(math::clamp_sample(sound));

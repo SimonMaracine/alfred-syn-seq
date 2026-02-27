@@ -9,50 +9,144 @@
 #include "alfred/audio.hpp"
 
 namespace syn {
-    void EnvelopeAdsr::note_on() {
+    static constexpr double eps(double duration) {
+        // Magic number comes from here: e ** -eps * t = 1 / 100
+        return 4.605170186 / duration;
+    }
+
+    static constexpr double increment_of_linear(double height, double duration) {
+        return height / (duration * double(audio::SAMPLE_FREQUENCY));
+    }
+
+    static constexpr double exponential(double t, double duration, double top, double bottom) {
+        return (top - bottom) * std::pow(math::E, -eps(duration) * t) + bottom;
+    }
+
+    static constexpr double inverse_exponential(double t, double duration, double bottom) {
+        return 1.0 - (1.0 - bottom) * std::pow(math::E, -eps(duration) * t);
+    }
+
+    static constexpr double increment_of_exponential(double t, double duration, double top = 1.0, double bottom = 0.0) {
+        static constexpr double eps {1.0 / double(audio::SAMPLE_FREQUENCY)};
+        return std::abs(exponential(t + eps, duration, top, bottom) - exponential(t, duration, top, bottom));
+    }
+
+    static constexpr double increment_of_inverse_exponential(double t, double duration, double bottom = 0.0) {
+        static constexpr double eps {1.0 / double(audio::SAMPLE_FREQUENCY)};
+        return std::abs(inverse_exponential(t + eps, duration, bottom) - inverse_exponential(t, duration, bottom));
+    }
+
+    void EnvelopeAdsrLinear::note_on(double) {
         m_segment = Segment::Attack;
 
-        m_attack_increment = 1.0 / (m_description.time_attack * audio::SAMPLE_FREQUENCY);
-        m_decay_increment = (1.0 - m_description.value_sustain) / (m_description.time_decay * audio::SAMPLE_FREQUENCY);
+        m_attack_increment = increment_of_linear(1.0, m_description.duration_attack);
+        m_decay_increment = increment_of_linear(1.0 - m_description.value_sustain, m_description.duration_decay);
     }
 
-    void EnvelopeAdsr::note_off() {
+    void EnvelopeAdsrLinear::note_off(double) {
         m_segment = Segment::Release;
 
-        m_release_increment = m_description.value_sustain / (m_description.time_release * audio::SAMPLE_FREQUENCY);
+        m_release_increment = increment_of_linear(m_description.value_sustain, m_description.duration_release);
     }
 
-    void EnvelopeAdsr::update() {
+    void EnvelopeAdsrLinear::update(double) {
         switch (m_segment) {
             case Segment::None:
                 break;
             case Segment::Attack:
-                m_current_value += m_attack_increment;
+                m_value_current += m_attack_increment;
 
-                if (m_current_value >= 1.0) {
-                    m_current_value = 1.0;
+                if (m_value_current >= 1.0) {
+                    m_value_current = 1.0;
                     m_segment = Segment::Decay;
                 }
 
                 break;
             case Segment::Decay:
-                m_current_value -= m_decay_increment;
+                m_value_current -= m_decay_increment;
 
-                if (m_current_value <= m_description.value_sustain) {
-                    m_current_value = m_description.value_sustain;
+                if (m_value_current <= m_description.value_sustain) {
+                    m_value_current = m_description.value_sustain;
                     m_segment = Segment::Sustain;
                 }
 
                 break;
             case Segment::Sustain:
-                m_current_value = m_description.value_sustain;
+                m_value_current = m_description.value_sustain;
 
                 break;
             case Segment::Release:
-                m_current_value -= m_release_increment;
+                m_value_current -= m_release_increment;
 
-                if (m_current_value <= 0.0) {
-                    m_current_value = 0.0;
+                if (m_value_current <= 0.0) {
+                    m_value_current = 0.0;
+                    m_segment = Segment::None;
+                }
+
+                break;
+        }
+    }
+
+    double EnvelopeAdsrLinear::value() const {
+        return math::clamp(m_value_current);
+    }
+
+    bool EnvelopeAdsrLinear::done() const {
+        return m_segment == Segment::None;
+    }
+
+    void EnvelopeAdsr::note_on(double time) {
+        m_segment = Segment::Attack;
+
+        m_time_note_on = time;
+        m_value_note_on = m_value_current;
+    }
+
+    void EnvelopeAdsr::note_off(double time) {
+        m_segment = Segment::Release;
+
+        m_time_note_off = time;
+        m_value_note_off = m_value_current;
+    }
+
+    void EnvelopeAdsr::update(double time) {
+        switch (m_segment) {
+            case Segment::None:
+                break;
+            case Segment::Attack:
+                m_value_current += math::clamp_min(
+                    increment_of_inverse_exponential(time - m_time_note_on, m_description.duration_attack, m_value_note_on)
+                );
+
+                if (m_value_current >= 1.0) {
+                    m_value_current = 1.0;
+                    m_time_decay = time;
+                    m_segment = Segment::Decay;
+                }
+
+                break;
+            case Segment::Decay:
+                m_value_current -= math::clamp_min(
+                    increment_of_exponential(time - m_time_decay, m_description.duration_decay, 1.0, m_description.value_sustain)
+                );
+
+                if (m_value_current <= m_description.value_sustain) {
+                    m_value_current = m_description.value_sustain;
+                    m_segment = Segment::Sustain;
+                }
+
+                break;
+            case Segment::Sustain:
+                m_value_current = m_description.value_sustain;
+
+                break;
+            case Segment::Release:
+                m_value_current -= math::clamp_min(
+                    increment_of_exponential(time - m_time_note_off, m_description.duration_release, m_value_note_off)
+                );
+
+                if (m_value_current <= 0.0) {
+                    m_value_current = 0.0;
                     m_segment = Segment::None;
                 }
 
@@ -61,53 +155,117 @@ namespace syn {
     }
 
     double EnvelopeAdsr::value() const {
-        return math::clamp(m_current_value);
+        return math::clamp(m_value_current);
     }
 
     bool EnvelopeAdsr::done() const {
         return m_segment == Segment::None;
     }
 
-    void EnvelopeAdr::note_on() {
+    void EnvelopeAdrLinear::note_on(double) {
         m_segment = Segment::Attack;
 
-        m_attack_increment = 1.0 / (m_description.time_attack * audio::SAMPLE_FREQUENCY);
-        m_decay_increment = 1.0 / (m_description.time_decay * audio::SAMPLE_FREQUENCY);
+        m_attack_increment = increment_of_linear(1.0, m_description.duration_attack);
+        m_decay_increment = increment_of_linear(1.0, m_description.duration_decay);
     }
 
-    void EnvelopeAdr::note_off() {
+    void EnvelopeAdrLinear::note_off(double) {
         m_segment = Segment::Release;
 
-        m_release_increment = 1.0 / (m_description.time_release * audio::SAMPLE_FREQUENCY);
+        m_release_increment = increment_of_linear(1.0, m_description.duration_release);
     }
 
-    void EnvelopeAdr::update() {
+    void EnvelopeAdrLinear::update(double) {
         switch (m_segment) {
             case Segment::None:
                 break;
             case Segment::Attack:
-                m_current_value += m_attack_increment;
+                m_value_current += m_attack_increment;
 
-                if (m_current_value >= 1.0) {
-                    m_current_value = 1.0;
+                if (m_value_current >= 1.0) {
+                    m_value_current = 1.0;
                     m_segment = Segment::Decay;
                 }
 
                 break;
             case Segment::Decay:
-                m_current_value -= m_decay_increment;
+                m_value_current -= m_decay_increment;
 
-                if (m_current_value <= 0.0) {
-                    m_current_value = 0.0;
+                if (m_value_current <= 0.0) {
+                    m_value_current = 0.0;
                     m_segment = Segment::None;
                 }
 
                 break;
             case Segment::Release:
-                m_current_value -= m_release_increment;
+                m_value_current -= m_release_increment;
 
-                if (m_current_value <= 0.0) {
-                    m_current_value = 0.0;
+                if (m_value_current <= 0.0) {
+                    m_value_current = 0.0;
+                    m_segment = Segment::None;
+                }
+
+                break;
+        }
+    }
+
+    double EnvelopeAdrLinear::value() const {
+        return math::clamp(m_value_current);
+    }
+
+    bool EnvelopeAdrLinear::done() const {
+        return m_segment == Segment::None;
+    }
+
+    void EnvelopeAdr::note_on(double time) {
+        m_segment = Segment::Attack;
+
+        m_time_note_on = time;
+        m_value_note_on = m_value_current;
+    }
+
+    void EnvelopeAdr::note_off(double time) {
+        m_segment = Segment::Release;
+
+        m_time_note_off = time;
+        m_value_note_off = m_value_current;
+    }
+
+    void EnvelopeAdr::update(double time) {
+        switch (m_segment) {
+            case Segment::None:
+                break;
+            case Segment::Attack: {
+                m_value_current += math::clamp_min(
+                    increment_of_inverse_exponential(time - m_time_note_on, m_description.duration_attack, m_value_note_on)
+                );
+
+                if (m_value_current >= 1.0) {
+                    m_value_current = 1.0;
+                    m_time_decay = time;
+                    m_segment = Segment::Decay;
+                }
+
+                break;
+            }
+            case Segment::Decay:
+                m_value_current -= math::clamp_min(
+                    increment_of_exponential(time - m_time_decay, m_description.duration_decay)
+                );
+
+                if (m_value_current <= 0.0) {
+                    m_value_current = 0.0;
+                    m_segment = Segment::None;
+                }
+
+                break;
+            case Segment::Release:
+                m_value_current -= math::clamp_min(
+                    increment_of_exponential(time - m_time_note_off, m_description.duration_release, m_value_note_off)
+                );
+
+                if (m_value_current <= 0.0) {
+                    m_value_current = 0.0;
                     m_segment = Segment::None;
                 }
 
@@ -116,7 +274,7 @@ namespace syn {
     }
 
     double EnvelopeAdr::value() const {
-        return math::clamp(m_current_value);
+        return math::clamp(m_value_current);
     }
 
     bool EnvelopeAdr::done() const {

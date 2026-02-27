@@ -17,14 +17,14 @@ namespace instrument {  // TODO description
 
         double sound(double time, syn::NoteId note) const override;
 
-        syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
-        double attack_time() const override { return ENVELOPE.time_attack; }
-        double release_time() const override { return ENVELOPE.time_release; }
+        syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdrLinear>(ENVELOPE); }
+        double attack_duration() const override { return ENVELOPE.duration_attack; }
+        double release_duration() const override { return ENVELOPE.duration_release; }
     private:
         static constexpr syn::DescriptionAdr ENVELOPE {
-            .time_attack = 0.007,
-            .time_decay = 0.15,
-            .time_release = 0.007
+            .duration_attack = 0.007,
+            .duration_decay = 0.15,
+            .duration_release = 0.007
         };
     };
 
@@ -39,19 +39,19 @@ namespace instrument {  // TODO description
         syn::InstrumentRange range() const override { return { 12, 51 }; }
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
-        double attack_time() const override { return ENVELOPE.time_attack; }
-        double release_time() const override { return ENVELOPE.time_release; }
+        double attack_duration() const override { return ENVELOPE.duration_attack; }
+        double release_duration() const override { return ENVELOPE.duration_release; }
     private:
         static constexpr syn::DescriptionAdr ENVELOPE {
-            .time_attack = 0.5,
-            .time_decay = 1.0,
-            .time_release = 0.7
+            .duration_attack = 0.5,
+            .duration_decay = 1.0,
+            .duration_release = 0.7
         };
     };
 
     class Harmonica : public syn::Instrument {
     public:
-        ALFRED_INSTRUMENT_STATIC_NAME_ID("Harmonica")
+        ALFRED_INSTRUMENT_STATIC_NAME_ID("Harmonica?")
 
         const char* name() const override { return static_name(); }
         syn::InstrumentId id() const override { return static_id(); }
@@ -59,20 +59,20 @@ namespace instrument {  // TODO description
         double sound(double time, syn::NoteId note) const override;
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdsr>(ENVELOPE); }
-        double attack_time() const override { return ENVELOPE.time_attack; }
-        double release_time() const override { return ENVELOPE.time_release; }
+        double attack_duration() const override { return ENVELOPE.duration_attack; }
+        double release_duration() const override { return ENVELOPE.duration_release; }
     private:
         static constexpr syn::DescriptionAdsr ENVELOPE {
-            .time_attack = 0.08,
-            .time_decay = 0.02,
-            .time_release = 0.12,
+            .duration_attack = 0.2,
+            .duration_decay = 0.02,
+            .duration_release = 0.6,
             .value_sustain = 0.7
         };
     };
 
     class DrumBass : public syn::Instrument {
     public:
-        ALFRED_INSTRUMENT_STATIC_NAME_ID("Drum Bass")
+        ALFRED_INSTRUMENT_STATIC_NAME_ID("Drum Bass?")
 
         const char* name() const override { return static_name(); }
         syn::InstrumentId id() const override { return static_id(); }
@@ -80,19 +80,19 @@ namespace instrument {  // TODO description
         double sound(double time, syn::NoteId note) const override;
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
-        double attack_time() const override { return ENVELOPE.time_attack; }
-        double release_time() const override { return ENVELOPE.time_release; }
+        double attack_duration() const override { return ENVELOPE.duration_attack; }
+        double release_duration() const override { return ENVELOPE.duration_release; }
     private:
         static constexpr syn::DescriptionAdr ENVELOPE {
-            .time_attack = 0.01,
-            .time_decay = 0.15,
-            .time_release = 0.02
+            .duration_attack = 0.01,
+            .duration_decay = 0.15,
+            .duration_release = 0.02
         };
     };
 
     class DrumSnare : public syn::Instrument {
     public:
-        ALFRED_INSTRUMENT_STATIC_NAME_ID("Drum Snare")
+        ALFRED_INSTRUMENT_STATIC_NAME_ID("Drum Snare?")
 
         const char* name() const override { return static_name(); }
         syn::InstrumentId id() const override { return static_id(); }
@@ -100,19 +100,19 @@ namespace instrument {  // TODO description
         double sound(double time, syn::NoteId note) const override;
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
-        double attack_time() const override { return ENVELOPE.time_attack; }
-        double release_time() const override { return ENVELOPE.time_release; }
+        double attack_duration() const override { return ENVELOPE.duration_attack; }
+        double release_duration() const override { return ENVELOPE.duration_release; }
     private:
         static constexpr syn::DescriptionAdr ENVELOPE {
-            .time_attack = 0.01,
-            .time_decay = 0.2,
-            .time_release = 0.03
+            .duration_attack = 0.01,
+            .duration_decay = 0.2,
+            .duration_release = 0.03
         };
     };
 
     class DrumHiHat : public syn::Instrument {
     public:
-        ALFRED_INSTRUMENT_STATIC_NAME_ID("Drum Hi-Hat")
+        ALFRED_INSTRUMENT_STATIC_NAME_ID("Drum Hi-Hat?")
 
         const char* name() const override { return static_name(); }
         syn::InstrumentId id() const override { return static_id(); }
@@ -120,13 +120,13 @@ namespace instrument {  // TODO description
         double sound(double time, syn::NoteId note) const override;
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
-        double attack_time() const override { return ENVELOPE.time_attack; }
-        double release_time() const override { return ENVELOPE.time_release; }
+        double attack_duration() const override { return ENVELOPE.duration_attack; }
+        double release_duration() const override { return ENVELOPE.duration_release; }
     private:
         static constexpr syn::DescriptionAdr ENVELOPE {
-            .time_attack = 0.01,
-            .time_decay = 0.15,
-            .time_release = 0.02
+            .duration_attack = 0.01,
+            .duration_decay = 0.15,
+            .duration_release = 0.02
         };
     };
 
@@ -140,19 +140,19 @@ namespace instrument {  // TODO description
         double sound(double time, syn::NoteId note) const override;
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
-        double attack_time() const override { return ENVELOPE.time_attack; }
-        double release_time() const override { return ENVELOPE.time_release; }
+        double attack_duration() const override { return ENVELOPE.duration_attack; }
+        double release_duration() const override { return ENVELOPE.duration_release; }
     private:
         static constexpr syn::DescriptionAdr ENVELOPE {
-            .time_attack = 0.01,
-            .time_decay = 5.0,
-            .time_release = 0.15
+            .duration_attack = 0.1,
+            .duration_decay = 5.0,
+            .duration_release = 0.7
         };
     };
 
     class Guitar : public syn::Instrument {
     public:
-        ALFRED_INSTRUMENT_STATIC_NAME_ID("Guitar")
+        ALFRED_INSTRUMENT_STATIC_NAME_ID("Guitar?")
 
         const char* name() const override { return static_name(); }
         syn::InstrumentId id() const override { return static_id(); }
@@ -161,13 +161,13 @@ namespace instrument {  // TODO description
         syn::InstrumentRange range() const override { return { 7, 51 }; }
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
-        double attack_time() const override { return ENVELOPE.time_attack; }
-        double release_time() const override { return ENVELOPE.time_release; }
+        double attack_duration() const override { return ENVELOPE.duration_attack; }
+        double release_duration() const override { return ENVELOPE.duration_release; }
     private:
         static constexpr syn::DescriptionAdr ENVELOPE {
-            .time_attack = 0.03,
-            .time_decay = 4.0,
-            .time_release = 0.17
+            .duration_attack = 0.2,
+            .duration_decay = 5.0,
+            .duration_release = 0.3
         };
     };
 
@@ -183,13 +183,13 @@ namespace instrument {  // TODO description
         double sound(double time, syn::NoteId note) const override;
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdsr>(ENVELOPE); }
-        double attack_time() const override { return ENVELOPE.time_attack; }
-        double release_time() const override { return ENVELOPE.time_release; }
+        double attack_duration() const override { return ENVELOPE.duration_attack; }
+        double release_duration() const override { return ENVELOPE.duration_release; }
     private:
         static constexpr syn::DescriptionAdsr ENVELOPE {
-            .time_attack = 0.12,
-            .time_decay = 0.03,
-            .time_release = 0.3,
+            .duration_attack = 0.2,
+            .duration_decay = 0.03,
+            .duration_release = 0.8,
             .value_sustain = 0.9
         };
 

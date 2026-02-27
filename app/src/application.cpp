@@ -2238,7 +2238,7 @@ namespace application {
 
         m_task_manager.add_delayed_task([this, id = note.id] {
             m_synthesizer.note_off(id, m_instrument);
-        }, math::seconds_to_milliseconds(m_synthesizer.get_instrument(m_instrument).attack_time()) + 100);
+        }, math::seconds_to_milliseconds(m_synthesizer.get_instrument(m_instrument).attack_duration()) + 100);
     }
 
     bool Application::keyboard_active() {

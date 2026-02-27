@@ -270,7 +270,7 @@ namespace seq {
 
     unsigned int Player::calculate_note_duration(ConstMeasureIter measure, syn::InstrumentId instrument, unsigned int duration) const {
         const double step_time {measure->time_signature.step_time(measure->tempo)};
-        const double release_time {m_synthesizer->get_instrument(instrument).release_time()};
+        const double release_time {m_synthesizer->get_instrument(instrument).release_duration()};
         const unsigned int release_duration {static_cast<unsigned int>(std::ceil(release_time / step_time))};
 
         if (release_duration > duration) {
