@@ -2,7 +2,6 @@
 
 #include <vector>
 #include <unordered_map>
-#include <flat_set>
 #include <set>
 #include <optional>
 #include <stdexcept>
@@ -10,6 +9,18 @@
 #include <algorithm>
 #include <iterator>
 #include <ranges>
+
+#ifdef __cpp_lib_flat_set
+    #include <flat_set>
+
+    template<typename T>
+    using std_flat_multiset = std::flat_multiset<T>;
+#else
+    #include <set>
+
+    template<typename T>
+    using std_flat_multiset = std::multiset<T>;
+#endif
 
 #include <alfred/synthesizer.hpp>
 #include "alfred/math.hpp"
@@ -120,13 +131,15 @@ namespace seq {
         }
     };
 
+    using Notes = std::set<Note>;
+
     struct Measure {
         Tempo tempo;
         TimeSignature time_signature;
 
         // Notes must always be sorted in a very specific way
         // Use a normal set, because the iterators need to stay stable
-        std::unordered_map<syn::InstrumentId, std::set<Note>> instruments;  // TODO erase empty when serializing
+        std::unordered_map<syn::InstrumentId, Notes> instruments;  // TODO erase empty when serializing
 
         bool equal_signature(const Measure& other) const {
             return time_signature == other.time_signature;
@@ -135,7 +148,7 @@ namespace seq {
 
     using MeasureIter = std::vector<Measure>::iterator;
     using ConstMeasureIter = std::vector<Measure>::const_iterator;
-    using NoteIter = std::set<Note>::iterator;
+    using NoteIter = Notes::iterator;
 
     template<std::contiguous_iterator MeasureIter_ = MeasureIter>
     class ProvenanceNote {
@@ -287,8 +300,8 @@ namespace seq {
         };
 
         // Notes must always be ordered
-        using UnplayedNotes = std::flat_multiset<UnplayedNote>;
-        using PlayedNotes = std::flat_multiset<PlayedNote>;
+        using UnplayedNotes = std_flat_multiset<UnplayedNote>;
+        using PlayedNotes = std_flat_multiset<PlayedNote>;
 
         struct Execution {
             UnplayedNotes notes_unplayed;

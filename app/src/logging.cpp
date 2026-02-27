@@ -1,9 +1,15 @@
 #include "logging.hpp"
 
-#include <print>
 #include <fstream>
 #include <ostream>
 #include <mutex>
+
+#ifdef __cpp_lib_print
+    #include <print>
+#else
+    #include <iostream>
+    #include <format>
+#endif
 
 #include "utility.hpp"
 
@@ -32,6 +38,7 @@ namespace logging {
     void println_console(Severity severity, const std::source_location& location, TimeOfDay time_of_day, const std::string& message) {
         // This is already thread safe
 
+#ifdef __cpp_lib_print
         std::println(
             stderr,
             "[{} {} {} {} {}:{}] {}",
@@ -43,6 +50,18 @@ namespace logging {
             location.column(),
             message
         );
+#else
+        std::cerr << std::format(
+            "[{} {} {} {} {}:{}] {}\n",
+            severity_to_string(severity),
+            time_of_day,
+            location.file_name(),
+            location.function_name(),
+            location.line(),
+            location.column(),
+            message
+        );
+#endif
     }
 
     void println_file(Severity severity, const std::source_location& location, TimeOfDay time_of_day, const std::string& message) {
@@ -52,6 +71,7 @@ namespace logging {
             return;
         }
 
+#ifdef __cpp_lib_print
         std::println(
             g_stream.stream,
             "[{} {} {} {} {}:{}] {}",
@@ -63,5 +83,17 @@ namespace logging {
             location.column(),
             message
         );
+#else
+        g_stream.stream << std::format(
+            "[{} {} {} {} {}:{}] {}\n",
+            severity_to_string(severity),
+            time_of_day,
+            location.file_name(),
+            location.function_name(),
+            location.line(),
+            location.column(),
+            message
+        );
+#endif
     }
 }

@@ -174,7 +174,7 @@ namespace task {
         // So this is no "perfect repeatable task"
 
         if (task.m_total_time > task.m_interval) {
-            task.m_total_time = 0.0;  // Better to just reset instead of decrement
+            task.m_total_time = 0;  // Better to just reset instead of decrement
 
             if (task.m_task_function()) {
                 return true;
