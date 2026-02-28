@@ -9,8 +9,6 @@
 #include "alfred/math.hpp"
 
 namespace synthesizer {
-    static constexpr std::size_t MAX_VOICES {8};
-
     Synthesizer::Synthesizer() {
         m_instruments[instrument::Metronome::static_id()] = std::make_unique<instrument::Metronome>();
         m_instruments[instrument::Bell::static_id()] = std::make_unique<instrument::Bell>();
@@ -75,7 +73,7 @@ namespace synthesizer {
             return voice.envelope->done();
         });
 
-        while (m_voices.size() > MAX_VOICES) {
+        while (m_voices.size() > m_max_voices) {
             // Replace the oldest voice policy
             m_voices.erase(std::ranges::min_element(m_voices, [](const auto& lhs, const auto& rhs) {
                 return lhs.time_on < rhs.time_on;
@@ -102,12 +100,12 @@ namespace synthesizer {
             output += voice.loudness * voice.envelope->value() * m_instruments.at(voice.instrument)->sound(time, voice.note);
 
             // The update function should take care of removing voices, if there are too many
-            if (i == MAX_VOICES) {
+            if (i == long(m_max_voices)) {
                 break;
             }
         }
 
-        return output / double(MAX_VOICES);
+        return output / double(m_max_voices);
     }
 
     RealSynthesizer::~RealSynthesizer() noexcept {

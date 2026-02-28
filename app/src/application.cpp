@@ -88,6 +88,7 @@ namespace application {
 
         m_ui.volume = m_synthesizer.volume();
         m_ui.device = m_synthesizer.device().second;
+        m_ui.polyphony = int(m_synthesizer.polyphony());
         m_ui.texture_play = image::Texture(m_renderer, image::Surface(PLAY));
         m_ui.texture_pause = image::Texture(m_renderer, image::Surface(PAUSE));
         m_ui.texture_rewind = image::Texture(m_renderer, image::Surface(REWIND));
@@ -146,7 +147,7 @@ namespace application {
             ImGuiID dock_id_left_top {};
             ImGuiID dock_id_left_bottom {};
 
-            ImGui::DockBuilderSplitNode(dock_id_left, ImGuiDir_Up, 0.7f, &dock_id_left_top, &dock_id_left_bottom);
+            ImGui::DockBuilderSplitNode(dock_id_left, ImGuiDir_Up, 0.75f, &dock_id_left_top, &dock_id_left_bottom);
 
             ImGuiID dock_id_right_top {};
             ImGuiID dock_id_right_bottom {dock_id_right};
@@ -487,6 +488,15 @@ namespace application {
 
             if (ImGui::SliderInt("##loudness", &m_ui.loudness, ui::Pianississimo, ui::Fortississimo)) {
                 m_loudness = seq::Loudness(m_ui.loudness - 1);
+                m_synthesizer.silence();
+            }
+
+            ImGui::Dummy(ui::rem(ImVec2(0.0f, 1.0f)));
+
+            ImGui::SeparatorText("Polyphony");
+
+            if (ImGui::SliderInt("##polyphony", &m_ui.polyphony, int(synthesizer::MIN_VOICES), int(synthesizer::MAX_VOICES))) {
+                m_synthesizer.polyphony(std::size_t(m_ui.polyphony));
                 m_synthesizer.silence();
             }
 

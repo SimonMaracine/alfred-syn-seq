@@ -9,6 +9,9 @@
 #include "alfred/synthesis.hpp"
 
 namespace synthesizer {
+    inline constexpr std::size_t MIN_VOICES {2};
+    inline constexpr std::size_t MAX_VOICES {8};
+
     class Synthesizer {
     public:
         Synthesizer();
@@ -22,6 +25,11 @@ namespace synthesizer {
         void note_on(double time, syn::NoteId note, syn::InstrumentId instrument, double loudness);
         void note_off(double time, syn::NoteId note, syn::InstrumentId instrument);
 
+        std::size_t polyphony() const { return m_max_voices; }
+
+        // Silence the synthesizer after calling this!
+        void polyphony(std::size_t max_voices) { m_max_voices = max_voices; }
+
         void for_each_instrument(const std::function<void(const syn::Instrument&)>& function) const;
         const syn::Instrument& get_instrument(syn::InstrumentId instrument) const;
     protected:
@@ -32,6 +40,7 @@ namespace synthesizer {
 
         std::unordered_map<syn::InstrumentId, std::unique_ptr<syn::Instrument>> m_instruments;
         std::vector<syn::Voice> m_voices;
+        std::size_t m_max_voices {4};
     };
 
     class RealSynthesizer : public Synthesizer, public audio::Audio {

@@ -63,7 +63,7 @@ namespace instrument {  // TODO description
         double release_duration() const override { return ENVELOPE.duration_release; }
     private:
         static constexpr syn::DescriptionAdsr ENVELOPE {
-            .duration_attack = 0.2,
+            .duration_attack = 0.15,
             .duration_decay = 0.02,
             .duration_release = 0.6,
             .value_sustain = 0.7
@@ -139,13 +139,13 @@ namespace instrument {  // TODO description
 
         double sound(double time, syn::NoteId note) const override;
 
-        syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
+        syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdrLinear>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
     private:
         static constexpr syn::DescriptionAdr ENVELOPE {
-            .duration_attack = 0.1,
-            .duration_decay = 5.0,
+            .duration_attack = 0.01,
+            .duration_decay = 4.0,
             .duration_release = 0.7
         };
     };
@@ -165,7 +165,7 @@ namespace instrument {  // TODO description
         double release_duration() const override { return ENVELOPE.duration_release; }
     private:
         static constexpr syn::DescriptionAdr ENVELOPE {
-            .duration_attack = 0.2,
+            .duration_attack = 0.07,
             .duration_decay = 5.0,
             .duration_release = 0.3
         };

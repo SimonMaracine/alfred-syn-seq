@@ -222,6 +222,7 @@ namespace application {
             ui::Composition composition;
             int octave {ui::Octave3};
             int loudness {ui::MezzoForte};
+            int polyphony {};
             double volume {};
             const char* device {};
             float render_progress {};
