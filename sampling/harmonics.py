@@ -2,7 +2,7 @@ import sys
 import pprint
 
 
-def _db_to_amplitude(power: float) -> float:
+def _db_to_amplitude(power: int) -> float:
     return 10.0 ** (power / 20.0)
 
 
@@ -26,14 +26,19 @@ def _process_harmonics(frequency_fundamental: float, harmonics_file: str) -> lis
     harmonics = []
 
     for line in lines:
-        if not line.strip():
+        line = line.lstrip()
+
+        if not line:
+            continue
+
+        if line[0] == "#":
             continue
 
         frequency, power = line.split(",")
 
         harmonic = (
             float(frequency) / frequency_fundamental,
-            _db_to_amplitude(float(power))
+            _db_to_amplitude(0 - int(power))
         )
 
         harmonics.append(harmonic)

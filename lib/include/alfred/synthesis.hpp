@@ -6,6 +6,7 @@
 #include <ranges>
 #include <limits>
 #include <utility>
+#include <tuple>
 
 #include "alfred/allocator.hpp"
 
@@ -272,19 +273,24 @@ namespace syn {
     double random();
     double frequency(NoteId note);
 
-    template<std::size_t N>
-    constexpr std::array<double, N> amplitudes(std::array<double, N> denominators) {
-        for (const auto [i, denominator] : denominators | std::views::enumerate) {
-            denominators[i] = 1.0 / double(denominator);
+    namespace util {
+        template<std::size_t N>
+        constexpr std::array<double, N> amplitudes(std::array<double, N> denominators) {
+            for (const auto [i, denominator] : denominators | std::views::enumerate) {
+                denominators[i] = 1.0 / double(denominator);
+            }
+
+            const double sum {std::accumulate(denominators.begin(), denominators.end(), 0.0)};
+
+            for (double& denominator : denominators) {
+                denominator /= sum;
+            }
+
+            return denominators;
         }
 
-        const double sum {std::accumulate(denominators.begin(), denominators.end(), 0.0)};
-
-        for (double& denominator : denominators) {
-            denominator /= sum;
-        }
-
-        return denominators;
+        using Harmonic = double(*)(double, NoteId);
+        using HarmonicAtTime = std::tuple<double, Harmonic>;
     }
 
     namespace padsynth {
