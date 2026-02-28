@@ -59,7 +59,7 @@ target_include_directories(alfred_app PRIVATE "src" "${CMAKE_CURRENT_BINARY_DIR}
 target_link_libraries(alfred_app PRIVATE SDL3::SDL3 cereal imgui alfred_lib)
 
 set_target_cpp_mode(alfred_app)
-enable_target_warnings(alfred_app)
+set_target_warnings(alfred_app)
 enable_target_diagnostics(alfred_app)
 
 if(ALFRED_DISTRIBUTION)

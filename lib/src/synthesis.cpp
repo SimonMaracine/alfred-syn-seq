@@ -18,20 +18,20 @@ namespace syn {
         return height / (duration * double(audio::SAMPLE_FREQUENCY));
     }
 
-    static constexpr double exponential(double t, double duration, double top, double bottom) {
+    static double exponential(double t, double duration, double top, double bottom) {
         return (top - bottom) * std::pow(math::E, -eps(duration) * t) + bottom;
     }
 
-    static constexpr double inverse_exponential(double t, double duration, double bottom) {
+    static double inverse_exponential(double t, double duration, double bottom) {
         return 1.0 - (1.0 - bottom) * std::pow(math::E, -eps(duration) * t);
     }
 
-    static constexpr double increment_of_exponential(double t, double duration, double top = 1.0, double bottom = 0.0) {
+    static double increment_of_exponential(double t, double duration, double top = 1.0, double bottom = 0.0) {
         static constexpr double eps {1.0 / double(audio::SAMPLE_FREQUENCY)};
         return std::abs(exponential(t + eps, duration, top, bottom) - exponential(t, duration, top, bottom));
     }
 
-    static constexpr double increment_of_inverse_exponential(double t, double duration, double bottom = 0.0) {
+    static double increment_of_inverse_exponential(double t, double duration, double bottom = 0.0) {
         static constexpr double eps {1.0 / double(audio::SAMPLE_FREQUENCY)};
         return std::abs(inverse_exponential(t + eps, duration, bottom) - inverse_exponential(t, duration, bottom));
     }
