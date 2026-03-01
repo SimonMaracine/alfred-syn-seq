@@ -247,7 +247,7 @@ namespace application {
         }
 
         if (ImGui::BeginMenu("Open Recent")) {
-            for (const auto& [i, file_path] : m_data.recent_compositions | std::views::enumerate) {
+            for (const auto [i, file_path] : m_data.recent_compositions | std::views::enumerate) {
                 ImGui::PushID(int(i));
 
                 if (ImGui::MenuItem(file_path.c_str())) {
@@ -326,7 +326,7 @@ namespace application {
 
     void Application::main_menu_bar_help() {
         if (ImGui::BeginMenu("About")) {
-            const char* link {get_property(SDL_PROP_APP_METADATA_URL_STRING)};
+            const char* link {utility::get_property(SDL_PROP_APP_METADATA_URL_STRING)};
             ImGui::TextLinkOpenURL(link, link);
 
             ImGui::EndMenu();
@@ -338,7 +338,7 @@ namespace application {
 #else
             constexpr const char* DEV_TAG {" dev"};
 #endif
-            ImGui::Text("Version: %s%s", get_property(SDL_PROP_APP_METADATA_VERSION_STRING), DEV_TAG);
+            ImGui::Text("Version: %s%s", utility::get_property(SDL_PROP_APP_METADATA_VERSION_STRING), DEV_TAG);
 #ifdef ALFRED_LINUX
             ImGui::Text("Compiler: GCC %d.%d", __GNUC__, __GNUC_MINOR__);
 #elifdef ALFRED_WINDOWS
@@ -1034,7 +1034,7 @@ namespace application {
 
         float position_x {ui::rem(COMPOSITION_LEFT)};
 
-        for (const auto& [i, measure] : m_composition.measures | std::views::enumerate) {
+        for (const auto [i, measure] : m_composition.measures | std::views::enumerate) {
             const float width {float(measure.time_signature.measure_steps()) * ui::rem(STEP_SIZE.x)};
 
             if (point_x_in_camera_view(position_x + width, draw.space.x + width)) {
@@ -1425,6 +1425,7 @@ namespace application {
                 ImGui::SaveIniSettingsToDisk("imguid.ini");
             }
 
+            ImGui::Text("m_synthesizer.current_voices() %zu", m_synthesizer.current_voices());
             ImGui::Text("m_player.get_position() %u", m_player.get_position());
             ImGui::Text("m_composition_not_compiled %d", m_composition_not_compiled);
             ImGui::Text("m_composition_not_saved %d", m_composition_not_saved);
@@ -2576,8 +2577,8 @@ namespace application {
         m_composition_path = std::move(path);
         m_data.recent_compositions.insert(m_composition_path.string());
 
-        std::strncpy(m_ui.composition.title, m_composition.title.c_str(), sizeof(m_ui.composition.title));
-        std::strncpy(m_ui.composition.author, m_composition.author.c_str(), sizeof(m_ui.composition.author));
+        std::strncpy(m_ui.composition.title, m_composition.title.c_str(), sizeof(m_ui.composition.title) - 1);
+        std::strncpy(m_ui.composition.author, m_composition.author.c_str(), sizeof(m_ui.composition.author) - 1);
         m_ui.composition.year = short(int(m_composition.year));
 
         reset_player_and_composition_selection();
@@ -2649,9 +2650,9 @@ namespace application {
 
     void Application::reset_render_composition() {
         if (!m_composition_path.empty()) {
-            std::strncpy(m_ui.render_file_path, std::filesystem::path(m_composition_path).replace_extension().string().c_str(), sizeof(m_ui.render_file_path));
+            std::strncpy(m_ui.render_file_path, std::filesystem::path(m_composition_path).replace_extension().string().c_str(), sizeof(m_ui.render_file_path) - 1);
         } else {
-            std::strncpy(m_ui.render_file_path, (std::filesystem::path(m_working_directory) / "unsaved_composition").string().c_str(), sizeof(m_ui.render_file_path));
+            std::strncpy(m_ui.render_file_path, (std::filesystem::path(m_working_directory) / "unsaved_composition").string().c_str(), sizeof(m_ui.render_file_path) - 1);
         }
 
         m_ui.render_progress = 0.0f;

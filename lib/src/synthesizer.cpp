@@ -96,13 +96,13 @@ namespace synthesizer {
     double Synthesizer::mix_sound(double time) const {
         double output {};
 
-        for (const auto& [i, voice] : m_voices | std::views::enumerate) {
-            output += voice.loudness * voice.envelope->value() * m_instruments.at(voice.instrument)->sound(time, voice.note);
-
+        for (const auto [i, voice] : m_voices | std::views::enumerate) {
             // The update function should take care of removing voices, if there are too many
             if (i == long(m_max_voices)) {
                 break;
             }
+
+            output += voice.loudness * voice.envelope->value() * m_instruments.at(voice.instrument)->sound(time, voice.time_on, voice.note);
         }
 
         return output / double(m_max_voices);

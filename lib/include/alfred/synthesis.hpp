@@ -6,8 +6,8 @@
 #include <ranges>
 #include <limits>
 #include <utility>
-#include <tuple>
 
+#include "alfred/math.hpp"
 #include "alfred/allocator.hpp"
 
 namespace syn {
@@ -244,7 +244,7 @@ namespace syn {
         virtual const char* name() const = 0;
         virtual InstrumentId id() const = 0;
 
-        virtual double sound(double time, NoteId note) const = 0;
+        virtual double sound(double time, double time_on, NoteId note) const = 0;
         virtual InstrumentRange range() const { return keyboard::ID_FULL_RANGE; }
 
         virtual EnvelopePtr new_envelope() const = 0;
@@ -275,22 +275,76 @@ namespace syn {
 
     namespace util {
         template<std::size_t N>
-        constexpr std::array<double, N> amplitudes(std::array<double, N> denominators) {
-            for (const auto [i, denominator] : denominators | std::views::enumerate) {
-                denominators[i] = 1.0 / double(denominator);
+        constexpr std::array<double, N> amplitudes(std::array<double, N> divisors) {
+            for (const auto [i, divisor] : divisors | std::views::enumerate) {
+                divisors[i] = 1.0 / double(divisor);
             }
 
-            const double sum {std::accumulate(denominators.begin(), denominators.end(), 0.0)};
+            const double sum {std::accumulate(divisors.begin(), divisors.end(), 0.0)};
 
-            for (double& denominator : denominators) {
-                denominator /= sum;
+            for (double& divisor : divisors) {
+                divisor /= sum;
             }
 
-            return denominators;
+            return divisors;
         }
 
-        using Harmonic = double(*)(double, NoteId);
-        using HarmonicAtTime = std::tuple<double, Harmonic>;
+        template<std::size_t N>
+        constexpr double sound(double time, NoteId note, std::array<double, N> frequency_multipliers, std::array<double, N> amplitude_divisors) {
+            const auto amp {amplitudes(amplitude_divisors)};
+
+            double output {};
+
+            for (std::size_t i {}; i < N; i++) {
+                output += amp[i] * oscillator::sine(time, frequency_multipliers[i] * frequency(note));
+            }
+
+            return output;
+        }
+
+        template<std::size_t N>
+        constexpr double sound(double time, NoteId note, LowFrequencyOscillator lfo, std::array<double, N> frequency_multipliers, std::array<double, N> amplitude_divisors) {
+            const auto amp {amplitudes(amplitude_divisors)};
+
+            double output {};
+
+            output += amp[0] * oscillator::sine(time, frequency_multipliers[0] * frequency(note), lfo);
+
+            for (std::size_t i {1}; i < N; i++) {
+                output += amp[i] * oscillator::sine(time, frequency_multipliers[i] * frequency(note));
+            }
+
+            return output;
+        }
+
+        using Sound = double(*)(double, NoteId);
+
+        struct SoundAtTime {
+            double time {};
+            Sound sound {};
+        };
+
+        template<std::size_t N>
+        constexpr double sound(double time, double time_on, NoteId note, const std::array<SoundAtTime, N>& sounds_at_times) {
+            const double time_sample {time - time_on};
+
+            if (time_sample >= sounds_at_times.back().time) {
+                return sounds_at_times.back().sound(time, note);
+            }
+
+            for (std::size_t i {}; i < sounds_at_times.size() - 1; i++) {
+                if (time_sample >= sounds_at_times[i].time && time_sample < sounds_at_times[i + 1].time) {
+                    const double percentage {math::map(time_sample, sounds_at_times[i].time, sounds_at_times[i + 1].time, 0.0, 1.0)};
+                    return math::mix(sounds_at_times[i].sound(time, note), sounds_at_times[i + 1].sound(time, note), percentage);  // FIXME bad performance
+                }
+            }
+
+            if (time_sample < sounds_at_times.front().time) {
+                return sounds_at_times.front().sound(time, note);
+            }
+
+            std::unreachable();
+        }
     }
 
     namespace padsynth {

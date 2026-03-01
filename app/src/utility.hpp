@@ -12,6 +12,10 @@ namespace utility {
 
     std::filesystem::path data_file_path();
 
+    void set_property(const char* property, const char* value);
+    const char* get_property(const char* property);
+    void show_error_message_box(const char* title, const char* message);
+
     struct FilerError : std::runtime_error {
         using std::runtime_error::runtime_error;
     };

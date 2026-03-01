@@ -45,6 +45,11 @@ namespace math {
         return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
     }
 
+    template<typename T>
+    constexpr T mix(T x, T y, T a) {
+        return x * (T(1) - a) + y * a;
+    }
+
     constexpr unsigned int seconds_to_milliseconds(double seconds) {
         return static_cast<unsigned int>(seconds * 1000.0);
     }

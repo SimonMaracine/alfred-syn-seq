@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include <functional>
+#include <atomic>
 
 #include "alfred/audio.hpp"
 #include "alfred/synthesis.hpp"
@@ -25,6 +26,7 @@ namespace synthesizer {
         void note_on(double time, syn::NoteId note, syn::InstrumentId instrument, double loudness);
         void note_off(double time, syn::NoteId note, syn::InstrumentId instrument);
 
+        std::size_t current_voices() const { return m_voices.size(); }
         std::size_t polyphony() const { return m_max_voices; }
 
         // Silence the synthesizer after calling this!
@@ -40,7 +42,7 @@ namespace synthesizer {
 
         std::unordered_map<syn::InstrumentId, std::unique_ptr<syn::Instrument>> m_instruments;
         std::vector<syn::Voice> m_voices;
-        std::size_t m_max_voices {4};
+        std::atomic_size_t m_max_voices {4};
     };
 
     class RealSynthesizer : public Synthesizer, public audio::Audio {

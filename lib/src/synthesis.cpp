@@ -5,7 +5,6 @@
 #include <cmath>
 #include <cassert>
 
-#include "alfred/math.hpp"
 #include "alfred/audio.hpp"
 
 namespace syn {

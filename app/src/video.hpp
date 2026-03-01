@@ -38,7 +38,6 @@ namespace video {
         void set_title(std::string_view title) const;
         void set_window_size(int width, int height) const;
         std::pair<int, int> get_window_size() const;
-        static const char* get_property(const char* property);
 
         const bool* get_keyboard_state() const { return m_keyboard_state; }
         double get_frame_time() const { return m_frame_timef; }

@@ -62,7 +62,7 @@ namespace audio {
 
     class AudioLockGuard {
     public:
-        AudioLockGuard(const Audio* audio);
+        explicit AudioLockGuard(const Audio* audio);
         ~AudioLockGuard() noexcept;
 
         AudioLockGuard(const AudioLockGuard&) = default;

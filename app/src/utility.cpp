@@ -2,6 +2,8 @@
 
 #include <fstream>
 
+#include <SDL3/SDL.h>
+
 namespace utility {
     void read_file(const std::filesystem::path& path, Buffer& buffer) {
         std::ifstream stream {path, std::ios_base::binary};
@@ -40,11 +42,31 @@ namespace utility {
 #ifdef ALFRED_DISTRIBUTION
     #ifdef ALFRED_LINUX
         // TODO
+        return "./";
     #elifdef ALFRED_WINDOWS
         // TODO
+        return "./";
     #endif
 #else
         return "./";  // Relative directory
 #endif
+    }
+
+    void set_property(const char* property, const char* value) {
+        (void) SDL_SetAppMetadataProperty(property, value);
+    }
+
+    const char* get_property(const char* property) {
+        const char* value {SDL_GetAppMetadataProperty(property)};
+
+        if (!value) {
+            return "";
+        }
+
+        return value;
+    }
+
+    void show_error_message_box(const char* title, const char* message) {
+        (void) SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, title, message, nullptr);
     }
 }

@@ -51,7 +51,7 @@ def _main(args: list[str]) -> int:
         time, frequency_fundamental, harmonics_file = _process_inputs(args)
         harmonics = _process_harmonics(frequency_fundamental, harmonics_file)
 
-        with open(f"harmonic_{time}.txt", "w") as file:
+        with open(f"harmonic_{time:.3f}.txt", "w") as file:
             print("Time:", time, file=file)
             print("Frequency fundamental:", frequency_fundamental, file=file)
             print(file=file)

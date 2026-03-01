@@ -167,16 +167,6 @@ namespace video {
         return { width, height };
     }
 
-    const char* Video::get_property(const char* property) {
-        const char* value {SDL_GetAppMetadataProperty(property)};
-
-        if (!value) {
-            return "";
-        }
-
-        return value;
-    }
-
     void Video::render() {
         if (!SDL_RenderClear(m_renderer)) {
             throw VideoError(std::format("SDL_RenderClear: {}", SDL_GetError()));
