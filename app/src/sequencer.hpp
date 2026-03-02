@@ -11,7 +11,8 @@
 #include <iterator>
 
 #include <alfred/synthesizer.hpp>
-#include "alfred/math.hpp"
+#include <alfred/math.hpp>
+
 #include "flat_set.hpp"
 
 namespace seq {
@@ -94,8 +95,9 @@ namespace seq {
         Fortississimo
     };
 
-    constexpr double loudness(Loudness loudness) {  // FIXME this is not linear
-        return math::map(double(loudness), double(Loudness::Pianississimo), double(Loudness::Fortississimo), 0.1, 1.0);
+    constexpr double loudness_amplitude(Loudness loudness) {
+        const double value {math::map(double(loudness), double(Loudness::Pianississimo), double(Loudness::Fortississimo), 0.1, 1.0)};
+        return value * value;
     }
 
     struct Note {
@@ -121,25 +123,25 @@ namespace seq {
 
     using Notes = std::set<Note>;
 
+    struct ConstantLoudness {
+        Loudness loudness;
+    };
+
+    struct VaryingLoudness {
+        Loudness loudness_begin;
+        Loudness loudness_end;
+    };
+
+    using Dynamics = std::variant<ConstantLoudness, VaryingLoudness>;
+
     struct Measure {
         Tempo tempo;
         TimeSignature time_signature;
+        Dynamics dynamics {ConstantLoudness { Loudness::MezzoForte }};
 
         // Notes must always be sorted in a very specific way
         // Use a normal set, because the iterators need to stay stable
         std::unordered_map<syn::InstrumentId, Notes> instruments;  // TODO erase empty when serializing
-
-        struct ConstantLoudness {
-            Loudness loudness;
-        };
-
-        struct VaryingLoudness {
-            Loudness loudness_min;
-            Loudness loudness_max;
-        };
-
-        // std::variant<ConstantLoudness, VaryingLoudness> loudness {ConstantLoudness { Loudness::MezzoForte }};
-        std::variant<ConstantLoudness, VaryingLoudness> loudness {VaryingLoudness { Loudness::Pianississimo, Loudness::Fortississimo }};
 
         bool equal_signature(const Measure& other) const {
             return time_signature == other.time_signature;

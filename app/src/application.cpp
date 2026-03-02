@@ -157,7 +157,7 @@ namespace application {
             ImGuiID dock_id_right_top_left {};
             ImGuiID dock_id_right_top_right {};
 
-            ImGui::DockBuilderSplitNode(dock_id_right_top, ImGuiDir_Left, 0.35f, &dock_id_right_top_left, &dock_id_right_top_right);
+            ImGui::DockBuilderSplitNode(dock_id_right_top, ImGuiDir_Left, 0.3f, &dock_id_right_top_left, &dock_id_right_top_right);
 
             ImGuiID dock_id_right_top2 {dock_id_right_bottom};
             ImGuiID dock_id_right_bottom2 {};
@@ -478,7 +478,7 @@ namespace application {
             ImGui::SeparatorText("Octave");
 
             if (ImGui::SliderInt("##octave", &m_ui.octave, ui::Octave1, ui::Octave5)) {
-                m_octave = syn::keyboard::Octave(m_ui.octave - 1);
+                m_octave = syn::keyboard::Octave(m_ui.octave);
                 m_synthesizer.silence();
             }
 
@@ -486,8 +486,8 @@ namespace application {
 
             ImGui::SeparatorText("Loudness");
 
-            if (ImGui::SliderInt("##loudness", &m_ui.loudness, ui::Pianississimo, ui::Fortississimo)) {
-                m_loudness = seq::Loudness(m_ui.loudness - 1);
+            if (ImGui::SliderInt("##loudness", &m_ui.loudness, ui::LoudnessPianississimo, ui::LoudnessFortississimo)) {
+                m_loudness = seq::Loudness(m_ui.loudness);
                 m_synthesizer.silence();
             }
 
@@ -604,9 +604,13 @@ namespace application {
                 }
             }
 
-            ImGui::SetItemTooltip("The metronome is a pseudo-instrument not part of the composition");
+            ImGui::SetItemTooltip("Toggle the metronome on and off");
 
             ImGui::EndDisabled();
+
+            ImGui::SameLine();
+
+            ImGui::Dummy(ui::rem(ImVec2(0.5f, 0.0f)));
 
             ImGui::SameLine();
 
@@ -684,9 +688,9 @@ namespace application {
 
         ImGui::SameLine();
 
-        ImGui::BeginGroup();
-
         ImGui::BeginDisabled(m_composition_selected_measure == m_composition.measures.end());
+
+        ImGui::BeginGroup();
 
         if (ImGui::Button("Clear")) {
             clear_measure();
@@ -700,15 +704,23 @@ namespace application {
 
         ImGui::SetItemTooltip("Completely delete the selected measure (Alt+D)");
 
-        ImGui::EndDisabled();
-
         ImGui::EndGroup();
 
         ImGui::SameLine();
 
-        ImGui::BeginGroup();
+        ImGui::Dummy(ui::rem(ImVec2(0.5f, 0.0f)));
 
-        ImGui::BeginDisabled(m_composition_selected_measure == m_composition.measures.end());
+        ImGui::SameLine();
+
+        if (dynamics()) {
+            set_measure_dynamics();
+        }
+
+        ImGui::SameLine();
+
+        ImGui::Dummy(ui::rem(ImVec2(0.5f, 0.0f)));
+
+        ImGui::SameLine();
 
         if (time_signature()) {
             set_measure_time_signature();
@@ -718,11 +730,13 @@ namespace application {
 
         ImGui::SameLine();
 
+        ImGui::Dummy(ui::rem(ImVec2(0.5f, 0.0f)));
+
+        ImGui::SameLine();
+
         if (tempo()) {
             set_measures_tempo();
         }
-
-        ImGui::EndGroup();
 
         ImGui::EndDisabled();
     }
@@ -809,6 +823,10 @@ namespace application {
         ImGui::EndGroup();
 
         ImGui::EndDisabled();
+
+        ImGui::SameLine();
+
+        ImGui::Dummy(ui::rem(ImVec2(0.5f, 0.0f)));
 
         ImGui::SameLine();
 
@@ -1320,6 +1338,63 @@ namespace application {
         }
     }
 
+    bool Application::dynamics() {
+        bool result {};
+
+        ImGui::BeginGroup();
+
+        if (ImGui::Button(m_ui.dynamics.varying ? "Varying" : "Constant")) {
+            m_ui.dynamics.varying = !m_ui.dynamics.varying;
+            result = true;
+        }
+
+        static constexpr auto flags {ImGuiComboFlags_HeightSmall | ImGuiComboFlags_WidthFitPreview | ImGuiComboFlags_NoArrowButton};
+        constexpr const char* LOUDNESS[] { "ppp", "pp", "p", "mp", "mf", "f", "ff", "fff" };
+
+        if (m_ui.dynamics.varying) {
+            if (ImGui::BeginCombo("##begin", LOUDNESS[m_ui.dynamics.loudness1], flags)) {
+                for (std::size_t i {}; i < std::size(LOUDNESS); i++) {
+                    if (ImGui::Selectable(LOUDNESS[i], m_ui.dynamics.loudness1 == int(i))) {
+                        m_ui.dynamics.loudness1 = ui::Loudness(i);
+                        result = true;
+                    }
+                }
+
+                ImGui::EndCombo();
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::BeginCombo("##end", LOUDNESS[m_ui.dynamics.loudness2], flags)) {
+                for (std::size_t i {}; i < std::size(LOUDNESS); i++) {
+                    if (ImGui::Selectable(LOUDNESS[i], m_ui.dynamics.loudness2 == int(i))) {
+                        m_ui.dynamics.loudness2 = ui::Loudness(i);
+                        result = true;
+                    }
+                }
+
+                ImGui::EndCombo();
+            }
+        } else {
+            if (ImGui::BeginCombo("##loudness", LOUDNESS[m_ui.dynamics.loudness1], flags)) {
+                for (std::size_t i {}; i < std::size(LOUDNESS); i++) {
+                    if (ImGui::Selectable(LOUDNESS[i], m_ui.dynamics.loudness1 == int(i))) {
+                        m_ui.dynamics.loudness1 = ui::Loudness(i);
+                        result = true;
+                    }
+                }
+
+                ImGui::EndCombo();
+            }
+        }
+
+        ImGui::EndGroup();
+
+        ImGui::SetItemTooltip("Change the dynamics of the current measure");
+
+        return result;
+    }
+
     bool Application::tempo() {
         constexpr unsigned int one {1};
 
@@ -1438,7 +1513,7 @@ namespace application {
     void Application::keyboard_input(unsigned int key, bool down) {
         const auto update {[this, down](syn::NoteId id) {
             if (down) {
-                m_synthesizer.note_on(id + m_octave * 12, m_instrument, seq::loudness(m_loudness));
+                m_synthesizer.note_on(id + m_octave * 12, m_instrument, seq::loudness_amplitude(m_loudness));
             } else {
                 m_synthesizer.note_off(id + m_octave * 12, m_instrument);
             }
@@ -1528,6 +1603,7 @@ namespace application {
         } else {
             m_composition_selected_measure = hovered_measure;
 
+            set_dynamics(m_ui.dynamics, *hovered_measure);
             set_tempo(m_ui.tempo, *hovered_measure);
             set_time_signature(m_ui.time_signature, *hovered_measure);
         }
@@ -1591,6 +1667,17 @@ namespace application {
         reset_note_legato_previous_measure(m_composition_selected_measure);
 
         m_composition_selected_measure = m_composition.measures.erase(m_composition_selected_measure);
+
+        modify_composition();
+    }
+
+    void Application::set_measure_dynamics() {
+        assert(!m_player.is_playing());
+        assert(m_composition_selected_measure != m_composition.measures.end());
+
+        remember_composition();
+
+        set_dynamics(*m_composition_selected_measure, m_ui.dynamics);
 
         modify_composition();
     }
@@ -2244,7 +2331,7 @@ namespace application {
     }
 
     void Application::play_note(const seq::Note& note) {
-        m_synthesizer.note_on(note.id, m_instrument, seq::loudness(seq::Loudness::MezzoForte));
+        m_synthesizer.note_on(note.id, m_instrument, seq::loudness_amplitude(seq::Loudness::MezzoForte));
 
         m_task_manager.add_delayed_task([this, id = note.id] {
             m_synthesizer.note_off(id, m_instrument);
@@ -2292,7 +2379,29 @@ namespace application {
         return { tempo, time_signature };
     }
 
-    void Application::set_tempo(seq::Measure& measure, const ui::Tempo& tempo) {
+    void Application::set_dynamics(seq::Measure& measure, ui::Dynamics dynamics) {
+        if (dynamics.varying) {
+            measure.dynamics = seq::VaryingLoudness { seq::Loudness(dynamics.loudness1), seq::Loudness(dynamics.loudness2) };
+        } else {
+            measure.dynamics = seq::ConstantLoudness { seq::Loudness(dynamics.loudness1) };
+        }
+    }
+
+    void Application::set_dynamics(ui::Dynamics& dynamics, const seq::Measure& measure) {
+        switch (measure.dynamics.index()) {
+            case 0:
+                dynamics.varying = false;
+                dynamics.loudness1 = ui::Loudness(std::get<0>(measure.dynamics).loudness);
+                break;
+            case 1:
+                dynamics.varying = true;
+                dynamics.loudness1 = ui::Loudness(std::get<1>(measure.dynamics).loudness_begin);
+                dynamics.loudness2 = ui::Loudness(std::get<1>(measure.dynamics).loudness_end);
+                break;
+        }
+    }
+
+    void Application::set_tempo(seq::Measure& measure, ui::Tempo tempo) {
         measure.tempo = seq::Tempo(tempo);
     }
 
@@ -2300,7 +2409,7 @@ namespace application {
         tempo = measure.tempo;
     }
 
-    void Application::set_time_signature(seq::Measure& measure, const ui::TimeSignature& time_signature) {
+    void Application::set_time_signature(seq::Measure& measure, ui::TimeSignature time_signature) {
         seq::Beats beats {};
         seq::Value value {};
 
@@ -2365,7 +2474,7 @@ namespace application {
 
     bool Application::measure_empty(const seq::Measure& measure) {
         return std::ranges::all_of(measure.instruments, [](const auto& instrument) {
-            return instrument.second.empty()/* || instrument.first == instrument::Metronome::static_id()*/;
+            return instrument.second.empty();
         });
     }
 

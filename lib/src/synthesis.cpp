@@ -18,11 +18,11 @@ namespace syn {
     }
 
     static double exponential(double t, double duration, double top, double bottom) {
-        return (top - bottom) * std::pow(math::E, -eps(duration) * t) + bottom;
+        return (top - bottom) * std::exp(-eps(duration) * t) + bottom;
     }
 
     static double inverse_exponential(double t, double duration, double bottom) {
-        return 1.0 - (1.0 - bottom) * std::pow(math::E, -eps(duration) * t);
+        return 1.0 - (1.0 - bottom) * std::exp(-eps(duration) * t);
     }
 
     static double increment_of_exponential(double t, double duration, double top = 1.0, double bottom = 0.0) {

@@ -103,6 +103,7 @@ namespace application {
         void composition_cursor(const Draw& draw) const;
         void composition_hover(const Draw& draw, const HoveredNote& hovered_note) const;
         void shortcuts();
+        bool dynamics();
         bool tempo();
         bool time_signature();
         void render_composition();
@@ -116,6 +117,7 @@ namespace application {
         void insert_measure();
         void clear_measure();
         void delete_measure();
+        void set_measure_dynamics();
         void set_measure_tempo();
         void set_measures_tempo();
         void set_measure_time_signature();
@@ -160,9 +162,11 @@ namespace application {
         static ImVec4 note_rectangle(const seq::Note& note);
         static const char* measure_label(char* buffer, long number);
         static std::pair<seq::Tempo, seq::TimeSignature> measure_type(MeasureIter measure, const std::vector<seq::Measure>& measures);
-        static void set_tempo(seq::Measure& measure, const ui::Tempo& tempo);
+        static void set_dynamics(seq::Measure& measure, ui::Dynamics dynamics);
+        static void set_dynamics(ui::Dynamics& dynamics, const seq::Measure& measure);
+        static void set_tempo(seq::Measure& measure, ui::Tempo tempo);
         static void set_tempo(ui::Tempo& tempo, const seq::Measure& measure);
-        static void set_time_signature(seq::Measure& measure, const ui::TimeSignature& time_signature);
+        static void set_time_signature(seq::Measure& measure, ui::TimeSignature time_signature);
         static void set_time_signature(ui::TimeSignature& time_signature, const seq::Measure& measure);
         static bool measure_empty(const seq::Measure& measure);
         static bool check_note_up_limit(const seq::Note& note);
@@ -217,11 +221,12 @@ namespace application {
             bool metronome {};
             int tool {ui::ToolMeasure};
             int value {ui::ValueQuarter};
+            ui::Dynamics dynamics;
             ui::Tempo tempo {seq::Tempo()};
             ui::TimeSignature time_signature;
             ui::Composition composition;
             int octave {ui::Octave3};
-            int loudness {ui::MezzoForte};
+            int loudness {ui::LoudnessMezzoForte};
             int polyphony {};
             double volume {};
             const char* device {};

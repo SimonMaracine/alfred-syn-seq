@@ -27,6 +27,23 @@ namespace ui {
         ToolNote
     };
 
+    enum Loudness : int {
+        LoudnessPianississimo,
+        LoudnessPianissimo,
+        LoudnessPiano,
+        LoudnessMezzoPiano,
+        LoudnessMezzoForte,
+        LoudnessForte,
+        LoudnessFortissimo,
+        LoudnessFortississimo
+    };
+
+    struct Dynamics {
+        bool varying {};
+        Loudness loudness1 {LoudnessMezzoForte};
+        Loudness loudness2 {LoudnessForte};
+    };
+
     struct TimeSignature {
         enum Beats : unsigned int {
             Beats1,
@@ -70,22 +87,11 @@ namespace ui {
     };
 
     enum Octave : int {
-        Octave1 = 1,
+        Octave1,
         Octave2,
         Octave3,
         Octave4,
         Octave5
-    };
-
-    enum Loudness : int {
-        Pianississimo = 1,
-        Pianissimo,
-        Piano,
-        MezzoPiano,
-        MezzoForte,
-        Forte,
-        Fortissimo,
-        Fortississimo
     };
 
     // https://www.colorhexa.com/color-names
@@ -130,7 +136,7 @@ namespace ui {
             case Scale100:
                 return 1.0f;
             case Scale125:
-                return 1.25f;;
+                return 1.25f;
             case Scale150:
                 return 1.5f;
             case Scale175:
