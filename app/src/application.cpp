@@ -1763,7 +1763,6 @@ namespace application {
         const seq::Note new_note {
             hovered_note.id(),
             get_value(ui::Value(m_ui.value)),
-            seq::Loudness::MezzoForte,
             hovered_note.position() / seq::DIVISION * seq::DIVISION,  // Always place on groups of steps
         };
 

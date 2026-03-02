@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <set>
 #include <optional>
+#include <variant>
 #include <stdexcept>
 #include <functional>
 #include <algorithm>
@@ -93,14 +94,13 @@ namespace seq {
         Fortississimo
     };
 
-    constexpr double loudness(Loudness loudness) {
+    constexpr double loudness(Loudness loudness) {  // FIXME this is not linear
         return math::map(double(loudness), double(Loudness::Pianississimo), double(Loudness::Fortississimo), 0.1, 1.0);
     }
 
     struct Note {
         syn::NoteId id {};
         Value value {};
-        Loudness loudness {};
         unsigned int position {};  // Local, inside a measure
         unsigned int delay {};  // Used for arpeggios
         bool legato {};
@@ -128,6 +128,18 @@ namespace seq {
         // Notes must always be sorted in a very specific way
         // Use a normal set, because the iterators need to stay stable
         std::unordered_map<syn::InstrumentId, Notes> instruments;  // TODO erase empty when serializing
+
+        struct ConstantLoudness {
+            Loudness loudness;
+        };
+
+        struct VaryingLoudness {
+            Loudness loudness_min;
+            Loudness loudness_max;
+        };
+
+        // std::variant<ConstantLoudness, VaryingLoudness> loudness {ConstantLoudness { Loudness::MezzoForte }};
+        std::variant<ConstantLoudness, VaryingLoudness> loudness {VaryingLoudness { Loudness::Pianississimo, Loudness::Fortississimo }};
 
         bool equal_signature(const Measure& other) const {
             return time_signature == other.time_signature;
@@ -324,6 +336,8 @@ namespace seq {
         double initialize_elapsed_time(unsigned int position) const;
         unsigned int initialize_measure_position(unsigned int position) const;
         unsigned int calculate_note_duration(ConstMeasureIter measure, syn::InstrumentId instrument, unsigned int duration) const;
+        static double calculate_note_loudness(ConstMeasureIter measure, syn::InstrumentId instrument, unsigned int position, unsigned int duration);
+
         bool finished() const;
         bool no_notes() const;
 

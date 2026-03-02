@@ -163,7 +163,6 @@ namespace seq {
                     measure->instruments[instrument::Metronome::static_id()].emplace(
                         i == 0 ? syn::note(syn::B, syn::Octave5) : syn::note(syn::A, syn::Octave5),
                         Sixteenth,
-                        Loudness::Fortississimo,
                         i
                     );
                 }
@@ -205,7 +204,7 @@ namespace seq {
 
                     executions[instrument].notes_unplayed.emplace(
                         note->id,
-                        loudness(note->loudness),
+                        calculate_note_loudness(measure, instrument, note->position, seq::steps(note->value)),
                         steps + note->position + note->delay,
                         calculate_note_duration(measure, instrument, duration)
                     );
@@ -280,6 +279,27 @@ namespace seq {
         }
 
         return std::max(duration - release_duration, MIN_DURATION);
+    }
+
+    double Player::calculate_note_loudness(ConstMeasureIter measure, syn::InstrumentId instrument, unsigned int position, unsigned int duration) {
+        if (instrument == instrument::Metronome::static_id()) {
+            return loudness(Loudness::Fortississimo);
+        }
+
+        switch (measure->loudness.index()) {
+            case 0:
+                return loudness(std::get<0>(measure->loudness).loudness);
+            case 1:
+                return math::map(
+                    double(position + duration / 2),
+                    double(0),
+                    double(measure->time_signature.measure_steps() - 1),
+                    loudness(std::get<1>(measure->loudness).loudness_min),
+                    loudness(std::get<1>(measure->loudness).loudness_max)
+                );
+        }
+
+        std::unreachable();
     }
 
     bool Player::finished() const {
