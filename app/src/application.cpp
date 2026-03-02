@@ -1519,7 +1519,7 @@ namespace application {
         m_composition_camera.x = std::max(m_composition_camera.x, 0.0f);
         m_composition_camera.x = std::min(m_composition_camera.x, composition_width());
         m_composition_camera.y = std::max(m_composition_camera.y, 0.0f);
-        m_composition_camera.y = std::min(m_composition_camera.y, ui::rem(COMPOSITION_HEIGHT + STEP_SIZE.y) - space.y);
+        m_composition_camera.y = std::min(m_composition_camera.y, std::max(ui::rem(COMPOSITION_HEIGHT + STEP_SIZE.y) - space.y, 0.0f));
     }
 
     void Application::select_measure(MeasureIter hovered_measure) {
