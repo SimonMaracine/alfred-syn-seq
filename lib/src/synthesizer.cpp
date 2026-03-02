@@ -1,7 +1,6 @@
 #include "alfred/synthesizer.hpp"
 
 #include <algorithm>
-#include <tuple>
 #include <ranges>
 #include <cassert>
 

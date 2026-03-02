@@ -3,5 +3,5 @@ Name=Alfred
 Exec=alfred
 Type=Application
 Icon=alfred
-Categories=Audio;
+Categories=AudioVideo;Audio;
 Comment=A software synthesizer and sequencer program
