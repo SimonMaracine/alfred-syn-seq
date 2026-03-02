@@ -4,8 +4,8 @@
 #include <ranges>
 #include <cassert>
 
-#include "alfred/instrument.hpp"
-#include "alfred/math.hpp"
+#include <alfred/instrument.hpp>
+#include <alfred/math.hpp>
 
 namespace synthesizer {
     Synthesizer::Synthesizer() {
@@ -86,13 +86,13 @@ namespace synthesizer {
         });
     }
 
-    void Synthesizer::mix_update(double time) const {
+    void Synthesizer::mix_update(double time) const noexcept {
         for (const syn::Voice& voice : m_voices) {
             voice.envelope->update(time);
         }
     }
 
-    double Synthesizer::mix_sound(double time) const {
+    double Synthesizer::mix_sound(double time) const noexcept {
         double output {};
 
         for (const auto [i, voice] : m_voices | std::views::enumerate) {
@@ -141,11 +141,11 @@ namespace synthesizer {
         m_voices.clear();
     }
 
-    void RealSynthesizer::callback_update() {
+    void RealSynthesizer::callback_update() noexcept {
         mix_update(m_time);
     }
 
-    double RealSynthesizer::callback_sound() const {
+    double RealSynthesizer::callback_sound() const noexcept {
         return mix_sound(m_time);
     }
 

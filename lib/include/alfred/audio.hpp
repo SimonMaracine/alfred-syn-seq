@@ -4,7 +4,6 @@
 #include <span>
 #include <utility>
 #include <vector>
-#include <atomic>
 #include <cstdint>
 
 // Nyquist criterion
@@ -48,12 +47,12 @@ namespace audio {
 
         operator bool() const { return m_stream; }
 
-        virtual void callback_update() = 0;
-        virtual double callback_sound() const = 0;
+        virtual void callback_update() noexcept = 0;
+        virtual double callback_sound() const noexcept = 0;
     protected:
-        std::atomic<double> m_time {0.0};
+        double m_time {};
     private:
-        static void stream_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int total_amount);
+        static void stream_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int total_amount) noexcept;
 
         SDL_AudioStream* m_stream {};
 

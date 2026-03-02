@@ -13,6 +13,7 @@ struct SDL_Renderer;
 namespace video {
     inline constexpr int DEFAULT_WIDTH {1280};
     inline constexpr int DEFAULT_HEIGHT {720};
+    inline constexpr auto MAX_DELTA {50ull};
 
     class Video {
     public:

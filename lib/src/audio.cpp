@@ -152,7 +152,7 @@ namespace audio {
         std::unique_ptr<Resolution[]> buffer;
     } g_buffer;
 
-    void Audio::stream_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int) {
+    void Audio::stream_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int) noexcept {
         // This code is run under an internal SDL mutex
 
         Audio& self {*static_cast<Audio*>(userdata)};

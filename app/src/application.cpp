@@ -98,6 +98,11 @@ namespace application {
             return false;
         }, 5000);
 
+        m_task_manager.add_repeatable_task([this] {
+            m_synthesizer.update();
+            return false;
+        }, video::MAX_DELTA);
+
         m_synthesizer.for_each_instrument([this, index = std::size_t()](const auto& instrument) mutable {
             m_ui.colors[instrument.id()] = ui::ColorIndex(index);
             index = (index + 1) % std::size(ui::COLORS);
@@ -118,7 +123,6 @@ namespace application {
 
     void Application::on_update() {
         m_player.update(get_frame_time());
-        m_synthesizer.update();
     }
 
     void Application::on_imgui() {

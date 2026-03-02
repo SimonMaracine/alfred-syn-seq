@@ -6,8 +6,8 @@
 #include <functional>
 #include <atomic>
 
-#include "alfred/audio.hpp"
-#include "alfred/synthesis.hpp"
+#include <alfred/audio.hpp>
+#include <alfred/synthesis.hpp>
 
 namespace synthesizer {
     inline constexpr std::size_t MIN_VOICES {2};
@@ -37,8 +37,8 @@ namespace synthesizer {
     protected:
         void update_voices();
         std::vector<syn::Voice>::iterator find_voice(syn::NoteId note);
-        void mix_update(double time) const;
-        double mix_sound(double time) const;
+        void mix_update(double time) const noexcept;
+        double mix_sound(double time) const noexcept;
 
         std::unordered_map<syn::InstrumentId, std::unique_ptr<syn::Instrument>> m_instruments;
         std::vector<syn::Voice> m_voices;
@@ -54,8 +54,8 @@ namespace synthesizer {
         void update() override;
         void silence() override;
     private:
-        void callback_update() override;
-        double callback_sound() const override;
+        void callback_update() noexcept override;
+        double callback_sound() const noexcept override;
     };
 
     class VirtualSynthesizer : public Synthesizer {

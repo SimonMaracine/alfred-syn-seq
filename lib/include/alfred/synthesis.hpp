@@ -290,7 +290,7 @@ namespace syn {
         }
 
         template<std::size_t N>
-        constexpr double sound(double time, NoteId note, std::array<double, N> frequency_multipliers, std::array<double, N> amplitude_divisors) {
+        constexpr double sound(double time, NoteId note, const std::array<double, N>& frequency_multipliers, const std::array<double, N>& amplitude_divisors) {
             const auto amp {amplitudes(amplitude_divisors)};
 
             double output {};
@@ -303,7 +303,7 @@ namespace syn {
         }
 
         template<std::size_t N>
-        constexpr double sound(double time, NoteId note, LowFrequencyOscillator lfo, std::array<double, N> frequency_multipliers, std::array<double, N> amplitude_divisors) {
+        constexpr double sound(double time, NoteId note, LowFrequencyOscillator lfo, const std::array<double, N>& frequency_multipliers, const std::array<double, N>& amplitude_divisors) {
             const auto amp {amplitudes(amplitude_divisors)};
 
             double output {};
@@ -334,8 +334,7 @@ namespace syn {
 
             for (std::size_t i {}; i < sounds_at_times.size() - 1; i++) {
                 if (time_sample >= sounds_at_times[i].time && time_sample < sounds_at_times[i + 1].time) {
-                    const double percentage {math::map(time_sample, sounds_at_times[i].time, sounds_at_times[i + 1].time, 0.0, 1.0)};
-                    return math::mix(sounds_at_times[i].sound(time, note), sounds_at_times[i + 1].sound(time, note), percentage);  // FIXME bad performance
+                    return sounds_at_times[i].sound(time, note);
                 }
             }
 
