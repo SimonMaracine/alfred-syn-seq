@@ -96,7 +96,7 @@ namespace seq {
     };
 
     constexpr double loudness_amplitude(Loudness loudness) {
-        const double value {math::map(double(loudness), double(Loudness::Pianississimo), double(Loudness::Fortississimo), 0.1, 1.0)};
+        const double value {math::map(double(loudness), double(Loudness::Pianississimo), double(Loudness::Fortississimo), 0.2, 1.0)};
         return value * value;
     }
 
