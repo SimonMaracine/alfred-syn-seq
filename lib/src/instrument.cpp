@@ -1,6 +1,5 @@
 #include "alfred/instrument.hpp"
 
-#include <utility>
 #include <cmath>
 
 #include "alfred/math.hpp"
@@ -215,7 +214,7 @@ namespace instrument {
     Strings::Strings() {
         double amplitude_harmonics[64] {};
 
-        for (std::size_t i {1}; i < std::size(amplitude_harmonics); ++i) {
+        for (std::size_t i {1}; i < std::size(amplitude_harmonics); i++) {
             amplitude_harmonics[i] = 1.0 / double(i);
 
             if (i % 2 == 0) {
@@ -234,20 +233,13 @@ namespace instrument {
     }
 
     double Strings::sound(double time, double, syn::NoteId note) const {
-        static constexpr double SAMPLE_DURATION {double(SIZE) / double(audio::SAMPLE_FREQUENCY)};
-
-        const double pitch {syn::frequency(note) / FREQUENCY};
-        double _;
-        const double part {std::modf(time * pitch / SAMPLE_DURATION, &_)};
-        const auto index {std::size_t(part * double(SIZE))};
-
-        return m_sample[index];
+        return syn::util::sound(time, note, m_sample.get(), SIZE, FREQUENCY);
     }
 
     Cello::Cello() {
         double amplitude_harmonics[64] {};
 
-        for (std::size_t i {1}; i < std::size(amplitude_harmonics); ++i) {
+        for (std::size_t i {1}; i < std::size(amplitude_harmonics); i++) {
             amplitude_harmonics[i] = 1.0 / double(i);
 
             if (i % 2 == 0) {
@@ -263,16 +255,15 @@ namespace instrument {
             amplitude_harmonics,
             int(std::size(amplitude_harmonics))
         );
+
+        double t {};
+        for (std::size_t i {}; i < SIZE; i++) {
+            m_sample[i] *= 1.0 + LFO_DEVIATION * (syn::oscillator::sine(t, LFO_FREQUENCY) - 1.0);
+            t += 1.0 / double(audio::SAMPLE_FREQUENCY);
+        }
     }
 
     double Cello::sound(double time, double, syn::NoteId note) const {
-        static constexpr double SAMPLE_DURATION {double(SIZE) / double(audio::SAMPLE_FREQUENCY)};
-
-        const double pitch {syn::frequency(note) / FREQUENCY};
-        double _;
-        const double part {std::modf(time * pitch / SAMPLE_DURATION, &_)};
-        const auto index {std::size_t(part * double(SIZE))};
-
-        return m_sample[index];
+        return syn::util::sound(time, note, m_sample.get(), SIZE, FREQUENCY);
     }
 }

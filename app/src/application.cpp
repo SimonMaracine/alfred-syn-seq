@@ -481,7 +481,7 @@ namespace application {
 
             ImGui::SeparatorText("Octave");
 
-            if (ImGui::SliderInt("##octave", &m_ui.octave, ui::Octave1, ui::Octave5)) {
+            if (ImGui::SliderInt("##octave", &m_ui.octave, ui::OctaveFirst, ui::OctaveSeventh)) {
                 m_octave = syn::keyboard::Octave(m_ui.octave);
                 m_synthesizer.silence();
             }
@@ -921,7 +921,7 @@ namespace application {
         constexpr const char* NOTES_EXTRA[] { "C \0", "B \0", "A #", "A \0" };
 
         float position_y {};
-        int octave {7};
+        int octave {8};
 
         for (int j {}; j < syn::keyboard::OCTAVES; j++) {
             for (std::size_t i {}; i < std::size(NOTES_OCTAVES); i++) {

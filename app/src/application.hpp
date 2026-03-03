@@ -204,7 +204,7 @@ namespace application {
         task::TaskManager m_task_manager;
 
         syn::InstrumentId m_instrument {};
-        syn::keyboard::Octave m_octave {syn::keyboard::Octave3};
+        syn::keyboard::Octave m_octave {syn::keyboard::OctaveFourth};
         seq::Loudness m_loudness {seq::Loudness::MezzoForte};
 
         ImVec2 m_composition_camera;
@@ -225,7 +225,7 @@ namespace application {
             ui::Tempo tempo {seq::Tempo()};
             ui::TimeSignature time_signature;
             ui::Composition composition;
-            int octave {ui::Octave3};
+            int octave {ui::OctaveFourth};
             int loudness {ui::LoudnessMezzoForte};
             int polyphony {};
             double volume {};

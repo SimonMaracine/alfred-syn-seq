@@ -6,6 +6,7 @@
 #include <cassert>
 
 #include "alfred/audio.hpp"
+#include "alfred/math.hpp"
 
 namespace syn {
     static constexpr double eps(double duration) {
@@ -349,16 +350,29 @@ namespace syn {
     }
 
     double frequency(NoteId note) {
-        static constexpr double BASE_FREQUENCY {55.0};  // A1
+        static constexpr double BASE_FREQUENCY {27.5};  // A0
         static constexpr double STEP_FREQUENCY {1.059463094};  // 2.0 ** (1.0 / 12.0)
 
         return BASE_FREQUENCY * std::pow(STEP_FREQUENCY, double(note));
     }
 
+    namespace util {
+        double sound(double time, NoteId note, const double* sample, std::size_t size, double frequency) {
+            const double sample_duration {double(size) / double(audio::SAMPLE_FREQUENCY)};
+
+            const double pitch {syn::frequency(note) / frequency};
+            double _;
+            const double part {std::modf(time * pitch / sample_duration, &_)};
+            const auto index {std::size_t(part * double(size))};
+
+            return sample[index];
+        }
+    }
+
     // https://zynaddsubfx.sourceforge.io/doc/PADsynth/PADsynth.htm
 
     namespace padsynth {
-        static double profile(double frequency, double bandwidth) {  // TODO make customizable
+        static double default_profile(double frequency, double bandwidth) {
             const double x {frequency / bandwidth};
             return std::exp(-x * x) / bandwidth;
         }
@@ -395,15 +409,20 @@ namespace syn {
             double frequency,
             double bandwidth,
             const double* amplitude_harmonics,
-            int number_harmonics
+            int number_harmonics,
+            Profile profile
         ) {
+            if (!profile) {
+                profile = default_profile;
+            }
+
             auto sample {std::make_unique<double[]>(size)};
             auto frequency_amplitudes {std::make_unique<double[]>(size / 2)};
             auto frequency_phases {std::make_unique<double[]>(size / 2)};
 
             for (int harmonic {1}; harmonic < number_harmonics; harmonic++) {
                 const double harmonic_bandwidth {
-                    (std::pow(2.0, bandwidth / 1200.0) - 1.0) * frequency * double(harmonic)
+                    (std::exp2(bandwidth / 1200.0) - 1.0) * frequency * double(harmonic)
                 };
 
                 const double bandwidth_i {harmonic_bandwidth / (2.0 * double(sample_rate))};
@@ -421,13 +440,6 @@ namespace syn {
 
             inverse_ft(size, frequency_amplitudes.get(), frequency_phases.get(), sample.get());
             normalize(sample.get(), size);
-
-            double t {};
-
-            for (std::size_t i {}; i < size; i++) {
-                sample[i] *= 1.0 + 0.08 * (oscillator::sine(t, 9.0) - 1.0);
-                t += 1.0 / double(sample_rate);
-            }
 
             return sample;
         }

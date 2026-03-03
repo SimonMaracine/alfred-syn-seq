@@ -6,8 +6,8 @@
 #include <functional>
 #include <atomic>
 
-#include <alfred/audio.hpp>
-#include <alfred/synthesis.hpp>
+#include "alfred/audio.hpp"
+#include "alfred/synthesis.hpp"
 
 namespace synthesizer {
     inline constexpr std::size_t MIN_VOICES {2};

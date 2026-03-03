@@ -2,12 +2,13 @@
 
 #include <memory>
 #include <array>
+#include <cmath>
 #include <numeric>
 #include <ranges>
 #include <limits>
 #include <utility>
 
-#include "alfred/math.hpp"
+#include "alfred/audio.hpp"
 #include "alfred/allocator.hpp"
 
 namespace syn {
@@ -174,13 +175,15 @@ namespace syn {
     };
 
     enum NoteOctave : unsigned int {
+        Octave0,
         Octave1,
         Octave2,
         Octave3,
         Octave4,
         Octave5,
         Octave6,
-        Octave7
+        Octave7,
+        Octave8
     };
 
     // MIDI-like note ID
@@ -201,9 +204,9 @@ namespace syn {
         return base + 12 * (multiplier - 1);
     }
 
-    static_assert(note(A, Octave5) == 48);
-    static_assert(note(B, Octave5) == 50);
-    static_assert(note(C, Octave2) == 3);
+    static_assert(note(A, Octave5) == 60);
+    static_assert(note(B, Octave5) == 62);
+    static_assert(note(C, Octave2) == 15);
 
     struct Voice {
         NoteId note {};
@@ -216,14 +219,16 @@ namespace syn {
 
     namespace keyboard {
         enum Octave : unsigned int {
-            Octave1,
-            Octave2,
-            Octave3,
-            Octave4,
-            Octave5
+            OctaveFirst,
+            OctaveSecond,
+            OctaveThird,
+            OctaveFourth,
+            OctaveFifth,
+            OctaveSixth,
+            OctaveSeventh
         };
 
-        inline constexpr int OCTAVES {5};
+        inline constexpr int OCTAVES {7};
         inline constexpr int EXTRA {4};
         inline constexpr int NOTES {OCTAVES * 12 + EXTRA};
 
@@ -344,10 +349,13 @@ namespace syn {
 
             std::unreachable();
         }
+
+        double sound(double time, NoteId note, const double* sample, std::size_t size, double frequency);
     }
 
     namespace padsynth {
         using Sample = std::unique_ptr<double[]>;
+        using Profile = double(*)(double, double);
 
         Sample padsynth(
             std::size_t size,
@@ -355,7 +363,8 @@ namespace syn {
             double frequency,
             double bandwidth,
             const double* amplitude_harmonics,
-            int number_harmonics
+            int number_harmonics,
+            Profile profile = nullptr
         );
     }
 }

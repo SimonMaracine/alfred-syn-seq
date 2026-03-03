@@ -36,7 +36,7 @@ namespace instrument {  // TODO description
         syn::InstrumentId id() const override { return static_id(); }
 
         double sound(double time, double time_on, syn::NoteId note) const override;
-        syn::InstrumentRange range() const override { return { 12, 51 }; }
+        syn::InstrumentRange range() const override { return { syn::note(syn::C, syn::Octave2), syn::note(syn::C, syn::Octave6) }; }
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
@@ -158,7 +158,7 @@ namespace instrument {  // TODO description
         syn::InstrumentId id() const override { return static_id(); }
 
         double sound(double time, double time_on, syn::NoteId note) const override;
-        syn::InstrumentRange range() const override { return { 7, 51 }; }
+        syn::InstrumentRange range() const override { return { syn::note(syn::E, syn::Octave2), syn::note(syn::C, syn::Octave6) }; }
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
@@ -203,26 +203,29 @@ namespace instrument {  // TODO description
     public:
         Cello();
 
-        ALFRED_INSTRUMENT_STATIC_NAME_ID("Cello?")
+        ALFRED_INSTRUMENT_STATIC_NAME_ID("Cello")
 
         const char* name() const override { return static_name(); }
         syn::InstrumentId id() const override { return static_id(); }
 
         double sound(double time, double time_on, syn::NoteId note) const override;
+        syn::InstrumentRange range() const override { return { syn::note(syn::C, syn::Octave2), syn::note(syn::A, syn::Octave5) }; }
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdsrLinear>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
     private:
         static constexpr syn::DescriptionAdsr ENVELOPE {
-            .duration_attack = 0.25,
+            .duration_attack = 0.33,
             .duration_decay = 0.05,
-            .duration_release = 0.25,
+            .duration_release = 0.3,
             .value_sustain = 0.95
         };
 
         static constexpr std::size_t SIZE {262144};
         static constexpr double FREQUENCY {261.63};
+        static constexpr double LFO_FREQUENCY {8.0};
+        static constexpr double LFO_DEVIATION {0.07};
 
         syn::padsynth::Sample m_sample;
     };

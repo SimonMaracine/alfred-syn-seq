@@ -87,11 +87,13 @@ namespace ui {
     };
 
     enum Octave : int {
-        Octave1,
-        Octave2,
-        Octave3,
-        Octave4,
-        Octave5
+        OctaveFirst,
+        OctaveSecond,
+        OctaveThird,
+        OctaveFourth,
+        OctaveFifth,
+        OctaveSixth,
+        OctaveSeventh
     };
 
     // https://www.colorhexa.com/color-names

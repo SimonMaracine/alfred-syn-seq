@@ -4,8 +4,8 @@
 #include <ranges>
 #include <cassert>
 
-#include <alfred/instrument.hpp>
-#include <alfred/math.hpp>
+#include "alfred/instrument.hpp"
+#include "alfred/math.hpp"
 
 namespace synthesizer {
     Synthesizer::Synthesizer() {
