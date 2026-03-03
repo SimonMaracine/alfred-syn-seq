@@ -39,7 +39,7 @@ namespace video {
 
         m_working_directory = SDL_GetCurrentDirectory();
 
-        set_desired_frame_time(16);
+        desired_frame_time(16);
     }
 
     Video::~Video() {
@@ -118,11 +118,11 @@ namespace video {
         on_stop();
     }
 
-    void Video::set_desired_frame_time(unsigned long long milliseconds) {
+    void Video::desired_frame_time(unsigned long long milliseconds) {
         m_desired_frame_time = milliseconds * SDL_NS_PER_MS;
     }
 
-    void Video::set_icons(std::initializer_list<std::span<const unsigned char>> icons) const {
+    void Video::icons(std::initializer_list<std::span<const unsigned char>> icons) const {
         std::vector<image::Surface> surfaces;
 
         for (const auto icon : icons) {
@@ -140,13 +140,13 @@ namespace video {
         }
     }
 
-    void Video::set_title(std::string_view title) const {
+    void Video::title(std::string_view title) const {
         if (!SDL_SetWindowTitle(m_window, title.data())) {
             throw VideoError(std::format("SDL_SetWindowTitle: {}", SDL_GetError()));
         }
     }
 
-    void Video::set_window_size(int width, int height) const {
+    void Video::window_size(int width, int height) const {
         if (!SDL_SetWindowSize(m_window, width, height)) {
             throw VideoError(std::format("SDL_SetWindowSize: {}", SDL_GetError()));
         }
@@ -156,7 +156,7 @@ namespace video {
         }
     }
 
-    std::pair<int, int> Video::get_window_size() const {
+    std::pair<int, int> Video::window_size() const {
         int width {};
         int height {};
 

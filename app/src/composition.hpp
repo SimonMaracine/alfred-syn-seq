@@ -42,8 +42,28 @@ namespace seq {
     }
 
     template<typename Archive>
+    void serialize(Archive& archive, ConstantLoudness& self, const std::uint32_t) {
+        archive(self.loudness);
+    }
+
+    template<typename Archive>
+    void serialize(Archive& archive, VaryingLoudness& self, const std::uint32_t) {
+        archive(self.loudness_begin, self.loudness_end);
+    }
+
+    template<typename Archive>
+    void serialize(Archive& archive, ConstantTempo& self, const std::uint32_t) {
+        archive(self.tempo);
+    }
+
+    template<typename Archive>
+    void serialize(Archive& archive, VaryingTempo& self, const std::uint32_t) {
+        archive(self.tempo_begin, self.tempo_end);
+    }
+
+    template<typename Archive>
     void serialize(Archive& archive, Measure& self, const std::uint32_t) {
-        archive(self.tempo, self.time_signature, self.instruments);
+        archive(self.time_signature, self.dynamics, self.jifdwkefbuikejbfjk, self.instruments);
     }
 
     template<typename Archive>

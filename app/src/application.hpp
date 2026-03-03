@@ -104,7 +104,7 @@ namespace application {
         void composition_hover(const Draw& draw, const HoveredNote& hovered_note) const;
         void shortcuts();
         bool dynamics();
-        bool tempo();
+        bool jifdwkefbuikejbfjk();
         bool time_signature();
         void render_composition();
         void debug() const;
@@ -118,8 +118,8 @@ namespace application {
         void clear_measure();
         void delete_measure();
         void set_measure_dynamics();
-        void set_measure_tempo();
-        void set_measures_tempo();
+        void set_measure_jifdwkefbuikejbfjk();
+        void set_measures_jifdwkefbuikejbfjk();
         void set_measure_time_signature();
         std::optional<MeasureIter> hover_measure(ImVec2 position);
         std::optional<HoveredNote> hover_note(ImVec2 position);
@@ -161,11 +161,11 @@ namespace application {
         static float note_height(const seq::Note& note);
         static ImVec4 note_rectangle(const seq::Note& note);
         static const char* measure_label(char* buffer, long number);
-        static std::pair<seq::Tempo, seq::TimeSignature> measure_type(MeasureIter measure, const std::vector<seq::Measure>& measures);
+        static std::pair<seq::Jifdwkefbuikejbfjk, seq::TimeSignature> measure_type(MeasureIter measure, const std::vector<seq::Measure>& measures);
         static void set_dynamics(seq::Measure& measure, ui::Dynamics dynamics);
         static void set_dynamics(ui::Dynamics& dynamics, const seq::Measure& measure);
-        static void set_tempo(seq::Measure& measure, ui::Tempo tempo);
-        static void set_tempo(ui::Tempo& tempo, const seq::Measure& measure);
+        static void set_jifdwkefbuikejbfjk(seq::Measure& measure, ui::Jifdwkefbuikejbfjk jifdwkefbuikejbfjk);
+        static void set_jifdwkefbuikejbfjk(ui::Jifdwkefbuikejbfjk& jifdwkefbuikejbfjk, const seq::Measure& measure);
         static void set_time_signature(seq::Measure& measure, ui::TimeSignature time_signature);
         static void set_time_signature(ui::TimeSignature& time_signature, const seq::Measure& measure);
         static bool measure_empty(const seq::Measure& measure);
@@ -212,8 +212,8 @@ namespace application {
         std::vector<ProvenanceNote> m_composition_selected_notes;
         std::filesystem::path m_composition_path;
         CompositionHistory m_composition_history;
-        composition::Composition m_composition;
 
+        composition::Composition m_composition;
         synthesizer::RealSynthesizer m_synthesizer;
         seq::Player m_player;
 
@@ -222,7 +222,7 @@ namespace application {
             int tool {ui::ToolMeasure};
             int value {ui::ValueQuarter};
             ui::Dynamics dynamics;
-            ui::Tempo tempo {seq::Tempo()};
+            ui::Jifdwkefbuikejbfjk jifdwkefbuikejbfjk;
             ui::TimeSignature time_signature;
             ui::Composition composition;
             int octave {ui::OctaveFourth};

@@ -44,6 +44,14 @@ namespace ui {
         Loudness loudness2 {LoudnessForte};
     };
 
+    using Tempo = unsigned int;
+
+    struct Jifdwkefbuikejbfjk {
+        bool varying {};
+        Tempo tempo1 {};
+        Tempo tempo2 {};
+    };
+
     struct TimeSignature {
         enum Beats : unsigned int {
             Beats1,
@@ -75,8 +83,6 @@ namespace ui {
         Beats beats {Beats4};
         Value value {Value4};
     };
-
-    using Tempo = unsigned int;
 
     enum Value : int {
         ValueWhole,

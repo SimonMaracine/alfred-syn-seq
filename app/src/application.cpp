@@ -36,10 +36,10 @@ namespace application {
     static constexpr unsigned long long FRAME_TIME_PLAYBACK {4};
 
     void Application::on_start() {
-        set_desired_frame_time(FRAME_TIME_DEFAULT);
+        desired_frame_time(FRAME_TIME_DEFAULT);
 
         try {
-            set_icons({ ICON64, ICON128 });
+            icons({ ICON64, ICON128 });
         } catch (const video::VideoError& e) {
             logging::error("Could not set icon: {}", e.what());
         }
@@ -67,11 +67,11 @@ namespace application {
                 break;
             case ui::Scale150:
             case ui::Scale175:
-                set_window_size(1920, 1080);
+                window_size(1920, 1080);
                 LOG_INFORMATION("Set a higher window size");
                 break;
             case ui::Scale200:
-                set_window_size(2560, 1440);
+                window_size(2560, 1440);
                 LOG_INFORMATION("Set a higher window size");
                 break;
         }
@@ -83,7 +83,7 @@ namespace application {
         io.IniFilename = nullptr;
 
         m_instrument = instrument::Piano::static_id();
-        m_player = seq::Player(m_synthesizer, m_composition, [this] { set_desired_frame_time(FRAME_TIME_DEFAULT); });
+        m_player = seq::Player(m_synthesizer, m_composition, [this] { desired_frame_time(FRAME_TIME_DEFAULT); });
         m_composition_selected_measure = m_composition.measures.end();
 
         m_ui.volume = m_synthesizer.volume();
@@ -122,7 +122,7 @@ namespace application {
     }
 
     void Application::on_update() {
-        m_player.update(get_frame_time());
+        m_player.update(frame_time());
     }
 
     void Application::on_imgui() {
@@ -444,7 +444,7 @@ namespace application {
         const ImVec2 base {(space.x - ui::rem(WIDTH)) / 2.0f, (space.y - ui::rem(HEIGHT)) / 2.0f};
         const ImVec2 position {x * ui::rem(CELL), y * ui::rem(CELL)};
         const char label[2] { key, '\0' };
-        ImColor color {get_keyboard_state()[scancode] ? COLOR_ACTIVE : COLOR_INACTIVE};
+        ImColor color {keyboard_state()[scancode] ? COLOR_ACTIVE : COLOR_INACTIVE};
 
         // Just override when keyboard is disabled
         if (!keyboard_active()) {
@@ -583,7 +583,7 @@ namespace application {
 
             ImGui::SameLine();
 
-            if (m_player.is_playing()) {
+            if (m_player.playing()) {
                 if (ImGui::ImageButton("Pause", reinterpret_cast<ImTextureID>(m_ui.texture_pause.get()), SIZE, UV0, UV1, COLOR_BACKGROUND, COLOR_FOREGROUND)) {
                     stop_player();
                 }
@@ -597,11 +597,11 @@ namespace application {
 
             ImGui::SameLine();
 
-            ImGui::BeginDisabled(m_player.is_playing());
+            ImGui::BeginDisabled(m_player.playing());
 
             if (ImGui::Checkbox("Metronome", &m_ui.metronome)) {
-                if (const bool allow_edit {!m_player.is_playing()}; allow_edit) {
-                    m_player.set_metronome(m_ui.metronome);
+                if (const bool allow_edit {!m_player.playing()}; allow_edit) {
+                    m_player.metronome(m_ui.metronome);
                     m_composition_not_compiled = true;
                 } else {
                     m_ui.metronome = !m_ui.metronome;
@@ -618,9 +618,9 @@ namespace application {
 
             ImGui::SameLine();
 
-            const Time time {elapsed_seconds_to_time(m_player.get_elapsed_time())};
+            const Time time {elapsed_seconds_to_time(m_player.elapsed_time())};
 
-            if (m_player.is_in_time()) {
+            if (m_player.in_time()) {
                 ImGui::Text("%02d:%02d.%d", time.minutes, time.seconds, time.deciseconds);
             } else {
                 const ImColor& COLOR {color(ImGuiCol_PlotLinesHovered)};
@@ -668,7 +668,7 @@ namespace application {
     }
 
     void Application::tools_measure() {
-        ImGui::BeginDisabled(m_player.is_playing());
+        ImGui::BeginDisabled(m_player.playing());
 
         ImGui::BeginGroup();
 
@@ -730,23 +730,23 @@ namespace application {
             set_measure_time_signature();
         }
 
-        ImGui::EndDisabled();
-
         ImGui::SameLine();
 
         ImGui::Dummy(ui::rem(ImVec2(0.5f, 0.0f)));
 
         ImGui::SameLine();
 
-        if (tempo()) {
-            set_measures_tempo();
+        if (jifdwkefbuikejbfjk()) {
+            set_measures_jifdwkefbuikejbfjk();
         }
+
+        ImGui::EndDisabled();
 
         ImGui::EndDisabled();
     }
 
     void Application::tools_note() {
-        ImGui::BeginDisabled(m_player.is_playing() || m_composition_selected_notes.empty());
+        ImGui::BeginDisabled(m_player.playing() || m_composition_selected_notes.empty());
 
         ImGui::BeginGroup();
 
@@ -870,7 +870,7 @@ namespace application {
 
             const bool item_active {ImGui::IsItemActive()};
             const bool item_hovered {ImGui::IsItemHovered()};
-            const bool allow_edit {!m_player.is_playing()};
+            const bool allow_edit {!m_player.playing()};
 
             if (!ImGui::IsKeyDown(ImGuiMod_Alt)) {
                 if (const auto hovered_note {hover_note(composition_mouse_position(origin))}; item_hovered && allow_edit && hovered_note) {
@@ -1144,7 +1144,7 @@ namespace application {
     void Application::composition_cursor(const Draw& draw) const {
         const ImColor& COLOR {color(ImGuiCol_PlotHistogramHovered)};
 
-        const float position_x {ui::rem(COMPOSITION_LEFT) + float(m_player.get_position()) * ui::rem(STEP_SIZE.x)};
+        const float position_x {ui::rem(COMPOSITION_LEFT) + float(m_player.position()) * ui::rem(STEP_SIZE.x)};
 
         draw.list->AddLine(
             draw.origin + ImVec2(position_x, 0.0f) - ImVec2(m_composition_camera.x, 0.0f),
@@ -1222,7 +1222,7 @@ namespace application {
         }
 
         if (ImGui::Shortcut(ImGuiKey_Space, ImGuiInputFlags_RouteAlways)) {
-            if (m_player.is_playing()) {
+            if (m_player.playing()) {
                 stop_player();
             } else {
                 start_player();
@@ -1248,7 +1248,7 @@ namespace application {
 
         switch (m_ui.tool) {
             case ui::ToolMeasure:
-                if (m_player.is_playing()) {
+                if (m_player.playing()) {
                     break;
                 }
 
@@ -1298,7 +1298,7 @@ namespace application {
                     m_ui.value = ui::ValueSixteenth;
                 }
 
-                if (m_player.is_playing() || m_composition_selected_notes.empty()) {
+                if (m_player.playing() || m_composition_selected_notes.empty()) {
                     break;
                 }
 
@@ -1347,7 +1347,7 @@ namespace application {
 
         ImGui::BeginGroup();
 
-        if (ImGui::Button(m_ui.dynamics.varying ? "Varying" : "Constant")) {
+        if (ImGui::Button(m_ui.dynamics.varying ? "Varying##dynamics" : "Constant##dynamics")) {
             m_ui.dynamics.varying = !m_ui.dynamics.varying;
             result = true;
         }
@@ -1356,7 +1356,7 @@ namespace application {
         constexpr const char* LOUDNESS[] { "ppp", "pp", "p", "mp", "mf", "f", "ff", "fff" };
 
         if (m_ui.dynamics.varying) {
-            if (ImGui::BeginCombo("##begin", LOUDNESS[m_ui.dynamics.loudness1], flags)) {
+            if (ImGui::BeginCombo("##loudness1", LOUDNESS[m_ui.dynamics.loudness1], flags)) {
                 for (std::size_t i {}; i < std::size(LOUDNESS); i++) {
                     if (ImGui::Selectable(LOUDNESS[i], m_ui.dynamics.loudness1 == int(i))) {
                         m_ui.dynamics.loudness1 = ui::Loudness(i);
@@ -1369,7 +1369,7 @@ namespace application {
 
             ImGui::SameLine();
 
-            if (ImGui::BeginCombo("##end", LOUDNESS[m_ui.dynamics.loudness2], flags)) {
+            if (ImGui::BeginCombo("##loudness2", LOUDNESS[m_ui.dynamics.loudness2], flags)) {
                 for (std::size_t i {}; i < std::size(LOUDNESS); i++) {
                     if (ImGui::Selectable(LOUDNESS[i], m_ui.dynamics.loudness2 == int(i))) {
                         m_ui.dynamics.loudness2 = ui::Loudness(i);
@@ -1399,19 +1399,46 @@ namespace application {
         return result;
     }
 
-    bool Application::tempo() {
+    bool Application::jifdwkefbuikejbfjk() {
         constexpr unsigned int one {1};
-
-        ImGui::SetNextItemWidth(ui::rem(6.0f));
 
         bool result {};
 
-        if (ImGui::InputScalar("Tempo", ImGuiDataType_S32, &m_ui.tempo, &one)) {
-            m_ui.tempo = std::clamp(m_ui.tempo, seq::Tempo::MIN, seq::Tempo::MAX);
+        ImGui::BeginGroup();
+
+        if (ImGui::Button(m_ui.jifdwkefbuikejbfjk.varying ? "Varying##jifdwkefbuikejbfjk" : "Constant##jifdwkefbuikejbfjk")) {
+            m_ui.jifdwkefbuikejbfjk.varying = !m_ui.jifdwkefbuikejbfjk.varying;
             result = true;
         }
 
-        ImGui::SetItemTooltip("Change the tempo of the composition in quarters per minute");
+        if (m_ui.jifdwkefbuikejbfjk.varying) {
+            ImGui::SetNextItemWidth(ui::rem(6.0f));
+
+            if (ImGui::InputScalar("##tempo1", ImGuiDataType_U32, &m_ui.jifdwkefbuikejbfjk.tempo1, &one)) {
+                m_ui.jifdwkefbuikejbfjk.tempo1 = std::clamp(m_ui.jifdwkefbuikejbfjk.tempo1, seq::Tempo::MIN, seq::Tempo::MAX);
+                result = true;
+            }
+
+            ImGui::SameLine();
+
+            ImGui::SetNextItemWidth(ui::rem(6.0f));
+
+            if (ImGui::InputScalar("##tempo2", ImGuiDataType_U32, &m_ui.jifdwkefbuikejbfjk.tempo2, &one)) {
+                m_ui.jifdwkefbuikejbfjk.tempo2 = std::clamp(m_ui.jifdwkefbuikejbfjk.tempo2, seq::Tempo::MIN, seq::Tempo::MAX);
+                result = true;
+            }
+        } else {
+            ImGui::SetNextItemWidth(ui::rem(6.0f));
+
+            if (ImGui::InputScalar("##tempo", ImGuiDataType_U32, &m_ui.jifdwkefbuikejbfjk.tempo1, &one)) {
+                m_ui.jifdwkefbuikejbfjk.tempo1 = std::clamp(m_ui.jifdwkefbuikejbfjk.tempo1, seq::Tempo::MIN, seq::Tempo::MAX);
+                result = true;
+            }
+        }
+
+        ImGui::EndGroup();
+
+        ImGui::SetItemTooltip("Change the tempo of the current measure in quarters per minute");
 
         return result;
     }
@@ -1498,14 +1525,14 @@ namespace application {
     void Application::debug() const {
 #ifndef ALFRED_DISTRIBUTION
         if (ImGui::Begin("Debug", nullptr, ImGuiWindowFlags_NoDocking)) {
-            ImGui::Text("Frame time: %f", get_frame_time());
+            ImGui::Text("Frame time: %f", frame_time());
 
             if (ImGui::SmallButton("Write Settings")) {
                 ImGui::SaveIniSettingsToDisk("imguid.ini");
             }
 
             ImGui::Text("m_synthesizer.current_voices() %zu", m_synthesizer.current_voices());
-            ImGui::Text("m_player.get_position() %u", m_player.get_position());
+            ImGui::Text("m_player.get_position() %u", m_player.position());
             ImGui::Text("m_composition_not_compiled %d", m_composition_not_compiled);
             ImGui::Text("m_composition_not_saved %d", m_composition_not_saved);
         }
@@ -1589,9 +1616,9 @@ namespace application {
             }
         }
 
-        const float cursor_position {float(m_player.get_position()) * ui::rem(STEP_SIZE.x) - m_composition_camera.x};
+        const float cursor_position {float(m_player.position()) * ui::rem(STEP_SIZE.x) - m_composition_camera.x};
 
-        if (m_player.is_playing() && cursor_position > space.x / 2.0f) {
+        if (m_player.playing() && cursor_position > space.x / 2.0f) {
             m_composition_camera.x += std::floor(cursor_position - space.x / 2.0f);
         }
 
@@ -1608,49 +1635,49 @@ namespace application {
             m_composition_selected_measure = hovered_measure;
 
             set_dynamics(m_ui.dynamics, *hovered_measure);
-            set_tempo(m_ui.tempo, *hovered_measure);
+            set_jifdwkefbuikejbfjk(m_ui.jifdwkefbuikejbfjk, *hovered_measure);
             set_time_signature(m_ui.time_signature, *hovered_measure);
         }
     }
 
-    void Application::append_measures() {
-        assert(!m_player.is_playing());
+    void Application::append_measures() {  // FIXME set the corresponding dynamics and jifdwkefbuikejbfjk
+        assert(!m_player.playing());
 
         remember_composition();
 
-        const auto [tempo, time_signature] {measure_type(
+        const auto [jifdwkefbuikejbfjk, time_signature] {measure_type(
             !m_composition.measures.empty() ? std::prev(m_composition.measures.end()) : m_composition.measures.end(),
             m_composition.measures
         )};
 
         for (int i {}; i < ADD_MEASURES; i++) {
-            m_composition.measures.emplace_back(tempo, time_signature);
+            m_composition.measures.emplace_back(time_signature, seq::Dynamics(), jifdwkefbuikejbfjk);
             m_composition_selected_measure = m_composition.measures.end();
         }
 
         modify_composition();
     }
 
-    void Application::insert_measure() {
-        assert(!m_player.is_playing());
+    void Application::insert_measure() {  // FIXME set the corresponding dynamics and jifdwkefbuikejbfjk
+        assert(!m_player.playing());
         assert(m_composition_selected_measure != m_composition.measures.end());
 
         remember_composition();
 
-        const auto [tempo, time_signature] {measure_type(
+        const auto [jifdwkefbuikejbfjk, time_signature] {measure_type(
             m_composition_selected_measure,
             m_composition.measures
         )};
 
         reset_note_legato_previous_measure(m_composition_selected_measure);
 
-        m_composition_selected_measure = m_composition.measures.emplace(m_composition_selected_measure, tempo, time_signature);
+        m_composition_selected_measure = m_composition.measures.emplace(m_composition_selected_measure, time_signature, seq::Dynamics(), jifdwkefbuikejbfjk);
 
         modify_composition();
     }
 
     void Application::clear_measure() {
-        assert(!m_player.is_playing());
+        assert(!m_player.playing());
         assert(m_composition_selected_measure != m_composition.measures.end());
 
         remember_composition();
@@ -1663,7 +1690,7 @@ namespace application {
     }
 
     void Application::delete_measure() {
-        assert(!m_player.is_playing());
+        assert(!m_player.playing());
         assert(m_composition_selected_measure != m_composition.measures.end());
 
         remember_composition();
@@ -1676,7 +1703,7 @@ namespace application {
     }
 
     void Application::set_measure_dynamics() {
-        assert(!m_player.is_playing());
+        assert(!m_player.playing());
         assert(m_composition_selected_measure != m_composition.measures.end());
 
         remember_composition();
@@ -1686,29 +1713,29 @@ namespace application {
         modify_composition();
     }
 
-    void Application::set_measure_tempo() {
-        assert(!m_player.is_playing());
+    void Application::set_measure_jifdwkefbuikejbfjk() {  // FIXME set to currently selected measure
+        assert(!m_player.playing());
         assert(m_composition_selected_measure != m_composition.measures.end());
 
         remember_composition();
 
-        set_tempo(*m_composition_selected_measure, m_ui.tempo);
+        set_jifdwkefbuikejbfjk(*m_composition_selected_measure, m_ui.jifdwkefbuikejbfjk);
 
         modify_composition();
     }
 
-    void Application::set_measures_tempo() {
+    void Application::set_measures_jifdwkefbuikejbfjk() {  // FIXME set to currently selected measure
         remember_composition();
 
         for (auto measure {m_composition.measures.begin()}; measure != m_composition.measures.end(); measure++) {
-            set_tempo(*measure, m_ui.tempo);
+            set_jifdwkefbuikejbfjk(*measure, m_ui.jifdwkefbuikejbfjk);
         }
 
         modify_composition();
     }
 
     void Application::set_measure_time_signature() {
-        assert(!m_player.is_playing());
+        assert(!m_player.playing());
         assert(m_composition_selected_measure != m_composition.measures.end());
 
         if (measure_empty(*m_composition_selected_measure)) {
@@ -1885,7 +1912,7 @@ namespace application {
     }
 
     void Application::delete_notes() {
-        assert(!m_player.is_playing());
+        assert(!m_player.playing());
         assert(!m_composition_selected_notes.empty());
 
         remember_composition();
@@ -1904,7 +1931,7 @@ namespace application {
     }
 
     void Application::legato_notes() {
-        assert(!m_player.is_playing());
+        assert(!m_player.playing());
         assert(!m_composition_selected_notes.empty());
 
         remember_composition();
@@ -1932,7 +1959,7 @@ namespace application {
     }
 
     void Application::shift_notes_up() {  // FIXME don't reset legato if the tied notes are both shifted
-        assert(!m_player.is_playing());
+        assert(!m_player.playing());
         assert(!m_composition_selected_notes.empty());
 
         if (
@@ -1984,7 +2011,7 @@ namespace application {
     }
 
     void Application::shift_notes_down() {  // FIXME don't reset legato if the tied notes are both shifted
-        assert(!m_player.is_playing());
+        assert(!m_player.playing());
         assert(!m_composition_selected_notes.empty());
 
         if (
@@ -2036,7 +2063,7 @@ namespace application {
     }
 
     void Application::shift_notes_left() {
-        assert(!m_player.is_playing());
+        assert(!m_player.playing());
         assert(!m_composition_selected_notes.empty());
 
         if (
@@ -2083,7 +2110,7 @@ namespace application {
     }
 
     void Application::shift_notes_right() {
-        assert(!m_player.is_playing());
+        assert(!m_player.playing());
         assert(!m_composition_selected_notes.empty());
 
         if (
@@ -2134,7 +2161,7 @@ namespace application {
     }
 
     void Application::add_delay_notes() {
-        assert(!m_player.is_playing());
+        assert(!m_player.playing());
         assert(!m_composition_selected_notes.empty());
 
         remember_composition();
@@ -2162,7 +2189,7 @@ namespace application {
     }
 
     void Application::remove_delay_notes() {
-        assert(!m_player.is_playing());
+        assert(!m_player.playing());
         assert(!m_composition_selected_notes.empty());
 
         remember_composition();
@@ -2193,12 +2220,12 @@ namespace application {
         m_composition_selected_notes.clear();
 
         m_player.start();
-        set_desired_frame_time(FRAME_TIME_PLAYBACK);
+        desired_frame_time(FRAME_TIME_PLAYBACK);
     }
 
     void Application::stop_player() {
         m_player.stop();
-        set_desired_frame_time(FRAME_TIME_DEFAULT);
+        desired_frame_time(FRAME_TIME_DEFAULT);
     }
 
     void Application::modify_composition() {
@@ -2227,9 +2254,9 @@ namespace application {
 
     void Application::set_title_composition_not_saved() const {
         if (m_composition_path.empty()) {
-            set_title("Alfred - Unsaved Composition");
+            title("Alfred - Unsaved Composition");
         } else {
-            set_title(std::format("Alfred - {}*", m_composition_path.filename().string().c_str()));
+            title(std::format("Alfred - {}*", m_composition_path.filename().string().c_str()));
         }
 
         LOG_DEBUG("Changed title");
@@ -2237,9 +2264,9 @@ namespace application {
 
     void Application::set_title_composition_saved() const {
         if (m_composition_path.empty()) {
-            set_title("Alfred");
+            title("Alfred");
         } else {
-            set_title(std::format("Alfred - {}", m_composition_path.filename().string().c_str()));
+            title(std::format("Alfred - {}", m_composition_path.filename().string().c_str()));
         }
 
         LOG_DEBUG("Changed title");
@@ -2371,23 +2398,23 @@ namespace application {
         return buffer;
     }
 
-    std::pair<seq::Tempo, seq::TimeSignature> Application::measure_type(MeasureIter measure, const std::vector<seq::Measure>& measures) {
-        seq::Tempo tempo;
+    std::pair<seq::Jifdwkefbuikejbfjk, seq::TimeSignature> Application::measure_type(MeasureIter measure, const std::vector<seq::Measure>& measures) {  // TODO rename
+        seq::Jifdwkefbuikejbfjk jifdwkefbuikejbfjk;
         seq::TimeSignature time_signature;
 
         if (measure != measures.end()) {
-            tempo = measure->tempo;
+            jifdwkefbuikejbfjk = measure->jifdwkefbuikejbfjk;
             time_signature = measure->time_signature;
         }
 
-        return { tempo, time_signature };
+        return { jifdwkefbuikejbfjk, time_signature };
     }
 
     void Application::set_dynamics(seq::Measure& measure, ui::Dynamics dynamics) {
         if (dynamics.varying) {
-            measure.dynamics = seq::VaryingLoudness { seq::Loudness(dynamics.loudness1), seq::Loudness(dynamics.loudness2) };
+            measure.dynamics = seq::VaryingLoudness {seq::Loudness(dynamics.loudness1), seq::Loudness(dynamics.loudness2)};
         } else {
-            measure.dynamics = seq::ConstantLoudness { seq::Loudness(dynamics.loudness1) };
+            measure.dynamics = seq::ConstantLoudness {seq::Loudness(dynamics.loudness1)};
         }
     }
 
@@ -2405,12 +2432,26 @@ namespace application {
         }
     }
 
-    void Application::set_tempo(seq::Measure& measure, ui::Tempo tempo) {
-        measure.tempo = seq::Tempo(tempo);
+    void Application::set_jifdwkefbuikejbfjk(seq::Measure& measure, ui::Jifdwkefbuikejbfjk jifdwkefbuikejbfjk) {
+        if (jifdwkefbuikejbfjk.varying) {
+            measure.jifdwkefbuikejbfjk = seq::VaryingTempo {seq::Tempo(jifdwkefbuikejbfjk.tempo1), seq::Tempo(jifdwkefbuikejbfjk.tempo2)};
+        } else {
+            measure.jifdwkefbuikejbfjk = seq::ConstantTempo {seq::Tempo(jifdwkefbuikejbfjk.tempo1)};
+        }
     }
 
-    void Application::set_tempo(ui::Tempo& tempo, const seq::Measure& measure) {
-        tempo = measure.tempo;
+    void Application::set_jifdwkefbuikejbfjk(ui::Jifdwkefbuikejbfjk& jifdwkefbuikejbfjk, const seq::Measure& measure) {
+        switch (measure.jifdwkefbuikejbfjk.index()) {
+            case 0:
+                jifdwkefbuikejbfjk.varying = false;
+                jifdwkefbuikejbfjk.tempo1 = ui::Tempo(std::get<0>(measure.jifdwkefbuikejbfjk).tempo);
+                break;
+            case 1:
+                jifdwkefbuikejbfjk.varying = true;
+                jifdwkefbuikejbfjk.tempo1 = ui::Tempo(std::get<1>(measure.jifdwkefbuikejbfjk).tempo_begin);
+                jifdwkefbuikejbfjk.tempo2 = ui::Tempo(std::get<1>(measure.jifdwkefbuikejbfjk).tempo_end);
+                break;
+        }
     }
 
     void Application::set_time_signature(seq::Measure& measure, ui::TimeSignature time_signature) {
@@ -2825,7 +2866,7 @@ namespace application {
             player.update(1.0 / double(audio::SAMPLE_FREQUENCY));
             synthesizer.update();
 
-            assert(player.is_in_time());
+            assert(player.in_time());
 
             if (task.stop_requested()) {
                 logging::information("Interrupted rendering composition");
@@ -2837,7 +2878,7 @@ namespace application {
             if (time_now - time_last_update > 0.1s) {
                 time_last_update = time_now;
 
-                m_task_manager.add_immediate_thread_safe_task([this, position = player.get_position(), size] {
+                m_task_manager.add_immediate_thread_safe_task([this, position = player.position(), size] {
                     m_ui.render_progress = math::map(float(position), 0.0f, float(size), 0.0f, 0.9f);
                 });
             }

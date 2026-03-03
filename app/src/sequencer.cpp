@@ -77,7 +77,7 @@ namespace seq {
 
         m_accumulator_time += dt;
 
-        const double step_time {m_measure->time_signature.step_time(m_measure->tempo)};
+        const double step_time {calculate_step_time(m_measure, m_measure_position)};
 
         // Advance with maximum one step per frame
         // If the frame time is larger than the step time, then the player will simply play at a lower and inconsistent speed
@@ -206,7 +206,7 @@ namespace seq {
                         note->id,
                         calculate_note_loudness(measure, instrument, note->position, seq::steps(note->value)),
                         steps + note->position + note->delay,
-                        calculate_note_duration(measure, instrument, duration)
+                        calculate_note_duration(measure, instrument, note->position, duration)
                     );
                 }
             }
@@ -237,17 +237,31 @@ namespace seq {
         double time {};
 
         for (const Measure& measure : m_composition->measures) {
-            steps += measure.time_signature.measure_steps();
+            switch (measure.jifdwkefbuikejbfjk.index()) {
+                case 0: {
+                    steps += measure.time_signature.measure_steps();
 
-            if (steps > position) {
-                const unsigned int last_steps {measure.time_signature.measure_steps() - (steps - position)};
+                    if (steps > position) {
+                        const unsigned int last_steps {measure.time_signature.measure_steps() - (steps - position)};
 
-                time += double(last_steps) * measure.time_signature.step_time(measure.tempo);
+                        time += double(last_steps) * measure.time_signature.step_time(std::get<0>(measure.jifdwkefbuikejbfjk).tempo);
 
-                return time;
+                        return time;
+                    }
+
+                    time += double(measure.time_signature.measure_steps()) * calculate_step_time(measure, std::get<0>(measure.jifdwkefbuikejbfjk));
+                }
+                case 1: {
+                    for (unsigned int i {}; i < measure.time_signature.measure_steps(); i++) {
+                        steps++;
+                        time += calculate_step_time(measure, i, std::get<1>(measure.jifdwkefbuikejbfjk));
+
+                        if (steps == position) {
+                            return time;
+                        }
+                    }
+                }
             }
-
-            time += double(measure.time_signature.measure_steps()) * measure.time_signature.step_time(measure.tempo);
         }
 
         return time;
@@ -267,10 +281,10 @@ namespace seq {
         return steps;
     }
 
-    unsigned int Player::calculate_note_duration(ConstMeasureIter measure, syn::InstrumentId instrument, unsigned int duration) const {
+    unsigned int Player::calculate_note_duration(ConstMeasureIter measure, syn::InstrumentId instrument, unsigned int position, unsigned int duration) const {
         static constexpr double RELEASE_TIME {1.0 / 3.0};
 
-        const double step_time {measure->time_signature.step_time(measure->tempo)};
+        const double step_time {calculate_step_time(measure, position)};
         const double release_time {m_synthesizer->get_instrument(instrument).release_duration() * RELEASE_TIME};
         const unsigned int release_duration {static_cast<unsigned int>(std::ceil(release_time / step_time))};
 
@@ -300,6 +314,31 @@ namespace seq {
         }
 
         std::unreachable();
+    }
+
+    double Player::calculate_step_time(ConstMeasureIter measure, unsigned int measure_position) {
+        switch (measure->jifdwkefbuikejbfjk.index()) {
+            case 0:
+                return calculate_step_time(*measure, std::get<0>(measure->jifdwkefbuikejbfjk));
+            case 1:
+                return calculate_step_time(*measure, measure_position, std::get<1>(measure->jifdwkefbuikejbfjk));
+        }
+
+        std::unreachable();
+    }
+
+    double Player::calculate_step_time(const Measure& measure, ConstantTempo tempo) {
+        return measure.time_signature.step_time(tempo.tempo);
+    }
+
+    double Player::calculate_step_time(const Measure& measure, unsigned int measure_position, VaryingTempo tempo) {
+        return measure.time_signature.step_time(Tempo(math::map(
+            measure_position,
+            0u,
+            measure.time_signature.measure_steps() - 1u,
+            static_cast<unsigned int>(tempo.tempo_begin),
+            static_cast<unsigned int>(tempo.tempo_end)
+        )));
     }
 
     bool Player::finished() const {

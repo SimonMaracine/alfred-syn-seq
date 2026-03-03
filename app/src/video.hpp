@@ -34,14 +34,14 @@ namespace video {
 
         void run();
     protected:
-        void set_desired_frame_time(unsigned long long milliseconds);
-        void set_icons(std::initializer_list<std::span<const unsigned char>> icons) const;
-        void set_title(std::string_view title) const;
-        void set_window_size(int width, int height) const;
-        std::pair<int, int> get_window_size() const;
+        void desired_frame_time(unsigned long long milliseconds);
+        void icons(std::initializer_list<std::span<const unsigned char>> icons) const;
+        void title(std::string_view title) const;
+        void window_size(int width, int height) const;
+        std::pair<int, int> window_size() const;
 
-        const bool* get_keyboard_state() const { return m_keyboard_state; }
-        double get_frame_time() const { return m_frame_timef; }
+        const bool* keyboard_state() const { return m_keyboard_state; }
+        double frame_time() const { return m_frame_timef; }
 
         SDL_Window* m_window {};
         SDL_Renderer* m_renderer {};

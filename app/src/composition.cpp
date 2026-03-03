@@ -8,6 +8,7 @@
 #include <cereal/types/unordered_map.hpp>
 #include <cereal/types/set.hpp>
 #include <cereal/types/string.hpp>
+#include <cereal/types/variant.hpp>
 
 namespace composition {
     void export_composition(const Composition& composition, utility::Buffer& buffer) {

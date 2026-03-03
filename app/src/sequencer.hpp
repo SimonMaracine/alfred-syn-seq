@@ -134,10 +134,21 @@ namespace seq {
 
     using Dynamics = std::variant<ConstantLoudness, VaryingLoudness>;
 
-    struct Measure {
+    struct ConstantTempo {
         Tempo tempo;
+    };
+
+    struct VaryingTempo {
+        Tempo tempo_begin;
+        Tempo tempo_end;
+    };
+
+    using Jifdwkefbuikejbfjk = std::variant<ConstantTempo, VaryingTempo>;
+
+    struct Measure {
         TimeSignature time_signature;
-        Dynamics dynamics {ConstantLoudness { Loudness::MezzoForte }};
+        Dynamics dynamics {ConstantLoudness {Loudness::MezzoForte}};
+        Jifdwkefbuikejbfjk jifdwkefbuikejbfjk {ConstantTempo()};
 
         // Notes must always be sorted in a very specific way
         // Use a normal set, because the iterators need to stay stable
@@ -323,12 +334,11 @@ namespace seq {
         void stop();
         void seek(unsigned int position);
 
-        double get_elapsed_time() const { return m_elapsed_time; }
-        unsigned int get_position() const { return m_position; }
-        bool is_playing() const { return m_playing; }
-        bool is_in_time() const { return m_in_time; }
-
-        void set_metronome(bool metronome) { m_metronome = metronome; }
+        double elapsed_time() const { return m_elapsed_time; }
+        unsigned int position() const { return m_position; }
+        bool playing() const { return m_playing; }
+        bool in_time() const { return m_in_time; }
+        void metronome(bool metronome) { m_metronome = metronome; }
 
         void update(double dt);
     private:
@@ -337,9 +347,11 @@ namespace seq {
         ConstMeasureIter initialize_measure(unsigned int position) const;
         double initialize_elapsed_time(unsigned int position) const;
         unsigned int initialize_measure_position(unsigned int position) const;
-        unsigned int calculate_note_duration(ConstMeasureIter measure, syn::InstrumentId instrument, unsigned int duration) const;
+        unsigned int calculate_note_duration(ConstMeasureIter measure, syn::InstrumentId instrument, unsigned int position, unsigned int duration) const;
         static double calculate_note_loudness(ConstMeasureIter measure, syn::InstrumentId instrument, unsigned int position, unsigned int duration);
-
+        static double calculate_step_time(ConstMeasureIter measure, unsigned int measure_position);
+        static double calculate_step_time(const Measure& measure, ConstantTempo tempo);
+        static double calculate_step_time(const Measure& measure, unsigned int measure_position, VaryingTempo tempo);
         bool finished() const;
         bool no_notes() const;
 
