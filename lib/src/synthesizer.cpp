@@ -18,6 +18,7 @@ namespace synthesizer {
         m_instruments[instrument::Piano::static_id()] = std::make_unique<instrument::Piano>();
         m_instruments[instrument::Guitar::static_id()] = std::make_unique<instrument::Guitar>();
         m_instruments[instrument::Strings::static_id()] = std::make_unique<instrument::Strings>();
+        m_instruments[instrument::Cello::static_id()] = std::make_unique<instrument::Cello>();
     }
 
     void Synthesizer::note_on(double time, syn::NoteId note, syn::InstrumentId instrument, double loudness) {

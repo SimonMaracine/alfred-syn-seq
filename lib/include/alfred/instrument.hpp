@@ -198,4 +198,32 @@ namespace instrument {  // TODO description
 
         syn::padsynth::Sample m_sample;
     };
+
+    class Cello : public syn::Instrument {
+    public:
+        Cello();
+
+        ALFRED_INSTRUMENT_STATIC_NAME_ID("Cello?")
+
+        const char* name() const override { return static_name(); }
+        syn::InstrumentId id() const override { return static_id(); }
+
+        double sound(double time, double time_on, syn::NoteId note) const override;
+
+        syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdsrLinear>(ENVELOPE); }
+        double attack_duration() const override { return ENVELOPE.duration_attack; }
+        double release_duration() const override { return ENVELOPE.duration_release; }
+    private:
+        static constexpr syn::DescriptionAdsr ENVELOPE {
+            .duration_attack = 0.25,
+            .duration_decay = 0.05,
+            .duration_release = 0.25,
+            .value_sustain = 0.95
+        };
+
+        static constexpr std::size_t SIZE {262144};
+        static constexpr double FREQUENCY {261.63};
+
+        syn::padsynth::Sample m_sample;
+    };
 }

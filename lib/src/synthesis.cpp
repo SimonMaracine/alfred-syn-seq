@@ -422,6 +422,13 @@ namespace syn {
             inverse_ft(size, frequency_amplitudes.get(), frequency_phases.get(), sample.get());
             normalize(sample.get(), size);
 
+            double t {};
+
+            for (std::size_t i {}; i < size; i++) {
+                sample[i] *= 1.0 + 0.08 * (oscillator::sine(t, 9.0) - 1.0);
+                t += 1.0 / double(sample_rate);
+            }
+
             return sample;
         }
     }

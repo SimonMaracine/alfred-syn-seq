@@ -243,4 +243,36 @@ namespace instrument {
 
         return m_sample[index];
     }
+
+    Cello::Cello() {
+        double amplitude_harmonics[64] {};
+
+        for (std::size_t i {1}; i < std::size(amplitude_harmonics); ++i) {
+            amplitude_harmonics[i] = 1.0 / double(i);
+
+            if (i % 2 == 0) {
+                amplitude_harmonics[i] *= 2.0;
+            }
+        }
+
+        m_sample = syn::padsynth::padsynth(
+            SIZE,
+            audio::SAMPLE_FREQUENCY,
+            FREQUENCY,
+            2.0,
+            amplitude_harmonics,
+            int(std::size(amplitude_harmonics))
+        );
+    }
+
+    double Cello::sound(double time, double, syn::NoteId note) const {
+        static constexpr double SAMPLE_DURATION {double(SIZE) / double(audio::SAMPLE_FREQUENCY)};
+
+        const double pitch {syn::frequency(note) / FREQUENCY};
+        double _;
+        const double part {std::modf(time * pitch / SAMPLE_DURATION, &_)};
+        const auto index {std::size_t(part * double(SIZE))};
+
+        return m_sample[index];
+    }
 }
