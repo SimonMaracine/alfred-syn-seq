@@ -19,8 +19,18 @@ add_resource("PLAY" "play.png" "binary")
 add_resource("PAUSE" "pause.png" "binary")
 add_resource("REWIND" "rewind.png" "binary")
 
+if(WIN32)
+    if(ALFRED_DISTRIBUTION)
+        set(ALFRED_APP_NO_CONSOLE WIN32)
+    endif()
+
+    set(ALFRED_APP_ICON "res/alfred.rc")
+endif()
+
 add_executable(
     alfred_app
+    ${ALFRED_APP_NO_CONSOLE}
+    ${ALFRED_APP_ICON}
     "include/icon64.png.hpp"
     "include/icon128.png.hpp"
     "include/play.png.hpp"
