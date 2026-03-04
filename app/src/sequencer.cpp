@@ -237,29 +237,33 @@ namespace seq {
         double time {};
 
         for (const Measure& measure : m_composition->measures) {
-            switch (measure.jifdwkefbuikejbfjk.index()) {
+            switch (measure.agogic.index()) {
                 case 0: {
                     steps += measure.time_signature.measure_steps();
 
                     if (steps > position) {
                         const unsigned int last_steps {measure.time_signature.measure_steps() - (steps - position)};
 
-                        time += double(last_steps) * measure.time_signature.step_time(std::get<0>(measure.jifdwkefbuikejbfjk).tempo);
+                        time += double(last_steps) * measure.time_signature.step_time(std::get<0>(measure.agogic).tempo);
 
                         return time;
                     }
 
-                    time += double(measure.time_signature.measure_steps()) * calculate_step_time(measure, std::get<0>(measure.jifdwkefbuikejbfjk));
+                    time += double(measure.time_signature.measure_steps()) * calculate_step_time(measure, std::get<0>(measure.agogic));
+
+                    break;
                 }
                 case 1: {
                     for (unsigned int i {}; i < measure.time_signature.measure_steps(); i++) {
                         steps++;
-                        time += calculate_step_time(measure, i, std::get<1>(measure.jifdwkefbuikejbfjk));
+                        time += calculate_step_time(measure, i, std::get<1>(measure.agogic));
 
                         if (steps == position) {
                             return time;
                         }
                     }
+
+                    break;
                 }
             }
         }
@@ -306,7 +310,7 @@ namespace seq {
             case 1:
                 return math::map(
                     double(position + duration / 2),
-                    double(0),
+                    0.0,
                     double(measure->time_signature.measure_steps() - 1),
                     loudness_amplitude(std::get<1>(measure->dynamics).loudness_begin),
                     loudness_amplitude(std::get<1>(measure->dynamics).loudness_end)
@@ -317,11 +321,11 @@ namespace seq {
     }
 
     double Player::calculate_step_time(ConstMeasureIter measure, unsigned int measure_position) {
-        switch (measure->jifdwkefbuikejbfjk.index()) {
+        switch (measure->agogic.index()) {
             case 0:
-                return calculate_step_time(*measure, std::get<0>(measure->jifdwkefbuikejbfjk));
+                return calculate_step_time(*measure, std::get<0>(measure->agogic));
             case 1:
-                return calculate_step_time(*measure, measure_position, std::get<1>(measure->jifdwkefbuikejbfjk));
+                return calculate_step_time(*measure, measure_position, std::get<1>(measure->agogic));
         }
 
         std::unreachable();
@@ -332,13 +336,15 @@ namespace seq {
     }
 
     double Player::calculate_step_time(const Measure& measure, unsigned int measure_position, VaryingTempo tempo) {
-        return measure.time_signature.step_time(Tempo(math::map(
-            measure_position,
-            0u,
-            measure.time_signature.measure_steps() - 1u,
-            static_cast<unsigned int>(tempo.tempo_begin),
-            static_cast<unsigned int>(tempo.tempo_end)
-        )));
+        return measure.time_signature.step_time(Tempo(
+            static_cast<unsigned int>(math::map(
+                double(measure_position),
+                0.0,
+                double(measure.time_signature.measure_steps() - 1),
+                double(tempo.tempo_begin),
+                double(tempo.tempo_end)
+            ))
+        ));
     }
 
     bool Player::finished() const {

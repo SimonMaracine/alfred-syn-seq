@@ -684,7 +684,7 @@ namespace application {
             insert_measure();
         }
 
-        ImGui::SetItemTooltip("Insert a measure before the selected measure (Alt+I)");
+        ImGui::SetItemTooltip("Insert a measure after the selected measure (Alt+I)");
 
         ImGui::EndDisabled();
 
@@ -736,8 +736,8 @@ namespace application {
 
         ImGui::SameLine();
 
-        if (jifdwkefbuikejbfjk()) {
-            set_measures_jifdwkefbuikejbfjk();
+        if (agogic()) {
+            set_measure_agogic();
         }
 
         ImGui::EndDisabled();
@@ -1399,23 +1399,23 @@ namespace application {
         return result;
     }
 
-    bool Application::jifdwkefbuikejbfjk() {
+    bool Application::agogic() {
         constexpr unsigned int one {1};
 
         bool result {};
 
         ImGui::BeginGroup();
 
-        if (ImGui::Button(m_ui.jifdwkefbuikejbfjk.varying ? "Varying##jifdwkefbuikejbfjk" : "Constant##jifdwkefbuikejbfjk")) {
-            m_ui.jifdwkefbuikejbfjk.varying = !m_ui.jifdwkefbuikejbfjk.varying;
+        if (ImGui::Button(m_ui.agogic.varying ? "Varying##agogic" : "Constant##agogic")) {
+            m_ui.agogic.varying = !m_ui.agogic.varying;
             result = true;
         }
 
-        if (m_ui.jifdwkefbuikejbfjk.varying) {
+        if (m_ui.agogic.varying) {
             ImGui::SetNextItemWidth(ui::rem(6.0f));
 
-            if (ImGui::InputScalar("##tempo1", ImGuiDataType_U32, &m_ui.jifdwkefbuikejbfjk.tempo1, &one)) {
-                m_ui.jifdwkefbuikejbfjk.tempo1 = std::clamp(m_ui.jifdwkefbuikejbfjk.tempo1, seq::Tempo::MIN, seq::Tempo::MAX);
+            if (ImGui::InputScalar("##tempo1", ImGuiDataType_U32, &m_ui.agogic.tempo1, &one)) {
+                m_ui.agogic.tempo1 = std::clamp(m_ui.agogic.tempo1, seq::Tempo::MIN, seq::Tempo::MAX);
                 result = true;
             }
 
@@ -1423,22 +1423,22 @@ namespace application {
 
             ImGui::SetNextItemWidth(ui::rem(6.0f));
 
-            if (ImGui::InputScalar("##tempo2", ImGuiDataType_U32, &m_ui.jifdwkefbuikejbfjk.tempo2, &one)) {
-                m_ui.jifdwkefbuikejbfjk.tempo2 = std::clamp(m_ui.jifdwkefbuikejbfjk.tempo2, seq::Tempo::MIN, seq::Tempo::MAX);
+            if (ImGui::InputScalar("##tempo2", ImGuiDataType_U32, &m_ui.agogic.tempo2, &one)) {
+                m_ui.agogic.tempo2 = std::clamp(m_ui.agogic.tempo2, seq::Tempo::MIN, seq::Tempo::MAX);
                 result = true;
             }
         } else {
             ImGui::SetNextItemWidth(ui::rem(6.0f));
 
-            if (ImGui::InputScalar("##tempo", ImGuiDataType_U32, &m_ui.jifdwkefbuikejbfjk.tempo1, &one)) {
-                m_ui.jifdwkefbuikejbfjk.tempo1 = std::clamp(m_ui.jifdwkefbuikejbfjk.tempo1, seq::Tempo::MIN, seq::Tempo::MAX);
+            if (ImGui::InputScalar("##tempo", ImGuiDataType_U32, &m_ui.agogic.tempo1, &one)) {
+                m_ui.agogic.tempo1 = std::clamp(m_ui.agogic.tempo1, seq::Tempo::MIN, seq::Tempo::MAX);
                 result = true;
             }
         }
 
         ImGui::EndGroup();
 
-        ImGui::SetItemTooltip("Change the tempo of the current measure in quarters per minute");
+        ImGui::SetItemTooltip("Change the agogic of the current measure in quarters per minute");
 
         return result;
     }
@@ -1582,7 +1582,7 @@ namespace application {
         switch (m_ui.tool) {
             case ui::ToolMeasure: {
                 if (const auto hovered_measure {hover_measure(composition_mouse_position(origin))}; hovered_measure) {
-                    select_measure(*hovered_measure);
+                    toggle_select_measure(*hovered_measure);
                 }
                 break;
             }
@@ -1628,52 +1628,73 @@ namespace application {
         m_composition_camera.y = std::min(m_composition_camera.y, std::max(ui::rem(COMPOSITION_HEIGHT + STEP_SIZE.y) - space.y, 0.0f));
     }
 
-    void Application::select_measure(MeasureIter hovered_measure) {
-        if (m_composition_selected_measure == hovered_measure) {
+    void Application::toggle_select_measure(MeasureIter measure) {
+        if (m_composition_selected_measure == measure) {
             m_composition_selected_measure = m_composition.measures.end();
         } else {
-            m_composition_selected_measure = hovered_measure;
-
-            set_dynamics(m_ui.dynamics, *hovered_measure);
-            set_jifdwkefbuikejbfjk(m_ui.jifdwkefbuikejbfjk, *hovered_measure);
-            set_time_signature(m_ui.time_signature, *hovered_measure);
+            m_composition_selected_measure = measure;
+            select_measure(measure);
         }
     }
 
-    void Application::append_measures() {  // FIXME set the corresponding dynamics and jifdwkefbuikejbfjk
+    void Application::select_measure(MeasureIter measure) {
+        set_dynamics(m_ui.dynamics, *measure);
+        set_agogic(m_ui.agogic, *measure);
+        set_time_signature(m_ui.time_signature, *measure);
+    }
+
+    void Application::append_measures() {
         assert(!m_player.playing());
 
         remember_composition();
 
-        const auto [jifdwkefbuikejbfjk, time_signature] {measure_type(
+        seq::TimeSignature time_signature;
+        seq::Dynamics dynamics;
+        seq::Agogic agogic;
+
+        measure_properties(
             !m_composition.measures.empty() ? std::prev(m_composition.measures.end()) : m_composition.measures.end(),
-            m_composition.measures
-        )};
+            m_composition.measures,
+            time_signature,
+            dynamics,
+            agogic
+        );
 
         for (int i {}; i < ADD_MEASURES; i++) {
-            m_composition.measures.emplace_back(time_signature, seq::Dynamics(), jifdwkefbuikejbfjk);
-            m_composition_selected_measure = m_composition.measures.end();
+            m_composition.measures.emplace_back(time_signature, dynamics, agogic);
         }
+
+        m_composition_selected_measure = m_composition.measures.end();
 
         modify_composition();
     }
 
-    void Application::insert_measure() {  // FIXME set the corresponding dynamics and jifdwkefbuikejbfjk
+    void Application::insert_measure() {
         assert(!m_player.playing());
         assert(m_composition_selected_measure != m_composition.measures.end());
 
         remember_composition();
 
-        const auto [jifdwkefbuikejbfjk, time_signature] {measure_type(
+        seq::TimeSignature time_signature;
+        seq::Dynamics dynamics;
+        seq::Agogic agogic;
+
+        measure_properties(
             m_composition_selected_measure,
-            m_composition.measures
-        )};
+            m_composition.measures,
+            time_signature,
+            dynamics,
+            agogic
+        );
 
         reset_note_legato_previous_measure(m_composition_selected_measure);
 
-        m_composition_selected_measure = m_composition.measures.emplace(m_composition_selected_measure, time_signature, seq::Dynamics(), jifdwkefbuikejbfjk);
+        m_composition_selected_measure = m_composition.measures.emplace(std::next(m_composition_selected_measure), time_signature, dynamics, agogic);
 
         modify_composition();
+
+        // The selected measure has changed
+        select_measure(m_composition_selected_measure);
     }
 
     void Application::clear_measure() {
@@ -1700,6 +1721,9 @@ namespace application {
         m_composition_selected_measure = m_composition.measures.erase(m_composition_selected_measure);
 
         modify_composition();
+
+        // The selected measure has changed
+        select_measure(m_composition_selected_measure);
     }
 
     void Application::set_measure_dynamics() {
@@ -1713,23 +1737,13 @@ namespace application {
         modify_composition();
     }
 
-    void Application::set_measure_jifdwkefbuikejbfjk() {  // FIXME set to currently selected measure
+    void Application::set_measure_agogic() {
         assert(!m_player.playing());
         assert(m_composition_selected_measure != m_composition.measures.end());
 
         remember_composition();
 
-        set_jifdwkefbuikejbfjk(*m_composition_selected_measure, m_ui.jifdwkefbuikejbfjk);
-
-        modify_composition();
-    }
-
-    void Application::set_measures_jifdwkefbuikejbfjk() {  // FIXME set to currently selected measure
-        remember_composition();
-
-        for (auto measure {m_composition.measures.begin()}; measure != m_composition.measures.end(); measure++) {
-            set_jifdwkefbuikejbfjk(*measure, m_ui.jifdwkefbuikejbfjk);
-        }
+        set_agogic(*m_composition_selected_measure, m_ui.agogic);
 
         modify_composition();
     }
@@ -2398,16 +2412,33 @@ namespace application {
         return buffer;
     }
 
-    std::pair<seq::Jifdwkefbuikejbfjk, seq::TimeSignature> Application::measure_type(MeasureIter measure, const std::vector<seq::Measure>& measures) {  // TODO rename
-        seq::Jifdwkefbuikejbfjk jifdwkefbuikejbfjk;
-        seq::TimeSignature time_signature;
-
-        if (measure != measures.end()) {
-            jifdwkefbuikejbfjk = measure->jifdwkefbuikejbfjk;
-            time_signature = measure->time_signature;
+    void Application::measure_properties(MeasureIter measure, const std::vector<seq::Measure>& measures, seq::TimeSignature& time_signature, seq::Dynamics& dynamics, seq::Agogic& agogic) {
+        if (measure == measures.end()) {
+            time_signature = seq::TimeSignature();
+            dynamics = seq::Dynamics();
+            agogic = seq::Agogic();
+            return;
         }
 
-        return { jifdwkefbuikejbfjk, time_signature };
+        time_signature = measure->time_signature;
+
+        switch (measure->dynamics.index()) {
+            case 0:
+                dynamics = seq::ConstantLoudness {std::get<0>(measure->dynamics).loudness};
+                break;
+            case 1:
+                dynamics = seq::ConstantLoudness {std::get<1>(measure->dynamics).loudness_end};
+                break;
+        }
+
+        switch (measure->agogic.index()) {
+            case 0:
+                agogic = seq::ConstantTempo {std::get<0>(measure->agogic).tempo};
+                break;
+            case 1:
+                agogic = seq::ConstantTempo {std::get<1>(measure->agogic).tempo_end};
+                break;
+        }
     }
 
     void Application::set_dynamics(seq::Measure& measure, ui::Dynamics dynamics) {
@@ -2432,24 +2463,24 @@ namespace application {
         }
     }
 
-    void Application::set_jifdwkefbuikejbfjk(seq::Measure& measure, ui::Jifdwkefbuikejbfjk jifdwkefbuikejbfjk) {
-        if (jifdwkefbuikejbfjk.varying) {
-            measure.jifdwkefbuikejbfjk = seq::VaryingTempo {seq::Tempo(jifdwkefbuikejbfjk.tempo1), seq::Tempo(jifdwkefbuikejbfjk.tempo2)};
+    void Application::set_agogic(seq::Measure& measure, ui::Agogic agogic) {
+        if (agogic.varying) {
+            measure.agogic = seq::VaryingTempo {seq::Tempo(agogic.tempo1), seq::Tempo(agogic.tempo2)};
         } else {
-            measure.jifdwkefbuikejbfjk = seq::ConstantTempo {seq::Tempo(jifdwkefbuikejbfjk.tempo1)};
+            measure.agogic = seq::ConstantTempo {seq::Tempo(agogic.tempo1)};
         }
     }
 
-    void Application::set_jifdwkefbuikejbfjk(ui::Jifdwkefbuikejbfjk& jifdwkefbuikejbfjk, const seq::Measure& measure) {
-        switch (measure.jifdwkefbuikejbfjk.index()) {
+    void Application::set_agogic(ui::Agogic& agogic, const seq::Measure& measure) {
+        switch (measure.agogic.index()) {
             case 0:
-                jifdwkefbuikejbfjk.varying = false;
-                jifdwkefbuikejbfjk.tempo1 = ui::Tempo(std::get<0>(measure.jifdwkefbuikejbfjk).tempo);
+                agogic.varying = false;
+                agogic.tempo1 = ui::Tempo(std::get<0>(measure.agogic).tempo);
                 break;
             case 1:
-                jifdwkefbuikejbfjk.varying = true;
-                jifdwkefbuikejbfjk.tempo1 = ui::Tempo(std::get<1>(measure.jifdwkefbuikejbfjk).tempo_begin);
-                jifdwkefbuikejbfjk.tempo2 = ui::Tempo(std::get<1>(measure.jifdwkefbuikejbfjk).tempo_end);
+                agogic.varying = true;
+                agogic.tempo1 = ui::Tempo(std::get<1>(measure.agogic).tempo_begin);
+                agogic.tempo2 = ui::Tempo(std::get<1>(measure.agogic).tempo_end);
                 break;
         }
     }

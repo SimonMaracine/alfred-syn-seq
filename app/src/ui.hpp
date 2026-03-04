@@ -41,15 +41,15 @@ namespace ui {
     struct Dynamics {
         bool varying {};
         Loudness loudness1 {LoudnessMezzoForte};
-        Loudness loudness2 {LoudnessForte};
+        Loudness loudness2 {LoudnessMezzoForte};
     };
 
     using Tempo = unsigned int;
 
-    struct Jifdwkefbuikejbfjk {
+    struct Agogic {
         bool varying {};
-        Tempo tempo1 {};
-        Tempo tempo2 {};
+        Tempo tempo1 {90};
+        Tempo tempo2 {90};
     };
 
     struct TimeSignature {

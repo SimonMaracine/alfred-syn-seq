@@ -124,12 +124,12 @@ namespace seq {
     using Notes = std::set<Note>;
 
     struct ConstantLoudness {
-        Loudness loudness;
+        Loudness loudness {Loudness::MezzoForte};
     };
 
     struct VaryingLoudness {
-        Loudness loudness_begin;
-        Loudness loudness_end;
+        Loudness loudness_begin {Loudness::MezzoForte};
+        Loudness loudness_end {Loudness::MezzoForte};
     };
 
     using Dynamics = std::variant<ConstantLoudness, VaryingLoudness>;
@@ -143,12 +143,12 @@ namespace seq {
         Tempo tempo_end;
     };
 
-    using Jifdwkefbuikejbfjk = std::variant<ConstantTempo, VaryingTempo>;
+    using Agogic = std::variant<ConstantTempo, VaryingTempo>;
 
     struct Measure {
         TimeSignature time_signature;
-        Dynamics dynamics {ConstantLoudness {Loudness::MezzoForte}};
-        Jifdwkefbuikejbfjk jifdwkefbuikejbfjk {ConstantTempo()};
+        Dynamics dynamics;
+        Agogic agogic;
 
         // Notes must always be sorted in a very specific way
         // Use a normal set, because the iterators need to stay stable
