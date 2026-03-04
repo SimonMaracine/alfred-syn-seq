@@ -12,7 +12,7 @@ I built this program for myself, as a reason to try out the art of music composi
 
 ![Alfred](gfx/mascot/alfred.png)
 
-## Building and Installing
+## Building, Installing and Packaging
 
 ### Requirements
 
@@ -20,6 +20,7 @@ I built this program for myself, as a reason to try out the art of music composi
 - CMake
 - GCC or MSVC (Visual Studio)
 - Python
+- NSIS (Windows only)
 
 ### Download
 
@@ -46,8 +47,32 @@ cmake --build --preset build-dist-win
 
 ### Install
 
+#### Linux
+
 ```txt
-cmake --install build/dist/
+cmake --build --preset build-dist-nix --target install
+```
+
+#### Windows
+
+```txt
+cmake --build --preset build-dist-win --target install
+```
+
+## Package
+
+#### Linux
+
+```txt
+cmake --build --preset build-dist-nix --target package_source
+cmake --build --preset build-dist-nix --target package
+```
+
+#### Windows
+
+```txt
+cmake --build --preset build-dist-win --target package_source
+cmake --build --preset build-dist-win --target package
 ```
 
 ## Dependencies
@@ -57,12 +82,14 @@ cmake --install build/dist/
 - [Cereal](https://github.com/USCiLab/cereal)
 - [FFTW](https://www.fftw.org/)
 
-## Material
+## Material and Acknowledgements
 
 - PadSynth algorithm by Paul Nașca
 - Sound Synthesis and Sampling Second Edition by Martin Russ
 - THE COMPLETE SYNTHESIZER: A Comprehensive Guide by David Crombie
 - Code-It-Yourself! Sound Synthesizer by javidx9
+
+I give my thanks to my friend Tudor for sharing his knowledge of signal processing with me.
 
 ---
 
