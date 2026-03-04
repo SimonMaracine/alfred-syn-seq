@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(alfred)
+project(
+    "alfred"
+    VERSION "0.1.0"
+    DESCRIPTION "A cross-platform synthesizer and sequencer program"
+    HOMEPAGE_URL "https://github.com/SimonMaracine/alfred"
+    LANGUAGES CXX
+)
 
 include(cmake/options.cmake)
 
@@ -16,6 +22,8 @@ add_subdirectory(lib)
 add_subdirectory(app)
 
 include(cmake/install.cmake)
+include(cmake/package.cmake)
+include(CPack)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT alfred_app)

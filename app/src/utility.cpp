@@ -1,6 +1,7 @@
 #include "utility.hpp"
 
 #include <fstream>
+#include <memory>
 
 #include <SDL3/SDL.h>
 
@@ -38,15 +39,16 @@ namespace utility {
         }
     }
 
-    std::filesystem::path data_file_path() {
+    std::filesystem::path data_file_path([[maybe_unused]] const char* organization, [[maybe_unused]] const char* application) {
 #ifdef ALFRED_DISTRIBUTION
-    #ifdef ALFRED_LINUX
-        // TODO
-        return "./";
-    #elifdef ALFRED_WINDOWS
-        // TODO
-        return "./";
-    #endif
+        static const auto file_path {
+            std::unique_ptr<char, decltype(&SDL_free)>(
+                SDL_GetPrefPath(organization, application),
+                SDL_free
+            )
+        };
+
+        return file_path.get();
 #else
         return "./";  // Relative directory
 #endif

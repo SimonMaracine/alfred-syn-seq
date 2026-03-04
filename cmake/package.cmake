@@ -1,0 +1,24 @@
+if(UNIX)
+    set(CPACK_GENERATOR "RPM;DEB;TGZ")
+    set(CPACK_SOURCE_GENERATOR "TGZ")
+elseif(WIN32)
+    set(CPACK_GENERATOR "NSIS")
+    set(CPACK_SOURCE_GENERATOR "ZIP")
+endif()
+
+#if(WIN32)
+#    set(CPACK_PACKAGE_INSTALL_DIRECTORY "Alfred")
+#endif()
+
+set(CPACK_SOURCE_IGNORE_FILES "build\/.*;\.env\/.*;\.git\/.*;analysis\/.*;\.vscode\/.*;\.idea\/.*;extern\/.*")
+set(CPACK_PACKAGE_VENDOR "Simon")
+set(CPACK_PACKAGE_ICON "${CMAKE_SOURCE_DIR}/app/res/icon128.png")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE")
+set(CPACK_PACKAGE_EXECUTABLES "alfred;Alfred")
+set(CPACK_VERBATIM_VARIABLES TRUE)
+
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "simonmara.dev@gmail.com")
+set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "fftw")
+
+set(CPACK_RPM_PACKAGE_REQUIRES "fftw")

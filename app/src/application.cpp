@@ -46,7 +46,7 @@ namespace application {
 
         try {
             utility::Buffer buffer;
-            utility::read_file(utility::data_file_path() / "alfred.dat", buffer);
+            utility::read_file(utility::data_file_path("simonmara", "alfred") / "alfred.dat", buffer);
             data::import_data(m_data, buffer);
         } catch (const data::DataError& e) {
             logging::warning("Could not import data: {}", e.what());
@@ -113,7 +113,7 @@ namespace application {
         try {
             utility::Buffer buffer;
             data::export_data(m_data, buffer);
-            utility::write_file(utility::data_file_path() / "alfred.dat", buffer);
+            utility::write_file(utility::data_file_path("simonmara", "alfred") / "alfred.dat", buffer);
         } catch (const data::DataError& e) {
             logging::warning("Could not export data: {}", e.what());
         } catch (const utility::FilerError& e) {

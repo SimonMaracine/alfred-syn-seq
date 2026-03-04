@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
         logging::error("SDL_SetHint(SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES)");
     }
 
-    if (!SDL_SetHint(SDL_HINT_AUDIO_DEVICE_RAW_STREAM, "1")) {  // TODO ?
+    if (!SDL_SetHint(SDL_HINT_AUDIO_DEVICE_RAW_STREAM, "1")) {
         logging::error("SDL_SetHint(SDL_HINT_AUDIO_DEVICE_RAW_STREAM)");
     }
 
