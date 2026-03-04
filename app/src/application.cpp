@@ -872,8 +872,10 @@ namespace application {
             const bool item_hovered {ImGui::IsItemHovered()};
             const bool allow_edit {!m_player.playing()};
 
+            std::optional<HoveredNote> hovered_note;
+
             if (!ImGui::IsKeyDown(ImGuiMod_Alt)) {
-                if (const auto hovered_note {hover_note(composition_mouse_position(origin))}; item_hovered && allow_edit && hovered_note) {
+                if (hovered_note = hover_note(composition_mouse_position(origin)); item_hovered && allow_edit && hovered_note) {
                     composition_hover(draw, *hovered_note);
                 }
             }
@@ -885,6 +887,10 @@ namespace application {
             composition_notes(draw);
             composition_measures_labels(draw);
             composition_left(draw);
+
+            if (item_hovered && hovered_note) {
+                composition_pitch(draw, *hovered_note);
+            }
 
             if (item_hovered && allow_edit) {
                 if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
@@ -917,47 +923,17 @@ namespace application {
             COLOR_FOREGROUND
         );
 
-        constexpr const char* NOTES_OCTAVES[] { "C \0", "B \0", "A #", "A \0", "G #", "G \0", "F #", "F \0", "E \0", "D #", "D \0", "C #" };
-        constexpr const char* NOTES_EXTRA[] { "C \0", "B \0", "A #", "A \0" };
-
         float position_y {};
-        int octave {8};
 
-        for (int j {}; j < syn::keyboard::OCTAVES; j++) {
-            for (std::size_t i {}; i < std::size(NOTES_OCTAVES); i++) {
-                if (point_y_in_camera_view(position_y + ui::rem(STEP_SIZE.y), draw.space.y + ui::rem(STEP_SIZE.y))) {
-                    char buffer[4] {};
-                    std::strcpy(buffer, NOTES_OCTAVES[i]);
-                    buffer[1] = char(octave + 48);
-
-                    draw.list->AddText(
-                        draw.origin + ImVec2(0.0f, position_y) + ui::rem(TEXT_OFFSET) - ImVec2(0.0f, m_composition_camera.y),
-                        COLOR_FOREGROUND,
-                        buffer
-                    );
-
-                    draw.list->AddLine(
-                        draw.origin + ImVec2(0.0f, position_y + ui::rem(STEP_SIZE.y)) - ImVec2(0.0f, m_composition_camera.y),
-                        draw.origin + ImVec2(ui::rem(COMPOSITION_LEFT), position_y + ui::rem(STEP_SIZE.y)) - ImVec2(0.0f, m_composition_camera.y),
-                        COLOR_FOREGROUND
-                    );
-                }
-
-                position_y += ui::rem(STEP_SIZE.y);
-                octave -= i == 0 ? 1 : 0;
-            }
-        }
-
-        for (std::size_t i {}; i < std::size(NOTES_EXTRA); i++) {
+        for (int id {syn::keyboard::ID_END}; id >= int(syn::keyboard::ID_BEGIN); id--) {
             if (point_y_in_camera_view(position_y + ui::rem(STEP_SIZE.y), draw.space.y + ui::rem(STEP_SIZE.y))) {
-                char buffer[4] {};
-                std::strcpy(buffer, NOTES_EXTRA[i]);
-                buffer[1] = char(octave + 48);
+                char note_pitch[4] {};
+                note_to_string(syn::NoteId(id), note_pitch);
 
                 draw.list->AddText(
                     draw.origin + ImVec2(0.0f, position_y) + ui::rem(TEXT_OFFSET) - ImVec2(0.0f, m_composition_camera.y),
                     COLOR_FOREGROUND,
-                    buffer
+                    note_pitch
                 );
 
                 draw.list->AddLine(
@@ -968,7 +944,6 @@ namespace application {
             }
 
             position_y += ui::rem(STEP_SIZE.y);
-            octave -= i == 0 ? 1 : 0;
         }
     }
 
@@ -1154,8 +1129,8 @@ namespace application {
     }
 
     void Application::composition_hover(const Draw& draw, const HoveredNote& hovered_note) const {
-        const ImColor COLOR {color_opacity(ImGuiCol_PopupBg, 0.4f)};
-        const ImColor COLOR2 {color_opacity(ImGuiCol_PopupBg, 0.6f)};
+        const ImColor COLOR {color_opacity(ImGuiCol_PopupBg, 0.5f)};
+        const ImColor COLOR2 {color_opacity(ImGuiCol_PopupBg, 0.7f)};
 
         switch (m_ui.tool) {
             case ui::ToolMeasure: {
@@ -1190,6 +1165,19 @@ namespace application {
                 break;
             }
         }
+    }
+
+    void Application::composition_pitch(const Draw& draw, const HoveredNote& hovered_note) const {
+        const ImColor& COLOR {color(ImGuiCol_Text)};
+
+        char note_pitch[4] {};
+        note_to_string(hovered_note.id(), note_pitch);
+
+        draw.list->AddText(
+            draw.origin + ImVec2(ui::rem(COMPOSITION_LEFT) + ui::rem(0.5f), draw.space.y - ui::rem(1.5f)),
+            COLOR,
+            note_pitch
+        );
     }
 
     void Application::shortcuts() {
@@ -2381,6 +2369,15 @@ namespace application {
         m_task_manager.add_delayed_task([this, id = note.id] {
             m_synthesizer.note_off(id, m_instrument);
         }, math::seconds_to_milliseconds(m_synthesizer.get_instrument(m_instrument).attack_duration()) + 100);
+    }
+
+    void Application::note_to_string(syn::NoteId note, char* buffer) {
+        constexpr const char* NOTES[] { "A \0", "A #", "B \0", "C \0", "C #", "D \0", "D #", "E \0", "F \0", "F #", "G \0", "G #" };
+
+        const auto [name, octave] {syn::note(note)};
+
+        std::strncpy(buffer, NOTES[name], 3);
+        buffer[1] = char(octave + 48);
     }
 
     bool Application::keyboard_active() {

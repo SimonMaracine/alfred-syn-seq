@@ -102,6 +102,7 @@ namespace application {
         void composition_notes(const Draw& draw, syn::InstrumentId instrument, const seq::Notes& notes, float global_position_x, float rounding) const;
         void composition_cursor(const Draw& draw) const;
         void composition_hover(const Draw& draw, const HoveredNote& hovered_note) const;
+        void composition_pitch(const Draw& draw, const HoveredNote& hovered_note) const;
         void shortcuts();
         bool time_signature();
         bool dynamics();
@@ -157,6 +158,7 @@ namespace application {
         void reset_note_legato_previous_measure(MeasureIter measure) const;
         void play_note(const seq::Note& note);
 
+        static void note_to_string(syn::NoteId note, char* buffer);
         static bool keyboard_active();
         static float note_height(const seq::Note& note);
         static ImVec4 note_rectangle(const seq::Note& note);

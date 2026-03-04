@@ -204,9 +204,23 @@ namespace syn {
         return base + 12 * (multiplier - 1);
     }
 
+    constexpr std::pair<NoteName, NoteOctave> note(NoteId id) {
+        unsigned int octave {id / 12};
+        const unsigned int name {id % 12};
+
+        if (name >= 3) {
+            octave += 1;
+        }
+
+        return std::make_pair(NoteName(name), NoteOctave(octave));
+    }
+
     static_assert(note(A, Octave5) == 60);
     static_assert(note(B, Octave5) == 62);
     static_assert(note(C, Octave2) == 15);
+    static_assert(note(2) == std::pair(B, Octave0));
+    static_assert(note(16) == std::pair(Cs, Octave2));
+    static_assert(note(85) == std::pair(As, Octave7));
 
     struct Voice {
         NoteId note {};
