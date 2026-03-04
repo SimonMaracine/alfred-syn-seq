@@ -94,16 +94,6 @@
             "jobs": 8,
             "configuration": "Release",
             "cleanFirst": true
-        },
-        {
-            "name": "pack-nix-rpm",
-            "inherits": "build-dist-nix",
-            "configurePreset": "conf-dist-nix-rpm"
-        },
-        {
-            "name": "pack-nix-deb",
-            "inherits": "build-dist-nix",
-            "configurePreset": "conf-dist-nix-deb"
         }
     ]
 }

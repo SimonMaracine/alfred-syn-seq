@@ -64,15 +64,23 @@ cmake --build --preset build-dist-win --target install
 #### Linux
 
 ```txt
+cmake --preset conf-dist-nix
 cmake --build --preset build-dist-nix --target package_source
-cmake --build --preset pack-nix-rpm --target package
-cmake --build --preset pack-nix-deb --target package
+
+cmake --preset conf-dist-nix-rpm
+cmake --build --preset build-dist-nix --target package
+
+cmake --preset conf-dist-nix-deb
+cmake --build --preset build-dist-nix --target package
 ```
 
 #### Windows
 
 ```txt
+cmake --preset conf-dist-win
 cmake --build --preset build-dist-win --target package_source
+
+cmake --preset conf-dist-win
 cmake --build --preset build-dist-win --target package
 ```
 
