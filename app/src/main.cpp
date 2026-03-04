@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
 #ifdef ALFRED_DISTRIBUTION
     catch (...) {
         logging::critical("Unknown fatal error");
-        show_error_message_box("Alfred Unknown Error", "An unknown critical error occurred.");
+        utility::show_error_message_box("Alfred Unknown Error", "An unknown critical error occurred.");
         return 1;
     }
 #endif

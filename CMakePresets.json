@@ -46,6 +46,20 @@
             }
         },
         {
+            "name": "conf-dist-nix-rpm",
+            "inherits": "conf-dist-nix",
+            "cacheVariables": {
+                "CPACK_GENERATOR": "RPM;TGZ"
+            }
+        },
+        {
+            "name": "conf-dist-nix-deb",
+            "inherits": "conf-dist-nix",
+            "cacheVariables": {
+                "CPACK_GENERATOR": "DEB;TGZ"
+            }
+        },
+        {
             "name": "conf-dist-win",
             "inherits": "default",
             "binaryDir": "${sourceDir}/build/dist",
@@ -80,6 +94,16 @@
             "jobs": 8,
             "configuration": "Release",
             "cleanFirst": true
+        },
+        {
+            "name": "pack-nix-rpm",
+            "inherits": "build-dist-nix",
+            "configurePreset": "conf-dist-nix-rpm"
+        },
+        {
+            "name": "pack-nix-deb",
+            "inherits": "build-dist-nix",
+            "configurePreset": "conf-dist-nix-deb"
         }
     ]
 }
