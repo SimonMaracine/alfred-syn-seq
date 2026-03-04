@@ -2,6 +2,7 @@
 
 #include <format>
 #include <memory>
+#include <cmath>
 
 #include <SDL3/SDL.h>
 
@@ -132,7 +133,9 @@ namespace audio {
     }
 
     void Audio::volume(double volume) const {
-        if (!SDL_SetAudioStreamGain(m_stream, std::clamp(float(volume), 0.0f, 1.0f))) {
+        // The gain is logarithmic, so change the curve
+
+        if (!SDL_SetAudioStreamGain(m_stream, std::clamp(float(volume * volume), 0.0f, 1.0f))) {
             throw AudioError(std::format("SDL_SetAudioStreamGain: {}", SDL_GetError()));
         }
     }
@@ -144,7 +147,9 @@ namespace audio {
             throw AudioError(std::format("SDL_GetAudioStreamGain: {}", SDL_GetError()));
         }
 
-        return double(gain);
+        // Undo the changed curve
+
+        return double(std::sqrt(gain));
     }
 
     thread_local struct {
