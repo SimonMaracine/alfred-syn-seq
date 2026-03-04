@@ -297,9 +297,11 @@ namespace application {
 
         ImGui::Separator();
 
+#if 0
         if (ImGui::MenuItem("Cut", "Ctrl+X")) {}
         if (ImGui::MenuItem("Copy", "Ctrl+C")) {}
         if (ImGui::MenuItem("Paste", "Ctrl+V")) {}
+#endif
     }
 
     void Application::main_menu_bar_composition() {
