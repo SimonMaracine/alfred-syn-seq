@@ -103,9 +103,9 @@ namespace application {
         void composition_cursor(const Draw& draw) const;
         void composition_hover(const Draw& draw, const HoveredNote& hovered_note) const;
         void shortcuts();
+        bool time_signature();
         bool dynamics();
         bool agogic();
-        bool time_signature();
         void render_composition();
         void debug() const;
 

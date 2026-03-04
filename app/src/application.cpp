@@ -716,8 +716,8 @@ namespace application {
 
         ImGui::SameLine();
 
-        if (dynamics()) {
-            set_measure_dynamics();
+        if (time_signature()) {
+            set_measure_time_signature();
         }
 
         ImGui::SameLine();
@@ -726,8 +726,8 @@ namespace application {
 
         ImGui::SameLine();
 
-        if (time_signature()) {
-            set_measure_time_signature();
+        if (dynamics()) {
+            set_measure_dynamics();
         }
 
         ImGui::SameLine();
@@ -1342,6 +1342,45 @@ namespace application {
         }
     }
 
+    bool Application::time_signature() {
+        constexpr const char* BEATS[]{ "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16" };
+        constexpr const char* VALUE[]{ "1", "2", "4", "8", "16" };
+
+        static constexpr auto flags{ ImGuiComboFlags_HeightSmall | ImGuiComboFlags_WidthFitPreview | ImGuiComboFlags_NoArrowButton };
+
+        bool result{};
+
+        ImGui::BeginGroup();
+
+        if (ImGui::BeginCombo("Beats", BEATS[m_ui.time_signature.beats], flags)) {
+            for (std::size_t i{}; i < std::size(BEATS); i++) {
+                if (ImGui::Selectable(BEATS[i], m_ui.time_signature.beats == i)) {
+                    m_ui.time_signature.beats = ui::TimeSignature::Beats(i);
+                    result = true;
+                }
+            }
+
+            ImGui::EndCombo();
+        }
+
+        if (ImGui::BeginCombo("Value", VALUE[m_ui.time_signature.value], flags)) {
+            for (std::size_t i{}; i < std::size(VALUE); i++) {
+                if (ImGui::Selectable(VALUE[i], m_ui.time_signature.value == i)) {
+                    m_ui.time_signature.value = ui::TimeSignature::Value(i);
+                    result = true;
+                }
+            }
+
+            ImGui::EndCombo();
+        }
+
+        ImGui::EndGroup();
+
+        ImGui::SetItemTooltip("Change the time signature of the selected measure");
+
+        return result;
+    }
+
     bool Application::dynamics() {
         bool result {};
 
@@ -1394,7 +1433,7 @@ namespace application {
 
         ImGui::EndGroup();
 
-        ImGui::SetItemTooltip("Change the dynamics of the current measure");
+        ImGui::SetItemTooltip("Change the dynamics of the selected measure");
 
         return result;
     }
@@ -1438,46 +1477,7 @@ namespace application {
 
         ImGui::EndGroup();
 
-        ImGui::SetItemTooltip("Change the agogic of the current measure in quarters per minute");
-
-        return result;
-    }
-
-    bool Application::time_signature() {
-        constexpr const char* BEATS[] { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16" };
-        constexpr const char* VALUE[] { "1", "2", "4", "8", "16" };
-
-        static constexpr auto flags {ImGuiComboFlags_HeightSmall | ImGuiComboFlags_WidthFitPreview | ImGuiComboFlags_NoArrowButton};
-
-        bool result {};
-
-        ImGui::BeginGroup();
-
-        if (ImGui::BeginCombo("Beats", BEATS[m_ui.time_signature.beats], flags)) {
-            for (std::size_t i {}; i < std::size(BEATS); i++) {
-                if (ImGui::Selectable(BEATS[i], m_ui.time_signature.beats == i)) {
-                    m_ui.time_signature.beats = ui::TimeSignature::Beats(i);
-                    result = true;
-                }
-            }
-
-            ImGui::EndCombo();
-        }
-
-        if (ImGui::BeginCombo("Value", VALUE[m_ui.time_signature.value], flags)) {
-            for (std::size_t i {}; i < std::size(VALUE); i++) {
-                if (ImGui::Selectable(VALUE[i], m_ui.time_signature.value == i)) {
-                    m_ui.time_signature.value = ui::TimeSignature::Value(i);
-                    result = true;
-                }
-            }
-
-            ImGui::EndCombo();
-        }
-
-        ImGui::EndGroup();
-
-        ImGui::SetItemTooltip("Change the time signature of the selected measure");
+        ImGui::SetItemTooltip("Change the agogic of the selected measure in quarters per minute");
 
         return result;
     }
