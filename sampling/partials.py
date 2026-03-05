@@ -1,3 +1,5 @@
+#! /usr/bin/env python3
+
 import sys
 import dataclasses
 
@@ -13,7 +15,7 @@ def _db_to_amplitude(power: int) -> float:
     return 10.0 ** (power / 20.0)
 
 
-def _read_analysis(lines: list[str], line_index: int) -> tuple[Analysis, int] | None:
+def _read_analysis(lines: list[str], line_index: int) -> Analysis | None:
     if line_index == len(lines):
         return None
 
@@ -34,7 +36,11 @@ def _read_analysis(lines: list[str], line_index: int) -> tuple[Analysis, int] | 
 
         line = lines[line_index].strip()
 
-        if line == "PARTIAL":
+        if not line:
+            line_index += 1
+            continue
+
+        if line == "ANALYSIS":
             break
 
         # Increment only after check
@@ -45,7 +51,7 @@ def _read_analysis(lines: list[str], line_index: int) -> tuple[Analysis, int] | 
         partial = (float(frequency) / frequency_fundamental, _db_to_amplitude(-int(power)))
         partials.append(partial)
 
-    return Analysis(time, frequency_fundamental, partials), line_index
+    return Analysis(time, frequency_fundamental, partials)
 
 
 def _read_partials_file(lines: list[str]) -> list[Analysis]:
@@ -53,7 +59,9 @@ def _read_partials_file(lines: list[str]) -> list[Analysis]:
     analysis_list = []
 
     while True:
-        if lines[line_index].strip() == "PARTIAL":
+        line = lines[line_index].strip()
+
+        if line == "ANALYSIS":
             line_index += 1
             analysis = _read_analysis(lines, line_index)
 
@@ -61,6 +69,8 @@ def _read_partials_file(lines: list[str]) -> list[Analysis]:
                 break
 
             analysis_list.append(analysis)
+
+        line_index += 1
 
     return analysis_list
 
