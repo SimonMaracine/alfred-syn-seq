@@ -7,7 +7,6 @@ import dataclasses
 @dataclasses.dataclass(slots=True, frozen=True)
 class Analysis:
     time: float
-    frequency_fundamental: float
     partials: list[tuple[float, float]]
 
 
@@ -28,7 +27,13 @@ def _read_analysis(lines: list[str], line_index: int) -> Analysis | None:
     frequency_fundamental = float(lines[line_index])
     line_index += 1
 
-    partials = []
+    if line_index == len(lines):
+        return None
+
+    amplitude_fundamental = int(lines[line_index])
+    line_index += 1
+
+    partials = [(1.0, _db_to_amplitude(-int(amplitude_fundamental)))]
 
     while True:
         if line_index == len(lines):
@@ -51,7 +56,7 @@ def _read_analysis(lines: list[str], line_index: int) -> Analysis | None:
         partial = (float(frequency) / frequency_fundamental, _db_to_amplitude(-int(power)))
         partials.append(partial)
 
-    return Analysis(time, frequency_fundamental, partials)
+    return Analysis(time, partials)
 
 
 def _read_partials_file(lines: list[str]) -> list[Analysis]:
@@ -89,6 +94,24 @@ def _main(args: list[str]) -> int:
             for analysis in analysis_list:
                 print(analysis, file=file)
                 print(file=file)
+
+        for analysis in analysis_list:
+            # Don't forget the fundamental
+            partials = [(1.0, 1.0)] + analysis.partials
+
+            print(
+f"""syn::util::SoundAtTime {{
+    {analysis.time},
+    [](double time, syn::NoteId note) {{
+        return syn::util::sound(
+            time,
+            note,
+            std::array {{ {", ".join(map(str, (round(partial[0], 1) for partial in partials)))} }},
+            std::array {{ {", ".join(map(str, (round(partial[1], 4) for partial in partials)))} }}
+        );
+    }}
+}},"""
+            )
     except KeyboardInterrupt:
         return 1
     except Exception as e:
