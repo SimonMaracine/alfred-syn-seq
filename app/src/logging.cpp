@@ -35,10 +35,19 @@ namespace logging {
         g_stream.stream.close();
     }
 
-    void println_console(Severity severity, const std::source_location& location, TimeOfDay time_of_day, const std::string& message) {
+    void println_console(Severity severity, [[maybe_unused]] const std::source_location& location, TimeOfDay time_of_day, const std::string& message) {
         // This is already thread safe
 
 #ifdef __cpp_lib_print
+    #ifdef ALFRED_DISTRIBUTION
+        std::println(
+            stderr,
+            "[{} {}] {}",
+            severity_to_string(severity),
+            time_of_day,
+            message
+        );
+    #else
         std::println(
             stderr,
             "[{} {} {} {} {}:{}] {}",
@@ -50,7 +59,16 @@ namespace logging {
             location.column(),
             message
         );
+    #endif
 #else
+    #ifdef ALFRED_DISTRIBUTION
+        std::cerr << std::format(
+            "[{} {}] {}\n",
+            severity_to_string(severity),
+            time_of_day,
+            message
+        );
+    #else
         std::cerr << std::format(
             "[{} {} {} {} {}:{}] {}\n",
             severity_to_string(severity),
@@ -61,10 +79,11 @@ namespace logging {
             location.column(),
             message
         );
+    #endif
 #endif
     }
 
-    void println_file(Severity severity, const std::source_location& location, TimeOfDay time_of_day, const std::string& message) {
+    void println_file(Severity severity, [[maybe_unused]] const std::source_location& location, TimeOfDay time_of_day, const std::string& message) {
         std::lock_guard guard {g_stream.mutex};
 
         if (!g_stream.stream.is_open()) {
@@ -72,6 +91,15 @@ namespace logging {
         }
 
 #ifdef __cpp_lib_print
+    #ifdef ALFRED_DISTRIBUTION
+        std::println(
+            g_stream.stream,
+            "[{} {}] {}",
+            severity_to_string(severity),
+            time_of_day,
+            message
+        );
+    #else
         std::println(
             g_stream.stream,
             "[{} {} {} {} {}:{}] {}",
@@ -83,7 +111,16 @@ namespace logging {
             location.column(),
             message
         );
+    #endif
 #else
+    #ifdef ALFRED_DISTRIBUTION
+        g_stream.stream << std::format(
+            "[{} {}] {}\n",
+            severity_to_string(severity),
+            time_of_day,
+            message
+        );
+    #else
         g_stream.stream << std::format(
             "[{} {} {} {} {}:{}] {}\n",
             severity_to_string(severity),
@@ -94,6 +131,7 @@ namespace logging {
             location.column(),
             message
         );
+    #endif
 #endif
     }
 }
