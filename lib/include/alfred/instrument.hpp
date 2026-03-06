@@ -132,7 +132,7 @@ namespace instrument {  // TODO description
 
     class Piano : public syn::Instrument {
     public:
-        ALFRED_INSTRUMENT_STATIC_NAME_ID("Piano")
+        ALFRED_INSTRUMENT_STATIC_NAME_ID("Synth Piano")
 
         const char* name() const override { return static_name(); }
         syn::InstrumentId id() const override { return static_id(); }
