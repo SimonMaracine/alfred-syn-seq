@@ -152,7 +152,7 @@ namespace seq {
 
         // Notes must always be sorted in a very specific way
         // Use a normal set, because the iterators need to stay stable
-        std::unordered_map<syn::InstrumentId, Notes> instruments;  // TODO erase empty when serializing
+        std::unordered_map<syn::InstrumentId, Notes> instruments;
 
         bool equal_signature(const Measure& other) const {
             return time_signature == other.time_signature;

@@ -2699,6 +2699,8 @@ namespace application {
     bool Application::composition_save(std::filesystem::path path) {
         path.replace_extension("alfred");
 
+        strip_composition_empty_instruments(m_composition);
+
         try {
             composition_save(path, m_composition);
         } catch (const composition::CompositionError& e) {
@@ -2724,6 +2726,8 @@ namespace application {
         if (m_composition_path.extension() != ".alfred") {
             LOG_WARNING("Composition file has the wrong extension");
         }
+
+        strip_composition_empty_instruments(m_composition);
 
         try {
             composition_save(m_composition_path, m_composition);
@@ -2953,6 +2957,19 @@ namespace application {
         }
 
         return *std::max_element(time_line.get(), time_line.get() + composition.size());
+    }
+
+    void Application::strip_composition_empty_instruments(seq::Composition& composition) {
+        for (seq::Measure& measure : composition.measures) {
+            for (auto iter {measure.instruments.begin()}; iter != measure.instruments.end();) {
+                if (iter->second.empty()) {
+                    iter = measure.instruments.erase(iter);
+                    continue;
+                }
+
+                iter++;
+            }
+        }
     }
 
     void Application::undo() {
