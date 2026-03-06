@@ -262,6 +262,7 @@ namespace syn {
 
         virtual const char* name() const = 0;
         virtual InstrumentId id() const = 0;
+        virtual const char* description() const = 0;
 
         virtual double sound(double time, double time_on, NoteId note) const = 0;
         virtual InstrumentRange range() const { return keyboard::ID_FULL_RANGE; }

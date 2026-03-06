@@ -5,15 +5,21 @@
 
 #define ALFRED_INSTRUMENT_STATIC_NAME_ID(NAME_STRING) \
     static consteval auto static_name() { return NAME_STRING; } \
-    static consteval auto static_id() { return hash::HashedStr32(static_name()); }
+    static consteval auto static_id() { return hash::HashedStr32(static_name()); } \
+    const char* name() const override { return static_name(); } \
+    syn::InstrumentId id() const override { return static_id(); }
 
-namespace instrument {  // TODO description
+#define ALFRED_INSTRUMENT_DESCRIPTION(DESCRIPTION_STRING) \
+    const char* description() const override { return DESCRIPTION_STRING; }
+
+#define ALFRED_INSTRUMENT_DESCRIPTION_UNFINISHED() \
+    const char* description() const override { return "This instrument/preset is unfinished"; }
+
+namespace instrument {
     class Metronome : public syn::Instrument {
     public:
         ALFRED_INSTRUMENT_STATIC_NAME_ID("Metronome")
-
-        const char* name() const override { return static_name(); }
-        syn::InstrumentId id() const override { return static_id(); }
+        ALFRED_INSTRUMENT_DESCRIPTION("Simply a metronome")
 
         double sound(double time, double time_on, syn::NoteId note) const override;
 
@@ -31,9 +37,7 @@ namespace instrument {  // TODO description
     class Bell : public syn::Instrument {
     public:
         ALFRED_INSTRUMENT_STATIC_NAME_ID("Bell?")
-
-        const char* name() const override { return static_name(); }
-        syn::InstrumentId id() const override { return static_id(); }
+        ALFRED_INSTRUMENT_DESCRIPTION_UNFINISHED()
 
         double sound(double time, double time_on, syn::NoteId note) const override;
         syn::InstrumentRange range() const override { return { syn::note(syn::C, syn::Octave2), syn::note(syn::C, syn::Octave6) }; }
@@ -52,9 +56,7 @@ namespace instrument {  // TODO description
     class Harmonica : public syn::Instrument {
     public:
         ALFRED_INSTRUMENT_STATIC_NAME_ID("Harmonica?")
-
-        const char* name() const override { return static_name(); }
-        syn::InstrumentId id() const override { return static_id(); }
+        ALFRED_INSTRUMENT_DESCRIPTION_UNFINISHED()
 
         double sound(double time, double time_on, syn::NoteId note) const override;
 
@@ -73,9 +75,7 @@ namespace instrument {  // TODO description
     class DrumBass : public syn::Instrument {
     public:
         ALFRED_INSTRUMENT_STATIC_NAME_ID("Drum Bass?")
-
-        const char* name() const override { return static_name(); }
-        syn::InstrumentId id() const override { return static_id(); }
+        ALFRED_INSTRUMENT_DESCRIPTION_UNFINISHED()
 
         double sound(double time, double time_on, syn::NoteId note) const override;
 
@@ -93,9 +93,7 @@ namespace instrument {  // TODO description
     class DrumSnare : public syn::Instrument {
     public:
         ALFRED_INSTRUMENT_STATIC_NAME_ID("Drum Snare?")
-
-        const char* name() const override { return static_name(); }
-        syn::InstrumentId id() const override { return static_id(); }
+        ALFRED_INSTRUMENT_DESCRIPTION_UNFINISHED()
 
         double sound(double time, double time_on, syn::NoteId note) const override;
 
@@ -113,9 +111,7 @@ namespace instrument {  // TODO description
     class DrumHiHat : public syn::Instrument {
     public:
         ALFRED_INSTRUMENT_STATIC_NAME_ID("Drum Hi-Hat?")
-
-        const char* name() const override { return static_name(); }
-        syn::InstrumentId id() const override { return static_id(); }
+        ALFRED_INSTRUMENT_DESCRIPTION_UNFINISHED()
 
         double sound(double time, double time_on, syn::NoteId note) const override;
 
@@ -133,9 +129,7 @@ namespace instrument {  // TODO description
     class Piano : public syn::Instrument {
     public:
         ALFRED_INSTRUMENT_STATIC_NAME_ID("Synth Piano")
-
-        const char* name() const override { return static_name(); }
-        syn::InstrumentId id() const override { return static_id(); }
+        ALFRED_INSTRUMENT_DESCRIPTION("Pretend it sounds like a synthetic piano")
 
         double sound(double time, double time_on, syn::NoteId note) const override;
 
@@ -153,9 +147,7 @@ namespace instrument {  // TODO description
     class Guitar : public syn::Instrument {
     public:
         ALFRED_INSTRUMENT_STATIC_NAME_ID("Guitar?")
-
-        const char* name() const override { return static_name(); }
-        syn::InstrumentId id() const override { return static_id(); }
+        ALFRED_INSTRUMENT_DESCRIPTION_UNFINISHED()
 
         double sound(double time, double time_on, syn::NoteId note) const override;
         syn::InstrumentRange range() const override { return { syn::note(syn::E, syn::Octave2), syn::note(syn::C, syn::Octave6) }; }
@@ -176,9 +168,7 @@ namespace instrument {  // TODO description
         Strings();
 
         ALFRED_INSTRUMENT_STATIC_NAME_ID("Strings?")
-
-        const char* name() const override { return static_name(); }
-        syn::InstrumentId id() const override { return static_id(); }
+        ALFRED_INSTRUMENT_DESCRIPTION_UNFINISHED()
 
         double sound(double time, double time_on, syn::NoteId note) const override;
 
@@ -204,9 +194,7 @@ namespace instrument {  // TODO description
         Cello();
 
         ALFRED_INSTRUMENT_STATIC_NAME_ID("Cello")
-
-        const char* name() const override { return static_name(); }
-        syn::InstrumentId id() const override { return static_id(); }
+        ALFRED_INSTRUMENT_DESCRIPTION("It's close, but not quite; sounds nice though")
 
         double sound(double time, double time_on, syn::NoteId note) const override;
         syn::InstrumentRange range() const override { return { syn::note(syn::C, syn::Octave2), syn::note(syn::A, syn::Octave5) }; }

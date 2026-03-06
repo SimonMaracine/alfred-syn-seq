@@ -5,6 +5,7 @@
 #include <charconv>
 #include <iterator>
 #include <chrono>
+#include <utility>
 #include <cstring>
 #include <cmath>
 #include <cstdlib>
@@ -474,6 +475,8 @@ namespace application {
                         m_composition_selected_notes.clear();
                         m_synthesizer.silence();
                     }
+
+                    ImGui::SetItemTooltip("%s", instrument.description());
                 });
 
                 ImGui::EndCombo();
