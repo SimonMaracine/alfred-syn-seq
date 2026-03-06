@@ -66,16 +66,18 @@ namespace instrument {
             amp[2] * syn::noise();
     }
 
-    double Piano::sound(double time, double, syn::NoteId note) const noexcept {
-        static constexpr auto amp {syn::util::amplitudes(std::array { 1.0, 1.5, 6.0, 12.0, 20.0, 90.0 })};
+    double SynthPiano::sound(double time, double, syn::NoteId note) const noexcept {
+        static constexpr auto amp {syn::util::amplitudes(std::array { 40.0, 30.0, 1.0, 1.5, 6.0, 12.0, 20.0, 90.0 })};
 
         return
-            amp[0] * syn::oscillator::sine(time, 1.0 * syn::frequency(note), { 4.5, 0.001 }) +
-            amp[1] * syn::oscillator::triangle(time, 2.0 * syn::frequency(note)) +
-            amp[2] * syn::oscillator::sine(time, 3.025 * syn::frequency(note)) +
-            amp[3] * syn::oscillator::sine(time, 4.05 * syn::frequency(note)) +
-            amp[4] * syn::oscillator::sine(time, 5.1 * syn::frequency(note)) +
-            amp[5] * syn::noise();
+            amp[0] * syn::oscillator::sine(time, 0.85 * syn::frequency(note)) +
+            amp[1] * syn::oscillator::sine(time, 0.95 * syn::frequency(note)) +
+            amp[2] * syn::oscillator::sine(time, 1.0 * syn::frequency(note), { 4.5, 0.001 }) +
+            amp[3] * syn::oscillator::triangle(time, 2.0 * syn::frequency(note)) +
+            amp[4] * syn::oscillator::sine(time, 3.025 * syn::frequency(note)) +
+            amp[5] * syn::oscillator::sine(time, 4.05 * syn::frequency(note)) +
+            amp[6] * syn::oscillator::sine(time, 5.1 * syn::frequency(note)) +
+            amp[7] * syn::noise();
     }
 
     double Guitar::sound(double time, double, syn::NoteId note) const noexcept {

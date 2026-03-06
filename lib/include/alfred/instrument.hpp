@@ -126,7 +126,7 @@ namespace instrument {
         };
     };
 
-    class Piano : public syn::Instrument {
+    class SynthPiano : public syn::Instrument {
     public:
         ALFRED_INSTRUMENT_STATIC_NAME_ID("Synth Piano")
         ALFRED_INSTRUMENT_DESCRIPTION("Pretend it sounds like a synthetic piano")

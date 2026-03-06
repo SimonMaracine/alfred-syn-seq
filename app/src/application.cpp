@@ -83,7 +83,7 @@ namespace application {
         io.ConfigWindowsMoveFromTitleBarOnly = true;
         io.IniFilename = nullptr;
 
-        m_instrument = instrument::Piano::static_id();
+        m_instrument = instrument::SynthPiano::static_id();
         m_player = seq::Player(m_synthesizer, m_composition, [this] { desired_frame_time(FRAME_TIME_DEFAULT); });
         m_composition_selected_measure = m_composition.measures.end();
 

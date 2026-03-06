@@ -15,7 +15,7 @@ namespace synthesizer {
         m_instruments[instrument::DrumBass::static_id()] = std::make_unique<instrument::DrumBass>();
         m_instruments[instrument::DrumSnare::static_id()] = std::make_unique<instrument::DrumSnare>();
         m_instruments[instrument::DrumHiHat::static_id()] = std::make_unique<instrument::DrumHiHat>();
-        m_instruments[instrument::Piano::static_id()] = std::make_unique<instrument::Piano>();
+        m_instruments[instrument::SynthPiano::static_id()] = std::make_unique<instrument::SynthPiano>();
         m_instruments[instrument::Guitar::static_id()] = std::make_unique<instrument::Guitar>();
         m_instruments[instrument::Strings::static_id()] = std::make_unique<instrument::Strings>();
         m_instruments[instrument::Cello::static_id()] = std::make_unique<instrument::Cello>();
