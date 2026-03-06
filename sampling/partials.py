@@ -51,7 +51,11 @@ def _read_analysis(lines: list[str], line_index: int) -> Analysis | None:
         # Increment only after check
         line_index += 1
 
-        frequency, power = line.split()
+        try:
+            frequency, power = line.split()
+        except Exception:
+            print(line, file=sys.stderr)
+            raise
 
         partial = (float(frequency) / frequency_fundamental, _db_to_amplitude(-int(power)))
         partials.append(partial)
@@ -96,9 +100,6 @@ def _main(args: list[str]) -> int:
                 print(file=file)
 
         for analysis in analysis_list:
-            # Don't forget the fundamental
-            partials = [(1.0, 1.0)] + analysis.partials
-
             print(
 f"""syn::util::SoundAtTime {{
     {analysis.time},
@@ -106,8 +107,8 @@ f"""syn::util::SoundAtTime {{
         return syn::util::sound(
             time,
             note,
-            std::array {{ {", ".join(map(str, (round(partial[0], 1) for partial in partials)))} }},
-            std::array {{ {", ".join(map(str, (round(partial[1], 4) for partial in partials)))} }}
+            std::array {{ {", ".join(map(str, (round(partial[0], 1) for partial in analysis.partials)))} }},
+            std::array {{ {", ".join(map(str, (round(partial[1], 4) for partial in analysis.partials)))} }}
         );
     }}
 }},"""
