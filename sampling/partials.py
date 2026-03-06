@@ -54,7 +54,7 @@ def _read_analysis(lines: list[str], line_index: int) -> Analysis | None:
         try:
             frequency, power = line.split()
         except Exception:
-            print(line, file=sys.stderr)
+            print(f"Line: `{line}` Index: {line_index}", file=sys.stderr)
             raise
 
         partial = (float(frequency) / frequency_fundamental, _db_to_amplitude(-int(power)))
