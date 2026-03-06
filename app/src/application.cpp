@@ -2882,11 +2882,15 @@ namespace application {
         using namespace std::chrono_literals;
         using TimePoint = std::chrono::time_point<std::chrono::system_clock>;
 
-        const unsigned int size {composition.size()};
         bool rendering {true};
 
         synthesizer::VirtualSynthesizer synthesizer;
         seq::Player player {synthesizer, composition, [&] { rendering = false; }};
+
+        // Scan the composition for the optimal max voice number
+        synthesizer.polyphony(max_composition_voices(composition));
+
+        logging::debug("{}", synthesizer.polyphony());
 
         logging::debug("Starting rendering composition to `{}`", file_path.string().c_str());
 
@@ -2911,7 +2915,7 @@ namespace application {
             if (time_now - time_last_update > 0.1s) {
                 time_last_update = time_now;
 
-                m_task_manager.add_immediate_thread_safe_task([this, position = player.position(), size] {
+                m_task_manager.add_immediate_thread_safe_task([this, position = player.position(), size = composition.size()] {
                     m_ui.render_progress = math::map(float(position), 0.0f, float(size), 0.0f, 0.9f);
                 });
             }
@@ -2926,6 +2930,29 @@ namespace application {
         });
 
         logging::information("Done rendering composition in {}", std::chrono::duration_cast<std::chrono::seconds>(time_stop - time_start));
+    }
+
+    std::size_t Application::max_composition_voices(const seq::Composition& composition) {
+        if (composition.size() == 0) {
+            return 0;
+        }
+
+        auto time_line {std::make_unique<std::size_t[]>(composition.size())};
+        unsigned int steps {};
+
+        for (const seq::Measure& measure : composition.measures) {
+            for (const auto& notes: measure.instruments | std::views::values) {
+                for (const seq::Note& note : notes) {
+                    for (unsigned int i {steps + note.position}; i < steps + note.position + seq::steps(note.value); i++) {
+                        time_line[i]++;
+                    }
+                }
+            }
+
+            steps += measure.time_signature.measure_steps();
+        }
+
+        return *std::max_element(time_line.get(), time_line.get() + composition.size());
     }
 
     void Application::undo() {

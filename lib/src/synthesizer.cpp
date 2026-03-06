@@ -58,6 +58,10 @@ namespace synthesizer {
         }
     }
 
+    void Synthesizer::polyphony(std::size_t max_voices) {
+        m_max_voices = std::clamp(max_voices, MIN_VOICES, MAX_VOICES);
+    }
+
     void Synthesizer::for_each_instrument(const std::function<void(const syn::Instrument&)>& function) const {
         for (const auto& instrument : m_instruments | std::views::values) {
             function(*instrument);

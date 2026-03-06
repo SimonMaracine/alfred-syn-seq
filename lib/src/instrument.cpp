@@ -6,7 +6,7 @@
 #include "alfred/audio.hpp"
 
 namespace instrument {
-    double Metronome::sound(double time, double, syn::NoteId note) const {
+    double Metronome::sound(double time, double, syn::NoteId note) const noexcept {
         static constexpr auto amp {syn::util::amplitudes(std::array { 1.0, 2.0, 4.0, 25.0 })};
 
         return
@@ -16,7 +16,7 @@ namespace instrument {
             amp[3] * syn::noise();
     }
 
-    double Bell::sound(double time, double, syn::NoteId note) const {
+    double Bell::sound(double time, double, syn::NoteId note) const noexcept {
         static constexpr auto amp {syn::util::amplitudes(std::array { 1.0, 2.0, 4.0 })};
 
         return
@@ -25,7 +25,7 @@ namespace instrument {
             amp[2] * syn::oscillator::sine(time, 4.0 * syn::frequency(note));
     }
 
-    double Harmonica::sound(double time, double, syn::NoteId note) const {
+    double Harmonica::sound(double time, double, syn::NoteId note) const noexcept {
         static constexpr auto amp {syn::util::amplitudes(std::array { 1.0, 2.0, 4.0, 50.0 })};
 
         return
@@ -35,7 +35,7 @@ namespace instrument {
             amp[3] * syn::noise();
     }
 
-    double DrumBass::sound(double time, double, syn::NoteId) const {
+    double DrumBass::sound(double time, double, syn::NoteId) const noexcept {
         static constexpr syn::NoteId C3 {15};
         static constexpr auto amp {syn::util::amplitudes(std::array { 1.0, 6.0, 15.0 })};
 
@@ -45,7 +45,7 @@ namespace instrument {
             amp[2] * syn::noise();
     }
 
-    double DrumSnare::sound(double time, double, syn::NoteId) const {
+    double DrumSnare::sound(double time, double, syn::NoteId) const noexcept {
         static constexpr syn::NoteId C3 {15};
         static constexpr auto amp {syn::util::amplitudes(std::array { 1.0, 2.0, 4.0, 8.0, 5.0 })};
 
@@ -56,7 +56,7 @@ namespace instrument {
             amp[4] * syn::noise();
     }
 
-    double DrumHiHat::sound(double time, double, syn::NoteId) const {
+    double DrumHiHat::sound(double time, double, syn::NoteId) const noexcept {
         static constexpr syn::NoteId C4 {27};
         static constexpr auto amp {syn::util::amplitudes(std::array { 1.0, 4.0, 0.5 })};
 
@@ -66,7 +66,7 @@ namespace instrument {
             amp[2] * syn::noise();
     }
 
-    double Piano::sound(double time, double, syn::NoteId note) const {
+    double Piano::sound(double time, double, syn::NoteId note) const noexcept {
         static constexpr auto amp {syn::util::amplitudes(std::array { 1.0, 1.5, 6.0, 12.0, 20.0, 90.0 })};
 
         return
@@ -78,7 +78,7 @@ namespace instrument {
             amp[5] * syn::noise();
     }
 
-    double Guitar::sound(double time, double, syn::NoteId note) const {
+    double Guitar::sound(double time, double, syn::NoteId note) const noexcept {
         static constexpr auto amp {syn::util::amplitudes(std::array { 1.0, 2.0, 4.0, 8.0 })};
 
         return
@@ -109,7 +109,7 @@ namespace instrument {
         );
     }
 
-    double Strings::sound(double time, double, syn::NoteId note) const {
+    double Strings::sound(double time, double, syn::NoteId note) const noexcept {
         return syn::util::sound(time, note, m_sample.get(), SIZE, FREQUENCY);
     }
 
@@ -140,7 +140,7 @@ namespace instrument {
         }
     }
 
-    double Cello::sound(double time, double, syn::NoteId note) const {
+    double Cello::sound(double time, double, syn::NoteId note) const noexcept {
         return syn::util::sound(time, note, m_sample.get(), SIZE, FREQUENCY);
     }
 }

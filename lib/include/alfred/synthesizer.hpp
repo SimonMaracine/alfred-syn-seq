@@ -30,7 +30,7 @@ namespace synthesizer {
         std::size_t polyphony() const { return m_max_voices; }
 
         // Silence the synthesizer after calling this!
-        void polyphony(std::size_t max_voices) { m_max_voices = max_voices; }
+        void polyphony(std::size_t max_voices);
 
         void for_each_instrument(const std::function<void(const syn::Instrument&)>& function) const;
         const syn::Instrument& get_instrument(syn::InstrumentId instrument) const;

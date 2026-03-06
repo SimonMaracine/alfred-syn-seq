@@ -197,6 +197,7 @@ namespace application {
         void reset_render_composition();
         void start_render_composition();
         void do_render_composition(const task::AsyncTask& task, std::filesystem::path&& file_path, seq::Composition&& composition);
+        static std::size_t max_composition_voices(const seq::Composition& composition);
         void undo();
         void redo();
         void remember_composition();
