@@ -148,7 +148,7 @@ namespace seq {
         exec::Executions executions;
         unsigned int steps {};
 
-        std::vector<ProvenanceNote<ConstMeasureIter>> processed_notes;
+        std::unordered_map<syn::InstrumentId, std::vector<ProvenanceNote<ConstMeasureIter>>> processed_notes;
         Composition cloned_composition;
 
         // By default, simply reference the composition pointer
@@ -179,10 +179,10 @@ namespace seq {
                     }
 
                     if (
-                        std::ranges::find_if(processed_notes, [measure, note](const auto& provenance_note) {
+                        std::ranges::find_if(processed_notes[instrument], [measure, note](const auto& provenance_note) {
                             return provenance_note.measure() == measure && provenance_note.note() == note;
                         }
-                    ) != processed_notes.end()) {
+                    ) != processed_notes[instrument].end()) {
                         continue;
                     }
 
@@ -198,7 +198,7 @@ namespace seq {
 
                         duration += seq::steps(next_note->note()->value);
 
-                        processed_notes.push_back(*next_note);
+                        processed_notes[instrument].push_back(*next_note);
                         current_note = next_note->note();
                     }
 

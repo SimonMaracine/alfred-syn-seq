@@ -28,7 +28,7 @@ namespace synthesizer {
             return;
         }
 
-        if (const auto voice {find_voice(note)}; voice == m_voices.end()) {
+        if (const auto voice {find_voice(note, instrument)}; voice == m_voices.end()) {
             syn::Voice& new_voice {m_voices.emplace_back()};
             new_voice.note = note;
             new_voice.instrument = instrument;
@@ -50,7 +50,7 @@ namespace synthesizer {
             return;
         }
 
-        if (const auto voice {find_voice(note)}; voice != m_voices.end()) {
+        if (const auto voice {find_voice(note, instrument)}; voice != m_voices.end()) {
             if (voice->time_on > voice->time_off) {
                 voice->time_off = time;
                 voice->envelope->note_off(time);
@@ -85,9 +85,9 @@ namespace synthesizer {
         }
     }
 
-    std::vector<syn::Voice>::iterator Synthesizer::find_voice(syn::NoteId note) {
-        return std::ranges::find_if(m_voices, [note](const syn::Voice& voice) {
-            return voice.note == note;
+    std::vector<syn::Voice>::iterator Synthesizer::find_voice(syn::NoteId note, syn::InstrumentId instrument) {
+        return std::ranges::find_if(m_voices, [note, instrument](const syn::Voice& voice) {
+            return voice.note == note && voice.instrument == instrument;
         });
     }
 

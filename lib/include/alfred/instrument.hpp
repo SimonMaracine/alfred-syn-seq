@@ -204,9 +204,9 @@ namespace instrument {
         double release_duration() const override { return ENVELOPE.duration_release; }
     private:
         static constexpr syn::DescriptionAdsr ENVELOPE {
-            .duration_attack = 0.33,
+            .duration_attack = 0.3,
             .duration_decay = 0.05,
-            .duration_release = 0.3,
+            .duration_release = 0.27,
             .value_sustain = 0.95
         };
 

@@ -36,7 +36,7 @@ namespace synthesizer {
         const syn::Instrument& get_instrument(syn::InstrumentId instrument) const;
     protected:
         void update_voices();
-        std::vector<syn::Voice>::iterator find_voice(syn::NoteId note);
+        std::vector<syn::Voice>::iterator find_voice(syn::NoteId note, syn::InstrumentId instrument);
         void mix_update(double time) const noexcept;
         double mix_sound(double time) const noexcept;
 
