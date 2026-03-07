@@ -62,13 +62,27 @@ namespace synthesizer {
         m_max_voices = std::clamp(max_voices, MIN_VOICES, MAX_VOICES);
     }
 
+    void Synthesizer::active_instruments(std::span<syn::InstrumentId> active_instruments) {
+
+    }
+
     void Synthesizer::for_each_instrument(const std::function<void(const syn::Instrument&)>& function) const {
         for (const auto& instrument : m_instruments | std::views::values) {
             function(*instrument);
         }
     }
 
+    void Synthesizer::for_each_instrument(const std::function<void(syn::Instrument&)>& function) {
+        for (const auto& instrument : m_instruments | std::views::values) {
+            function(*instrument);
+        }
+    }
+
     const syn::Instrument& Synthesizer::get_instrument(syn::InstrumentId instrument) const {
+        return *m_instruments.at(instrument);
+    }
+
+    syn::Instrument& Synthesizer::get_instrument(syn::InstrumentId instrument) {
         return *m_instruments.at(instrument);
     }
 
@@ -106,7 +120,10 @@ namespace synthesizer {
                 break;
             }
 
-            output += voice.loudness * voice.envelope->value() * m_instruments.at(voice.instrument)->sound(time, voice.time_on, voice.note);
+            output +=
+                voice.loudness *
+                voice.envelope->value() *
+                m_instruments.at(voice.instrument)->sound(time, voice.time_on, voice.note);
         }
 
         return output / double(m_max_voices);

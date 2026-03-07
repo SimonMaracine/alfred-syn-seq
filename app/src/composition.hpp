@@ -1,14 +1,30 @@
 #pragma once
 
+#include <unordered_map>
 #include <string>
 #include <chrono>
 #include <stdexcept>
 
 #include <cereal/cereal.hpp>
 #include <cereal/types/base_class.hpp>
+#include <alfred/mixer.hpp>
 
 #include "sequencer.hpp"
 #include "utility.hpp"
+
+namespace mixer {
+    template<typename Archive>
+    void save(Archive& archive, const Volume& self, const std::uint32_t) {
+        archive(double(self));
+    }
+
+    template<typename Archive>
+    void load(Archive& archive, Volume& self, const std::uint32_t) {
+        double volume {};
+        archive(volume);
+        self = Volume(volume);
+    }
+}
 
 namespace seq {
     template<typename Archive>
@@ -88,17 +104,30 @@ namespace std::chrono {
 
 namespace composition {
     struct Composition : seq::Composition {
+        // Mixer
+        std::unordered_map<syn::InstrumentId, mixer::Volume> instrument_volumes;
+
+        // Metadata
         std::string title;
         std::string author;
         std::chrono::year year {};
 
         template<typename Archive>
-        void serialize(Archive& archive, const std::uint32_t) {
-            archive(cereal::base_class<seq::Composition>(this), title, author, year);
+        void save(Archive& archive, const std::uint32_t) const {
+            archive(cereal::base_class<seq::Composition>(this), instrument_volumes, title, author, year);
+        }
+
+        template<typename Archive>
+        void load(Archive& archive, const std::uint32_t version) {
+            if (version == 1) {
+                archive(cereal::base_class<seq::Composition>(this), title, author, year);
+            } else {
+                archive(cereal::base_class<seq::Composition>(this), instrument_volumes, title, author, year);
+            }
         }
     };
 
-    inline constexpr std::uint32_t VERSION {1};
+    inline constexpr std::uint32_t VERSION {2};
 
     void export_composition(const Composition& composition, utility::Buffer& buffer);
     void import_composition(Composition& composition, const utility::Buffer& buffer);
@@ -109,4 +138,4 @@ namespace composition {
 }
 
 CEREAL_CLASS_VERSION(composition::Composition, composition::VERSION)
-CEREAL_SPECIALIZE_FOR_ALL_ARCHIVES(composition::Composition, cereal::specialization::member_serialize)
+CEREAL_SPECIALIZE_FOR_ALL_ARCHIVES(composition::Composition, cereal::specialization::member_load_save)

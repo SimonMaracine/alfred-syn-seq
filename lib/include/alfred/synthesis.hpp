@@ -267,6 +267,9 @@ namespace syn {
         virtual double sound(double time, double time_on, NoteId note) const noexcept = 0;
         virtual InstrumentRange range() const { return keyboard::ID_FULL_RANGE; }
 
+        virtual double volume() const = 0;
+        virtual void volume(double volume) = 0;
+
         virtual EnvelopePtr new_envelope() const = 0;
         virtual double attack_duration() const = 0;
         virtual double release_duration() const = 0;
@@ -297,7 +300,7 @@ namespace syn {
         template<std::size_t N>
         constexpr std::array<double, N> amplitudes(std::array<double, N> divisors) {
             for (const auto [i, divisor] : divisors | std::views::enumerate) {
-                divisors[i] = 1.0 / double(divisor);
+                divisors[i] = 1.0 / divisor;
             }
 
             const double sum {std::accumulate(divisors.begin(), divisors.end(), 0.0)};

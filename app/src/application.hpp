@@ -106,6 +106,8 @@ namespace application {
         bool time_signature();
         bool dynamics();
         bool agogic();
+        void composition_metadata();
+        void composition_mixer();
         void render_composition();
         void debug() const;
 
@@ -194,6 +196,8 @@ namespace application {
         void file_new();
         void file_open();
         void file_save();
+        void open_composition_metadata();
+        void open_composition_mixer();
         void open_render_composition();
         void reset_render_composition();
         void start_render_composition();
@@ -203,6 +207,7 @@ namespace application {
         void undo();
         void redo();
         void remember_composition();
+        void update_synthesizer_instrument_volumes();
 
         data::Data m_data;
         task::TaskManager m_task_manager;
@@ -244,6 +249,8 @@ namespace application {
 
         bool m_composition_not_compiled {};
         bool m_composition_not_saved {};
+        bool m_composition_metadata_menu {};
+        bool m_composition_mixer_menu {};
         bool m_render_composition_menu {};
         bool m_render_in_progress {};
         bool m_invalidate_ui_dock_builder {};

@@ -5,13 +5,14 @@
 #include <memory>
 #include <functional>
 #include <atomic>
+#include <span>
 
 #include "alfred/audio.hpp"
 #include "alfred/synthesis.hpp"
 
 namespace synthesizer {
     inline constexpr std::size_t MIN_VOICES {2};
-    inline constexpr std::size_t MAX_VOICES {8};
+    inline constexpr std::size_t MAX_VOICES {10};
 
     class Synthesizer {
     public:
@@ -29,11 +30,14 @@ namespace synthesizer {
         std::size_t current_voices() const { return m_voices.size(); }
         std::size_t polyphony() const { return m_max_voices; }
 
-        // Silence the synthesizer after calling this!
+        // Silence the synthesizer after calling this
         void polyphony(std::size_t max_voices);
 
+        void active_instruments(std::span<syn::InstrumentId> active_instruments);
         void for_each_instrument(const std::function<void(const syn::Instrument&)>& function) const;
+        void for_each_instrument(const std::function<void(syn::Instrument&)>& function);
         const syn::Instrument& get_instrument(syn::InstrumentId instrument) const;
+        syn::Instrument& get_instrument(syn::InstrumentId instrument);
     protected:
         void update_voices();
         std::vector<syn::Voice>::iterator find_voice(syn::NoteId note, syn::InstrumentId instrument);
@@ -41,6 +45,7 @@ namespace synthesizer {
         double mix_sound(double time) const noexcept;
 
         std::unordered_map<syn::InstrumentId, std::unique_ptr<syn::Instrument>> m_instruments;
+        std::vector<syn::InstrumentId> m_active_instruments;
         std::vector<syn::Voice> m_voices;
         std::atomic_size_t m_max_voices {4};
     };

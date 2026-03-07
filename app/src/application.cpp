@@ -108,6 +108,8 @@ namespace application {
             m_ui.colors[instrument.id()] = ui::ColorIndex(index);
             index = (index + 1) % std::size(ui::COLORS);
         });
+
+
     }
 
     void Application::on_stop() {
@@ -189,6 +191,8 @@ namespace application {
         playback();
         tools();
         composition();
+        composition_metadata();
+        composition_mixer();
         render_composition();
         shortcuts();
 
@@ -306,31 +310,12 @@ namespace application {
     }
 
     void Application::main_menu_bar_composition() {
-        if (ImGui::BeginMenu("Title")) {
-            if (ImGui::InputText("##title", m_ui.composition.title, sizeof(m_ui.composition.title))) {
-                m_composition.title = m_ui.composition.title;
-                modify_composition_metadata();
-            }
-
-            ImGui::EndMenu();
+        if (ImGui::MenuItem("Metadata")) {
+            open_composition_metadata();
         }
 
-        if (ImGui::BeginMenu("Author")) {
-            if (ImGui::InputText("##author", m_ui.composition.author, sizeof(m_ui.composition.author))) {
-                m_composition.author = m_ui.composition.author;
-                modify_composition_metadata();
-            }
-
-            ImGui::EndMenu();
-        }
-
-        if (ImGui::BeginMenu("Year")) {
-            if (ImGui::InputScalar("##year", ImGuiDataType_S16, &m_ui.composition.year)) {
-                m_composition.year = std::chrono::year(m_ui.composition.year);
-                modify_composition_metadata();
-            }
-
-            ImGui::EndMenu();
+        if (ImGui::MenuItem("Mixer")) {
+            open_composition_mixer();
         }
     }
 
@@ -1476,6 +1461,88 @@ namespace application {
         ImGui::SetItemTooltip("Change the agogic of the selected measure in quarters per minute");
 
         return result;
+    }
+
+    void Application::composition_metadata() {
+        if (!m_composition_metadata_menu) {
+            return;
+        }
+
+        ImGui::SetNextWindowPos(ImVec2(float(m_render_output_width / 2), float(m_render_output_height / 2)), ImGuiCond_Once, ImVec2(0.5f, 0.5f));
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
+
+        static constexpr auto flags {ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDocking};
+
+        if (ImGui::Begin("Composition Metadata", &m_composition_metadata_menu, flags)) {
+            if (ImGui::InputText("Title", m_ui.composition.title, sizeof(m_ui.composition.title))) {
+                m_composition.title = m_ui.composition.title;
+                modify_composition_metadata();
+            }
+
+            if (ImGui::InputText("Author", m_ui.composition.author, sizeof(m_ui.composition.author))) {
+                m_composition.author = m_ui.composition.author;
+                modify_composition_metadata();
+            }
+
+            if (ImGui::InputScalar("Year", ImGuiDataType_S16, &m_ui.composition.year)) {
+                m_composition.year = std::chrono::year(m_ui.composition.year);
+                modify_composition_metadata();
+            }
+        }
+
+        ImGui::End();
+
+        ImGui::PopStyleVar();
+    }
+
+    void Application::composition_mixer() {
+        if (!m_composition_mixer_menu) {
+            return;
+        }
+
+        ImGui::SetNextWindowPos(ImVec2(float(m_render_output_width / 2), float(m_render_output_height / 2)), ImGuiCond_Once, ImVec2(0.5f, 0.5f));
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
+
+        static constexpr auto flags {ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDocking};
+
+        if (ImGui::Begin("Composition Mixer", &m_composition_mixer_menu, flags)) {
+            const auto instruments {instruments_in_project()};
+
+            if (instruments.empty()) {
+                ImGui::Text("No Instruments");
+            }
+
+            for (const syn::InstrumentId instrument : instruments) {
+                const char* name {m_synthesizer.get_instrument(instrument).name()};
+
+                ImGui::PushID(name);
+
+                ImGui::Text("%s", name);
+
+                ImGui::SameLine();
+
+                constexpr double min {mixer::MIN};
+                constexpr double max {mixer::MAX};
+
+                double volume {mixer::clamp(m_composition.instrument_volumes[instrument])};
+
+                if (ImGui::SliderScalar("##volume", ImGuiDataType_Double, &volume, &min, &max, "%.1f")) {
+                    m_composition.instrument_volumes[instrument] = volume;
+                    m_synthesizer.get_instrument(instrument).volume(volume);
+                    modify_composition_metadata();
+                }
+
+                ImGui::Dummy(ui::rem(ImVec2(0.0f, 0.5f)));
+
+                ImGui::PopID();
+            }
+        }
+
+        ImGui::End();
+
+        ImGui::PopStyleVar();
     }
 
     void Application::render_composition() {
@@ -2786,6 +2853,7 @@ namespace application {
         reset_composition_flags();
         invalidate_composition();
         set_title_composition_saved();
+        update_synthesizer_instrument_volumes();
 
         return true;
     }
@@ -2798,6 +2866,7 @@ namespace application {
         reset_player_and_composition_selection();
         reset_composition_flags();
         set_title_composition_saved();
+        update_synthesizer_instrument_volumes();
     }
 
     void Application::file_new() {
@@ -2839,6 +2908,14 @@ namespace application {
         } else {
             composition_save();
         }
+    }
+
+    void Application::open_composition_metadata() {
+        m_composition_metadata_menu = true;
+    }
+
+    void Application::open_composition_mixer() {
+        m_composition_mixer_menu = true;
     }
 
     void Application::open_render_composition() {
@@ -3022,6 +3099,16 @@ namespace application {
 
         while (!m_composition_history.redo.empty()) {
             m_composition_history.redo.pop();
+        }
+    }
+
+    void Application::update_synthesizer_instrument_volumes() {
+        m_synthesizer.for_each_instrument([](syn::Instrument& instrument) {
+            instrument.volume(mixer::MAX);
+        });
+
+        for (const auto& [instrument, volume] : m_composition.instrument_volumes) {
+            m_synthesizer.get_instrument(instrument).volume(volume);
         }
     }
 }
