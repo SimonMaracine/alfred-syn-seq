@@ -2296,7 +2296,7 @@ namespace application {
         m_composition_selected_measure = m_composition.measures.end();
         m_composition_selected_notes.clear();
 
-        m_synthesizer.polyphony(max_composition_voices(m_composition));
+        m_synthesizer.polyphony(optimal_composition_voices(m_composition));
         LOG_DEBUG("Set polyphony to {}", m_synthesizer.polyphony());
 
         desired_frame_time(FRAME_TIME_PLAYBACK);
@@ -2985,8 +2985,7 @@ namespace application {
         synthesizer::VirtualSynthesizer synthesizer;
         seq::Player player {synthesizer, composition, [&] { rendering = false; }};
 
-        // Scan the composition for the optimal max voice number
-        synthesizer.polyphony(max_composition_voices(composition));
+        synthesizer.polyphony(optimal_composition_voices(composition));
 
         logging::debug("Starting rendering composition to `{}`", file_path.string().c_str());
 
@@ -3057,6 +3056,10 @@ namespace application {
         }
 
         return *std::max_element(time_line.get(), time_line.get() + composition.size());
+    }
+
+    std::size_t Application::optimal_composition_voices(const seq::Composition& composition) {
+        return std::size_t(std::ceil(double(max_composition_voices(composition)) * 1.5));
     }
 
     void Application::strip_composition_empty_instruments(seq::Composition& composition) {

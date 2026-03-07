@@ -12,7 +12,7 @@
 
 namespace synthesizer {
     inline constexpr std::size_t MIN_VOICES {2};
-    inline constexpr std::size_t MAX_VOICES {10};
+    inline constexpr std::size_t MAX_VOICES {12};
 
     class Synthesizer {
     public:
