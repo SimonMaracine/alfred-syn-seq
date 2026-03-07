@@ -33,12 +33,12 @@ namespace synthesizer {
             new_voice.note = note;
             new_voice.instrument = instrument;
             new_voice.envelope = m_instruments.at(instrument)->new_envelope();
-            new_voice.loudness = loudness;
+            new_voice.amplitude = loudness;
             new_voice.time_on = time;
             new_voice.envelope->note_on(time);
         } else {
             if (voice->time_off > voice->time_on) {
-                voice->loudness = loudness;
+                voice->amplitude = loudness;
                 voice->time_on = time;
                 voice->envelope->note_on(time);
             }
@@ -121,7 +121,7 @@ namespace synthesizer {
             }
 
             output +=
-                voice.loudness *
+                voice.amplitude *
                 voice.envelope->value() *
                 m_instruments.at(voice.instrument)->sound(time, voice.time_on, voice.note);
         }

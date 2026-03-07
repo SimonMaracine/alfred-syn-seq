@@ -226,7 +226,7 @@ namespace syn {
         NoteId note {};
         InstrumentId instrument {};
         EnvelopePtr envelope;  // Overall envelope
-        double loudness {};
+        double amplitude {};
         double time_on {};
         double time_off {-std::numeric_limits<double>::infinity()};
     };
