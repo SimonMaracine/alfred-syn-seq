@@ -309,6 +309,7 @@ namespace application {
         if (ImGui::BeginMenu("Title")) {
             if (ImGui::InputText("##title", m_ui.composition.title, sizeof(m_ui.composition.title))) {
                 m_composition.title = m_ui.composition.title;
+                modify_composition_metadata();
             }
 
             ImGui::EndMenu();
@@ -317,6 +318,7 @@ namespace application {
         if (ImGui::BeginMenu("Author")) {
             if (ImGui::InputText("##author", m_ui.composition.author, sizeof(m_ui.composition.author))) {
                 m_composition.author = m_ui.composition.author;
+                modify_composition_metadata();
             }
 
             ImGui::EndMenu();
@@ -325,6 +327,7 @@ namespace application {
         if (ImGui::BeginMenu("Year")) {
             if (ImGui::InputScalar("##year", ImGuiDataType_S16, &m_ui.composition.year)) {
                 m_composition.year = std::chrono::year(m_ui.composition.year);
+                modify_composition_metadata();
             }
 
             ImGui::EndMenu();
@@ -2241,6 +2244,14 @@ namespace application {
         }
 
         m_composition_not_compiled = true;
+        m_composition_not_saved = true;
+    }
+
+    void Application::modify_composition_metadata() {
+        if (!m_composition_not_saved) {
+            set_title_composition_not_saved();
+        }
+
         m_composition_not_saved = true;
     }
 

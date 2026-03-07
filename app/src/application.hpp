@@ -138,6 +138,7 @@ namespace application {
         void start_player();
         void stop_player();
         void modify_composition();
+        void modify_composition_metadata();
         void invalidate_composition();
         void reset_composition_flags();
         void reset_player_and_composition_selection();
