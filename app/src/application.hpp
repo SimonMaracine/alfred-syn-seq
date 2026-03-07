@@ -208,7 +208,7 @@ namespace application {
         void undo();
         void redo();
         void remember_composition();
-        void update_synthesizer_instrument_volumes();
+        void set_synthesizer_instrument_volumes(synthesizer::Synthesizer& synthesizer);
 
         data::Data m_data;
         task::TaskManager m_task_manager;

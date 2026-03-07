@@ -2858,7 +2858,7 @@ namespace application {
         reset_composition_flags();
         invalidate_composition();
         set_title_composition_saved();
-        update_synthesizer_instrument_volumes();
+        set_synthesizer_instrument_volumes(m_synthesizer);
 
         return true;
     }
@@ -2871,7 +2871,7 @@ namespace application {
         reset_player_and_composition_selection();
         reset_composition_flags();
         set_title_composition_saved();
-        update_synthesizer_instrument_volumes();
+        set_synthesizer_instrument_volumes(m_synthesizer);
     }
 
     void Application::file_new() {
@@ -2985,6 +2985,7 @@ namespace application {
         seq::Player player {synthesizer, composition, [&] { rendering = false; }};
 
         synthesizer.polyphony(optimal_composition_voices(composition));
+        set_synthesizer_instrument_volumes(synthesizer);
 
         logging::debug("Starting rendering composition to `{}`", file_path.string().c_str());
 
@@ -3110,13 +3111,13 @@ namespace application {
         }
     }
 
-    void Application::update_synthesizer_instrument_volumes() {
-        m_synthesizer.for_each_instrument([](syn::Instrument& instrument) {
+    void Application::set_synthesizer_instrument_volumes(synthesizer::Synthesizer& synthesizer) {
+        synthesizer.for_each_instrument([](syn::Instrument& instrument) {
             instrument.volume(mixer::DEFAULT);
         });
 
         for (const auto& [instrument, volume] : m_composition.instrument_volumes) {
-            m_synthesizer.get_instrument(instrument).volume(volume);
+            synthesizer.get_instrument(instrument).volume(volume);
         }
     }
 }
