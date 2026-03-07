@@ -387,9 +387,17 @@ namespace application {
 
             ImGui::EndMenu();
         }
+
+        if (ImGui::MenuItem("Show Keyboard", "Ctrl+K", m_ui.keyboard)) {
+            m_ui.keyboard = !m_ui.keyboard;
+        }
     }
 
     void Application::keyboard() const {
+        if (!m_ui.keyboard) {
+            return;
+        }
+
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
         if (ImGui::Begin("Keyboard", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse)) {
@@ -608,9 +616,7 @@ namespace application {
             ImGui::EndDisabled();
 
             ImGui::SameLine();
-
             ImGui::Dummy(ui::rem(ImVec2(0.5f, 0.0f)));
-
             ImGui::SameLine();
 
             const Time time {elapsed_seconds_to_time(m_player.elapsed_time())};
@@ -644,9 +650,7 @@ namespace application {
             ImGui::SetItemTooltip("Change the editing tool (Tab)");
 
             ImGui::SameLine();
-
             ImGui::Dummy(ImVec2(ui::rem(1.0f), 0.0f));
-
             ImGui::SameLine();
 
             switch (m_ui.tool) {
@@ -706,9 +710,7 @@ namespace application {
         ImGui::EndGroup();
 
         ImGui::SameLine();
-
         ImGui::Dummy(ui::rem(ImVec2(0.5f, 0.0f)));
-
         ImGui::SameLine();
 
         if (time_signature()) {
@@ -716,9 +718,7 @@ namespace application {
         }
 
         ImGui::SameLine();
-
         ImGui::Dummy(ui::rem(ImVec2(0.5f, 0.0f)));
-
         ImGui::SameLine();
 
         if (dynamics()) {
@@ -726,9 +726,7 @@ namespace application {
         }
 
         ImGui::SameLine();
-
         ImGui::Dummy(ui::rem(ImVec2(0.5f, 0.0f)));
-
         ImGui::SameLine();
 
         if (agogic()) {
@@ -824,9 +822,7 @@ namespace application {
         ImGui::EndDisabled();
 
         ImGui::SameLine();
-
         ImGui::Dummy(ui::rem(ImVec2(0.5f, 0.0f)));
-
         ImGui::SameLine();
 
         ImGui::BeginGroup();
@@ -850,6 +846,22 @@ namespace application {
         ImGui::EndGroup();
 
         ImGui::SetItemTooltip("Change the note value (1-5)");
+
+        ImGui::SameLine();
+        ImGui::Dummy(ui::rem(ImVec2(0.5f, 0.0f)));
+        ImGui::SameLine();
+
+        ImGui::BeginGroup();
+
+        ImGui::RadioButton("None", &m_ui.tuplet, ui::TupletNone);
+
+        ImGui::SameLine();
+
+        ImGui::RadioButton("Triplet", &m_ui.tuplet, ui::TupletTriplet);
+
+        ImGui::EndGroup();
+
+        ImGui::SetItemTooltip("Change the note tuplet type");
     }
 
     void Application::composition() {
@@ -1097,7 +1109,7 @@ namespace application {
             );
 
             if (note->legato) {
-                const float x {global_position_x + float(note->position + seq::steps(note->value)) * ui::rem(STEP_SIZE.x)};
+                const float x {global_position_x + float(note->position + seq::steps(note->value, note->tuplet)) * ui::rem(STEP_SIZE.x)};
 
                 draw.list->AddBezierCubic(
                     draw.origin + ImVec2(x - ui::rem(STEP_SIZE.x) * 6.0f, rect.y + ui::rem(STEP_SIZE.y) - 4.0f) - m_composition_camera,
@@ -1214,6 +1226,10 @@ namespace application {
 
         if (ImGui::Shortcut(ImGuiKey_Backspace, ImGuiInputFlags_RouteAlways)) {
             m_player.seek(0);
+        }
+
+        if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_K, ImGuiInputFlags_RouteAlways)) {
+            m_ui.keyboard = !m_ui.keyboard;
         }
 
         if (ImGui::Shortcut(ImGuiKey_Tab, ImGuiInputFlags_RouteAlways)) {
@@ -1891,7 +1907,7 @@ namespace application {
 
         for (auto n {instrument->second.begin()}; n != instrument->second.end(); n++) {
             if (hovered_note.id() == n->id) {
-                if (hovered_note.position() >= n->position && hovered_note.position() < n->position + seq::steps(n->value)) {
+                if (hovered_note.position() >= n->position && hovered_note.position() < n->position + seq::steps(n->value, n->tuplet)) {
                     return std::make_optional(n);
                 }
             }
@@ -1954,12 +1970,16 @@ namespace application {
             return;
         }
 
+        const auto new_note_value {get_value(ui::Value(m_ui.value))};
+
         const seq::Note new_note {
             hovered_note.id(),
-            get_value(ui::Value(m_ui.value)),
+            new_note_value,
             hovered_note.position() / seq::DIVISION * seq::DIVISION,  // Always place on groups of steps
+            seq::Tuplet::None
         };
 
+        // Test this particular new note, even though tuplets are inserted as something different
         if (
             ![this, &hovered_note, &new_note] {
                 if (new_note.position + seq::steps(new_note.value) > hovered_note.measure()->time_signature.measure_steps()) {
@@ -1981,7 +2001,32 @@ namespace application {
 
         remember_composition();
 
-        hovered_note.measure()->instruments[m_instrument].insert(new_note);
+        switch (m_ui.tuplet) {
+            case ui::TupletNone:
+                hovered_note.measure()->instruments[m_instrument].insert(new_note);
+                break;
+            case ui::TupletTriplet:
+                hovered_note.measure()->instruments[m_instrument].emplace(
+                    hovered_note.id(),
+                    new_note_value,
+                    hovered_note.position() / seq::DIVISION * seq::DIVISION,
+                    seq::Tuplet::Triplet
+                );
+                hovered_note.measure()->instruments[m_instrument].emplace(
+                    hovered_note.id(),
+                    new_note_value,
+                    hovered_note.position() / seq::DIVISION * seq::DIVISION + seq::steps(new_note_value, seq::Tuplet::Triplet),
+                    seq::Tuplet::Triplet
+                );
+                hovered_note.measure()->instruments[m_instrument].emplace(
+                    hovered_note.id(),
+                    new_note_value,
+                    hovered_note.position() / seq::DIVISION * seq::DIVISION + 2 * seq::steps(new_note_value, seq::Tuplet::Triplet),
+                    seq::Tuplet::Triplet
+                );
+                break;
+        }
+
         play_note(new_note);
 
         modify_composition();
@@ -2479,7 +2524,7 @@ namespace application {
     ImVec4 Application::note_rectangle(const seq::Note& note) {
         const float x {float(note.position + note.delay) * ui::rem(STEP_SIZE.x)};
         const float y {note_height(note)};
-        const float width {float(seq::steps(note.value) - note.delay) * ui::rem(STEP_SIZE.x)};
+        const float width {float(seq::steps(note.value, note.tuplet) - note.delay) * ui::rem(STEP_SIZE.x)};
         const float height {ui::rem(STEP_SIZE.y)};
 
         return ImVec4(x + 1.0f, y + 2.0f, width - 2.0f, height - 4.0f);
@@ -2652,7 +2697,7 @@ namespace application {
     }
 
     bool Application::check_note_right_limit(const seq::Note& note, const seq::Measure& measure) {
-        return note.position < measure.time_signature.measure_steps() - seq::steps(note.value);
+        return note.position < measure.time_signature.measure_steps() - seq::steps(note.value, note.tuplet);
     }
 
     bool Application::notes_overlapping(const seq::Note& note1, const seq::Note& note2) {
@@ -2661,11 +2706,12 @@ namespace application {
         }
 
         const auto note1_left {note1.position};
-        const auto note1_right {note1.position + seq::steps(note1.value)};
+        const auto note1_right {note1.position + seq::steps(note1.value, note1.tuplet)};
         const auto note2_left {note2.position};
-        const auto note2_right {note2.position + seq::steps(note2.value)};
+        const auto note2_right {note2.position + seq::steps(note2.value, note2.tuplet)};
 
-        return note1_left > note2_left && note1_left < note2_right ||
+        return
+            note1_left > note2_left && note1_left < note2_right ||
             note1_right > note2_left && note1_right < note2_right ||
             note2_left > note1_left && note2_left < note1_right ||
             note2_right > note1_left && note2_right < note1_right;
@@ -3046,7 +3092,7 @@ namespace application {
         for (const seq::Measure& measure : composition.measures) {
             for (const auto& notes: measure.instruments | std::views::values) {
                 for (const seq::Note& note : notes) {
-                    for (unsigned int i {steps + note.position}; i < steps + note.position + seq::steps(note.value); i++) {
+                    for (unsigned int i {steps + note.position}; i < steps + note.position + seq::steps(note.value, note.tuplet); i++) {
                         time_line[i]++;
                     }
                 }

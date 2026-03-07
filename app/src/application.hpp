@@ -229,8 +229,10 @@ namespace application {
 
         struct {
             bool metronome {};
+            bool keyboard {};
             int tool {ui::ToolMeasure};
             int value {ui::ValueQuarter};
+            int tuplet {ui::TupletNone};
             ui::Dynamics dynamics;
             ui::Agogic agogic;
             ui::TimeSignature time_signature;

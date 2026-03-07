@@ -92,6 +92,11 @@ namespace ui {
         ValueSixteenth
     };
 
+    enum Tuplet : int {
+        TupletNone,
+        TupletTriplet
+    };
+
     enum Octave : int {
         OctaveFirst,
         OctaveSecond,

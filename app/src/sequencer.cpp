@@ -163,7 +163,8 @@ namespace seq {
                     measure->instruments[instrument::Metronome::static_id()].emplace(
                         i == 0 ? syn::note(syn::B, syn::Octave5) : syn::note(syn::A, syn::Octave5),
                         Sixteenth,
-                        i
+                        i,
+                        Tuplet::None
                     );
                 }
             }

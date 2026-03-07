@@ -26,6 +26,11 @@ namespace seq {
         Sixteenth = 16
     };
 
+    enum class Tuplet : unsigned int {
+        None = 1,
+        Triplet = 3
+    };
+
     // A sixteenth divided by this is the step size
     // A step has variable length in seconds depending on the time signature and tempo
     inline constexpr unsigned int DIVISION {3 * 5};
@@ -36,8 +41,8 @@ namespace seq {
     inline constexpr unsigned int DELAY_INCREMENT {1};
     inline constexpr unsigned int MAX_DELAY {6};
 
-    constexpr unsigned int steps(Value value) {
-        return Sixteenth * DIVISION / value;
+    constexpr unsigned int steps(Value value, Tuplet tuplet = Tuplet::None) {
+        return Sixteenth * DIVISION / value / static_cast<unsigned int>(tuplet);
     }
 
     // Quarters per minute
@@ -101,8 +106,13 @@ namespace seq {
     }
 
     struct Note {
+        Note() = default;
+        Note(syn::NoteId id, Value value, unsigned int position, Tuplet tuplet)
+            : id(id), value(value), tuplet(tuplet), position(position) {}
+
         syn::NoteId id {};
         Value value {};
+        Tuplet tuplet {};
         unsigned int position {};  // Local, inside a measure
         unsigned int delay {};  // Used for arpeggios
         bool legato {};
