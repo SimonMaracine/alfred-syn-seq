@@ -2308,7 +2308,7 @@ namespace application {
         desired_frame_time(FRAME_TIME_DEFAULT);
 
         m_synthesizer.polyphony(std::size_t(m_ui.polyphony));
-        LOG_DEBUG("Set polyphony to {}", m_synthesizer.polyphony());
+        LOG_DEBUG("Reset polyphony to {}", m_synthesizer.polyphony());
     }
 
     void Application::modify_composition() {
