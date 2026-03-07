@@ -5,7 +5,6 @@
 #include <memory>
 #include <functional>
 #include <atomic>
-#include <span>
 
 #include "alfred/audio.hpp"
 #include "alfred/synthesis.hpp"
@@ -33,7 +32,6 @@ namespace synthesizer {
         // Silence the synthesizer after calling this
         void polyphony(std::size_t max_voices);
 
-        void active_instruments(std::span<syn::InstrumentId> active_instruments);
         void for_each_instrument(const std::function<void(const syn::Instrument&)>& function) const;
         void for_each_instrument(const std::function<void(syn::Instrument&)>& function);
         const syn::Instrument& get_instrument(syn::InstrumentId instrument) const;
@@ -41,11 +39,10 @@ namespace synthesizer {
     protected:
         void update_voices();
         std::vector<syn::Voice>::iterator find_voice(syn::NoteId note, syn::InstrumentId instrument);
-        void mix_update(double time) const noexcept;
-        double mix_sound(double time) const noexcept;
+        void sample_update(double time) const noexcept;
+        double sample_sound(double time) const noexcept;
 
         std::unordered_map<syn::InstrumentId, std::unique_ptr<syn::Instrument>> m_instruments;
-        std::vector<syn::InstrumentId> m_active_instruments;
         std::vector<syn::Voice> m_voices;
         std::atomic_size_t m_max_voices {4};
     };

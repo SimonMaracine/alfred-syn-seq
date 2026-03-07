@@ -10,6 +10,7 @@
 
 #include "alfred/audio.hpp"
 #include "alfred/allocator.hpp"
+#include "alfred/mixer.hpp"
 
 namespace syn {
     using EnvelopeStorage = allocator::StaticAllocatorStorage<64, 96, 8>;
@@ -270,8 +271,8 @@ namespace syn {
         virtual double sound(double time, double time_on, NoteId note) const noexcept = 0;
         virtual InstrumentRange range() const { return keyboard::ID_FULL_RANGE; }
 
-        virtual double volume() const = 0;
-        virtual void volume(double volume) = 0;
+        virtual mixer::Volume volume() const = 0;
+        virtual void volume(mixer::Volume volume) = 0;
 
         virtual EnvelopePtr new_envelope() const = 0;
         virtual double attack_duration() const = 0;

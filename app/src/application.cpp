@@ -550,6 +550,8 @@ namespace application {
                 m_synthesizer.volume(m_ui.volume);
             }
 
+            ImGui::SetItemTooltip("Master volume in linear scale");
+
             ImGui::Dummy(ui::rem(ImVec2(0.0f, 1.0f)));
 
             ImGui::SeparatorText("Device");
@@ -1519,16 +1521,13 @@ namespace application {
 
                 ImGui::PushID(name);
 
-                ImGui::Text("%s", name);
+                ImGui::TextColored(ui::COLORS[m_ui.colors.at(instrument)].second, "%s", name);
 
                 ImGui::SameLine();
 
-                constexpr double min {mixer::MIN};
-                constexpr double max {mixer::MAX};
+                int volume {mixer::clamp(m_composition.instrument_volumes[instrument])};
 
-                double volume {mixer::clamp(m_composition.instrument_volumes[instrument])};
-
-                if (ImGui::SliderScalar("##volume", ImGuiDataType_Double, &volume, &min, &max, "%.1f")) {
+                if (ImGui::SliderInt("##volume", &volume, mixer::MIN, mixer::MAX, "%d dB")) {
                     m_composition.instrument_volumes[instrument] = volume;
                     m_synthesizer.get_instrument(instrument).volume(volume);
                     modify_composition_metadata();
@@ -2345,9 +2344,9 @@ namespace application {
 
     void Application::set_title_composition_not_saved() const {
         if (m_composition_path.empty()) {
-            title("Alfred - Unsaved Composition");
+            title("Alfred | Unsaved Composition");
         } else {
-            title(std::format("Alfred - {}*", m_composition_path.filename().string().c_str()));
+            title(std::format("Alfred | {}*", m_composition_path.filename().string().c_str()));
         }
 
         LOG_DEBUG("Changed title");
@@ -2357,7 +2356,7 @@ namespace application {
         if (m_composition_path.empty()) {
             title("Alfred");
         } else {
-            title(std::format("Alfred - {}", m_composition_path.filename().string().c_str()));
+            title(std::format("Alfred | {}", m_composition_path.filename().string().c_str()));
         }
 
         LOG_DEBUG("Changed title");
@@ -3059,7 +3058,7 @@ namespace application {
     }
 
     std::size_t Application::optimal_composition_voices(const seq::Composition& composition) {
-        return std::size_t(std::ceil(double(max_composition_voices(composition)) * 1.5));
+        return std::size_t(std::round(double(max_composition_voices(composition)) * 1.5));
     }
 
     void Application::strip_composition_empty_instruments(seq::Composition& composition) {
@@ -3113,7 +3112,7 @@ namespace application {
 
     void Application::update_synthesizer_instrument_volumes() {
         m_synthesizer.for_each_instrument([](syn::Instrument& instrument) {
-            instrument.volume(mixer::MAX);
+            instrument.volume(mixer::DEFAULT);
         });
 
         for (const auto& [instrument, volume] : m_composition.instrument_volumes) {

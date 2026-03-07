@@ -11,20 +11,7 @@
 
 #include "sequencer.hpp"
 #include "utility.hpp"
-
-namespace mixer {
-    template<typename Archive>
-    void save(Archive& archive, const Volume& self, const std::uint32_t) {
-        archive(double(self));
-    }
-
-    template<typename Archive>
-    void load(Archive& archive, Volume& self, const std::uint32_t) {
-        double volume {};
-        archive(volume);
-        self = Volume(volume);
-    }
-}
+#include "logging.hpp"
 
 namespace seq {
     template<typename Archive>
@@ -119,15 +106,12 @@ namespace composition {
 
         template<typename Archive>
         void load(Archive& archive, const std::uint32_t version) {
-            if (version == 1) {
-                archive(cereal::base_class<seq::Composition>(this), title, author, year);
-            } else {
-                archive(cereal::base_class<seq::Composition>(this), instrument_volumes, title, author, year);
-            }
+            LOG_DEBUG("Composition version {}", version);
+            archive(cereal::base_class<seq::Composition>(this), instrument_volumes, title, author, year);
         }
     };
 
-    inline constexpr std::uint32_t VERSION {2};
+    inline constexpr std::uint32_t VERSION {3};
 
     void export_composition(const Composition& composition, utility::Buffer& buffer);
     void import_composition(Composition& composition, const utility::Buffer& buffer);

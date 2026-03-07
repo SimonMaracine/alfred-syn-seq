@@ -2,7 +2,6 @@
 
 #include "alfred/synthesis.hpp"
 #include "alfred/hash.hpp"
-#include "alfred/mixer.hpp"
 
 #define ALFRED_INSTRUMENT_STATIC_NAME_ID(NAME_STRING) \
     static consteval auto static_name() { return NAME_STRING; } \
@@ -24,8 +23,8 @@ namespace instrument {
 
         double sound(double time, double time_on, syn::NoteId note) const noexcept override;
 
-        double volume() const override { return m_volume; }
-        void volume(double volume) override { m_volume = volume; }
+        mixer::Volume volume() const override { return m_volume; }
+        void volume(mixer::Volume volume) override { m_volume = volume; }
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdrLinear>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
@@ -48,8 +47,8 @@ namespace instrument {
         double sound(double time, double time_on, syn::NoteId note) const noexcept override;
         syn::InstrumentRange range() const override { return { syn::note(syn::C, syn::Octave2), syn::note(syn::C, syn::Octave6) }; }
 
-        double volume() const override { return m_volume; }
-        void volume(double volume) override { m_volume = volume; }
+        mixer::Volume volume() const override { return m_volume; }
+        void volume(mixer::Volume volume) override { m_volume = volume; }
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
@@ -71,8 +70,8 @@ namespace instrument {
 
         double sound(double time, double time_on, syn::NoteId note) const noexcept override;
 
-        double volume() const override { return m_volume; }
-        void volume(double volume) override { m_volume = volume; }
+        mixer::Volume volume() const override { return m_volume; }
+        void volume(mixer::Volume volume) override { m_volume = volume; }
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdsr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
@@ -95,8 +94,8 @@ namespace instrument {
 
         double sound(double time, double time_on, syn::NoteId note) const noexcept override;
 
-        double volume() const override { return m_volume; }
-        void volume(double volume) override { m_volume = volume; }
+        mixer::Volume volume() const override { return m_volume; }
+        void volume(mixer::Volume volume) override { m_volume = volume; }
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
@@ -118,8 +117,8 @@ namespace instrument {
 
         double sound(double time, double time_on, syn::NoteId note) const noexcept override;
 
-        double volume() const override { return m_volume; }
-        void volume(double volume) override { m_volume = volume; }
+        mixer::Volume volume() const override { return m_volume; }
+        void volume(mixer::Volume volume) override { m_volume = volume; }
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
@@ -141,8 +140,8 @@ namespace instrument {
 
         double sound(double time, double time_on, syn::NoteId note) const noexcept override;
 
-        double volume() const override { return m_volume; }
-        void volume(double volume) override { m_volume = volume; }
+        mixer::Volume volume() const override { return m_volume; }
+        void volume(mixer::Volume volume) override { m_volume = volume; }
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
@@ -164,8 +163,8 @@ namespace instrument {
 
         double sound(double time, double time_on, syn::NoteId note) const noexcept override;
 
-        double volume() const override { return m_volume; }
-        void volume(double volume) override { m_volume = volume; }
+        mixer::Volume volume() const override { return m_volume; }
+        void volume(mixer::Volume volume) override { m_volume = volume; }
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
@@ -188,8 +187,8 @@ namespace instrument {
         double sound(double time, double time_on, syn::NoteId note) const noexcept override;
         syn::InstrumentRange range() const override { return { syn::note(syn::E, syn::Octave2), syn::note(syn::C, syn::Octave6) }; }
 
-        double volume() const override { return m_volume; }
-        void volume(double volume) override { m_volume = volume; }
+        mixer::Volume volume() const override { return m_volume; }
+        void volume(mixer::Volume volume) override { m_volume = volume; }
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
@@ -213,8 +212,8 @@ namespace instrument {
 
         double sound(double time, double time_on, syn::NoteId note) const noexcept override;
 
-        double volume() const override { return m_volume; }
-        void volume(double volume) override { m_volume = volume; }
+        mixer::Volume volume() const override { return m_volume; }
+        void volume(mixer::Volume volume) override { m_volume = volume; }
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdsr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
@@ -244,8 +243,8 @@ namespace instrument {
         double sound(double time, double time_on, syn::NoteId note) const noexcept override;
         syn::InstrumentRange range() const override { return { syn::note(syn::C, syn::Octave2), syn::note(syn::A, syn::Octave5) }; }
 
-        double volume() const override { return m_volume; }
-        void volume(double volume) override { m_volume = volume; }
+        mixer::Volume volume() const override { return m_volume; }
+        void volume(mixer::Volume volume) override { m_volume = volume; }
 
         syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdsrLinear>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }

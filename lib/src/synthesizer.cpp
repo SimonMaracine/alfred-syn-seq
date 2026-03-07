@@ -62,10 +62,6 @@ namespace synthesizer {
         m_max_voices = std::clamp(max_voices, MIN_VOICES, MAX_VOICES);
     }
 
-    void Synthesizer::active_instruments(std::span<syn::InstrumentId> active_instruments) {
-
-    }
-
     void Synthesizer::for_each_instrument(const std::function<void(const syn::Instrument&)>& function) const {
         for (const auto& instrument : m_instruments | std::views::values) {
             function(*instrument);
@@ -105,13 +101,13 @@ namespace synthesizer {
         });
     }
 
-    void Synthesizer::mix_update(double time) const noexcept {
+    void Synthesizer::sample_update(double time) const noexcept {
         for (const syn::Voice& voice : m_voices) {
             voice.envelope->update(time);
         }
     }
 
-    double Synthesizer::mix_sound(double time) const noexcept {
+    double Synthesizer::sample_sound(double time) const noexcept {
         double output {};
 
         for (const auto [i, voice] : m_voices | std::views::enumerate) {
@@ -120,10 +116,13 @@ namespace synthesizer {
                 break;
             }
 
+            const auto& instrument {m_instruments.at(voice.instrument)};
+
             output +=
                 voice.amplitude *
-                voice.envelope->value() *
-                m_instruments.at(voice.instrument)->sound(time, voice.time_on, voice.note);
+                voice.envelope->value() *  // FIXME technically a race condition
+                mixer::amplitude(instrument->volume()) *
+                instrument->sound(time, voice.time_on, voice.note);
         }
 
         return output / double(m_max_voices);
@@ -164,11 +163,11 @@ namespace synthesizer {
     }
 
     void RealSynthesizer::callback_update() noexcept {
-        mix_update(m_time);
+        sample_update(m_time);
     }
 
     double RealSynthesizer::callback_sound() const noexcept {
-        return mix_sound(m_time);
+        return sample_sound(m_time);
     }
 
     void VirtualSynthesizer::note_on(syn::NoteId note, syn::InstrumentId instrument, syn::Velocity velocity) {
@@ -182,8 +181,8 @@ namespace synthesizer {
     void VirtualSynthesizer::update() {
         update_voices();
 
-        mix_update(m_time);
-        const double sound {mix_sound(m_time)};
+        sample_update(m_time);
+        const double sound {sample_sound(m_time)};
 
         m_buffer.push_back(math::clamp_sample(sound));
 
