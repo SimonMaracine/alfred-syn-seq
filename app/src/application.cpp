@@ -2905,14 +2905,16 @@ namespace application {
         // Scan the composition for the optimal max voice number
         synthesizer.polyphony(max_composition_voices(composition));
 
-        logging::debug("{}", synthesizer.polyphony());
-
         logging::debug("Starting rendering composition to `{}`", file_path.string().c_str());
 
         player.start();
 
         const TimePoint time_start {std::chrono::system_clock::now()};
         TimePoint time_last_update {time_start};
+
+        for (int i {}; i < audio::SAMPLE_FREQUENCY / 10; i++) {
+            synthesizer.update();
+        }
 
         while (rendering) {
             player.update(1.0 / double(audio::SAMPLE_FREQUENCY));
@@ -2934,6 +2936,10 @@ namespace application {
                     m_ui.render_progress = math::map(float(position), 0.0f, float(size), 0.0f, 0.9f);
                 });
             }
+        }
+
+        for (int i {}; i < audio::SAMPLE_FREQUENCY / 2; i++) {
+            synthesizer.update();
         }
 
         const TimePoint time_stop {std::chrono::system_clock::now()};
