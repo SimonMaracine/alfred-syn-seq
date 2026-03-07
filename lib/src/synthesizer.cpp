@@ -21,8 +21,8 @@ namespace synthesizer {
         m_instruments[instrument::Cello::static_id()] = std::make_unique<instrument::Cello>();
     }
 
-    void Synthesizer::note_on(double time, syn::NoteId note, syn::InstrumentId instrument, double loudness) {
-        assert(loudness >= 0.0 && loudness <= 1.0);
+    void Synthesizer::note_on(double time, syn::NoteId note, syn::InstrumentId instrument, syn::Velocity velocity) {
+        assert(velocity >= 0.0 && velocity <= 1.0);
 
         if (const auto [begin, end] {m_instruments.at(instrument)->range()}; note < begin || note > end) {
             return;
@@ -33,12 +33,12 @@ namespace synthesizer {
             new_voice.note = note;
             new_voice.instrument = instrument;
             new_voice.envelope = m_instruments.at(instrument)->new_envelope();
-            new_voice.amplitude = loudness;
+            new_voice.amplitude = velocity;
             new_voice.time_on = time;
             new_voice.envelope->note_on(time);
         } else {
             if (voice->time_off > voice->time_on) {
-                voice->amplitude = loudness;
+                voice->amplitude = velocity;
                 voice->time_on = time;
                 voice->envelope->note_on(time);
             }
@@ -138,10 +138,10 @@ namespace synthesizer {
         halt();
     }
 
-    void RealSynthesizer::note_on(syn::NoteId note, syn::InstrumentId instrument, double loudness) {
+    void RealSynthesizer::note_on(syn::NoteId note, syn::InstrumentId instrument, syn::Velocity velocity) {
         audio::AudioLockGuard guard {this};
 
-        Synthesizer::note_on(m_time, note, instrument, loudness);
+        Synthesizer::note_on(m_time, note, instrument, velocity);
     }
 
     void RealSynthesizer::note_off(syn::NoteId note, syn::InstrumentId instrument) {
@@ -171,8 +171,8 @@ namespace synthesizer {
         return mix_sound(m_time);
     }
 
-    void VirtualSynthesizer::note_on(syn::NoteId note, syn::InstrumentId instrument, double loudness) {
-        Synthesizer::note_on(m_time, note, instrument, loudness);
+    void VirtualSynthesizer::note_on(syn::NoteId note, syn::InstrumentId instrument, syn::Velocity velocity) {
+        Synthesizer::note_on(m_time, note, instrument, velocity);
     }
 
     void VirtualSynthesizer::note_off(syn::NoteId note, syn::InstrumentId instrument) {

@@ -19,12 +19,12 @@ namespace synthesizer {
         Synthesizer();
         virtual ~Synthesizer() = default;
 
-        virtual void note_on(syn::NoteId note, syn::InstrumentId instrument, double loudness) = 0;
+        virtual void note_on(syn::NoteId note, syn::InstrumentId instrument, syn::Velocity velocity) = 0;
         virtual void note_off(syn::NoteId note, syn::InstrumentId instrument) = 0;
         virtual void update() = 0;
         virtual void silence() = 0;
 
-        void note_on(double time, syn::NoteId note, syn::InstrumentId instrument, double loudness);
+        void note_on(double time, syn::NoteId note, syn::InstrumentId instrument, syn::Velocity velocity);
         void note_off(double time, syn::NoteId note, syn::InstrumentId instrument);
 
         std::size_t current_voices() const { return m_voices.size(); }
@@ -54,7 +54,7 @@ namespace synthesizer {
     public:
         ~RealSynthesizer() noexcept override;
 
-        void note_on(syn::NoteId note, syn::InstrumentId instrument, double loudness) override;
+        void note_on(syn::NoteId note, syn::InstrumentId instrument, syn::Velocity velocity) override;
         void note_off(syn::NoteId note, syn::InstrumentId instrument) override;
         void update() override;
         void silence() override;
@@ -65,7 +65,7 @@ namespace synthesizer {
 
     class VirtualSynthesizer : public Synthesizer {
     public:
-        void note_on(syn::NoteId note, syn::InstrumentId instrument, double loudness) override;
+        void note_on(syn::NoteId note, syn::InstrumentId instrument, syn::Velocity velocity) override;
         void note_off(syn::NoteId note, syn::InstrumentId instrument) override;
         void update() override;
         void silence() override;

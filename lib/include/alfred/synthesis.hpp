@@ -189,6 +189,9 @@ namespace syn {
     // MIDI-like note ID
     using NoteId = unsigned int;
 
+    // MIDI-like value from 0 to 1
+    using Velocity = double;
+
     using InstrumentId = unsigned int;
 
     using InstrumentRange = std::pair<NoteId, NoteId>;
