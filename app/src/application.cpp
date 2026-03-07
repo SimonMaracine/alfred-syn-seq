@@ -28,7 +28,7 @@
 #include "rewind.png.hpp"
 
 namespace application {
-    static constexpr ImVec2 STEP_SIZE {1.0f / ui::FONT_SIZE, 20.0f / ui::FONT_SIZE};
+    static constexpr ImVec2 STEP_SIZE {1.0f / ui::FONT_SIZE, 18.0f / ui::FONT_SIZE};
     static constexpr float COMPOSITION_LEFT {40.0f / ui::FONT_SIZE};
     static constexpr float COMPOSITION_HEIGHT {STEP_SIZE.y * 12.0f * float(syn::keyboard::OCTAVES) + STEP_SIZE.y * float(syn::keyboard::EXTRA)};
     static constexpr float COMPOSITION_SCROLL_SPEED {40.0f / ui::FONT_SIZE};
@@ -1179,7 +1179,7 @@ namespace application {
         note_to_string(hovered_note.id(), note_pitch);
 
         draw.list->AddText(
-            draw.origin + ImVec2(ui::rem(COMPOSITION_LEFT) + ui::rem(0.5f), draw.space.y - ui::rem(1.5f)),
+            ImGui::GetMousePos() + ImVec2(ui::rem(1.0f), -ui::rem(1.5f)),
             COLOR,
             note_pitch
         );
