@@ -881,7 +881,7 @@ namespace application {
             composition_measures_labels(draw);
             composition_left(draw);
 
-            if (item_hovered && hovered_note) {
+            if (item_hovered && allow_edit && hovered_note) {
                 composition_pitch(draw, *hovered_note);
             }
 
@@ -2296,13 +2296,19 @@ namespace application {
         m_composition_selected_measure = m_composition.measures.end();
         m_composition_selected_notes.clear();
 
-        m_player.start();
+        m_synthesizer.polyphony(max_composition_voices(m_composition));
+        LOG_DEBUG("Set polyphony to {}", m_synthesizer.polyphony());
+
         desired_frame_time(FRAME_TIME_PLAYBACK);
+        m_player.start();
     }
 
     void Application::stop_player() {
         m_player.stop();
         desired_frame_time(FRAME_TIME_DEFAULT);
+
+        m_synthesizer.polyphony(std::size_t(m_ui.polyphony));
+        LOG_DEBUG("Set polyphony to {}", m_synthesizer.polyphony());
     }
 
     void Application::modify_composition() {
