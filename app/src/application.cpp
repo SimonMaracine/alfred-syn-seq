@@ -154,7 +154,7 @@ namespace application {
             ImGuiID dock_id_left_top {};
             ImGuiID dock_id_left_bottom {};
 
-            ImGui::DockBuilderSplitNode(dock_id_left, ImGuiDir_Up, 0.75f, &dock_id_left_top, &dock_id_left_bottom);
+            ImGui::DockBuilderSplitNode(dock_id_left, ImGuiDir_Up, 0.78f, &dock_id_left_top, &dock_id_left_bottom);
 
             ImGuiID dock_id_right_top {};
             ImGuiID dock_id_right_bottom {dock_id_right};
@@ -300,9 +300,9 @@ namespace application {
             redo();
         }
 
+#if 0
         ImGui::Separator();
 
-#if 0
         if (ImGui::MenuItem("Cut", "Ctrl+X")) {}
         if (ImGui::MenuItem("Copy", "Ctrl+C")) {}
         if (ImGui::MenuItem("Paste", "Ctrl+V")) {}
