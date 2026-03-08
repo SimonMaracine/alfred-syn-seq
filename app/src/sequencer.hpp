@@ -41,7 +41,11 @@ namespace seq {
     inline constexpr unsigned int DELAY_INCREMENT {1};
     inline constexpr unsigned int MAX_DELAY {6};
 
-    constexpr unsigned int steps(Value value, Tuplet tuplet = Tuplet::None) {
+    constexpr unsigned int steps(Value value) {
+        return Sixteenth * DIVISION / value;
+    }
+
+    constexpr unsigned int steps(Value value, Tuplet tuplet) {
         return Sixteenth * DIVISION / value / static_cast<unsigned int>(tuplet);
     }
 
