@@ -1801,6 +1801,8 @@ namespace application {
 
         // The selected measure has changed
         select_measure(m_composition_selected_measure);
+
+        keep_player_cursor_valid();
     }
 
     void Application::set_measure_dynamics() {
@@ -2395,10 +2397,14 @@ namespace application {
         m_composition_not_saved = false;
     }
 
-    void Application::reset_player_and_composition_selection() {
-        m_player.seek(0);
+    void Application::reset_composition_selection() {
         m_composition_selected_measure = m_composition.measures.end();
         m_composition_selected_notes.clear();
+    }
+
+    void Application::reset_player_and_composition_selection() {
+        m_player.seek(0);
+        reset_composition_selection();
     }
 
     void Application::set_title_composition_not_saved() const {
@@ -3146,7 +3152,8 @@ namespace application {
 
         m_composition_history.undo.pop();
 
-        reset_player_and_composition_selection();
+        reset_composition_selection();
+        keep_player_cursor_valid();
     }
 
     void Application::redo() {
@@ -3160,7 +3167,8 @@ namespace application {
 
         m_composition_history.redo.pop();
 
-        reset_player_and_composition_selection();
+        reset_composition_selection();
+        keep_player_cursor_valid();
     }
 
     void Application::remember_composition() {
@@ -3168,6 +3176,12 @@ namespace application {
 
         while (!m_composition_history.redo.empty()) {
             m_composition_history.redo.pop();
+        }
+    }
+
+    void Application::keep_player_cursor_valid() {
+        if (m_player.position() > m_composition.size()) {
+            m_player.seek(m_composition.size());
         }
     }
 

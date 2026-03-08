@@ -143,6 +143,7 @@ namespace application {
         void modify_composition_metadata();
         void invalidate_composition();
         void reset_composition_flags();
+        void reset_composition_selection();
         void reset_player_and_composition_selection();
         void set_title_composition_not_saved() const;
         void set_title_composition_saved() const;
@@ -208,6 +209,7 @@ namespace application {
         void undo();
         void redo();
         void remember_composition();
+        void keep_player_cursor_valid();
         void set_synthesizer_instrument_volumes(synthesizer::Synthesizer& synthesizer);
         static void reset_synthesizer_instrument_volumes(synthesizer::Synthesizer& synthesizer);
 
