@@ -1,7 +1,5 @@
 #include "alfred/instrument.hpp"
 
-#include <cmath>
-
 #include "alfred/math.hpp"
 #include "alfred/audio.hpp"
 

@@ -7,7 +7,6 @@
 
 #include <cereal/cereal.hpp>
 #include <cereal/types/base_class.hpp>
-#include <alfred/mixer.hpp>
 
 #include "sequencer.hpp"
 #include "utility.hpp"
@@ -92,7 +91,7 @@ namespace std::chrono {
 namespace composition {
     struct Composition : seq::Composition {
         // Mixer
-        std::unordered_map<syn::InstrumentId, mixer::Volume> instrument_volumes;
+        std::unordered_map<syn::InstrumentId, syn::Volume> instrument_volumes;
 
         // Metadata
         std::string title;

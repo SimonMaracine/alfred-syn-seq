@@ -2,15 +2,15 @@
 
 #include <memory>
 #include <array>
-#include <cmath>
 #include <numeric>
+#include <algorithm>
 #include <ranges>
 #include <limits>
 #include <utility>
+#include <cmath>
 
 #include "alfred/audio.hpp"
 #include "alfred/allocator.hpp"
-#include "alfred/mixer.hpp"
 
 namespace syn {
     using EnvelopeStorage = allocator::StaticAllocatorStorage<64, 96, 8>;
@@ -235,6 +235,17 @@ namespace syn {
         double time_off {-std::numeric_limits<double>::infinity()};
     };
 
+    // In decibels
+    using Volume = int;
+
+    inline constexpr Volume VOLUME_MIN {-40};
+    inline constexpr Volume VOLUME_DEFAULT {};
+    inline constexpr Volume VOLUME_MAX {12};
+
+    inline double amplitude(Volume volume) {
+        return std::pow(10.0, double(volume) / 20.0);
+    }
+
     namespace keyboard {
         enum Octave : unsigned int {
             OctaveFirst,
@@ -271,8 +282,8 @@ namespace syn {
         virtual double sound(double time, double time_on, NoteId note) const noexcept = 0;
         virtual InstrumentRange range() const { return keyboard::ID_FULL_RANGE; }
 
-        virtual mixer::Volume volume() const = 0;
-        virtual void volume(mixer::Volume volume) = 0;
+        virtual Volume volume() const = 0;
+        virtual void volume(Volume volume) = 0;
 
         virtual EnvelopePtr new_envelope() const = 0;
         virtual double attack_duration() const = 0;

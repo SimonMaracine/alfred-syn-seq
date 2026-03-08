@@ -209,6 +209,7 @@ namespace application {
         void redo();
         void remember_composition();
         void set_synthesizer_instrument_volumes(synthesizer::Synthesizer& synthesizer);
+        static void reset_synthesizer_instrument_volumes(synthesizer::Synthesizer& synthesizer);
 
         data::Data m_data;
         task::TaskManager m_task_manager;

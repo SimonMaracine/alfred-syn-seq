@@ -1525,11 +1525,10 @@ namespace application {
 
                 ImGui::SameLine();
 
-                int volume {mixer::clamp(m_composition.instrument_volumes[instrument])};
+                int volume {std::clamp(m_composition.instrument_volumes[instrument], syn::VOLUME_MIN, syn::VOLUME_MAX)};
 
-                if (ImGui::SliderInt("##volume", &volume, mixer::MIN, mixer::MAX, "%d dB")) {
+                if (ImGui::SliderInt("##volume", &volume, syn::VOLUME_MIN, syn::VOLUME_MAX, "%d dB")) {
                     m_composition.instrument_volumes[instrument] = volume;
-                    m_synthesizer.get_instrument(instrument).volume(volume);
                     modify_composition_metadata();
                 }
 
@@ -2298,6 +2297,7 @@ namespace application {
         m_synthesizer.polyphony(optimal_composition_voices(m_composition));
         LOG_DEBUG("Set polyphony to {}", m_synthesizer.polyphony());
 
+        set_synthesizer_instrument_volumes(m_synthesizer);
         desired_frame_time(FRAME_TIME_PLAYBACK);
         m_player.start();
     }
@@ -2305,6 +2305,7 @@ namespace application {
     void Application::stop_player() {
         m_player.stop();
         desired_frame_time(FRAME_TIME_DEFAULT);
+        reset_synthesizer_instrument_volumes(m_synthesizer);
 
         m_synthesizer.polyphony(std::size_t(m_ui.polyphony));
         LOG_DEBUG("Reset polyphony to {}", m_synthesizer.polyphony());
@@ -2871,7 +2872,7 @@ namespace application {
         reset_player_and_composition_selection();
         reset_composition_flags();
         set_title_composition_saved();
-        set_synthesizer_instrument_volumes(m_synthesizer);
+        reset_synthesizer_instrument_volumes(m_synthesizer);
     }
 
     void Application::file_new() {
@@ -3112,12 +3113,16 @@ namespace application {
     }
 
     void Application::set_synthesizer_instrument_volumes(synthesizer::Synthesizer& synthesizer) {
-        synthesizer.for_each_instrument([](syn::Instrument& instrument) {
-            instrument.volume(mixer::DEFAULT);
-        });
+        reset_synthesizer_instrument_volumes(synthesizer);
 
         for (const auto& [instrument, volume] : m_composition.instrument_volumes) {
             synthesizer.get_instrument(instrument).volume(volume);
         }
+    }
+
+    void Application::reset_synthesizer_instrument_volumes(synthesizer::Synthesizer& synthesizer) {
+        synthesizer.for_each_instrument([](syn::Instrument& instrument) {
+            instrument.volume(syn::VOLUME_DEFAULT);
+        });
     }
 }
