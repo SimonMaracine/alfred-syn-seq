@@ -171,7 +171,7 @@ namespace application {
 
             ImGui::DockBuilderSplitNode(dock_id_right_bottom, ImGuiDir_Down, 0.3f, &dock_id_right_bottom2, &dock_id_right_top2);
 
-            ImGui::DockBuilderDockWindow("Instruments", dock_id_left_top);
+            ImGui::DockBuilderDockWindow("Instruments & Synthesizer", dock_id_left_top);
             ImGui::DockBuilderDockWindow("Output", dock_id_left_bottom);
             ImGui::DockBuilderDockWindow("Playback", dock_id_right_top_left);
             ImGui::DockBuilderDockWindow("Tools", dock_id_right_top_right);
@@ -186,7 +186,7 @@ namespace application {
 
         main_menu_bar();
         keyboard();
-        instruments();
+        instruments_and_synthesizer();
         output();
         playback();
         tools();
@@ -460,8 +460,46 @@ namespace application {
         draw.list->AddText(base + draw.origin + position + ui::rem(ImVec2(TEXT_OFFSET, TEXT_OFFSET)), COLOR_TEXT, label);
     }
 
-    void Application::instruments() {
-        if (ImGui::Begin("Instruments", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize)) {
+    void Application::instruments_and_synthesizer() {
+        if (ImGui::Begin("Instruments & Synthesizer", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::SeparatorText("Active Instruments");
+
+            if (ImGui::BeginListBox("##active_instruments")) {
+                for (const auto instruments {active_instruments()}; const syn::InstrumentId instrument : instruments) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(ui::COLORS[m_ui.colors.at(instrument)].second));
+
+                    if (ImGui::Selectable(m_synthesizer.get_instrument(instrument).name(), instrument == m_instrument)) {
+                        m_instrument = instrument;
+                        m_composition_selected_notes.clear();
+                        m_synthesizer.silence();
+                    }
+
+                    ImGui::PopStyleColor();
+                }
+
+                ImGui::EndListBox();
+            }
+
+            ImGui::Dummy(ui::rem(ImVec2(0.0f, 1.0f)));
+
+            ImGui::SeparatorText("Color");
+
+            if (ImGui::BeginCombo("##color", ui::COLORS[m_ui.colors.at(m_instrument)].first, ImGuiComboFlags_NoArrowButton)) {
+                for (std::size_t i {}; i < std::size(ui::COLORS); i++) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(ui::COLORS[i].second));
+
+                    if (ImGui::Selectable(ui::COLORS[i].first, m_ui.colors.at(m_instrument) == i)) {
+                        m_ui.colors.at(m_instrument) = ui::ColorIndex(i);
+                    }
+
+                    ImGui::PopStyleColor();
+                }
+
+                ImGui::EndCombo();
+            }
+
+            ImGui::Dummy(ui::rem(ImVec2(0.0f, 2.0f)));
+
             ImGui::SeparatorText("Instrument");
 
             if (ImGui::BeginCombo("##instrument", m_synthesizer.get_instrument(m_instrument).name(), ImGuiComboFlags_NoArrowButton)) {
@@ -503,44 +541,6 @@ namespace application {
             if (ImGui::SliderInt("##polyphony", &m_ui.polyphony, int(synthesizer::MIN_VOICES), int(synthesizer::MAX_VOICES))) {
                 m_synthesizer.polyphony(std::size_t(m_ui.polyphony));
                 m_synthesizer.silence();
-            }
-
-            ImGui::Dummy(ui::rem(ImVec2(0.0f, 1.0f)));
-
-            ImGui::SeparatorText("In Project");
-
-            if (ImGui::BeginListBox("##in_project")) {
-                for (const auto instruments {instruments_in_project()}; const syn::InstrumentId instrument : instruments) {
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(ui::COLORS[m_ui.colors.at(instrument)].second));
-
-                    if (ImGui::Selectable(m_synthesizer.get_instrument(instrument).name(), instrument == m_instrument)) {
-                        m_instrument = instrument;
-                        m_composition_selected_notes.clear();
-                        m_synthesizer.silence();
-                    }
-
-                    ImGui::PopStyleColor();
-                }
-
-                ImGui::EndListBox();
-            }
-
-            ImGui::Dummy(ui::rem(ImVec2(0.0f, 1.0f)));
-
-            ImGui::SeparatorText("Color");
-
-            if (ImGui::BeginCombo("##color", ui::COLORS[m_ui.colors.at(m_instrument)].first, ImGuiComboFlags_NoArrowButton)) {
-                for (std::size_t i {}; i < std::size(ui::COLORS); i++) {
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(ui::COLORS[i].second));
-
-                    if (ImGui::Selectable(ui::COLORS[i].first, m_ui.colors.at(m_instrument) == i)) {
-                        m_ui.colors.at(m_instrument) = ui::ColorIndex(i);
-                    }
-
-                    ImGui::PopStyleColor();
-                }
-
-                ImGui::EndCombo();
             }
         }
 
@@ -1526,7 +1526,7 @@ namespace application {
         static constexpr auto flags {ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDocking};
 
         if (ImGui::Begin("Composition Mixer", &m_composition_mixer_menu, flags)) {
-            const auto instruments {instruments_in_project()};
+            const auto instruments {active_instruments()};
 
             if (instruments.empty()) {
                 ImGui::Text("No Instruments");
@@ -1622,7 +1622,7 @@ namespace application {
     void Application::keyboard_input(unsigned int key, bool down) {
         const auto update {[this, down](syn::NoteId id) {
             if (down) {
-                m_synthesizer.note_on(id + m_octave * 12, m_instrument, seq::loudness_amplitude(m_loudness));
+                m_synthesizer.note_on(id + m_octave * 12, m_instrument, seq::amplitude(m_loudness));
             } else {
                 m_synthesizer.note_off(id + m_octave * 12, m_instrument);
             }
@@ -1970,6 +1970,11 @@ namespace application {
             return;
         }
 
+        if (m_ui.tuplet != ui::TupletNone && m_ui.value == ui::ValueSixteenth) {
+            LOG_DEBUG("Cannot create a tuplet out of a sixteenth note");
+            return;
+        }
+
         const auto new_note_value {get_value(ui::Value(m_ui.value))};
 
         const seq::Note new_note {
@@ -2190,6 +2195,10 @@ namespace application {
         if (
             ![this] {
                 for (const ProvenanceNote& selected_note : m_composition_selected_notes) {
+                    if (selected_note.note()->tuplet != seq::Tuplet::None) {
+                        return false;
+                    }
+
                     if (!check_note_left_limit(*selected_note.note())) {
                         return false;
                     }
@@ -2237,6 +2246,10 @@ namespace application {
         if (
             ![this] {
                 for (const ProvenanceNote& selected_note : m_composition_selected_notes) {
+                    if (selected_note.note()->tuplet != seq::Tuplet::None) {
+                        return false;
+                    }
+
                     if (!check_note_right_limit(*selected_note.note(), *selected_note.measure())) {
                         return false;
                     }
@@ -2441,7 +2454,7 @@ namespace application {
         return mouse_position - origin - ImVec2(ui::rem(COMPOSITION_LEFT), 0.0f) + m_composition_camera;
     }
 
-    std_flat_set<syn::InstrumentId> Application::instruments_in_project() const {
+    std_flat_set<syn::InstrumentId> Application::active_instruments() const {
         std_flat_set<syn::InstrumentId> instruments;
 
         for (const seq::Measure& measure : m_composition.measures) {
@@ -2497,7 +2510,7 @@ namespace application {
     }
 
     void Application::play_note(const seq::Note& note) {
-        m_synthesizer.note_on(note.id, m_instrument, seq::loudness_amplitude(seq::Loudness::MezzoForte));
+        m_synthesizer.note_on(note.id, m_instrument, seq::amplitude(seq::Loudness::MezzoForte));
 
         m_task_manager.add_delayed_task([this, id = note.id] {
             m_synthesizer.note_off(id, m_instrument);
@@ -3092,8 +3105,8 @@ namespace application {
         for (const seq::Measure& measure : composition.measures) {
             for (const auto& notes: measure.instruments | std::views::values) {
                 for (const seq::Note& note : notes) {
-                    for (unsigned int i {steps + note.position}; i < steps + note.position + seq::steps(note.value, note.tuplet); i++) {
-                        time_line[i]++;
+                    for (unsigned int i {}; i < seq::steps(note.value, note.tuplet); i++) {
+                        time_line[steps + note.position + i]++;
                     }
                 }
             }

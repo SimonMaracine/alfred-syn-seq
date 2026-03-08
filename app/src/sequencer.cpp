@@ -22,7 +22,7 @@ namespace seq {
     }
 
     bool Composition::note_last_in_measure(const Measure& measure, const Note& note) {
-        return note.position + steps(note.value) == measure.time_signature.measure_steps();
+        return note.position + steps(note.value, note.tuplet) == measure.time_signature.measure_steps();
     }
 
     Player::Player(synthesizer::Synthesizer& synthesizer, const Composition& composition, std::function<void()> stopped)
@@ -188,7 +188,7 @@ namespace seq {
                     }
 
                     NoteIter current_note {note};
-                    unsigned int duration {seq::steps(current_note->value) - current_note->delay};
+                    unsigned int duration {seq::steps(current_note->value, current_note->tuplet) - current_note->delay};
 
                     while (current_note->legato) {
                         const auto next_note {
@@ -197,7 +197,7 @@ namespace seq {
 
                         assert(next_note);
 
-                        duration += seq::steps(next_note->note()->value);
+                        duration += seq::steps(next_note->note()->value, next_note->note()->tuplet);
 
                         processed_notes[instrument].push_back(*next_note);
                         current_note = next_note->note();
@@ -205,7 +205,7 @@ namespace seq {
 
                     executions[instrument].notes_unplayed.emplace(
                         note->id,
-                        calculate_note_loudness(measure, instrument, note->position, seq::steps(note->value)),
+                        calculate_note_loudness(measure, instrument, note->position, seq::steps(note->value, note->tuplet)),
                         steps + note->position + note->delay,
                         calculate_note_duration(measure, instrument, note->position, duration)
                     );
@@ -302,19 +302,19 @@ namespace seq {
 
     double Player::calculate_note_loudness(ConstMeasureIter measure, syn::InstrumentId instrument, unsigned int position, unsigned int duration) {
         if (instrument == instrument::Metronome::static_id()) {
-            return loudness_amplitude(Loudness::Fortississimo);
+            return amplitude(Loudness::Fortississimo);
         }
 
         switch (measure->dynamics.index()) {
             case 0:
-                return loudness_amplitude(std::get<0>(measure->dynamics).loudness);
+                return amplitude(std::get<0>(measure->dynamics).loudness);
             case 1:
                 return math::map(
                     double(position + duration / 2),
                     0.0,
                     double(measure->time_signature.measure_steps() - 1),
-                    loudness_amplitude(std::get<1>(measure->dynamics).loudness_begin),
-                    loudness_amplitude(std::get<1>(measure->dynamics).loudness_end)
+                    amplitude(std::get<1>(measure->dynamics).loudness_begin),
+                    amplitude(std::get<1>(measure->dynamics).loudness_end)
                 );
         }
 

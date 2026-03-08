@@ -20,8 +20,6 @@ namespace data {
         }
     };
 
-    inline constexpr std::uint32_t VERSION {1};
-
     void export_data(const Data& data, utility::Buffer& buffer);
     void import_data(Data& data, const utility::Buffer& buffer);
 
@@ -30,4 +28,4 @@ namespace data {
     };;
 }
 
-CEREAL_CLASS_VERSION(data::Data, data::VERSION)
+CEREAL_CLASS_VERSION(data::Data, 1)
