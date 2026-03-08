@@ -26,6 +26,11 @@ namespace seq {
         Sixteenth = 16
     };
 
+    enum class Tuplet : unsigned int {
+        None = 1,
+        Triplet = 3
+    };
+
     // A sixteenth divided by this is the step size
     // A step has variable length in seconds depending on the time signature and tempo
     inline constexpr unsigned int DIVISION {3 * 5};
@@ -36,8 +41,8 @@ namespace seq {
     inline constexpr unsigned int DELAY_INCREMENT {1};
     inline constexpr unsigned int MAX_DELAY {6};
 
-    constexpr unsigned int steps(Value value) {
-        return Sixteenth * DIVISION / value;
+    constexpr unsigned int steps(Value value, Tuplet tuplet = Tuplet::None) {
+        return Sixteenth * DIVISION / value / static_cast<unsigned int>(tuplet);
     }
 
     // Quarters per minute
@@ -95,14 +100,19 @@ namespace seq {
         Fortississimo
     };
 
-    constexpr double loudness_amplitude(Loudness loudness) {
+    constexpr double amplitude(Loudness loudness) {
         const double value {math::map(double(loudness), double(Loudness::Pianississimo), double(Loudness::Fortississimo), 0.2, 1.0)};
         return value * value;
     }
 
     struct Note {
+        Note() = default;
+        Note(syn::NoteId id, Value value, unsigned int position, Tuplet tuplet)
+            : id(id), value(value), tuplet(tuplet), position(position) {}
+
         syn::NoteId id {};
-        Value value {};
+        Value value {Whole};
+        Tuplet tuplet {Tuplet::None};
         unsigned int position {};  // Local, inside a measure
         unsigned int delay {};  // Used for arpeggios
         bool legato {};
@@ -204,7 +214,7 @@ namespace seq {
                     if (next_note != notes.end()) {
                         if (
                             next_note->id == note->id &&
-                            next_note->position == note->position + steps(note->value)
+                            next_note->position == note->position + steps(note->value, note->tuplet)
                         ) {
                             return std::make_optional<ProvenanceNote<MeasureIter>>(measure, next_note);
                         }
@@ -252,7 +262,7 @@ namespace seq {
 
                     if (
                         previous_note->id == note->id &&
-                        previous_note->position + steps(previous_note->value) == note->position
+                        previous_note->position + steps(previous_note->value, previous_note->tuplet) == note->position
                     ) {
                         return std::make_optional<ProvenanceNote<MeasureIter>>(measure, previous_note);
                     }

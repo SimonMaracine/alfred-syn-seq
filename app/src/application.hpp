@@ -86,7 +86,7 @@ namespace application {
         void main_menu_bar_help();
         void keyboard() const;
         void keyboard_key(const Draw& draw, char key, float x, float y, int scancode) const;
-        void instruments();
+        void instruments_and_synthesizer();
         void output();
         void playback();
         void tools();
@@ -151,7 +151,7 @@ namespace application {
         float composition_width() const;
         ImVec2 composition_space(ImVec2 space) const;
         ImVec2 composition_mouse_position(ImVec2 origin) const;
-        std_flat_set<syn::InstrumentId> instruments_in_project() const;
+        std_flat_set<syn::InstrumentId> active_instruments() const;
         bool point_x_in_camera_view(float point_x, float space_x) const;
         bool point_y_in_camera_view(float point_y, float space_y) const;
         void readd_note(ProvenanceNote& provenance_note, const seq::Note& note) const;
@@ -230,8 +230,10 @@ namespace application {
 
         struct {
             bool metronome {};
+            bool keyboard {};
             int tool {ui::ToolMeasure};
             int value {ui::ValueQuarter};
+            int tuplet {ui::TupletNone};
             ui::Dynamics dynamics;
             ui::Agogic agogic;
             ui::TimeSignature time_signature;

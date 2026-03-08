@@ -10,7 +10,6 @@
 
 #include "sequencer.hpp"
 #include "utility.hpp"
-#include "logging.hpp"
 
 namespace seq {
     template<typename Archive>
@@ -39,8 +38,13 @@ namespace seq {
     }
 
     template<typename Archive>
-    void serialize(Archive& archive, Note& self, const std::uint32_t) {
-        archive(self.id, self.value, self.position, self.delay, self.legato);
+    void save(Archive& archive, const Note& self, const std::uint32_t) {
+        archive(self.id, self.value, self.tuplet, self.position, self.delay, self.legato);
+    }
+
+    template<typename Archive>
+    void load(Archive& archive, Note& self, const std::uint32_t) {
+        archive(self.id, self.value, self.tuplet, self.position, self.delay, self.legato);
     }
 
     template<typename Archive>
@@ -104,13 +108,10 @@ namespace composition {
         }
 
         template<typename Archive>
-        void load(Archive& archive, const std::uint32_t version) {
-            LOG_DEBUG("Composition version {}", version);
+        void load(Archive& archive, const std::uint32_t) {
             archive(cereal::base_class<seq::Composition>(this), instrument_volumes, title, author, year);
         }
     };
-
-    inline constexpr std::uint32_t VERSION {3};
 
     void export_composition(const Composition& composition, utility::Buffer& buffer);
     void import_composition(Composition& composition, const utility::Buffer& buffer);
@@ -120,5 +121,6 @@ namespace composition {
     };
 }
 
-CEREAL_CLASS_VERSION(composition::Composition, composition::VERSION)
+CEREAL_CLASS_VERSION(composition::Composition, 1)
+CEREAL_CLASS_VERSION(seq::Note, 1)
 CEREAL_SPECIALIZE_FOR_ALL_ARCHIVES(composition::Composition, cereal::specialization::member_load_save)
