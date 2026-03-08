@@ -81,8 +81,9 @@ namespace application {
         void main_menu_bar();
         void main_menu_bar_file();
         void main_menu_bar_edit();
-        void main_menu_bar_options();
         void main_menu_bar_composition();
+        void main_menu_bar_options();
+        void main_menu_bar_information();
         void main_menu_bar_help();
         void keyboard() const;
         void keyboard_key(const Draw& draw, char key, float x, float y, int scancode) const;

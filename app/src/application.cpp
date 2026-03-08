@@ -241,6 +241,11 @@ namespace application {
                 ImGui::EndMenu();
             }
 
+            if (ImGui::BeginMenu("Information")) {
+                main_menu_bar_information();
+                ImGui::EndMenu();
+            }
+
             if (ImGui::BeginMenu("Help")) {
                 main_menu_bar_help();
                 ImGui::EndMenu();
@@ -319,38 +324,6 @@ namespace application {
         }
     }
 
-    void Application::main_menu_bar_help() {
-        if (ImGui::BeginMenu("About")) {
-            const char* link {utility::get_property(SDL_PROP_APP_METADATA_URL_STRING)};
-            ImGui::TextLinkOpenURL(link, link);
-
-            ImGui::EndMenu();
-        }
-
-        if (ImGui::BeginMenu("Build")) {
-#ifdef ALFRED_DISTRIBUTION
-            constexpr const char* DEV_TAG {""};
-#else
-            constexpr const char* DEV_TAG {" dev"};
-#endif
-            ImGui::Text("Version: %s%s", utility::get_property(SDL_PROP_APP_METADATA_VERSION_STRING), DEV_TAG);
-#ifdef ALFRED_LINUX
-            ImGui::Text("Compiler: GCC %d.%d", __GNUC__, __GNUC_MINOR__);
-#elifdef ALFRED_WINDOWS
-            ImGui::Text("Compiler: MSVC %d", _MSC_VER);
-#endif
-            ImGui::Text("Date: %s %s", __DATE__, __TIME__);
-
-            ImGui::EndMenu();
-        }
-
-        if (ImGui::BeginMenu("Driver")) {
-            ImGui::Text("%s", m_synthesizer.driver());
-
-            ImGui::EndMenu();
-        }
-    }
-
     void Application::main_menu_bar_options() {
         if (ImGui::BeginMenu("Color Scheme")) {
             constexpr const char* SCHEME[] { "Dark", "Light", "Classic" };
@@ -390,6 +363,52 @@ namespace application {
 
         if (ImGui::MenuItem("Show Keyboard", "Ctrl+K", m_ui.keyboard)) {
             m_ui.keyboard = !m_ui.keyboard;
+        }
+    }
+
+    void Application::main_menu_bar_information() {
+        if (ImGui::BeginMenu("Device")) {
+            ImGui::Text("%s", m_ui.device);
+
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Driver")) {
+            ImGui::Text("%s", m_synthesizer.driver());
+
+            ImGui::EndMenu();
+        }
+    }
+
+    void Application::main_menu_bar_help() {
+        if (ImGui::BeginMenu("About")) {
+            const char* link {utility::get_property(SDL_PROP_APP_METADATA_URL_STRING)};
+            ImGui::TextLinkOpenURL(link, link);
+
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Build")) {
+#ifdef ALFRED_DISTRIBUTION
+            constexpr const char* DEV_TAG {""};
+#else
+            constexpr const char* DEV_TAG {" dev"};
+#endif
+            ImGui::Text("Version: %s%s", utility::get_property(SDL_PROP_APP_METADATA_VERSION_STRING), DEV_TAG);
+#ifdef ALFRED_LINUX
+            ImGui::Text("Compiler: GCC %d.%d", __GNUC__, __GNUC_MINOR__);
+#elifdef ALFRED_WINDOWS
+            ImGui::Text("Compiler: MSVC %d", _MSC_VER);
+#endif
+            ImGui::Text("Date: %s %s", __DATE__, __TIME__);
+
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Log File")) {
+            ImGui::Text("%s", (utility::data_file_path("simonmara", "alfred") / "alfred.log").string().c_str());
+
+            ImGui::EndMenu();
         }
     }
 
@@ -562,9 +581,19 @@ namespace application {
 
             ImGui::Dummy(ui::rem(ImVec2(0.0f, 1.0f)));
 
-            ImGui::SeparatorText("Device");
+            ImGui::SeparatorText("Output");
 
-            ImGui::TextWrapped("%s", m_ui.device);
+            const ImColor& COLOR_FOREGROUND {color(ImGuiCol_Text)};
+
+            ImDrawList* draw_list {ImGui::GetWindowDrawList()};
+            const ImVec2 position {ImGui::GetCursorScreenPos()};
+
+            draw_list->AddRect(
+                position,
+                position + ui::rem(ImVec2(15.0f, 1.5f)),
+                COLOR_FOREGROUND,
+                4.0f
+            );
         }
 
         ImGui::End();
