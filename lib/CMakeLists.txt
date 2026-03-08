@@ -22,7 +22,6 @@ target_sources(
             "include/alfred/hash.hpp"
             "include/alfred/instrument.hpp"
             "include/alfred/math.hpp"
-            "include/alfred/mixer.hpp"
             "include/alfred/synthesis.hpp"
             "include/alfred/synthesizer.hpp"
 )

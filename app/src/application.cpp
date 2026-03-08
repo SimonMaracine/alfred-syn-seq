@@ -370,7 +370,7 @@ namespace application {
         }
 
         if (ImGui::BeginMenu("Scale")) {
-            constexpr const char* SCALE[] { "100", "125", "150", "175", "200" };
+            constexpr const char* SCALE[] { "100%", "125%", "150%", "175%", "200%" };
 
             if (ImGui::BeginCombo("##", SCALE[m_data.scale], ImGuiComboFlags_WidthFitPreview)) {
                 for (std::size_t i {}; i < std::size(SCALE); i++) {
