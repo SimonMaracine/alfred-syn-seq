@@ -21,6 +21,7 @@ add_resource("REWIND" "rewind.png" "binary")
 
 if(WIN32)
     if(ALFRED_DISTRIBUTION)
+        # This also disables printing
         set(ALFRED_APP_NO_CONSOLE WIN32)
     endif()
 
