@@ -50,8 +50,10 @@ namespace application {
             utility::read_file(utility::data_file_path("simonmara", "alfred") / "alfred.dat", buffer);
             data::import_data(m_data, buffer);
         } catch (const data::DataError& e) {
+            m_data = {};
             logging::warning("Could not import data: {}", e.what());
         } catch (const utility::FilerError& e) {
+            m_data = {};
             logging::warning("Could not import data: {}", e.what());
         }
 
@@ -108,8 +110,6 @@ namespace application {
             m_ui.colors[instrument.id()] = ui::ColorIndex(index);
             index = (index + 1) % std::size(ui::COLORS);
         });
-
-
     }
 
     void Application::on_stop() {
@@ -241,8 +241,8 @@ namespace application {
                 ImGui::EndMenu();
             }
 
-            if (ImGui::BeginMenu("Information")) {
-                main_menu_bar_information();
+            if (ImGui::BeginMenu("Audio")) {
+                main_menu_bar_audio();
                 ImGui::EndMenu();
             }
 
@@ -361,12 +361,12 @@ namespace application {
             ImGui::EndMenu();
         }
 
-        if (ImGui::MenuItem("Show Keyboard", "Ctrl+K", m_ui.keyboard)) {
-            m_ui.keyboard = !m_ui.keyboard;
+        if (ImGui::MenuItem("Show Keyboard", "Ctrl+K", m_data.show_keyboard)) {
+            m_data.show_keyboard = !m_data.show_keyboard;
         }
     }
 
-    void Application::main_menu_bar_information() {
+    void Application::main_menu_bar_audio() {
         if (ImGui::BeginMenu("Device")) {
             ImGui::Text("%s", m_ui.device);
 
@@ -413,7 +413,7 @@ namespace application {
     }
 
     void Application::keyboard() const {
-        if (!m_ui.keyboard) {
+        if (!m_data.show_keyboard) {
             return;
         }
 
@@ -1258,7 +1258,7 @@ namespace application {
         }
 
         if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_K, ImGuiInputFlags_RouteAlways)) {
-            m_ui.keyboard = !m_ui.keyboard;
+            m_data.show_keyboard = !m_data.show_keyboard;
         }
 
         if (ImGui::Shortcut(ImGuiKey_Tab, ImGuiInputFlags_RouteAlways)) {
