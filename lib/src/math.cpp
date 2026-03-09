@@ -5,6 +5,20 @@
 // https://fftw.org/
 
 namespace math {
+    void normalize(double* samples, std::size_t size) {
+        double max {};
+
+        for (std::size_t i {}; i < size; i++) {
+            max = std::max(max, std::abs(samples[i]));
+        }
+
+        max = std::max(max, 1.0e-5);
+
+        for (std::size_t i {}; i < size; i++) {
+            samples[i] /= max;
+        }
+    }
+
     namespace ft {
         Frequencies::Frequencies(std::size_t size) {
             m_sine = std::make_unique<double[]>(size);

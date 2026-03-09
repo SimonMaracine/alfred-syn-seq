@@ -389,20 +389,6 @@ namespace syn {
             transform.frequencies_to_samples(frequencies, sample);
         }
 
-        static void normalize(double* sample, std::size_t size) {
-            double max {};
-
-            for (std::size_t i {}; i < size; i++) {
-                max = std::max(max, std::abs(sample[i]));
-            }
-
-            max = std::max(max, 1.0e-5);
-
-            for (std::size_t i {}; i < size; i++) {
-                sample[i] /= max;
-            }
-        }
-
         Sample padsynth(
             std::size_t size,
             int sample_rate,
@@ -439,7 +425,7 @@ namespace syn {
             }
 
             inverse_ft(size, frequency_amplitudes.get(), frequency_phases.get(), sample.get());
-            normalize(sample.get(), size);
+            math::normalize(sample.get(), size);
 
             return sample;
         }

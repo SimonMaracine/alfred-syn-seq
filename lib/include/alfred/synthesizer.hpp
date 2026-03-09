@@ -71,6 +71,7 @@ namespace synthesizer {
 
         std::size_t get_buffer_size() const { return m_buffer.size(); }
         const double* get_buffer_data() const { return m_buffer.data(); }
+        double* get_buffer_data() { return m_buffer.data(); }
     private:
         double m_time {};
         std::vector<double> m_buffer;

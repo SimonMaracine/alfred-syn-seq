@@ -1616,6 +1616,10 @@ namespace application {
 
             ImGui::BeginDisabled(m_render_in_progress || *m_ui.render_file_path == 0);
 
+            ImGui::Checkbox("Normalize", &m_ui.render_normalize);
+
+            ImGui::SameLine();
+
             if (ImGui::Button("Render")) {
                 start_render_composition();
             }
@@ -3033,6 +3037,7 @@ namespace application {
             std::strncpy(m_ui.render_file_path, (std::filesystem::path(m_working_directory) / "unsaved_composition").string().c_str(), sizeof(m_ui.render_file_path) - 1);
         }
 
+        m_ui.render_normalize = true;
         m_ui.render_progress = 0.0f;
     }
 
@@ -3041,11 +3046,11 @@ namespace application {
 
         m_render_in_progress = true;
 
-        m_task_manager.add_async_task([this, path = std::filesystem::path(m_ui.render_file_path), composition = m_composition](task::AsyncTask& task) mutable {
+        m_task_manager.add_async_task([this, path = std::filesystem::path(m_ui.render_file_path), composition = m_composition, normalize = m_ui.render_normalize](task::AsyncTask& task) mutable {
             path.replace_extension("wav");
 
             try {
-                do_render_composition(task, std::move(path), std::move(composition));
+                do_render_composition(task, std::move(path), std::move(composition), normalize);
             } catch (const seq::SequencerError& e) {
                 logging::error("Error rendering composition: {}", e.what());
             } catch (const encoder::EncoderError& e) {
@@ -3070,7 +3075,7 @@ namespace application {
         });
     }
 
-    void Application::do_render_composition(const task::AsyncTask& task, std::filesystem::path&& file_path, seq::Composition&& composition) {
+    void Application::do_render_composition(const task::AsyncTask& task, std::filesystem::path&& file_path, seq::Composition&& composition, bool normalize) {
         using namespace std::chrono_literals;
         using TimePoint = std::chrono::time_point<std::chrono::system_clock>;
 
@@ -3120,6 +3125,11 @@ namespace application {
         }
 
         const TimePoint time_stop {std::chrono::system_clock::now()};
+
+        if (normalize) {
+            LOG_INFORMATION("Normalizing composition");
+            math::normalize(synthesizer.get_buffer_data(), synthesizer.get_buffer_size());
+        }
 
         utility::write_file(std::move(file_path), encoder::encode_wav(synthesizer.get_buffer_size(), synthesizer.get_buffer_data()));
 

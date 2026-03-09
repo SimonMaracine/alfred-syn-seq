@@ -53,6 +53,8 @@ namespace math {
         return static_cast<unsigned int>(seconds * 1000.0);
     }
 
+    void normalize(double* samples, std::size_t size);
+
     namespace ft {
         class Frequencies {
         public:

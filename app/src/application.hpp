@@ -203,7 +203,7 @@ namespace application {
         void open_render_composition();
         void reset_render_composition();
         void start_render_composition();
-        void do_render_composition(const task::AsyncTask& task, std::filesystem::path&& file_path, seq::Composition&& composition);
+        void do_render_composition(const task::AsyncTask& task, std::filesystem::path&& file_path, seq::Composition&& composition, bool normalize);
         static std::size_t max_composition_voices(const seq::Composition& composition);
         static std::size_t optimal_composition_voices(const seq::Composition& composition);
         static void strip_composition_empty_instruments(seq::Composition& composition);
@@ -245,6 +245,7 @@ namespace application {
             int polyphony {};
             double volume {};
             const char* device {};
+            bool render_normalize {true};
             float render_progress {};
             char render_file_path[256] {};
             image::Texture texture_play;
