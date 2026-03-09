@@ -102,7 +102,8 @@ namespace application {
         }, 5000);
 
         m_task_manager.add_repeatable_task([this] {
-            m_synthesizer.update();
+            m_ui.current_output_sample = m_synthesizer.update();
+            m_ui.past_output_sample_abs = std::max(m_ui.past_output_sample_abs, std::abs(m_ui.current_output_sample));
             return false;
         }, video::MAX_DELTA);
 
@@ -126,6 +127,11 @@ namespace application {
 
     void Application::on_update() {
         m_player.update(frame_time());
+
+        static constexpr double SPEED {0.2};
+
+        m_ui.past_output_sample_abs -= frame_time() * SPEED;
+        m_ui.past_output_sample_abs = std::max(m_ui.past_output_sample_abs, 0.0);
     }
 
     void Application::on_imgui() {
@@ -583,20 +589,38 @@ namespace application {
 
             ImGui::SeparatorText("Output");
 
-            const ImColor& COLOR_FOREGROUND {color(ImGuiCol_Text)};
-
-            ImDrawList* draw_list {ImGui::GetWindowDrawList()};
-            const ImVec2 position {ImGui::GetCursorScreenPos()};
-
-            draw_list->AddRect(
-                position,
-                position + ui::rem(ImVec2(15.0f, 1.5f)),
-                COLOR_FOREGROUND,
-                4.0f
-            );
+            output_indicator();
         }
 
         ImGui::End();
+    }
+
+    void Application::output_indicator() const {
+        const ImColor& COLOR {color(ImGuiCol_Text)};
+
+        ImDrawList* draw_list {ImGui::GetWindowDrawList()};
+        const ImVec2 position {ImGui::GetCursorScreenPos()};
+
+        const auto current_sample {float(math::map(std::abs(m_ui.current_output_sample), 0.0, 1.0, 0.0, 15.0))};
+        const auto past_sample {float(math::map(m_ui.past_output_sample_abs, 0.0, 1.0, 0.0, 15.0))};
+
+        draw_list->AddRectFilled(
+            position,
+            position + ui::rem(ImVec2(current_sample, 20.0f / ui::FONT_SIZE)),
+            IM_COL32(0, 255, 0, 255)  // FIXME TODO
+        );
+
+        draw_list->AddLine(
+            position + ui::rem(ImVec2(past_sample, 0.0f)),
+            position + ui::rem(ImVec2(past_sample, 20.0f / ui::FONT_SIZE)),
+            COLOR
+        );
+
+        draw_list->AddRect(
+            position,
+            position + ui::rem(ImVec2(15.0f, 20.0f / ui::FONT_SIZE)),
+            COLOR
+        );
     }
 
     void Application::playback() {

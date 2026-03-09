@@ -89,6 +89,7 @@ namespace application {
         void keyboard_key(const Draw& draw, char key, float x, float y, int scancode) const;
         void instruments_and_synthesizer();
         void output();
+        void output_indicator() const;
         void playback();
         void tools();
         void tools_measure();
@@ -244,6 +245,8 @@ namespace application {
             int loudness {ui::LoudnessMezzoForte};
             int polyphony {};
             double volume {};
+            double current_output_sample {};
+            double past_output_sample_abs {};
             const char* device {};
             bool render_normalize {true};
             float render_progress {};

@@ -171,9 +171,9 @@ namespace audio {
 
         for (std::size_t i {}; i < samples; i++) {
             self.callback_update();
-            const double sound {self.callback_sound()};
+            self.m_sample = self.callback_sound();
 
-            g_buffer.buffer[i] = math::encode_sample<Resolution>(math::clamp_sample(sound));
+            g_buffer.buffer[i] = math::encode_sample<Resolution>(math::clamp_sample(self.m_sample));
 
             self.m_time += 1.0 / double(SAMPLE_FREQUENCY);
         }

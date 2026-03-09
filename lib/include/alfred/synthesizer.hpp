@@ -20,7 +20,7 @@ namespace synthesizer {
 
         virtual void note_on(syn::NoteId note, syn::InstrumentId instrument, syn::Velocity velocity) = 0;
         virtual void note_off(syn::NoteId note, syn::InstrumentId instrument) = 0;
-        virtual void update() = 0;
+        virtual double update() = 0;
         virtual void silence() = 0;
 
         void note_on(double time, syn::NoteId note, syn::InstrumentId instrument, syn::Velocity velocity);
@@ -37,7 +37,7 @@ namespace synthesizer {
         const syn::Instrument& get_instrument(syn::InstrumentId instrument) const;
         syn::Instrument& get_instrument(syn::InstrumentId instrument);
     protected:
-        void update_voices();
+        void update_voices(double time);
         std::vector<syn::Voice>::iterator find_voice(syn::NoteId note, syn::InstrumentId instrument);
         void sample_update(double time) const noexcept;
         double sample_sound(double time) const noexcept;
@@ -53,7 +53,7 @@ namespace synthesizer {
 
         void note_on(syn::NoteId note, syn::InstrumentId instrument, syn::Velocity velocity) override;
         void note_off(syn::NoteId note, syn::InstrumentId instrument) override;
-        void update() override;
+        double update() override;
         void silence() override;
     private:
         void callback_update() noexcept override;
@@ -64,7 +64,7 @@ namespace synthesizer {
     public:
         void note_on(syn::NoteId note, syn::InstrumentId instrument, syn::Velocity velocity) override;
         void note_off(syn::NoteId note, syn::InstrumentId instrument) override;
-        void update() override;
+        double update() override;
         void silence() override;
 
         void reset();

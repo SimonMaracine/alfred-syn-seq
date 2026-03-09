@@ -51,12 +51,14 @@ namespace audio {
         virtual double callback_sound() const noexcept = 0;
     protected:
         double m_time {};
+
+        double sample() const { return m_sample; }
     private:
         static void stream_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int total_amount) noexcept;
 
         SDL_AudioStream* m_stream {};
-
         std::vector<Device> m_devices;
+        double m_sample {};
     };
 
     class AudioLockGuard {

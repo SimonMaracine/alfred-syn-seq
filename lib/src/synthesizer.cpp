@@ -82,16 +82,26 @@ namespace synthesizer {
         return *m_instruments.at(instrument);
     }
 
-    void Synthesizer::update_voices() {
+    void Synthesizer::update_voices(double time) {
         std::erase_if(m_voices, [](const syn::Voice& voice) {
             return voice.envelope->done();
         });
 
-        while (m_voices.size() > m_max_voices) {
-            // Replace the oldest voice policy
-            m_voices.erase(std::ranges::min_element(m_voices, [](const auto& lhs, const auto& rhs) {
+        auto size {m_voices.size()};
+
+        while (size > m_max_voices) {
+            // Remove the oldest voice policy
+            const auto oldest_voice {std::ranges::min_element(m_voices, [](const auto& lhs, const auto& rhs) {
                 return lhs.time_on < rhs.time_on;
-            }));
+            })};
+
+            // Simply force a note off on the voice and don't abruptly interrupt it
+            if (oldest_voice->time_on > oldest_voice->time_off) {
+                oldest_voice->time_off = time;
+                oldest_voice->envelope->note_off(time);
+            }
+
+            size--;
         }
     }
 
@@ -110,11 +120,8 @@ namespace synthesizer {
     double Synthesizer::sample_sound(double time) const noexcept {
         double output {};
 
-        for (const auto [i, voice] : m_voices | std::views::enumerate) {
-            // The update function should take care of removing voices, if there are too many
-            if (i == long(m_max_voices)) {
-                break;
-            }
+        for (const syn::Voice& voice : m_voices) {
+            // The update function should take care of nicely stopping voices, if there are too many
 
             const auto& instrument {m_instruments.at(voice.instrument)};
 
@@ -149,10 +156,12 @@ namespace synthesizer {
         Synthesizer::note_off(m_time, note, instrument);
     }
 
-    void RealSynthesizer::update() {
+    double RealSynthesizer::update() {
         audio::AudioLockGuard guard {this};
 
-        update_voices();
+        update_voices(m_time);
+
+        return sample();
     }
 
     void RealSynthesizer::silence() {
@@ -178,15 +187,17 @@ namespace synthesizer {
         Synthesizer::note_off(m_time, note, instrument);
     }
 
-    void VirtualSynthesizer::update() {
-        update_voices();
+    double VirtualSynthesizer::update() {
+        update_voices(m_time);
 
         sample_update(m_time);
-        const double sound {sample_sound(m_time)};
+        const double sample {sample_sound(m_time)};
 
-        m_buffer.push_back(math::clamp_sample(sound));
+        m_buffer.push_back(math::clamp_sample(sample));
 
         m_time += 1.0 / double(audio::SAMPLE_FREQUENCY);
+
+        return sample;
     }
 
     void VirtualSynthesizer::silence() {
