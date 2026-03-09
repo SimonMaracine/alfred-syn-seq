@@ -11,7 +11,7 @@ if(UNIX)
     set(CPACK_PACKAGING_INSTALL_PREFIX "/usr/local")
 endif()
 
-set(CPACK_SOURCE_IGNORE_FILES "build\/.*;\.env\/.*;\.git\/.*;analysis\/.*;\.vscode\/.*;\.idea\/.*;extern\/.*")
+set(CPACK_SOURCE_IGNORE_FILES "build\/.*;\.env\/.*;\.git\/.*;analysis\/.*;\.vscode\/.*;\.idea\/.*;extern\/.*;compositions\/.*")
 set(CPACK_PACKAGE_VENDOR "Simon")
 set(CPACK_PACKAGE_ICON "${CMAKE_SOURCE_DIR}/app/res/icon128.png")
 set(CPACK_PACKAGE_DESCRIPTION "Alfred is a free and open source cross-platform synthesizer and sequencer program, which allows you to synthesize different instruments and to compose and play music.")
