@@ -604,10 +604,22 @@ namespace application {
         const auto current_sample {float(math::map(std::abs(m_ui.current_output_sample), 0.0, 1.0, 0.0, 15.0))};
         const auto past_sample {float(math::map(m_ui.past_output_sample_abs, 0.0, 1.0, 0.0, 15.0))};
 
+        const ImU32 color {
+            [current_sample_abs = std::abs(m_ui.current_output_sample)] {
+                if (current_sample_abs > 0.9) {
+                    return IM_COL32(240, 20, 20, 255);
+                } else if (current_sample_abs > 0.7) {
+                    return IM_COL32(240, 240, 20, 255);
+                } else {
+                    return IM_COL32(20, 240, 20, 255);
+                }
+            }()
+        };
+
         draw_list->AddRectFilled(
             position,
             position + ui::rem(ImVec2(current_sample, 20.0f / ui::FONT_SIZE)),
-            IM_COL32(0, 255, 0, 255)  // FIXME TODO
+            color
         );
 
         draw_list->AddLine(
