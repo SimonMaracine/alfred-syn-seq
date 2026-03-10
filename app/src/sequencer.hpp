@@ -184,16 +184,18 @@ namespace seq {
     class ProvenanceNote {
     public:
         ProvenanceNote() = default;
-        ProvenanceNote(MeasureIter_ measure, NoteIter note)
-            : m_measure(measure), m_note(note) {}
+        ProvenanceNote(MeasureIter_ measure, NoteIter note, syn::InstrumentId instrument)
+            : m_measure(measure), m_note(note), m_instrument(instrument) {}
 
         MeasureIter_ measure() const { return m_measure; }
         NoteIter note() const { return m_note; }
         void note(NoteIter note) { m_note = note; }
         Note copy() const { return *m_note; }
+        syn::InstrumentId instrument() const { return m_instrument; }
     private:
         MeasureIter_ m_measure;
         NoteIter m_note;
+        syn::InstrumentId m_instrument {};
     };
 
     struct Composition {
@@ -206,12 +208,12 @@ namespace seq {
         static bool note_last_in_measure(const Measure& measure, const Note& note);
 
         template<std::contiguous_iterator MeasureIter>
-        std::optional<ProvenanceNote<MeasureIter>> check_note_has_next(syn::InstrumentId instrument, const ProvenanceNote<MeasureIter>& provenance_note) const {
-            return check_note_has_next(instrument, provenance_note.measure(), provenance_note.note());
+        std::optional<ProvenanceNote<MeasureIter>> check_note_has_next(const ProvenanceNote<MeasureIter>& provenance_note) const {
+            return check_note_has_next(provenance_note.measure(), provenance_note.note(), provenance_note.instrument());
         }
 
         template<std::contiguous_iterator MeasureIter>
-        std::optional<ProvenanceNote<MeasureIter>> check_note_has_next(syn::InstrumentId instrument, MeasureIter measure, NoteIter note) const {
+        std::optional<ProvenanceNote<MeasureIter>> check_note_has_next(MeasureIter measure, NoteIter note, syn::InstrumentId instrument) const {
             {
                 const auto& notes {measure->instruments.at(instrument)};
 
@@ -223,7 +225,7 @@ namespace seq {
                             next_note->id == note->id &&
                             next_note->position == note->position + steps(note->value, note->tuplet)
                         ) {
-                            return std::make_optional<ProvenanceNote<MeasureIter>>(measure, next_note);
+                            return std::make_optional<ProvenanceNote<MeasureIter>>(measure, next_note, instrument);
                         }
                     }
                 }
@@ -240,13 +242,13 @@ namespace seq {
                     }
 
                     const auto next_note {
-                        std::ranges::find_if(next_measure->instruments.at(instrument), [next_measure, note](const auto& note_) {
-                            return note_.id == note->id && note_first_in_measure(*next_measure, note_);
+                        std::ranges::find_if(next_measure->instruments.at(instrument), [next_measure, note](const auto& n) {
+                            return n.id == note->id && note_first_in_measure(*next_measure, n);
                         })
                     };
 
                     if (next_note != notes->second.end()) {
-                        return std::make_optional<ProvenanceNote<MeasureIter>>(next_measure, next_note);
+                        return std::make_optional<ProvenanceNote<MeasureIter>>(next_measure, next_note, instrument);
                     }
                 }
             }
@@ -255,12 +257,12 @@ namespace seq {
         }
 
         template<std::contiguous_iterator MeasureIter>
-        std::optional<ProvenanceNote<MeasureIter>> check_note_has_previous(syn::InstrumentId instrument, const ProvenanceNote<MeasureIter>& provenance_note) const {
-            return check_note_has_previous(instrument, provenance_note.measure(), provenance_note.note());
+        std::optional<ProvenanceNote<MeasureIter>> check_note_has_previous(const ProvenanceNote<MeasureIter>& provenance_note) const {
+            return check_note_has_previous(provenance_note.measure(), provenance_note.note(), provenance_note.instrument());
         }
 
         template<std::contiguous_iterator MeasureIter>
-        std::optional<ProvenanceNote<MeasureIter>> check_note_has_previous(syn::InstrumentId instrument, MeasureIter measure, NoteIter note) const {
+        std::optional<ProvenanceNote<MeasureIter>> check_note_has_previous(MeasureIter measure, NoteIter note, syn::InstrumentId instrument) const {
             {
                 const auto& notes {measure->instruments.at(instrument)};
 
@@ -271,7 +273,7 @@ namespace seq {
                         previous_note->id == note->id &&
                         previous_note->position + steps(previous_note->value, previous_note->tuplet) == note->position
                     ) {
-                        return std::make_optional<ProvenanceNote<MeasureIter>>(measure, previous_note);
+                        return std::make_optional<ProvenanceNote<MeasureIter>>(measure, previous_note, instrument);
                     }
                 }
             }
@@ -287,13 +289,13 @@ namespace seq {
                     }
 
                     const auto previous_note {
-                        std::ranges::find_if(previous_measure->instruments.at(instrument), [previous_measure, note](const auto& note_) {
-                            return note_.id == note->id && note_last_in_measure(*previous_measure, note_);
+                        std::ranges::find_if(previous_measure->instruments.at(instrument), [previous_measure, note](const auto& n) {
+                            return n.id == note->id && note_last_in_measure(*previous_measure, n);
                         })
                     };
 
                     if (previous_note != notes->second.end()) {
-                        return std::make_optional<ProvenanceNote<MeasureIter>>(previous_measure, previous_note);
+                        return std::make_optional<ProvenanceNote<MeasureIter>>(previous_measure, previous_note, instrument);
                     }
                 }
             }

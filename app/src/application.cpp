@@ -2011,8 +2011,8 @@ namespace application {
     void Application::do_with_note(const HoveredNote& hovered_note) {
         if (auto note {select_note(hovered_note)}; note) {
             const auto selected_note {
-                std::ranges::find_if(m_composition_selected_notes, [&hovered_note, note](const auto& n) {
-                    return n.measure() == hovered_note.measure() && n.note() == note;
+                std::ranges::find_if(m_composition_selected_notes, [this, &hovered_note, note](const auto& n) {
+                    return n.measure() == hovered_note.measure() && n.note() == *note && n.instrument() == m_instrument;
                 })
             };
 
@@ -2020,7 +2020,7 @@ namespace application {
                 if (selected_note != m_composition_selected_notes.end()) {
                     m_composition_selected_notes.erase(selected_note);
                 } else {
-                    m_composition_selected_notes.emplace_back(hovered_note.measure(), *note);
+                    m_composition_selected_notes.emplace_back(hovered_note.measure(), *note, m_instrument);
                 }
             } else {
                 const bool exists {selected_note != m_composition_selected_notes.end()};
@@ -2028,7 +2028,7 @@ namespace application {
                 m_composition_selected_notes.clear();
 
                 if (!exists) {
-                    m_composition_selected_notes.emplace_back(hovered_note.measure(), *note);
+                    m_composition_selected_notes.emplace_back(hovered_note.measure(), *note, m_instrument);
                 }
             }
 
@@ -2102,7 +2102,7 @@ namespace application {
                 break;
         }
 
-        play_note(new_note);
+        play_note(m_instrument, new_note);
 
         modify_composition();
     }
@@ -2200,7 +2200,7 @@ namespace application {
             }
 
             readd_note(selected_note, note);
-            play_note(note);
+            play_note(selected_note.instrument(), note);
         }
 
         modify_composition();
@@ -2252,7 +2252,7 @@ namespace application {
             }
 
             readd_note(selected_note, note);
-            play_note(note);
+            play_note(selected_note.instrument(), note);
         }
 
         modify_composition();
@@ -2552,32 +2552,32 @@ namespace application {
         return point_y >= m_composition_camera.y && point_y < m_composition_camera.y + space_y;
     }
 
-    void Application::readd_note(ProvenanceNote& provenance_note, const seq::Note& note) const {
-        provenance_note.measure()->instruments.at(m_instrument).erase(provenance_note.note());
-        const auto [iter, inserted] {provenance_note.measure()->instruments.at(m_instrument).insert(note)};
+    void Application::readd_note(ProvenanceNote& provenance_note, const seq::Note& note) {
+        provenance_note.measure()->instruments.at(provenance_note.instrument()).erase(provenance_note.note());
+        const auto [iter, inserted] {provenance_note.measure()->instruments.at(provenance_note.instrument()).insert(note)};
 
         assert(inserted);
 
         provenance_note.note(iter);
     }
 
-    void Application::readd_note(NoteIter note_iter, MeasureIter measure, const seq::Note& note) const {
-        measure->instruments.at(m_instrument).erase(note_iter);
-        measure->instruments.at(m_instrument).insert(note);
+    void Application::readd_note(syn::InstrumentId instrument, NoteIter note_iter, MeasureIter measure, const seq::Note& note) {
+        measure->instruments.at(instrument).erase(note_iter);
+        measure->instruments.at(instrument).insert(note);
     }
 
-    void Application::reset_note_legato(const ProvenanceNote& provenance_note) const {
+    void Application::reset_note_legato(const ProvenanceNote& provenance_note) {
         seq::Note note {provenance_note.copy()};
         note.legato = false;
 
-        readd_note(provenance_note.note(), provenance_note.measure(), note);
+        readd_note(provenance_note.instrument(), provenance_note.note(), provenance_note.measure(), note);
     }
 
     void Application::reset_note_legato_previous_measure(MeasureIter measure) const {
         for (const auto& [instrument, notes] : measure->instruments) {
             for (auto note {notes.begin()}; note != notes.end(); note++) {
                 if (seq::Composition::note_first_in_measure(*measure, *note)) {
-                    if (auto previous_note {m_composition.check_note_has_previous(instrument, measure, note)}; previous_note) {
+                    if (auto previous_note {m_composition.check_note_has_previous(measure, note, instrument)}; previous_note) {
                         reset_note_legato(*previous_note);
                     }
                 }
@@ -2585,12 +2585,12 @@ namespace application {
         }
     }
 
-    void Application::play_note(const seq::Note& note) {
-        m_synthesizer.note_on(note.id, m_instrument, seq::amplitude(seq::Loudness::MezzoForte));
+    void Application::play_note(syn::InstrumentId instrument, const seq::Note& note) {
+        m_synthesizer.note_on(note.id, instrument, seq::amplitude(seq::Loudness::MezzoForte));
 
-        m_task_manager.add_delayed_task([this, id = note.id] {
-            m_synthesizer.note_off(id, m_instrument);
-        }, math::seconds_to_milliseconds(m_synthesizer.get_instrument(m_instrument).attack_duration()) + 100);
+        m_task_manager.add_delayed_task([this, instrument = instrument, id = note.id] {
+            m_synthesizer.note_off(id, instrument);
+        }, math::seconds_to_milliseconds(m_synthesizer.get_instrument(instrument).attack_duration()) + 100);
     }
 
     void Application::note_to_string(syn::NoteId note, char* buffer) {
@@ -2813,11 +2813,11 @@ namespace application {
     }
 
     std::optional<ProvenanceNote> Application::check_note_has_next(const ProvenanceNote& provenance_note) const {
-        return m_composition.check_note_has_next(m_instrument, provenance_note);
+        return m_composition.check_note_has_next(provenance_note);
     }
 
     std::optional<ProvenanceNote> Application::check_note_has_previous(const ProvenanceNote& provenance_note) const {
-        return m_composition.check_note_has_previous(m_instrument, provenance_note);
+        return m_composition.check_note_has_previous(provenance_note);
     }
 
     Time Application::elapsed_seconds_to_time(double elapsed_seconds) {

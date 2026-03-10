@@ -192,7 +192,7 @@ namespace seq {
 
                     while (current_note->legato) {
                         const auto next_note {
-                            composition->check_note_has_next<ConstMeasureIter>(instrument, ProvenanceNote(measure, current_note))
+                            composition->check_note_has_next<ConstMeasureIter>(ProvenanceNote(measure, current_note, instrument))
                         };
 
                         assert(next_note);
