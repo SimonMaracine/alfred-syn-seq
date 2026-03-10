@@ -136,7 +136,7 @@ I give my thanks to my friend Tudor for sharing his knowledge of signal processi
 
 ## Credits
 
-One of the test compositions is the first section only from [I Secretly Love You](https://www.youtube.com/watch?v=7gYG95NG1YA) by Yuang Chen (Seycara Orchestral). 
+One of the test compositions is the first section only from [I Secretly Love You](https://www.youtube.com/watch?v=7gYG95NG1YA) by Yuang Chen (Seycara Orchestral).
 
 ---
 
