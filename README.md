@@ -33,7 +33,7 @@ Alfred was at least built and tested on:
 
 - Fedora Linux 43, GNOME 49, Wayland, PipeWire, GCC 15.2, CMake 3.31
 - Ubuntu 25.04, GNOME 48, X11 (Xwayland), PipeWire, GCC 14.2, CMake 3.31
-- ...
+- Windows 11 25H2, WASAPI, MSVC 19.50, CMake 4.3
 
 Additionally, it was at least tested on:
 
@@ -47,7 +47,7 @@ Build in distribution/release mode for the best audio experience! Compiled witho
 
 - Git
 - CMake
-- GCC or MSVC (Visual Studio)
+- GCC or MSVC with C++23 support
 - Python
 - NSIS (Windows only)
 
