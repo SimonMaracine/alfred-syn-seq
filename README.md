@@ -25,7 +25,7 @@ Currently, Alfred is in its infancy, so its current instruments are not well-mad
 
 Alfred works with 16-bit samples, one channel, and frequency 44100 Hz.
 
-[//]: # (TODO picture)
+![Screenshot](gfx/screenshots/1.png)
 
 ## Building, Installing and Packaging
 
