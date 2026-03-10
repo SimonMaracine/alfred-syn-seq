@@ -16,6 +16,8 @@
 namespace syn {
     using EnvelopeStorage = allocator::StaticAllocatorStorage<64, 96, 8>;
 
+    // Abstract class representing an envelope
+    // Envelopes use a custom allocator; they are usually dynamically allocated
     struct Envelope {
         Envelope() = default;
         virtual ~Envelope() = default;
@@ -25,10 +27,17 @@ namespace syn {
         Envelope(Envelope&&) = default;
         Envelope& operator=(Envelope&&) = default;
 
+        // MIDI-like note events
         virtual void note_on(double time) = 0;
         virtual void note_off(double time) = 0;
+
+        // Called for every sample of output
         virtual void update(double time) = 0;
+
+        // Get the current value
         virtual double value() const = 0;
+
+        // If the envelope has finished its lifetime
         virtual bool done() const = 0;
     };
 
@@ -194,8 +203,10 @@ namespace syn {
     // MIDI-like value from 0 to 1
     using Velocity = double;
 
+    // Instruments/presets are identified by IDs
     using InstrumentId = std::uint32_t;
 
+    // Min and max pitch of the instrument, inclusive range
     using InstrumentRange = std::pair<NoteId, NoteId>;
 
     constexpr NoteId note(NoteName name, NoteOctave octave) {
@@ -227,6 +238,9 @@ namespace syn {
     static_assert(note(16) == std::pair(Cs, Octave2));
     static_assert(note(85) == std::pair(As, Octave7));
 
+    // A voice represents a particular sound made by some instrument at some point in time in the synthesizer
+    // There can be multiple voices with the same instrument provided that their note (pitch) is different
+    // A synthesizer then stores and processes multiple voices in order to produce a sample of sound output
     struct Voice {
         NoteId note {};
         InstrumentId instrument {};
@@ -267,6 +281,8 @@ namespace syn {
         inline constexpr InstrumentRange ID_FULL_RANGE {std::make_pair(ID_BEGIN, ID_END)};
     }
 
+    // An instrument (or also called preset) describes how some voice should sound
+    // It comprises all the parameters that makes up a particular sound
     struct Instrument {
         Instrument() = default;
         virtual ~Instrument() = default;
@@ -276,17 +292,25 @@ namespace syn {
         Instrument(Instrument&&) = default;
         Instrument& operator=(Instrument&&) = default;
 
+        // Metadata and identification
         virtual const char* name() const = 0;
         virtual InstrumentId id() const = 0;
         virtual const char* description() const = 0;
 
+        // Raw sound produced at this particular time (without taking into account envelope and other values)
         virtual double sound(double time, double time_on, NoteId note) const noexcept = 0;
+
+        // Note range
         virtual InstrumentRange range() const { return keyboard::ID_FULL_RANGE; }
 
+        // Get/set volume in decibels (for mixing)
         virtual Volume volume() const = 0;
         virtual void volume(Volume volume) = 0;
 
+        // Create a new envelope specific for this instrument
         virtual EnvelopePtr new_envelope() const = 0;
+
+        // Get the attack and release durations
         virtual double attack_duration() const = 0;
         virtual double release_duration() const = 0;
     };

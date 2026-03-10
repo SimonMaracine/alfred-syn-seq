@@ -3,6 +3,8 @@
 #include "alfred/synthesis.hpp"
 #include "alfred/hash.hpp"
 
+// Default, compiled instruments/presets
+
 #define ALFRED_INSTRUMENT_STATIC_NAME_ID(NAME_STRING) \
     static consteval auto static_name() { return NAME_STRING; } \
     static consteval auto static_id() { return hash::HashedStr32(static_name()); } \

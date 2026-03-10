@@ -21,6 +21,26 @@ namespace synthesizer {
         m_instruments[instrument::Cello::static_id()] = std::make_unique<instrument::Cello>();
     }
 
+    void Synthesizer::for_each_instrument(const std::function<void(const syn::Instrument&)>& function) const {
+        for (const auto& instrument : m_instruments | std::views::values) {
+            function(*instrument);
+        }
+    }
+
+    void Synthesizer::for_each_instrument(const std::function<void(syn::Instrument&)>& function) {
+        for (const auto& instrument : m_instruments | std::views::values) {
+            function(*instrument);
+        }
+    }
+
+    const syn::Instrument& Synthesizer::get_instrument(syn::InstrumentId instrument) const {
+        return *m_instruments.at(instrument);
+    }
+
+    syn::Instrument& Synthesizer::get_instrument(syn::InstrumentId instrument) {
+        return *m_instruments.at(instrument);
+    }
+
     void Synthesizer::note_on(double time, syn::NoteId note, syn::InstrumentId instrument, syn::Velocity velocity) {
         assert(velocity >= 0.0 && velocity <= 1.0);
 
@@ -58,28 +78,8 @@ namespace synthesizer {
         }
     }
 
-    void Synthesizer::polyphony(std::size_t max_voices) {
+    void Synthesizer::set_polyphony(std::size_t max_voices) {
         m_max_voices = std::clamp(max_voices, MIN_VOICES, MAX_VOICES);
-    }
-
-    void Synthesizer::for_each_instrument(const std::function<void(const syn::Instrument&)>& function) const {
-        for (const auto& instrument : m_instruments | std::views::values) {
-            function(*instrument);
-        }
-    }
-
-    void Synthesizer::for_each_instrument(const std::function<void(syn::Instrument&)>& function) {
-        for (const auto& instrument : m_instruments | std::views::values) {
-            function(*instrument);
-        }
-    }
-
-    const syn::Instrument& Synthesizer::get_instrument(syn::InstrumentId instrument) const {
-        return *m_instruments.at(instrument);
-    }
-
-    syn::Instrument& Synthesizer::get_instrument(syn::InstrumentId instrument) {
-        return *m_instruments.at(instrument);
     }
 
     void Synthesizer::update_voices(double time) {
@@ -171,6 +171,12 @@ namespace synthesizer {
         m_voices.clear();
     }
 
+    void RealSynthesizer::polyphony(std::size_t max_voices) {
+        audio::AudioLockGuard guard {this};
+
+        set_polyphony(max_voices);
+    }
+
     void RealSynthesizer::callback_update() noexcept {
         sample_update(m_time);
     }
@@ -203,6 +209,10 @@ namespace synthesizer {
     void VirtualSynthesizer::silence() {
         m_time = 0.0;
         m_voices.clear();
+    }
+
+    void VirtualSynthesizer::polyphony(std::size_t max_voices) {
+        set_polyphony(max_voices);
     }
 
     void VirtualSynthesizer::reset() {

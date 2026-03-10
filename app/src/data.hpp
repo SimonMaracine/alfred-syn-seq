@@ -8,6 +8,8 @@
 #include "ui.hpp"
 #include "utility.hpp"
 
+// Application settings/options + serialization
+
 namespace data {
     struct Data {
         bool show_keyboard {true};

@@ -5,6 +5,8 @@
 
 #include <imgui.h>
 
+// Functions and definitions used by the UI of the application
+
 namespace ui {
     inline constexpr float FONT_SIZE {13.0f};
 

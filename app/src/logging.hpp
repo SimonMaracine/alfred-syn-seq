@@ -5,6 +5,8 @@
 #include <chrono>
 #include <stdexcept>
 
+// Global console and file logging
+
 namespace logging {
     enum class Severity {
         Debug,

@@ -12,6 +12,8 @@
 #include "sequencer.hpp"
 #include "utility.hpp"
 
+// Composition data + serialization
+
 namespace seq {
     template<typename Archive>
     void save(Archive& archive, const Tempo& self, const std::uint32_t) {

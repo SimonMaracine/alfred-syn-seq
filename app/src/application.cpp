@@ -607,12 +607,14 @@ namespace application {
         const ImU32 color {
             [current_sample_abs = std::abs(m_ui.current_output_sample)] {
                 if (current_sample_abs > 0.9) {
-                    return IM_COL32(240, 20, 20, 255);
-                } else if (current_sample_abs > 0.7) {
-                    return IM_COL32(240, 240, 20, 255);
-                } else {
-                    return IM_COL32(20, 240, 20, 255);
+                    return IM_COL32(230, 30, 30, 255);
                 }
+
+                if (current_sample_abs > 0.7) {
+                    return IM_COL32(230, 230, 30, 255);
+                }
+
+                return IM_COL32(30, 230, 30, 255);
             }()
         };
 
@@ -1551,7 +1553,7 @@ namespace application {
             return;
         }
 
-        ImGui::SetNextWindowPos(ImVec2(float(m_render_output_width / 2), float(m_render_output_height / 2)), ImGuiCond_Once, ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowPos(ImVec2(ImGui::GetMainViewport()->Size.x / 2.0f, ImGui::GetMainViewport()->Size.y / 2.0f), ImGuiCond_Once, ImVec2(0.5f, 0.5f));
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
 
@@ -1584,7 +1586,7 @@ namespace application {
             return;
         }
 
-        ImGui::SetNextWindowPos(ImVec2(float(m_render_output_width / 2), float(m_render_output_height / 2)), ImGuiCond_Once, ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowPos(ImVec2(ImGui::GetMainViewport()->Size.x / 2.0f, ImGui::GetMainViewport()->Size.y / 2.0f), ImGuiCond_Once, ImVec2(0.5f, 0.5f));
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
 
@@ -1629,7 +1631,7 @@ namespace application {
             return;
         }
 
-        ImGui::SetNextWindowPos(ImVec2(float(m_render_output_width / 2), float(m_render_output_height / 2)), ImGuiCond_Once, ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowPos(ImVec2(ImGui::GetMainViewport()->Size.x / 2.0f, ImGui::GetMainViewport()->Size.y / 2.0f), ImGuiCond_Once, ImVec2(0.5f, 0.5f));
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
 
@@ -1672,11 +1674,6 @@ namespace application {
 #ifndef ALFRED_DISTRIBUTION
         if (ImGui::Begin("Debug", nullptr, ImGuiWindowFlags_NoDocking)) {
             ImGui::Text("Frame time: %f", frame_time());
-
-            if (ImGui::SmallButton("Write Settings")) {
-                ImGui::SaveIniSettingsToDisk("imguid.ini");
-            }
-
             ImGui::Text("m_synthesizer.current_voices() %zu", m_synthesizer.current_voices());
             ImGui::Text("m_player.get_position() %u", m_player.position());
             ImGui::Text("m_composition_not_compiled %d", m_composition_not_compiled);

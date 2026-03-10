@@ -16,6 +16,8 @@
 
 #include "flat_set.hpp"
 
+// Everything about sequencing and modeling musical concepts
+
 namespace seq {
     using Beats = std::uint32_t;
 
@@ -343,14 +345,22 @@ namespace seq {
         using Executions = std::unordered_map<syn::InstrumentId, Execution>;
     }
 
+    // Class used to play a series of notes, a composition, using a synthesizer
+    // It stores a reference to the composition, so every time the former changes, the player needs to update its internals, to "compile" the composition
+    // The player is a runtime concept, so it is tied to wall clock time and needs to be updated as often as possible
     class Player {
     public:
         Player() = default;
         Player(synthesizer::Synthesizer& synthesizer, const Composition& composition, std::function<void()> stopped);
 
+        // "Compile" the current composition
         void prepare();
+
+        // Start/stop the player
         void start();
         void stop();
+
+        // Reset the cursor position, in steps
         void seek(std::uint32_t position);
 
         double elapsed_time() const { return m_elapsed_time; }
@@ -359,6 +369,7 @@ namespace seq {
         bool in_time() const { return m_in_time; }
         void metronome(bool metronome) { m_metronome = metronome; }
 
+        // Needs to be called as often as possible
         void update(double dt);
     private:
         void initialize(std::uint32_t position);

@@ -84,10 +84,6 @@ namespace video {
 
             m_keyboard_state = SDL_GetKeyboardState(nullptr);
 
-            if (!SDL_GetRenderOutputSize(m_renderer, &m_render_output_width, &m_render_output_height)) {
-                throw VideoError(std::format("SDL_GetRenderOutputSize: {}", SDL_GetError()));
-            }
-
             on_update();
 
             if (m_imgui_accumulator_time > IMGUI_UPDATE_INTERVAL) {
