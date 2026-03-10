@@ -237,7 +237,7 @@ namespace syn {
     };
 
     // In decibels
-    using Volume = int;
+    using Volume = std::int32_t;
 
     inline constexpr Volume VOLUME_MIN {-40};
     inline constexpr Volume VOLUME_DEFAULT {};
