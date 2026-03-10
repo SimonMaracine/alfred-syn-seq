@@ -18,6 +18,8 @@ Compositions can be rendered to uncompressed WAV files. One can choose to normal
 
 Compositions can be saved and opened from disk from the `File` menu. `Open Recent` displays recently saved and opened compositions.
 
+Alfred's synthesizer works differently whether the player is currently runnig or not. When the player is not running, the synthesizer is usually used for testing and so it's called *the test synthesizer*. However, when the player is running, the synthesizer automatically changes some of its parameters in order to play the composition.
+
 ## Composition
 
 It is the main work area where measures and notes and placed, inserted, removed, edited etc.

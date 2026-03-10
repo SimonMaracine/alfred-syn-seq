@@ -35,7 +35,7 @@ Alfred works with 16-bit samples, one channel, and frequency 44100 Hz.
 Alfred was at least built and tested on:
 
 - Fedora Linux 43, GNOME 49, Wayland, PipeWire, GCC 15.2, CMake 3.31
-- Ubuntu 25.04, GNOME 48, X11 (Xwayland), PipeWire, GCC 14.2, CMake 3.31
+- Ubuntu 25.04, GNOME 48, Wayland (Xwayland), PipeWire, GCC 14.2, CMake 3.31
 - Windows 11 25H2, WASAPI, MSVC 19.50, CMake 4.3
 
 Additionally, it was at least tested on:
