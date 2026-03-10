@@ -8,7 +8,7 @@ It is same instrument + pitch monophonic, otherwise it supports up to twelve voi
 
 The synthesized sounds are meant to be *suggestions* and *hints*, rather than realistic emulations.
 
-I built this program for myself, as a reason to try out the art of music composition. Of course MuseScore already exists, but isn't it nice to make your own tooling?
+I built this program for myself, as a reason to try out the art of music composition. Of course, MuseScore already exists, but isn't it nice to make your own tooling?
 
 Read the manual [here](MANUAL.md).
 
@@ -28,6 +28,8 @@ Currently, Alfred is in its infancy, so its current instruments are not well-mad
 
 Alfred works with 16-bit samples, one channel, and frequency 44100 Hz.
 
+The `main` branch is used for development, containing the newest bug fixes and features, while the `release` branch always points to a commit corresponding to a release.
+
 ![Screenshot](gfx/screenshots/1.png)
 
 ## Building, Installing and Packaging
@@ -46,6 +48,8 @@ Alfred is solely 64-bit software.
 
 Build in distribution/release mode for the best audio experience! Compiled without optimizations, due to low performance, the audio output can sometimes sound glitchy and bad!
 
+**Distribution** mode means compiling without asserts, additional debug code and generally for system integration. It differs from release mode, which merely means compiling with optimization flags. Thus it is technically possible to build Alfred for distrbution without optimiations and to build Alfred for development with optimizations enabled.
+
 ### Requirements
 
 - Git
@@ -53,6 +57,7 @@ Build in distribution/release mode for the best audio experience! Compiled witho
 - GCC or MSVC with C++23 support
 - Python
 - NSIS (Windows only)
+- SDL library dependencies (Linux only)
 
 ### Download
 
@@ -62,6 +67,13 @@ git submodule update --init
 ```
 
 ### Build (Distribution)
+
+See the available presets:
+
+```txt
+cmake --list-presets
+cmake --list-presets=build
+```
 
 #### Linux
 
@@ -123,7 +135,7 @@ cmake --build --preset build-dist-win --target package
 - [Cereal](https://github.com/USCiLab/cereal)
 - [FFTW](https://www.fftw.org/)
 
-The licenses are found in their respective directories.
+The licenses can be found in their respective directories.
 
 ## Material and Acknowledgements
 
