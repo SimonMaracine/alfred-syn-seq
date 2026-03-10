@@ -22,8 +22,11 @@ Currently, Alfred is in its infancy, so its current instruments are not well-mad
 - Plugins which dynamically add compiled instruments/presets
 - A graphical way to create, store and load runtime instruments/presets
 - Support for MIDI keyboard controllers
+- Presenting errors nicely instead of just silently logging them
 
 Alfred works with 16-bit samples, one channel, and frequency 44100 Hz.
+
+Read the manual [here](MANUAL.md).
 
 ![Screenshot](gfx/screenshots/1.png)
 
