@@ -157,11 +157,11 @@ namespace application {
         std_flat_set<syn::InstrumentId> active_instruments() const;
         bool point_x_in_camera_view(float point_x, float space_x) const;
         bool point_y_in_camera_view(float point_y, float space_y) const;
-        void readd_note(ProvenanceNote& provenance_note, const seq::Note& note) const;
-        void readd_note(NoteIter note_iter, MeasureIter measure, const seq::Note& note) const;
-        void reset_note_legato(const ProvenanceNote& provenance_note) const;
+        static void readd_note(ProvenanceNote& provenance_note, const seq::Note& note);
+        static void readd_note(syn::InstrumentId instrument, NoteIter note_iter, MeasureIter measure, const seq::Note& note);
+        static void reset_note_legato(const ProvenanceNote& provenance_note);
         void reset_note_legato_previous_measure(MeasureIter measure) const;
-        void play_note(const seq::Note& note);
+        void play_note(syn::InstrumentId instrument, const seq::Note& note);
 
         static void note_to_string(syn::NoteId note, char* buffer);
         static bool keyboard_active();
