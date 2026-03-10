@@ -221,7 +221,6 @@ namespace application {
 
         syn::InstrumentId m_instrument {};
         syn::keyboard::Octave m_octave {syn::keyboard::OctaveFourth};
-        seq::Loudness m_loudness {seq::Loudness::MezzoForte};
 
         ImVec2 m_composition_camera;
         MeasureIter m_composition_selected_measure;

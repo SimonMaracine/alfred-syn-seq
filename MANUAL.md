@@ -18,7 +18,9 @@ Compositions can be rendered to uncompressed WAV files. One can choose to normal
 
 Compositions can be saved and opened from disk from the `File` menu. `Open Recent` displays recently saved and opened compositions.
 
-Alfred's synthesizer works differently whether the player is currently runnig or not. When the player is not running, the synthesizer is usually used for testing and so it's called *the test synthesizer*. However, when the player is running, the synthesizer automatically changes some of its parameters in order to play the composition.
+Alfred's synthesizer works differently whether the player is currently running or not. When the player is not running, the synthesizer is usually used for testing and so it's called *the test synthesizer*. However, when the player is running, the synthesizer automatically changes some of its parameters in order to play the composition.
+
+The virtual keyboard always plays at full velocity.
 
 ## Composition
 
@@ -39,8 +41,6 @@ The player cursor can be moved by holding `Alt` and pressing `Left Click`.
 `Instrument` selector changes the current instrument/preset from the full list of available instruments/presets.
 
 `Octave` slider changes the octave of the test synthesizer.
-
-`Loudness` slider changes the loudness level of the test synthesizer.
 
 `Polyphony` slider changes the maximum number of voices of the test synthesizer.
 

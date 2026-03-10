@@ -160,7 +160,7 @@ namespace application {
             ImGuiID dock_id_left_top {};
             ImGuiID dock_id_left_bottom {};
 
-            ImGui::DockBuilderSplitNode(dock_id_left, ImGuiDir_Up, 0.78f, &dock_id_left_top, &dock_id_left_bottom);
+            ImGui::DockBuilderSplitNode(dock_id_left, ImGuiDir_Up, 0.75f, &dock_id_left_top, &dock_id_left_bottom);
 
             ImGuiID dock_id_right_top {};
             ImGuiID dock_id_right_bottom {dock_id_right};
@@ -552,15 +552,6 @@ namespace application {
 
             ImGui::Dummy(ui::rem(ImVec2(0.0f, 1.0f)));
 
-            ImGui::SeparatorText("Loudness");
-
-            if (ImGui::SliderInt("##loudness", &m_ui.loudness, ui::LoudnessPianississimo, ui::LoudnessFortississimo)) {
-                m_loudness = seq::Loudness(m_ui.loudness);
-                m_synthesizer.silence();
-            }
-
-            ImGui::Dummy(ui::rem(ImVec2(0.0f, 1.0f)));
-
             ImGui::SeparatorText("Polyphony");
 
             if (ImGui::SliderInt("##polyphony", &m_ui.polyphony, int(synthesizer::MIN_VOICES), int(synthesizer::MAX_VOICES))) {
@@ -601,8 +592,8 @@ namespace application {
         ImDrawList* draw_list {ImGui::GetWindowDrawList()};
         const ImVec2 position {ImGui::GetCursorScreenPos()};
 
-        const auto current_sample {float(math::map(std::abs(m_ui.current_output_sample), 0.0, 1.0, 0.0, 15.0))};
-        const auto past_sample {float(math::map(m_ui.past_output_sample_abs, 0.0, 1.0, 0.0, 15.0))};
+        const auto current_sample {float(math::map(std::min(std::abs(m_ui.current_output_sample), 1.0), 0.0, 1.0, 0.0, 15.0))};
+        const auto past_sample {float(math::map(std::min(m_ui.past_output_sample_abs, 1.0), 0.0, 1.0, 0.0, 15.0))};
 
         const ImU32 color {
             [current_sample_abs = std::abs(m_ui.current_output_sample)] {
@@ -1687,13 +1678,15 @@ namespace application {
     }
 
     void Application::keyboard_input(unsigned int key, bool down) {
-        auto update {[this, down](syn::NoteId id) {
-            if (down) {
-                m_synthesizer.note_on(id + m_octave * 12, m_instrument, seq::amplitude(m_loudness));
-            } else {
-                m_synthesizer.note_off(id + m_octave * 12, m_instrument);
+        auto update {
+            [this, down](syn::NoteId id) {
+                if (down) {
+                    m_synthesizer.note_on(id + m_octave * 12, m_instrument, seq::amplitude(seq::Loudness::Fortississimo));
+                } else {
+                    m_synthesizer.note_off(id + m_octave * 12, m_instrument);
+                }
             }
-        }};
+        };
 
         switch (key) {
             case SDLK_Z: update(0); break;
