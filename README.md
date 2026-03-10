@@ -10,6 +10,8 @@ The synthesized sounds are meant to be *suggestions* and *hints*, rather than re
 
 I built this program for myself, as a reason to try out the art of music composition. Of course MuseScore already exists, but isn't it nice to make your own tooling?
 
+Read the manual [here](MANUAL.md).
+
 ![Alfred](gfx/mascot/alfred.png)
 
 Alfred is split into two:
@@ -25,8 +27,6 @@ Currently, Alfred is in its infancy, so its current instruments are not well-mad
 - Presenting errors nicely instead of just silently logging them
 
 Alfred works with 16-bit samples, one channel, and frequency 44100 Hz.
-
-Read the manual [here](MANUAL.md).
 
 ![Screenshot](gfx/screenshots/1.png)
 
