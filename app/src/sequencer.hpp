@@ -9,6 +9,7 @@
 #include <functional>
 #include <algorithm>
 #include <iterator>
+#include <cstdint>
 
 #include <alfred/synthesizer.hpp>
 #include <alfred/math.hpp>
@@ -16,9 +17,9 @@
 #include "flat_set.hpp"
 
 namespace seq {
-    using Beats = unsigned int;
+    using Beats = std::uint32_t;
 
-    enum Value : unsigned int {
+    enum Value : std::uint32_t {
         Whole = 1,
         Half = 2,
         Quarter = 4,
@@ -26,43 +27,45 @@ namespace seq {
         Sixteenth = 16
     };
 
-    enum class Tuplet : unsigned int {
+    enum class Tuplet : std::uint32_t {
         None = 1,
         Triplet = 3
     };
 
     // A sixteenth divided by this is the step size
     // A step has variable length in seconds depending on the time signature and tempo
-    inline constexpr unsigned int DIVISION {3 * 5};
+    inline constexpr std::uint32_t DIVISION {3 * 5};
 
     // Chosen semi-arbitrarily :P
-    inline constexpr unsigned int MIN_DURATION {3};
+    inline constexpr std::uint32_t MIN_DURATION {3};
 
-    inline constexpr unsigned int DELAY_INCREMENT {1};
-    inline constexpr unsigned int MAX_DELAY {6};
+    inline constexpr std::uint32_t DELAY_INCREMENT {1};
+    inline constexpr std::uint32_t MAX_DELAY {6};
 
-    constexpr unsigned int steps(Value value) {
+    constexpr std::uint32_t steps(Value value) {
         return Sixteenth * DIVISION / value;
     }
 
-    constexpr unsigned int steps(Value value, Tuplet tuplet) {
-        return Sixteenth * DIVISION / value / static_cast<unsigned int>(tuplet);
+    constexpr std::uint32_t steps(Value value, Tuplet tuplet) {
+        return Sixteenth * DIVISION / value / std::uint32_t(tuplet);
     }
 
     // Quarters per minute
     class Tempo {
     public:
-        static constexpr unsigned int MIN {30};
-        static constexpr unsigned int MAX {240};
+        using Type = std::uint32_t;
+
+        static constexpr std::uint32_t MIN {30};
+        static constexpr std::uint32_t MAX {240};
 
         constexpr Tempo() = default;
-        constexpr explicit Tempo(unsigned int tempo)
+        constexpr explicit Tempo(std::uint32_t tempo)
             : m_tempo(tempo) {}
 
-        constexpr operator unsigned int() const { return m_tempo; }
+        constexpr operator std::uint32_t() const { return m_tempo; }
         constexpr auto operator<=>(const Tempo&) const = default;
     private:
-        unsigned int m_tempo {90};
+        std::uint32_t m_tempo {90};
     };
 
     class TimeSignature {
@@ -76,7 +79,7 @@ namespace seq {
 
         constexpr auto operator<=>(const TimeSignature&) const = default;
 
-        constexpr unsigned int measure_steps() const {
+        constexpr std::uint32_t measure_steps() const {
             return m_beats * steps(m_value);
         }
 
@@ -111,14 +114,14 @@ namespace seq {
 
     struct Note {
         Note() = default;
-        Note(syn::NoteId id, Value value, unsigned int position, Tuplet tuplet)
+        Note(syn::NoteId id, Value value, std::uint32_t position, Tuplet tuplet)
             : id(id), value(value), tuplet(tuplet), position(position) {}
 
         syn::NoteId id {};
         Value value {Whole};
         Tuplet tuplet {Tuplet::None};
-        unsigned int position {};  // Local, inside a measure
-        unsigned int delay {};  // Used for arpeggios
+        std::uint32_t position {};  // Local, inside a measure
+        std::uint32_t delay {};  // Used for arpeggios
         bool legato {};
 
         // Order the notes in the measure bottom to top, left to right
@@ -197,7 +200,7 @@ namespace seq {
         std::vector<Measure> measures;
 
         // In steps
-        unsigned int size() const;
+        std::uint32_t size() const;
 
         static bool note_first_in_measure(const Measure& measure, const Note& note);
         static bool note_last_in_measure(const Measure& measure, const Note& note);
@@ -301,13 +304,13 @@ namespace seq {
 
     namespace exec {
         struct Note {
-            Note(syn::NoteId id, double loudness, unsigned int position, unsigned int duration)
+            Note(syn::NoteId id, double loudness, std::uint32_t position, std::uint32_t duration)
                 : id(id), loudness(loudness), position(position), duration(duration) {}
 
             syn::NoteId id {};
             double loudness {};
-            unsigned int position {};  // Global, in the whole composition
-            unsigned int duration {};  // Number of steps
+            std::uint32_t position {};  // Global, in the whole composition
+            std::uint32_t duration {};  // Number of steps
         };
 
         struct UnplayedNote : Note {
@@ -346,26 +349,26 @@ namespace seq {
         void prepare();
         void start();
         void stop();
-        void seek(unsigned int position);
+        void seek(std::uint32_t position);
 
         double elapsed_time() const { return m_elapsed_time; }
-        unsigned int position() const { return m_position; }
+        std::uint32_t position() const { return m_position; }
         bool playing() const { return m_playing; }
         bool in_time() const { return m_in_time; }
         void metronome(bool metronome) { m_metronome = metronome; }
 
         void update(double dt);
     private:
-        void initialize(unsigned int position);
-        exec::Executions initialize_executions(unsigned int position) const;
-        ConstMeasureIter initialize_measure(unsigned int position) const;
-        double initialize_elapsed_time(unsigned int position) const;
-        unsigned int initialize_measure_position(unsigned int position) const;
-        unsigned int calculate_note_duration(ConstMeasureIter measure, syn::InstrumentId instrument, unsigned int position, unsigned int duration) const;
-        static double calculate_note_loudness(ConstMeasureIter measure, syn::InstrumentId instrument, unsigned int position, unsigned int duration);
-        static double calculate_step_time(ConstMeasureIter measure, unsigned int measure_position);
+        void initialize(std::uint32_t position);
+        exec::Executions initialize_executions(std::uint32_t position) const;
+        ConstMeasureIter initialize_measure(std::uint32_t position) const;
+        double initialize_elapsed_time(std::uint32_t position) const;
+        std::uint32_t initialize_measure_position(std::uint32_t position) const;
+        std::uint32_t calculate_note_duration(ConstMeasureIter measure, syn::InstrumentId instrument, std::uint32_t position, std::uint32_t duration) const;
+        static double calculate_note_loudness(ConstMeasureIter measure, syn::InstrumentId instrument, std::uint32_t position, std::uint32_t duration);
+        static double calculate_step_time(ConstMeasureIter measure, std::uint32_t measure_position);
         static double calculate_step_time(const Measure& measure, ConstantTempo tempo);
-        static double calculate_step_time(const Measure& measure, unsigned int measure_position, VaryingTempo tempo);
+        static double calculate_step_time(const Measure& measure, std::uint32_t measure_position, VaryingTempo tempo);
         bool finished() const;
         bool no_notes() const;
 
@@ -377,8 +380,8 @@ namespace seq {
         ConstMeasureIter m_measure;
         double m_accumulator_time {};
         double m_elapsed_time {};
-        unsigned int m_position {};  // Global position, like a cursor
-        unsigned int m_measure_position {};  // Local position in current measure
+        std::uint32_t m_position {};  // Global position, like a cursor
+        std::uint32_t m_measure_position {};  // Local position in current measure
         bool m_playing {};
         bool m_metronome {};
         bool m_in_time {true};  // If the player is able to keep up with the piece

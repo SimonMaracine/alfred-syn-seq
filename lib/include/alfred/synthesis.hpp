@@ -8,6 +8,7 @@
 #include <limits>
 #include <utility>
 #include <cmath>
+#include <cstdint>
 
 #include "alfred/audio.hpp"
 #include "alfred/allocator.hpp"
@@ -160,7 +161,7 @@ namespace syn {
 
     using EnvelopePtr = std::unique_ptr<Envelope>;
 
-    enum NoteName : unsigned int {
+    enum NoteName : std::uint32_t {
         A,
         As,
         B,
@@ -175,7 +176,7 @@ namespace syn {
         Gs
     };
 
-    enum NoteOctave : unsigned int {
+    enum NoteOctave : std::uint32_t {
         Octave0,
         Octave1,
         Octave2,
@@ -188,18 +189,18 @@ namespace syn {
     };
 
     // MIDI-like note ID
-    using NoteId = unsigned int;
+    using NoteId = std::uint32_t;
 
     // MIDI-like value from 0 to 1
     using Velocity = double;
 
-    using InstrumentId = unsigned int;
+    using InstrumentId = std::uint32_t;
 
     using InstrumentRange = std::pair<NoteId, NoteId>;
 
     constexpr NoteId note(NoteName name, NoteOctave octave) {
-        const unsigned int base {name};
-        const unsigned int multiplier {octave};
+        const std::uint32_t base {name};
+        const std::uint32_t multiplier {octave};
 
         if (base < 3) {
             return base + 12 * multiplier;
@@ -209,8 +210,8 @@ namespace syn {
     }
 
     constexpr std::pair<NoteName, NoteOctave> note(NoteId id) {
-        unsigned int octave {id / 12};
-        const unsigned int name {id % 12};
+        std::uint32_t octave {id / 12};
+        const std::uint32_t name {id % 12};
 
         if (name >= 3) {
             octave += 1;
@@ -247,7 +248,7 @@ namespace syn {
     }
 
     namespace keyboard {
-        enum Octave : unsigned int {
+        enum Octave : std::uint32_t {
             OctaveFirst,
             OctaveSecond,
             OctaveThird,
@@ -325,62 +326,6 @@ namespace syn {
             }
 
             return divisors;
-        }
-
-        template<std::size_t N>
-        constexpr double sound(double time, NoteId note, const std::array<double, N>& frequency_multipliers, const std::array<double, N>& amplitude_divisors) {
-            const auto amp {amplitudes(amplitude_divisors)};
-
-            double output {};
-
-            for (std::size_t i {}; i < N; i++) {
-                output += amp[i] * oscillator::sine(time, frequency_multipliers[i] * frequency(note));
-            }
-
-            return output;
-        }
-
-        template<std::size_t N>
-        constexpr double sound(double time, NoteId note, LowFrequencyOscillator lfo, const std::array<double, N>& frequency_multipliers, const std::array<double, N>& amplitude_divisors) {
-            const auto amp {amplitudes(amplitude_divisors)};
-
-            double output {};
-
-            output += amp[0] * oscillator::sine(time, frequency_multipliers[0] * frequency(note), lfo);
-
-            for (std::size_t i {1}; i < N; i++) {
-                output += amp[i] * oscillator::sine(time, frequency_multipliers[i] * frequency(note));
-            }
-
-            return output;
-        }
-
-        using Sound = double(*)(double, NoteId);
-
-        struct SoundAtTime {
-            double time {};
-            Sound sound {};
-        };
-
-        template<std::size_t N>
-        constexpr double sound(double time, double time_on, NoteId note, const std::array<SoundAtTime, N>& sounds_at_times) {
-            const double time_sample {time - time_on};
-
-            if (time_sample >= sounds_at_times.back().time) {
-                return sounds_at_times.back().sound(time, note);
-            }
-
-            for (std::size_t i {}; i < sounds_at_times.size() - 1; i++) {
-                if (time_sample >= sounds_at_times[i].time && time_sample < sounds_at_times[i + 1].time) {
-                    return sounds_at_times[i].sound(time, note);
-                }
-            }
-
-            if (time_sample < sounds_at_times.front().time) {
-                return sounds_at_times.front().sound(time, note);
-            }
-
-            std::unreachable();
         }
 
         double sound(double time, NoteId note, const double* sample, std::size_t size, double frequency);

@@ -4,6 +4,7 @@
 #include <string>
 #include <chrono>
 #include <stdexcept>
+#include <cstdint>
 
 #include <cereal/cereal.hpp>
 #include <cereal/types/base_class.hpp>
@@ -14,12 +15,12 @@
 namespace seq {
     template<typename Archive>
     void save(Archive& archive, const Tempo& self, const std::uint32_t) {
-        archive(static_cast<unsigned int>(self));
+        archive(Tempo::Type(self));
     }
 
     template<typename Archive>
     void load(Archive& archive, Tempo& self, const std::uint32_t) {
-        unsigned int tempo {};
+        Tempo::Type tempo {};
         archive(tempo);
         self = Tempo(tempo);
     }
@@ -81,12 +82,12 @@ namespace seq {
 namespace std::chrono {
     template<typename Archive>
     void save(Archive& archive, const year& self, const std::uint32_t) {
-        archive(int(self));
+        archive(std::int32_t(int(self)));
     }
 
     template<typename Archive>
     void load(Archive& archive, year& self, const std::uint32_t) {
-        int tempo {};
+        std::int32_t tempo {};
         archive(tempo);
         self = year(tempo);
     }

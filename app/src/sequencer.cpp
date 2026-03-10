@@ -7,8 +7,8 @@
 #include <alfred/instrument.hpp>
 
 namespace seq {
-    unsigned int Composition::size() const {
-        unsigned int steps {};
+    std::uint32_t Composition::size() const {
+        std::uint32_t steps {};
 
         for (const Measure& measure : measures) {
             steps += measure.time_signature.measure_steps();
@@ -44,7 +44,7 @@ namespace seq {
         m_synthesizer->silence();
     }
 
-    void Player::seek(unsigned int position) {
+    void Player::seek(std::uint32_t position) {
         m_position = position;
 
         m_playing = false;
@@ -137,16 +137,16 @@ namespace seq {
         }
     }
 
-    void Player::initialize(unsigned int position) {
+    void Player::initialize(std::uint32_t position) {
         m_executions = initialize_executions(position);
         m_measure = initialize_measure(position);
         m_elapsed_time = initialize_elapsed_time(position);
         m_measure_position = initialize_measure_position(position);
     }
 
-    exec::Executions Player::initialize_executions(unsigned int position) const {
+    exec::Executions Player::initialize_executions(std::uint32_t position) const {
         exec::Executions executions;
-        unsigned int steps {};
+        std::uint32_t steps {};
 
         std::unordered_map<syn::InstrumentId, std::vector<ProvenanceNote<ConstMeasureIter>>> processed_notes;
         Composition cloned_composition;
@@ -159,7 +159,7 @@ namespace seq {
             cloned_composition = *m_composition;
 
             for (auto measure {cloned_composition.measures.begin()}; measure != cloned_composition.measures.end(); measure++) {
-                for (unsigned int i {}; i < measure->time_signature.measure_steps(); i += seq::steps(measure->time_signature.value())) {
+                for (std::uint32_t i {}; i < measure->time_signature.measure_steps(); i += seq::steps(measure->time_signature.value())) {
                     measure->instruments[instrument::Metronome::static_id()].emplace(
                         i == 0 ? syn::note(syn::B, syn::Octave5) : syn::note(syn::A, syn::Octave5),
                         Sixteenth,
@@ -188,7 +188,7 @@ namespace seq {
                     }
 
                     NoteIter current_note {note};
-                    unsigned int duration {seq::steps(current_note->value, current_note->tuplet) - current_note->delay};
+                    std::uint32_t duration {seq::steps(current_note->value, current_note->tuplet) - current_note->delay};
 
                     while (current_note->legato) {
                         const auto next_note {
@@ -218,8 +218,8 @@ namespace seq {
         return executions;
     }
 
-    ConstMeasureIter Player::initialize_measure(unsigned int position) const {
-        unsigned int steps {};
+    ConstMeasureIter Player::initialize_measure(std::uint32_t position) const {
+        std::uint32_t steps {};
         ConstMeasureIter measure;
 
         for (measure = m_composition->measures.begin(); measure != m_composition->measures.end(); measure++) {
@@ -233,8 +233,8 @@ namespace seq {
         return measure;
     }
 
-    double Player::initialize_elapsed_time(unsigned int position) const {
-        unsigned int steps {};
+    double Player::initialize_elapsed_time(std::uint32_t position) const {
+        std::uint32_t steps {};
         double time {};
 
         for (const Measure& measure : m_composition->measures) {
@@ -243,7 +243,7 @@ namespace seq {
                     steps += measure.time_signature.measure_steps();
 
                     if (steps > position) {
-                        const unsigned int last_steps {measure.time_signature.measure_steps() - (steps - position)};
+                        const std::uint32_t last_steps {measure.time_signature.measure_steps() - (steps - position)};
 
                         time += double(last_steps) * measure.time_signature.step_time(std::get<0>(measure.agogic).tempo);
 
@@ -255,7 +255,7 @@ namespace seq {
                     break;
                 }
                 case 1: {
-                    for (unsigned int i {}; i < measure.time_signature.measure_steps(); i++) {
+                    for (std::uint32_t i {}; i < measure.time_signature.measure_steps(); i++) {
                         steps++;
                         time += calculate_step_time(measure, i, std::get<1>(measure.agogic));
 
@@ -272,8 +272,8 @@ namespace seq {
         return time;
     }
 
-    unsigned int Player::initialize_measure_position(unsigned int position) const {
-        unsigned int steps {};
+    std::uint32_t Player::initialize_measure_position(std::uint32_t position) const {
+        std::uint32_t steps {};
 
         for (const Measure& measure : m_composition->measures) {
             steps += measure.time_signature.measure_steps();
@@ -286,12 +286,12 @@ namespace seq {
         return steps;
     }
 
-    unsigned int Player::calculate_note_duration(ConstMeasureIter measure, syn::InstrumentId instrument, unsigned int position, unsigned int duration) const {
+    std::uint32_t Player::calculate_note_duration(ConstMeasureIter measure, syn::InstrumentId instrument, std::uint32_t position, std::uint32_t duration) const {
         static constexpr double RELEASE_TIME {1.0 / 3.0};
 
         const double step_time {calculate_step_time(measure, position)};
         const double release_time {m_synthesizer->get_instrument(instrument).release_duration() * RELEASE_TIME};
-        const unsigned int release_duration {static_cast<unsigned int>(std::ceil(release_time / step_time))};
+        const std::uint32_t release_duration {std::uint32_t(std::ceil(release_time / step_time))};
 
         if (release_duration > duration) {
             return MIN_DURATION;
@@ -300,7 +300,7 @@ namespace seq {
         return std::max(duration - release_duration, MIN_DURATION);
     }
 
-    double Player::calculate_note_loudness(ConstMeasureIter measure, syn::InstrumentId instrument, unsigned int position, unsigned int duration) {
+    double Player::calculate_note_loudness(ConstMeasureIter measure, syn::InstrumentId instrument, std::uint32_t position, std::uint32_t duration) {
         if (instrument == instrument::Metronome::static_id()) {
             return amplitude(Loudness::Fortississimo);
         }
@@ -321,7 +321,7 @@ namespace seq {
         std::unreachable();
     }
 
-    double Player::calculate_step_time(ConstMeasureIter measure, unsigned int measure_position) {
+    double Player::calculate_step_time(ConstMeasureIter measure, std::uint32_t measure_position) {
         switch (measure->agogic.index()) {
             case 0:
                 return calculate_step_time(*measure, std::get<0>(measure->agogic));
@@ -336,9 +336,9 @@ namespace seq {
         return measure.time_signature.step_time(tempo.tempo);
     }
 
-    double Player::calculate_step_time(const Measure& measure, unsigned int measure_position, VaryingTempo tempo) {
+    double Player::calculate_step_time(const Measure& measure, std::uint32_t measure_position, VaryingTempo tempo) {
         return measure.time_signature.step_time(Tempo(
-            static_cast<unsigned int>(math::map(
+            std::uint32_t(math::map(
                 double(measure_position),
                 0.0,
                 double(measure.time_signature.measure_steps() - 1),

@@ -1503,7 +1503,7 @@ namespace application {
     }
 
     bool Application::agogic() {
-        constexpr unsigned int one {1};
+        constexpr std::uint32_t one {1};
 
         bool result {};
 
@@ -1944,14 +1944,14 @@ namespace application {
         }
 
         float position_x {};
-        unsigned int global_position {};
+        std::uint32_t global_position {};
 
         for (auto measure {m_composition.measures.begin()}; measure != m_composition.measures.end(); measure++) {
             const float right {float(measure->time_signature.measure_steps()) * ui::rem(STEP_SIZE.x)};
 
             if (position.x >= position_x && position.x < position_x + right) {
                 const float offset {position.x - position_x};
-                const unsigned int result_position {static_cast<unsigned int>(offset / ui::rem(STEP_SIZE.x))};
+                const std::uint32_t result_position {std::uint32_t(offset / ui::rem(STEP_SIZE.x))};
 
                 return std::make_optional<HoveredNote>(
                     result_id,
@@ -1986,8 +1986,8 @@ namespace application {
         return std::nullopt;
     }
 
-    std::optional<unsigned int> Application::hover_position(ImVec2 position) const {
-        unsigned int result {};
+    std::optional<std::uint32_t> Application::hover_position(ImVec2 position) const {
+        std::uint32_t result {};
 
         for (float position_x {}; const seq::Measure& measure : m_composition.measures) {
             const float right {float(measure.time_signature.measure_steps()) * ui::rem(STEP_SIZE.x)};
@@ -1995,7 +1995,7 @@ namespace application {
             if (position.x >= position_x && position.x < position_x + right) {
                 const float offset {position.x - position_x};
 
-                result += static_cast<unsigned int>(offset / ui::rem(STEP_SIZE.x));
+                result += std::uint32_t(offset / ui::rem(STEP_SIZE.x));
 
                 return std::make_optional(result);
             }
@@ -2774,7 +2774,7 @@ namespace application {
     }
 
     bool Application::check_note_up_limit(const seq::Note& note) {
-        return note.id < static_cast<unsigned int>(syn::keyboard::NOTES - 1);
+        return note.id < std::uint32_t(syn::keyboard::NOTES - 1);
     }
 
     bool Application::check_note_down_limit(const seq::Note& note) {
@@ -3182,12 +3182,12 @@ namespace application {
         }
 
         auto time_line {std::make_unique<std::size_t[]>(composition.size())};
-        unsigned int steps {};
+        std::uint32_t steps {};
 
         for (const seq::Measure& measure : composition.measures) {
             for (const auto& notes: measure.instruments | std::views::values) {
                 for (const seq::Note& note : notes) {
-                    for (unsigned int i {}; i < seq::steps(note.value, note.tuplet); i++) {
+                    for (std::uint32_t i {}; i < seq::steps(note.value, note.tuplet); i++) {
                         time_line[steps + note.position + i]++;
                     }
                 }

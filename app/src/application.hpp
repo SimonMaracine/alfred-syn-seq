@@ -26,22 +26,22 @@ namespace application {
     class HoveredNote {
     public:
         HoveredNote() = default;
-        HoveredNote(syn::NoteId id, MeasureIter measure, unsigned int position, unsigned int global_position)
+        HoveredNote(syn::NoteId id, MeasureIter measure, std::uint32_t position, std::uint32_t global_position)
             : m_id(id), m_measure(measure), m_position(position), m_global_position(global_position) {}
 
         syn::NoteId id() const { return m_id; }
         MeasureIter measure() const { return m_measure; }
-        unsigned int position() const { return m_position; }
-        unsigned int global_position() const { return m_global_position; }
+        std::uint32_t position() const { return m_position; }
+        std::uint32_t global_position() const { return m_global_position; }
 
-        unsigned int measure_position() const {
+        std::uint32_t measure_position() const {
             return m_global_position - m_position;
         }
     private:
         syn::NoteId m_id {};
         MeasureIter m_measure;
-        unsigned int m_position {};
-        unsigned int m_global_position {};
+        std::uint32_t m_position {};
+        std::uint32_t m_global_position {};
     };
 
     struct Time {
@@ -128,7 +128,7 @@ namespace application {
         std::optional<MeasureIter> hover_measure(ImVec2 position);
         std::optional<HoveredNote> hover_note(ImVec2 position);
         std::optional<NoteIter> select_note(const HoveredNote& hovered_note) const;
-        std::optional<unsigned int> hover_position(ImVec2 position) const;
+        std::optional<std::uint32_t> hover_position(ImVec2 position) const;
         void do_with_note(const HoveredNote& hovered_note);
         void delete_notes();
         void legato_notes();

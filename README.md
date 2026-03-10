@@ -12,7 +12,36 @@ I built this program for myself, as a reason to try out the art of music composi
 
 ![Alfred](gfx/mascot/alfred.png)
 
+Alfred is split into two:
+
+- A synthesizer library worrying about synthesis-related things almost exclusively
+- A sequencer GUI application which enables playing notes and music, and which loosely models some sheet music concepts
+
+Currently, Alfred is in its infancy, so its current instruments are not well-made, and it is still missing some important features, which will probably be addressed with time:
+
+- Plugins which dynamically add compiled instruments/presets
+- A graphical way to create, store and load runtime instruments/presets
+- Support for MIDI keyboard controllers
+
+Alfred works with 16-bit samples, one channel, and frequency 44100 Hz.
+
+[//]: # (TODO picture)
+
 ## Building, Installing and Packaging
+
+Alfred was at least built and tested on:
+
+- Fedora Linux 43, GNOME 49, Wayland, PipeWire, GCC 15.2, CMake 3.31
+- Ubuntu 25.04, GNOME 48, X11 (Xwayland), PipeWire, GCC 14.2, CMake 3.31
+- ...
+
+Additionally, it was at least tested on:
+
+- ...
+
+Alfred is solely 64-bit software.
+
+Build in distribution/release mode for the best audio experience! Compiled without optimizations, due to low performance, the audio output can sometimes sound glitchy and bad!
 
 ### Requirements
 
@@ -91,6 +120,8 @@ cmake --build --preset build-dist-win --target package
 - [Cereal](https://github.com/USCiLab/cereal)
 - [FFTW](https://www.fftw.org/)
 
+The licenses are found in their respective directories.
+
 ## Material and Acknowledgements
 
 - PadSynth algorithm by Paul Nașca
@@ -100,6 +131,10 @@ cmake --build --preset build-dist-win --target package
 
 I give my thanks to my friend Tudor for sharing his knowledge of signal processing with me.
 
+## Credits
+
+One of the test compositions is the first section only from [I Secretly Love You](https://www.youtube.com/watch?v=7gYG95NG1YA) by Yuang Chen (Seycara Orchestral). 
+
 ---
 
-This software, even though it's free and open source, is not meant to be used for LLM training!
+This software, even though it's free and open source, is not meant to be consumed for LLM training!

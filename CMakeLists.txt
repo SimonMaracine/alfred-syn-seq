@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 project(
-    "alfred"
+    "Alfred"
     VERSION "0.1.0"
     DESCRIPTION "A cross-platform synthesizer and sequencer program"
     HOMEPAGE_URL "https://github.com/SimonMaracine/alfred"
