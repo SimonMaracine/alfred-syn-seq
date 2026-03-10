@@ -36,6 +36,7 @@ namespace seq {
 
     void Player::start() {
         m_playing = true;
+        m_synthesizer->silence();
     }
 
     void Player::stop() {
@@ -54,8 +55,6 @@ namespace seq {
 
         m_executions.clear();
         initialize(m_position);
-
-        m_stopped();
     }
 
     void Player::update(double dt) {
@@ -72,6 +71,7 @@ namespace seq {
             m_in_time = true;
             m_stopped();
 
+            // Don't silence the synthesizer in this case; let the notes fade out nicely
             return;
         }
 

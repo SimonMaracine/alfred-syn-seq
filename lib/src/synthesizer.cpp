@@ -127,8 +127,8 @@ namespace synthesizer {
 
             output +=
                 voice.amplitude *
-                voice.envelope->value() *  // FIXME technically a race condition
-                syn::amplitude(instrument->volume()) *
+                voice.envelope->value() *
+                syn::amplitude(instrument->volume()) *  // FIXME technically a race condition
                 instrument->sound(time, voice.time_on, voice.note);
         }
 

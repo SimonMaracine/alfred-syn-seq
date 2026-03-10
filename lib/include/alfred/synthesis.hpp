@@ -10,7 +10,6 @@
 #include <cmath>
 #include <cstdint>
 
-#include "alfred/audio.hpp"
 #include "alfred/allocator.hpp"
 
 namespace syn {

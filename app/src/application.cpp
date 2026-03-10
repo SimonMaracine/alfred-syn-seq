@@ -86,7 +86,7 @@ namespace application {
         io.IniFilename = nullptr;
 
         m_instrument = instrument::SynthPiano::static_id();
-        m_player = seq::Player(m_synthesizer, m_composition, [this] { desired_frame_time(FRAME_TIME_DEFAULT); });
+        m_player = seq::Player(m_synthesizer, m_composition, [this] { stop_player(); });
         m_composition_selected_measure = m_composition.measures.end();
 
         m_ui.volume = m_synthesizer.volume();
@@ -262,7 +262,7 @@ namespace application {
     }
 
     void Application::main_menu_bar_file() {
-        if (ImGui::MenuItem("New", "Ctrl+N")) {
+        if (ImGui::MenuItem("New", "Ctrl+N", false, !m_player.playing())) {
             file_new();
         }
 
@@ -270,7 +270,7 @@ namespace application {
             for (const auto [i, file_path] : m_data.recent_compositions | std::views::enumerate) {
                 ImGui::PushID(int(i));
 
-                if (ImGui::MenuItem(file_path.c_str())) {
+                if (ImGui::MenuItem(file_path.c_str(), nullptr, false, !m_player.playing())) {
                     if (!composition_open(file_path)) {
                         m_task_manager.add_immediate_task([this, &file_path] {
                             m_data.recent_compositions.erase(file_path);
@@ -285,15 +285,15 @@ namespace application {
             ImGui::EndMenu();
         }
 
-        if (ImGui::MenuItem("Open", "Ctrl+O")) {
+        if (ImGui::MenuItem("Open", "Ctrl+O", false, !m_player.playing())) {
             file_open();
         }
 
-        if (ImGui::MenuItem("Save", "Ctrl+S")) {
+        if (ImGui::MenuItem("Save", "Ctrl+S", false, !m_player.playing())) {
             file_save();
         }
 
-        if (ImGui::MenuItem("Render", "Ctrl+R")) {
+        if (ImGui::MenuItem("Render", "Ctrl+R", false, !m_player.playing())) {
             open_render_composition();
         }
 
@@ -303,11 +303,11 @@ namespace application {
     }
 
     void Application::main_menu_bar_edit() {
-        if (ImGui::MenuItem("Undo", "Ctrl+Z", false, !m_composition_history.undo.empty())) {
+        if (ImGui::MenuItem("Undo", "Ctrl+Z", false, !m_player.playing() && !m_composition_history.undo.empty())) {
             undo();
         }
 
-        if (ImGui::MenuItem("Redo", "Ctrl+Y", false, !m_composition_history.redo.empty())) {
+        if (ImGui::MenuItem("Redo", "Ctrl+Y", false, !m_player.playing() && !m_composition_history.redo.empty())) {
             redo();
         }
 
@@ -646,7 +646,7 @@ namespace application {
 
         if (ImGui::Begin("Playback", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize)) {
             if (ImGui::ImageButton("Rewind", reinterpret_cast<ImTextureID>(m_ui.texture_rewind.get()), SIZE, UV0, UV1, COLOR_BACKGROUND, COLOR_FOREGROUND)) {
-                m_player.seek(0);
+                seek_player(0);
             }
 
             ImGui::SetItemTooltip("Rewind the player to the beginning (Backspace)");
@@ -1255,32 +1255,34 @@ namespace application {
     }
 
     void Application::shortcuts() {
-        if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_N, ImGuiInputFlags_RouteAlways)) {
-            file_new();
-        }
-
-        if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_O, ImGuiInputFlags_RouteAlways)) {
-            file_open();
-        }
-
-        if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_S, ImGuiInputFlags_RouteAlways)) {
-            file_save();
-        }
-
-        if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_Z, ImGuiInputFlags_RouteAlways)) {
-            if (!m_composition_history.undo.empty()) {
-                undo();
+        if (!m_player.playing()) {
+            if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_N, ImGuiInputFlags_RouteAlways)) {
+                file_new();
             }
-        }
 
-        if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_Y, ImGuiInputFlags_RouteAlways)) {
-            if (!m_composition_history.redo.empty()) {
-                redo();
+            if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_O, ImGuiInputFlags_RouteAlways)) {
+                file_open();
             }
-        }
 
-        if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_R, ImGuiInputFlags_RouteAlways)) {
-            open_render_composition();
+            if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_S, ImGuiInputFlags_RouteAlways)) {
+                file_save();
+            }
+
+            if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_Z, ImGuiInputFlags_RouteAlways)) {
+                if (!m_composition_history.undo.empty()) {
+                    undo();
+                }
+            }
+
+            if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_Y, ImGuiInputFlags_RouteAlways)) {
+                if (!m_composition_history.redo.empty()) {
+                    redo();
+                }
+            }
+
+            if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_R, ImGuiInputFlags_RouteAlways)) {
+                open_render_composition();
+            }
         }
 
         if (ImGui::Shortcut(ImGuiKey_Space, ImGuiInputFlags_RouteAlways)) {
@@ -1292,7 +1294,7 @@ namespace application {
         }
 
         if (ImGui::Shortcut(ImGuiKey_Backspace, ImGuiInputFlags_RouteAlways)) {
-            m_player.seek(0);
+            seek_player(0);
         }
 
         if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_K, ImGuiInputFlags_RouteAlways)) {
@@ -1685,7 +1687,7 @@ namespace application {
     }
 
     void Application::keyboard_input(unsigned int key, bool down) {
-        const auto update {[this, down](syn::NoteId id) {
+        auto update {[this, down](syn::NoteId id) {
             if (down) {
                 m_synthesizer.note_on(id + m_octave * 12, m_instrument, seq::amplitude(m_loudness));
             } else {
@@ -1716,9 +1718,8 @@ namespace application {
     void Application::composition_mouse_pressed(ImVec2 origin) {
         if (ImGui::IsKeyDown(ImGuiMod_Alt)) {
             if (const auto position {hover_position(composition_mouse_position(origin))}; position) {
-                m_player.seek(*position);
+                seek_player(*position);
             }
-
             return;
         }
 
@@ -2417,8 +2418,7 @@ namespace application {
             m_composition_not_compiled = false;
         }
 
-        m_composition_selected_measure = m_composition.measures.end();
-        m_composition_selected_notes.clear();
+        reset_composition_selection();
 
         m_synthesizer.polyphony(optimal_composition_voices(m_composition));
         LOG_DEBUG("Set polyphony to {}", m_synthesizer.polyphony());
@@ -2435,6 +2435,14 @@ namespace application {
 
         m_synthesizer.polyphony(std::size_t(m_ui.polyphony));
         LOG_DEBUG("Reset polyphony to {}", m_synthesizer.polyphony());
+    }
+
+    void Application::seek_player(std::uint32_t position) {
+        if (m_player.playing()) {
+            stop_player();
+        }
+
+        m_player.seek(position);
     }
 
     void Application::modify_composition() {
@@ -2469,7 +2477,7 @@ namespace application {
     }
 
     void Application::reset_player_and_composition_selection() {
-        m_player.seek(0);
+        seek_player(0);
         reset_composition_selection();
     }
 
