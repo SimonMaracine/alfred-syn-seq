@@ -14,7 +14,7 @@ namespace ui {
         ImFontConfig config;
         config.SizePixels = font_size;
 
-        const auto font {io.Fonts->AddFontDefaultBitmap(&config)};
+        const auto font {io.Fonts->AddFontDefaultVector(&config)};
 
         if (!font) {
             throw UiError("Could not add font");
