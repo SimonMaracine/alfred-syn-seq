@@ -48,7 +48,7 @@ Alfred is solely 64-bit software.
 
 Build in distribution/release mode for the best audio experience! Compiled without optimizations, due to low performance, the audio output can sometimes sound glitchy and bad!
 
-**Distribution** mode means compiling without asserts, additional debug code and generally for system integration. It differs from release mode, which merely means compiling with optimization flags. Thus it is technically possible to build Alfred for distribution without optimizations and to build Alfred for development with optimizations enabled.
+**Distribution** mode means compiling without assertions, without additional debug code and generally for system integration. It differs from release mode, which merely means compiling with optimization flags. Thus it is technically possible to build Alfred for distribution without optimizations and to build Alfred for development with optimizations enabled.
 
 ### Requirements
 
