@@ -3149,7 +3149,7 @@ namespace application {
                 time_last_update = time_now;
 
                 m_task_manager.add_immediate_thread_safe_task([this, position = player.position(), size = composition.size()] {
-                    m_ui.render_progress = math::map(float(position), 0.0f, float(size), 0.0f, 0.9f);
+                    m_ui.render_progress = math::map(float(position), 0.0f, float(size), 0.0f, 0.95f);
                 });
             }
         }
