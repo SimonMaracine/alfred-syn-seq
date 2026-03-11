@@ -42,7 +42,7 @@ Alfred was at least built and tested on:
 
 Additionally, it was at least tested on:
 
-- ...
+- Linux Mint 22.3, Cinnamon 6.6, X11, PipeWire
 
 Alfred is solely 64-bit software.
 
@@ -57,7 +57,7 @@ Build in distribution/release mode for the best audio experience! Compiled witho
 - GCC or MSVC with C++23 support
 - Python
 - NSIS (Windows only)
-- SDL library dependencies (Linux only)
+- SDL dependencies packages - video, audio etc. libraries (Linux only)
 
 ### Download
 
