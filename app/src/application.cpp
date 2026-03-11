@@ -3225,6 +3225,7 @@ namespace application {
 
         m_composition_history.undo.pop();
 
+        modify_composition();
         reset_composition_selection();
         keep_player_cursor_valid();
     }
@@ -3240,6 +3241,7 @@ namespace application {
 
         m_composition_history.redo.pop();
 
+        modify_composition();
         reset_composition_selection();
         keep_player_cursor_valid();
     }
