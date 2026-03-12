@@ -64,6 +64,8 @@ namespace application {
         set_color_scheme(m_data.color_scheme);
         set_scale(m_data.scale);
 
+        reset_composition_instrument_colors();
+
         switch (m_data.scale) {
             case ui::Scale100:
             case ui::Scale125:
@@ -90,27 +92,17 @@ namespace application {
         m_composition_selected_measure = m_composition.measures.end();
 
         m_ui.volume = m_synthesizer.volume();
-        m_ui.device = m_synthesizer.device().second;
         m_ui.polyphony = int(m_synthesizer.polyphony());
         m_ui.texture_play = image::Texture(m_renderer, image::Surface(PLAY));
         m_ui.texture_pause = image::Texture(m_renderer, image::Surface(PAUSE));
         m_ui.texture_rewind = image::Texture(m_renderer, image::Surface(REWIND));
 
-        m_task_manager.add_repeatable_task([this] {
-            m_ui.device = m_synthesizer.device().second;
-            return false;
-        }, 5000);
-
+        // Synthesizer update routine
         m_task_manager.add_repeatable_task([this] {
             m_ui.current_output_sample = m_synthesizer.update();
             m_ui.past_output_sample_abs = std::max(m_ui.past_output_sample_abs, std::abs(m_ui.current_output_sample));
             return false;
         }, video::MAX_DELTA);
-
-        m_synthesizer.for_each_instrument([this, index = std::size_t()](const auto& instrument) mutable {
-            m_ui.colors[instrument.id()] = ui::ColorIndex(index);
-            index = (index + 1) % std::size(ui::COLORS);
-        });
     }
 
     void Application::on_stop() {
@@ -372,9 +364,9 @@ namespace application {
         }
     }
 
-    void Application::main_menu_bar_audio() {
+    void Application::main_menu_bar_audio() const {
         if (ImGui::BeginMenu("Device")) {
-            ImGui::Text("%s", m_ui.device);
+            ImGui::Text("%s", m_synthesizer.device().second);
 
             ImGui::EndMenu();
         }
@@ -491,7 +483,7 @@ namespace application {
 
             if (ImGui::BeginListBox("##active_instruments")) {
                 for (const auto instruments = active_instruments(); const syn::InstrumentId instrument : instruments) {
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(ui::COLORS[m_ui.colors.at(instrument)].second));
+                    ImGui::PushStyleColor(ImGuiCol_Text, ui::COLORS[m_ui.colors.at(instrument)].second);
 
                     if (ImGui::Selectable(m_synthesizer.get_instrument(instrument).name(), instrument == m_instrument)) {
                         m_instrument = instrument;
@@ -511,10 +503,12 @@ namespace application {
 
             if (ImGui::BeginCombo("##color", ui::COLORS[m_ui.colors.at(m_instrument)].first, ImGuiComboFlags_NoArrowButton)) {
                 for (std::size_t i {}; i < std::size(ui::COLORS); i++) {
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(ui::COLORS[i].second));
+                    ImGui::PushStyleColor(ImGuiCol_Text, ui::COLORS[i].second);
 
                     if (ImGui::Selectable(ui::COLORS[i].first, m_ui.colors.at(m_instrument) == i)) {
                         m_ui.colors.at(m_instrument) = ui::ColorIndex(i);
+                        m_composition.instrument_colors[m_instrument] = ui::ColorIndex(i);
+                        modify_composition_metadata();
                     }
 
                     ImGui::PopStyleColor();
@@ -1595,7 +1589,7 @@ namespace application {
 
                 ImGui::PushID(name);
 
-                ImGui::TextColored(ui::COLORS[m_ui.colors.at(instrument)].second, "%s", name);
+                ImGui::TextColored(ImColor(ui::COLORS[m_ui.colors.at(instrument)].second), "%s", name);
 
                 ImGui::SameLine();
 
@@ -2467,9 +2461,11 @@ namespace application {
         m_composition_selected_notes.clear();
     }
 
-    void Application::reset_player_and_composition_selection() {
+    void Application::reset_everything() {
         seek_player(0);
         reset_composition_selection();
+        m_composition_camera = {};
+        m_composition_history = {};
     }
 
     void Application::set_title_composition_not_saved() const {
@@ -2985,11 +2981,12 @@ namespace application {
         std::strncpy(m_ui.composition.author, m_composition.author.c_str(), sizeof(m_ui.composition.author) - 1);
         m_ui.composition.year = short(int(m_composition.year));
 
-        reset_player_and_composition_selection();
+        reset_everything();
         reset_composition_flags();
         invalidate_composition();
         set_title_composition_saved();
         set_synthesizer_instrument_volumes(m_synthesizer);
+        set_composition_instrument_colors();
 
         return true;
     }
@@ -2999,10 +2996,11 @@ namespace application {
         m_composition = {};
         m_ui.composition = {};
 
-        reset_player_and_composition_selection();
+        reset_everything();
         reset_composition_flags();
         set_title_composition_saved();
         reset_synthesizer_instrument_volumes(m_synthesizer);
+        reset_composition_instrument_colors();
     }
 
     void Application::file_new() {
@@ -3269,6 +3267,21 @@ namespace application {
     void Application::reset_synthesizer_instrument_volumes(synthesizer::Synthesizer& synthesizer) {
         synthesizer.for_each_instrument([](syn::Instrument& instrument) {
             instrument.volume(syn::VOLUME_DEFAULT);
+        });
+    }
+
+    void Application::set_composition_instrument_colors() {
+        reset_composition_instrument_colors();
+
+        for (const auto& [instrument, color] : m_composition.instrument_colors) {
+            m_ui.colors[instrument] = color;
+        }
+    }
+
+    void Application::reset_composition_instrument_colors() {
+        m_synthesizer.for_each_instrument([this, index = std::size_t()](const auto& instrument) mutable {
+            m_ui.colors[instrument.id()] = ui::ColorIndex(index);
+            index = (index + 1) % std::size(ui::COLORS);
         });
     }
 }

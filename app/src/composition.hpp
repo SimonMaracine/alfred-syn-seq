@@ -11,6 +11,7 @@
 
 #include "sequencer.hpp"
 #include "utility.hpp"
+#include "ui.hpp"
 
 // Composition data + serialization
 
@@ -100,6 +101,9 @@ namespace composition {
         // Mixer
         std::unordered_map<syn::InstrumentId, syn::Volume> instrument_volumes;
 
+        // UI
+        std::unordered_map<syn::InstrumentId, ui::ColorIndex> instrument_colors;
+
         // Metadata
         std::string title;
         std::string author;
@@ -107,12 +111,12 @@ namespace composition {
 
         template<typename Archive>
         void save(Archive& archive, const std::uint32_t) const {
-            archive(cereal::base_class<seq::Composition>(this), instrument_volumes, title, author, year);
+            archive(cereal::base_class<seq::Composition>(this), instrument_volumes, instrument_colors, title, author, year);
         }
 
         template<typename Archive>
         void load(Archive& archive, const std::uint32_t) {
-            archive(cereal::base_class<seq::Composition>(this), instrument_volumes, title, author, year);
+            archive(cereal::base_class<seq::Composition>(this), instrument_volumes, instrument_colors, title, author, year);
         }
     };
 

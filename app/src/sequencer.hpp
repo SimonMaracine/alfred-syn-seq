@@ -306,6 +306,7 @@ namespace seq {
         }
     };
 
+    // Data types used by the player for playback
     namespace exec {
         struct Note {
             Note(syn::NoteId id, double loudness, std::uint32_t position, std::uint32_t duration)

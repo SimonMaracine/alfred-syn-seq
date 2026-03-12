@@ -83,7 +83,7 @@ namespace application {
         void main_menu_bar_edit();
         void main_menu_bar_composition();
         void main_menu_bar_options();
-        void main_menu_bar_audio();
+        void main_menu_bar_audio() const;
         void main_menu_bar_help();
         void keyboard() const;
         void keyboard_key(const Draw& draw, char key, float x, float y, int scancode) const;
@@ -147,7 +147,7 @@ namespace application {
         void invalidate_composition();
         void reset_composition_flags();
         void reset_composition_selection();
-        void reset_player_and_composition_selection();
+        void reset_everything();
         void set_title_composition_not_saved() const;
         void set_title_composition_saved() const;
         static void set_color_scheme(ui::ColorScheme color_scheme);
@@ -215,6 +215,8 @@ namespace application {
         void keep_player_cursor_valid();
         void set_synthesizer_instrument_volumes(synthesizer::Synthesizer& synthesizer);
         static void reset_synthesizer_instrument_volumes(synthesizer::Synthesizer& synthesizer);
+        void set_composition_instrument_colors();
+        void reset_composition_instrument_colors();
 
         data::Data m_data;
         task::TaskManager m_task_manager;
@@ -247,7 +249,6 @@ namespace application {
             double volume {};
             double current_output_sample {};
             double past_output_sample_abs {};
-            const char* device {};
             bool render_normalize = true;
             float render_progress {};
             char render_file_path[256] {};

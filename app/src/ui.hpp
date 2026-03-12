@@ -2,6 +2,7 @@
 
 #include <utility>
 #include <stdexcept>
+#include <cstdint>
 
 #include <imgui.h>
 
@@ -111,27 +112,27 @@ namespace ui {
 
     // https://www.colorhexa.com/color-names
 
-    using ColorIndex = unsigned int;
+    using ColorIndex = std::uint32_t;  // These are serialized
 
-    inline constexpr std::pair<const char*, ImColor> COLORS[] {
-        { "Ash grey", ImColor(178, 190, 181) },
-        { "Debian red", ImColor(215, 10, 83) },
-        { "Amethyst", ImColor(153, 102, 204) },
-        { "Bright pink", ImColor(255, 0, 127) },
-        { "India green", ImColor(19, 136, 8) },
-        { "Azure", ImColor(0, 127, 255) },
-        { "Lemon", ImColor(255, 247, 0) },
-        { "Antique fuchsia", ImColor(145, 92, 131) },
-        { "Pastel blue", ImColor(174, 198, 207) },
-        { "Bittersweet", ImColor(254, 111, 94) },
-        { "Pale lavender", ImColor(220, 208, 255) },
-        { "Blue violet", ImColor(138, 43, 226) },
-        { "Medium Blue", ImColor(0, 0, 205) },
-        { "Android green", ImColor(164, 198, 67) },
-        { "Bright green", ImColor(102, 255, 0) },
-        { "Bronze", ImColor(205, 127, 50) },
-        { "Army green", ImColor(75, 83, 32) },
-        { "Amber", ImColor(255, 191, 0) }
+    inline constexpr std::pair<const char*, ImU32> COLORS[] {
+        { "Ash grey", IM_COL32(178, 190, 181, 255) },
+        { "Debian red", IM_COL32(215, 10, 83, 255) },
+        { "Amethyst", IM_COL32(153, 102, 204, 255) },
+        { "Bright pink", IM_COL32(255, 0, 127, 255) },
+        { "India green", IM_COL32(19, 136, 8, 255) },
+        { "Azure", IM_COL32(0, 127, 255, 255) },
+        { "Lemon", IM_COL32(255, 247, 0, 255) },
+        { "Antique fuchsia", IM_COL32(145, 92, 131, 255) },
+        { "Pastel blue", IM_COL32(174, 198, 207, 255) },
+        { "Bittersweet", IM_COL32(254, 111, 94, 255) },
+        { "Pale lavender", IM_COL32(220, 208, 255, 255) },
+        { "Blue violet", IM_COL32(138, 43, 226, 255) },
+        { "Medium Blue", IM_COL32(0, 0, 205, 255) },
+        { "Android green", IM_COL32(164, 198, 67, 255) },
+        { "Bright green", IM_COL32(102, 255, 0, 255) },
+        { "Bronze", IM_COL32(205, 127, 50, 255) },
+        { "Army green", IM_COL32(75, 83, 32, 255) },
+        { "Amber", IM_COL32(255, 191, 0, 255) }
     };
 
     struct Composition {
