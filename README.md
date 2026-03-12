@@ -28,8 +28,6 @@ Currently, Alfred is in its infancy, so its current instruments are not well-mad
 
 Alfred works with 16-bit samples, one channel, and frequency 44100 Hz.
 
-The `main` branch is used for development, containing the newest bug fixes and features, while the `release` branch always points to a commit corresponding to a release.
-
 ![Screenshot](gfx/screenshots/1.png)
 
 ## Building, Installing and Packaging
@@ -48,7 +46,7 @@ Alfred is solely 64-bit software.
 
 Build in distribution/release mode for the best audio experience! Compiled without optimizations, due to low performance, the audio output can sometimes sound glitchy and bad!
 
-**Distribution** mode means compiling without assertions, without additional debug code and generally for system integration. It differs from release mode, which merely means compiling with optimization flags. Thus it is technically possible to build Alfred for distribution without optimizations and to build Alfred for development with optimizations enabled.
+**Distribution** mode means compiling without assertions, without additional debug code and generally for system integration. It differs from release mode, which merely means compiling with optimization flags enabled.
 
 ### Requirements
 
@@ -57,7 +55,7 @@ Build in distribution/release mode for the best audio experience! Compiled witho
 - GCC or MSVC with C++23 support
 - Python
 - NSIS (Windows only)
-- SDL dependencies packages - video, audio etc. libraries (Linux only)
+- SDL dependency packages - video, audio etc. libraries (Linux only)
 
 ### Download
 
@@ -66,7 +64,7 @@ git clone https://github.com/SimonMaracine/alfred
 git submodule update --init
 ```
 
-### Build (Distribution)
+### Build
 
 See the available presets:
 
@@ -78,6 +76,9 @@ cmake --list-presets=build
 #### Linux
 
 ```txt
+cmake --preset conf-dev-nix
+cmake --build --preset build-dev-nix
+
 cmake --preset conf-dist-nix
 cmake --build --preset build-dist-nix
 ```
@@ -85,6 +86,9 @@ cmake --build --preset build-dist-nix
 #### Windows
 
 ```txt
+cmake --preset conf-dev-win
+cmake --build --preset build-dev-win
+
 cmake --preset conf-dist-win
 cmake --build --preset build-dist-win
 ```
@@ -137,7 +141,11 @@ cmake --build --preset build-dist-win --target package
 
 The licenses can be found in their respective directories.
 
-## Material and Acknowledgements
+## Contributing
+
+The `main` branch is used for development, containing the newest bug fixes and features, while the `release` branch always points to a commit corresponding to a release.
+
+## Initial Material and Acknowledgements
 
 - PadSynth algorithm by Paul Nașca
 - Sound Synthesis and Sampling Second Edition by Martin Russ
