@@ -28,7 +28,9 @@ It is the main work area where measures and notes and placed, inserted, removed,
 
 Camera is moved by dragging the mouse with `Right Click` or by scrolling the wheel. Hold `Shift` while scrolling to change the axis.
 
-Measures and notes are selected/deselected and new notes are placed with `Left Click`. 
+Measures and notes are selected/deselected and new notes are placed with `Left Click`.
+
+Multiple notes can be selected with `Left Click` while holding down `Ctrl`.
 
 The player cursor can be moved by holding `Alt` and pressing `Left Click`.
 
