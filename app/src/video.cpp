@@ -10,14 +10,14 @@
 #include "logging.hpp"
 
 namespace video {
-    static constexpr unsigned long long IMGUI_UPDATE_INTERVAL {16 * SDL_NS_PER_MS};
+    static constexpr unsigned long long IMGUI_UPDATE_INTERVAL = 16 * SDL_NS_PER_MS;
 
     Video::Video() {
         if (!SDL_InitSubSystem(SDL_INIT_VIDEO)) {
             throw VideoError(std::format("SDL_InitSubSystem: {}", SDL_GetError()));
         }
 
-        static constexpr SDL_WindowFlags flags {SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN};
+        static constexpr SDL_WindowFlags flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN;
 
         if (!SDL_CreateWindowAndRenderer("Alfred", DEFAULT_WIDTH, DEFAULT_HEIGHT, flags, &m_window, &m_renderer)) {
             throw VideoError(std::format("SDL_CreateWindowAndRenderer: {}", SDL_GetError()));
@@ -125,9 +125,9 @@ namespace video {
             surfaces.emplace_back(icon);
         }
 
-        const image::SurfaceRef surface_first {surfaces.front()};
+        const image::SurfaceRef surface_first = surfaces.front();
 
-        for (auto surface {std::next(surfaces.begin())}; surface != surfaces.end(); surface++) {
+        for (auto surface = std::next(surfaces.begin()); surface != surfaces.end(); surface++) {
             surface_first.add_alternate(*surface);
         }
 

@@ -8,7 +8,7 @@
 // Functions and definitions used by the UI of the application
 
 namespace ui {
-    inline constexpr float FONT_SIZE {13.0f};
+    inline constexpr float FONT_SIZE = 13.0f;
 
     enum ColorScheme : unsigned int {
         ColorSchemeDark,
@@ -42,16 +42,16 @@ namespace ui {
 
     struct Dynamics {
         bool varying {};
-        Loudness loudness1 {LoudnessMezzoForte};
-        Loudness loudness2 {LoudnessMezzoForte};
+        Loudness loudness1 = LoudnessMezzoForte;
+        Loudness loudness2 = LoudnessMezzoForte;
     };
 
     using Tempo = unsigned int;
 
     struct Agogic {
         bool varying {};
-        Tempo tempo1 {90};
-        Tempo tempo2 {90};
+        Tempo tempo1 = 90;
+        Tempo tempo2 = 90;
     };
 
     struct TimeSignature {
@@ -82,8 +82,8 @@ namespace ui {
             Value16
         };
 
-        Beats beats {Beats4};
-        Value value {Value4};
+        Beats beats = Beats4;
+        Value value = Value4;
     };
 
     enum Value : int {

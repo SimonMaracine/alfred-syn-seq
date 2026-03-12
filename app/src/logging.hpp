@@ -44,9 +44,9 @@ namespace logging {
 
     template<Severity severity, typename... Args>
     void log(const std::source_location& location, std::format_string<Args...> fmt, Args&&... args) {
-        const auto time {chrono::system_clock::now()};
+        const auto time = chrono::system_clock::now();
         const TimeOfDay time_of_day {chrono::floor<chrono::seconds>(time - chrono::floor<chrono::days>(time))};
-        const auto message {std::format(fmt, std::forward<Args>(args)...)};
+        const auto message = std::format(fmt, std::forward<Args>(args)...);
 
         println_console(severity, location, time_of_day, message);
         println_file(severity, location, time_of_day, message);

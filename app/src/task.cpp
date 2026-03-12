@@ -27,17 +27,17 @@ namespace task {
     }
 
     void TaskManager::add_repeatable_task(RepeatableTaskFunction task_function, unsigned long long interval) {
-        RepeatableTask& task {m_repeatable_tasks_incoming.emplace_back(std::move(task_function), interval * SDL_NS_PER_MS)};
+        RepeatableTask& task = m_repeatable_tasks_incoming.emplace_back(std::move(task_function), interval * SDL_NS_PER_MS);
         task.m_last_time = SDL_GetTicksNS();
     }
 
     void TaskManager::add_delayed_task(DelayedTaskFunction task_function, unsigned long long delay) {
-        DelayedTask& task {m_delayed_tasks_incoming.emplace_back(std::move(task_function), delay * SDL_NS_PER_MS)};
+        DelayedTask& task = m_delayed_tasks_incoming.emplace_back(std::move(task_function), delay * SDL_NS_PER_MS);
         task.m_last_time = SDL_GetTicksNS();
     }
 
     void TaskManager::add_continuous_task(ContinuousTaskFunction task_function, unsigned long long interval) {
-        ContinuousTask& task {m_continuous_tasks_incoming.emplace_back(std::move(task_function), interval * SDL_NS_PER_MS)};
+        ContinuousTask& task = m_continuous_tasks_incoming.emplace_back(std::move(task_function), interval * SDL_NS_PER_MS);
         task.m_last_time = SDL_GetTicksNS();
     }
 
@@ -131,8 +131,8 @@ namespace task {
     void TaskManager::update_async_tasks() {
         std::exception_ptr last_exception;
 
-        for (auto before_iter {m_async_tasks.before_begin()}, iter {m_async_tasks.begin()}; iter != m_async_tasks.end();) {
-            const auto& task {*iter};
+        for (auto before_iter = m_async_tasks.before_begin(), iter = m_async_tasks.begin(); iter != m_async_tasks.end();) {
+            const auto& task = *iter;
 
             if (task.m_thread.get_stop_token().stop_requested()) {
                 if (task.m_exception) {
@@ -164,8 +164,8 @@ namespace task {
     }
 
     bool TaskManager::update_repeatable_task(RepeatableTask& task) {
-        const unsigned long long current_time {SDL_GetTicksNS()};
-        const unsigned long long elapsed_time {current_time - task.m_last_time};
+        const unsigned long long current_time = SDL_GetTicksNS();
+        const unsigned long long elapsed_time = current_time - task.m_last_time;
 
         task.m_last_time = current_time;
         task.m_total_time += elapsed_time;
@@ -185,8 +185,8 @@ namespace task {
     }
 
     bool TaskManager::update_delayed_task(DelayedTask& task) {
-        const unsigned long long current_time {SDL_GetTicksNS()};
-        const unsigned long long elapsed_time {current_time - task.m_last_time};
+        const unsigned long long current_time = SDL_GetTicksNS();
+        const unsigned long long elapsed_time = current_time - task.m_last_time;
 
         task.m_last_time = current_time;
         task.m_total_time += elapsed_time;
@@ -202,8 +202,8 @@ namespace task {
     }
 
     bool TaskManager::update_continuous_task(ContinuousTask& task) {
-        const unsigned long long current_time {SDL_GetTicksNS()};
-        const unsigned long long elapsed_time {current_time - task.m_last_time};
+        const unsigned long long current_time = SDL_GetTicksNS();
+        const unsigned long long elapsed_time = current_time - task.m_last_time;
 
         task.m_last_time = current_time;
         task.m_total_time += elapsed_time;

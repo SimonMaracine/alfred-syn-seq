@@ -5,16 +5,16 @@
 
 namespace ui {
     static void set_font(float scale) {
-        const float font_size {std::floor(FONT_SIZE * scale)};
+        const float font_size = std::floor(FONT_SIZE * scale);
 
-        ImGuiIO& io {ImGui::GetIO()};
+        ImGuiIO& io = ImGui::GetIO();
 
         io.Fonts->Clear();
 
         ImFontConfig config;
         config.SizePixels = font_size;
 
-        const auto font {io.Fonts->AddFontDefaultVector(&config)};
+        const auto font = io.Fonts->AddFontDefaultVector(&config);
 
         if (!font) {
             throw UiError("Could not add font");
@@ -24,9 +24,9 @@ namespace ui {
     }
 
     static void reset_style() {
-        const ImGuiStyle current_style {ImGui::GetStyle()};
+        const ImGuiStyle current_style = ImGui::GetStyle();
 
-        ImGuiStyle& style {ImGui::GetStyle()};
+        ImGuiStyle& style = ImGui::GetStyle();
 
         style = ImGuiStyle();
 

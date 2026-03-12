@@ -14,7 +14,7 @@ namespace image {
     }
 
     Surface::Surface(std::span<const unsigned char> buffer) {
-        SDL_IOStream* stream {SDL_IOFromConstMem(buffer.data(), buffer.size())};
+        SDL_IOStream* stream = SDL_IOFromConstMem(buffer.data(), buffer.size());
 
         if (!stream) {
             throw ImageError(std::format("SDL_IOFromConstMem: {}", SDL_GetError()));

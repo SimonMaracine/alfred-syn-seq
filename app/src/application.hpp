@@ -220,7 +220,7 @@ namespace application {
         task::TaskManager m_task_manager;
 
         syn::InstrumentId m_instrument {};
-        syn::keyboard::Octave m_octave {syn::keyboard::OctaveFourth};
+        syn::keyboard::Octave m_octave = syn::keyboard::OctaveFourth;
 
         ImVec2 m_composition_camera;
         MeasureIter m_composition_selected_measure;
@@ -234,21 +234,21 @@ namespace application {
 
         struct {
             bool metronome {};
-            int tool {ui::ToolMeasure};
-            int value {ui::ValueQuarter};
-            int tuplet {ui::TupletNone};
+            int tool = ui::ToolMeasure;
+            int value = ui::ValueQuarter;
+            int tuplet = ui::TupletNone;
             ui::Dynamics dynamics;
             ui::Agogic agogic;
             ui::TimeSignature time_signature;
             ui::Composition composition;
-            int octave {ui::OctaveFourth};
-            int loudness {ui::LoudnessMezzoForte};
+            int octave = ui::OctaveFourth;
+            int loudness = ui::LoudnessMezzoForte;
             int polyphony {};
             double volume {};
             double current_output_sample {};
             double past_output_sample_abs {};
             const char* device {};
-            bool render_normalize {true};
+            bool render_normalize = true;
             float render_progress {};
             char render_file_path[256] {};
             image::Texture texture_play;

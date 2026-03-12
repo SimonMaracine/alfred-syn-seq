@@ -5,7 +5,7 @@
 
 namespace instrument {
     double Metronome::sound(double time, double, syn::NoteId note) const noexcept {
-        static constexpr auto amp {syn::util::amplitudes(std::array { 1.0, 2.0, 4.0, 25.0 })};
+        static constexpr auto amp = syn::util::amplitudes(std::array { 1.0, 2.0, 4.0, 25.0 });
 
         return
             amp[0] * syn::oscillator::triangle(time, 1.0 * syn::frequency(note)) +
@@ -15,7 +15,7 @@ namespace instrument {
     }
 
     double Bell::sound(double time, double, syn::NoteId note) const noexcept {
-        static constexpr auto amp {syn::util::amplitudes(std::array { 1.0, 2.0, 4.0 })};
+        static constexpr auto amp = syn::util::amplitudes(std::array { 1.0, 2.0, 4.0 });
 
         return
             amp[0] * syn::oscillator::sine(time, 1.0 * syn::frequency(note), { 5.0, 0.001 }) +
@@ -24,7 +24,7 @@ namespace instrument {
     }
 
     double Harmonica::sound(double time, double, syn::NoteId note) const noexcept {
-        static constexpr auto amp {syn::util::amplitudes(std::array { 1.0, 2.0, 4.0, 50.0 })};
+        static constexpr auto amp = syn::util::amplitudes(std::array { 1.0, 2.0, 4.0, 50.0 });
 
         return
             amp[0] * syn::oscillator::square(time, 1.0 * syn::frequency(note), { 5.0, 0.001 }) +
@@ -34,8 +34,8 @@ namespace instrument {
     }
 
     double DrumBass::sound(double time, double, syn::NoteId) const noexcept {
-        static constexpr syn::NoteId C3 {15};
-        static constexpr auto amp {syn::util::amplitudes(std::array { 1.0, 6.0, 15.0 })};
+        static constexpr syn::NoteId C3 = 15;
+        static constexpr auto amp = syn::util::amplitudes(std::array { 1.0, 6.0, 15.0 });
 
         return
             amp[0] * syn::oscillator::sine(time, 1.0 * syn::frequency(C3)) +
@@ -44,8 +44,8 @@ namespace instrument {
     }
 
     double DrumSnare::sound(double time, double, syn::NoteId) const noexcept {
-        static constexpr syn::NoteId C3 {15};
-        static constexpr auto amp {syn::util::amplitudes(std::array { 1.0, 2.0, 4.0, 8.0, 5.0 })};
+        static constexpr syn::NoteId C3 = 15;
+        static constexpr auto amp = syn::util::amplitudes(std::array { 1.0, 2.0, 4.0, 8.0, 5.0 });
 
         return
             amp[0] * syn::oscillator::sine(time, 1.0 * syn::frequency(C3)) +
@@ -55,8 +55,8 @@ namespace instrument {
     }
 
     double DrumHiHat::sound(double time, double, syn::NoteId) const noexcept {
-        static constexpr syn::NoteId C4 {27};
-        static constexpr auto amp {syn::util::amplitudes(std::array { 1.0, 4.0, 0.5 })};
+        static constexpr syn::NoteId C4 = 27;
+        static constexpr auto amp = syn::util::amplitudes(std::array { 1.0, 4.0, 0.5 });
 
         return
             amp[0] * syn::oscillator::square(time, 1.0 * syn::frequency(C4)) +
@@ -65,7 +65,7 @@ namespace instrument {
     }
 
     double SynthPiano::sound(double time, double, syn::NoteId note) const noexcept {
-        static constexpr auto amp {syn::util::amplitudes(std::array { 40.0, 30.0, 1.0, 1.5, 6.0, 12.0, 20.0, 90.0 })};
+        static constexpr auto amp = syn::util::amplitudes(std::array { 40.0, 30.0, 1.0, 1.5, 6.0, 12.0, 20.0, 90.0 });
 
         return
             amp[0] * syn::oscillator::sine(time, 0.85 * syn::frequency(note)) +
@@ -79,7 +79,7 @@ namespace instrument {
     }
 
     double Guitar::sound(double time, double, syn::NoteId note) const noexcept {
-        static constexpr auto amp {syn::util::amplitudes(std::array { 1.0, 2.0, 4.0, 8.0 })};
+        static constexpr auto amp = syn::util::amplitudes(std::array { 1.0, 2.0, 4.0, 8.0 });
 
         return
             amp[0] * syn::oscillator::sine(time, 1.0 * syn::frequency(note), { 10.0, 0.00001 }) +
@@ -91,7 +91,7 @@ namespace instrument {
     Strings::Strings() {
         double amplitude_harmonics[64] {};
 
-        for (std::size_t i {1}; i < std::size(amplitude_harmonics); i++) {
+        for (std::size_t i = 1; i < std::size(amplitude_harmonics); i++) {
             amplitude_harmonics[i] = 1.0 / double(i);
 
             if (i % 2 == 0) {
@@ -116,7 +116,7 @@ namespace instrument {
     Cello::Cello() {
         double amplitude_harmonics[64] {};
 
-        for (std::size_t i {1}; i < std::size(amplitude_harmonics); i++) {
+        for (std::size_t i = 1; i < std::size(amplitude_harmonics); i++) {
             amplitude_harmonics[i] = 1.0 / double(i);
 
             if (i % 2 == 0) {

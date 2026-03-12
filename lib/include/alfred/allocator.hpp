@@ -12,8 +12,8 @@ namespace allocator {
     struct StaticAllocatorStorage {
     private:
         static consteval std::size_t calculate_block_size() {
-            const auto quot {BlockSize / BlockAlignment};  // TODO __cpp_lib_constexpr_cmath is still undefined
-            const auto rem {BlockSize % BlockAlignment};
+            const auto quot = BlockSize / BlockAlignment;  // TODO __cpp_lib_constexpr_cmath is still undefined
+            const auto rem = BlockSize % BlockAlignment;
 
             if (rem == 0) {
                 return BlockSize;
@@ -22,9 +22,9 @@ namespace allocator {
             return (quot + 1) * BlockAlignment;
         }
     public:
-        static constexpr auto STORAGE_SIZE {StorageSize};
-        static constexpr auto BLOCK_SIZE {calculate_block_size()};
-        static constexpr auto BLOCK_ALIGNMENT {BlockAlignment};
+        static constexpr auto STORAGE_SIZE = StorageSize;
+        static constexpr auto BLOCK_SIZE = calculate_block_size();
+        static constexpr auto BLOCK_ALIGNMENT = BlockAlignment;
 
         alignas(BLOCK_ALIGNMENT) unsigned char m_base[STORAGE_SIZE * BLOCK_SIZE] {};
         bool m_blocks[STORAGE_SIZE] {};
@@ -45,9 +45,9 @@ namespace allocator {
         static_assert(alignof(T) <= Storage::BLOCK_ALIGNMENT);
 
         value_type* allocate(size_type n) {
-            auto& storage {Storage::get()};
+            auto& storage = Storage::get();
 
-            for (size_type i {storage.m_pointer}; i < storage.STORAGE_SIZE - n + 1; i++) {
+            for (size_type i = storage.m_pointer; i < storage.STORAGE_SIZE - n + 1; i++) {
                 if (try_allocate(storage, i, n)) {
                     return reinterpret_cast<value_type*>(storage.m_base + Storage::BLOCK_SIZE * i);
                 }
@@ -67,10 +67,10 @@ namespace allocator {
         }
 
         void deallocate(value_type* p, size_type n) {
-            auto& storage {Storage::get()};
+            auto& storage = Storage::get();
 
-            const size_type block_pointer {reinterpret_cast<size_type>(p) - reinterpret_cast<size_type>(storage.m_base)};
-            const size_type index {block_pointer / Storage::BLOCK_SIZE};
+            const size_type block_pointer = reinterpret_cast<size_type>(p) - reinterpret_cast<size_type>(storage.m_base);
+            const size_type index = block_pointer / Storage::BLOCK_SIZE;
 
             std::for_each(storage.m_blocks + index, storage.m_blocks + index + n, [](bool& block) { block = false; });
         }

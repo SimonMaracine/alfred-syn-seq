@@ -14,7 +14,7 @@ namespace utility {
         }
 
         stream.seekg(0, stream.end);
-        const auto size {stream.tellg()};
+        const auto size = stream.tellg();
         stream.seekg(0, stream.beg);
 
         buffer.resize(std::size_t(size));
@@ -41,12 +41,11 @@ namespace utility {
 
     std::filesystem::path data_file_path([[maybe_unused]] const char* organization, [[maybe_unused]] const char* application) {
 #ifdef ALFRED_DISTRIBUTION
-        static const auto file_path {
+        static const auto file_path =
             std::unique_ptr<char, decltype(&SDL_free)>(
                 SDL_GetPrefPath(organization, application),
                 SDL_free
-            )
-        };
+            );
 
         return file_path.get();
 #else
@@ -59,7 +58,7 @@ namespace utility {
     }
 
     const char* get_property(const char* property) {
-        const char* value {SDL_GetAppMetadataProperty(property)};
+        const char* value = SDL_GetAppMetadataProperty(property);
 
         if (!value) {
             return "";

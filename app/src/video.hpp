@@ -11,9 +11,9 @@ struct SDL_Window;
 struct SDL_Renderer;
 
 namespace video {
-    inline constexpr int DEFAULT_WIDTH {1280};
-    inline constexpr int DEFAULT_HEIGHT {720};
-    inline constexpr auto MAX_DELTA {50ull};
+    inline constexpr int DEFAULT_WIDTH = 1280;
+    inline constexpr int DEFAULT_HEIGHT = 720;
+    inline constexpr auto MAX_DELTA = 50ull;
 
     // Represents an application window and a main loop
     class Video {
@@ -67,7 +67,7 @@ namespace video {
         SDL_Window* m_window {};
         SDL_Renderer* m_renderer {};
         char* m_working_directory {};
-        bool m_running {true};
+        bool m_running = true;
     private:
         void render();
 

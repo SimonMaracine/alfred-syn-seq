@@ -9,15 +9,14 @@ def _contents(file_name: str, mode: str) -> str:
         return file.read()
 
 
-def _contents_text(variable_name: str, file_name: str) -> str | Iterable[int]:
+def _contents_text(variable_name: str, file_name: str) -> str:
     return f"""
 #pragma once
 
 #include <string_view>
 
-inline constexpr std::string_view {variable_name} {{
-    R"({_contents(file_name, "r")})"
-}};
+inline constexpr std::string_view {variable_name} =
+    R"({_contents(file_name, "r")})";
 """
 
 def _contents_binary(variable_name: str, file_name: str) -> str:

@@ -9,8 +9,8 @@
 #include "alfred/synthesis.hpp"
 
 namespace synthesizer {
-    inline constexpr std::size_t MIN_VOICES {2};
-    inline constexpr std::size_t MAX_VOICES {12};
+    inline constexpr std::size_t MIN_VOICES = 2;
+    inline constexpr std::size_t MAX_VOICES = 12;
 
     // The synthesizer is responsible for instruments/presets storage and for voices handling and mixing
     // It needs to be regularly updated
@@ -51,7 +51,7 @@ namespace synthesizer {
 
         std::unordered_map<syn::InstrumentId, std::unique_ptr<syn::Instrument>> m_instruments;
         std::vector<syn::Voice> m_voices;
-        std::size_t m_max_voices {4};
+        std::size_t m_max_voices = 4;
     };
 
     // Real time synthesizer whose output is the computer speakers

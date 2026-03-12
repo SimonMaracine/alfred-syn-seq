@@ -36,13 +36,13 @@ namespace seq {
 
     // A sixteenth divided by this is the step size
     // A step has variable length in seconds depending on the time signature and tempo
-    inline constexpr std::uint32_t DIVISION {3 * 5};
+    inline constexpr std::uint32_t DIVISION = 3 * 5;
 
     // Chosen semi-arbitrarily :P
-    inline constexpr std::uint32_t MIN_DURATION {3};
+    inline constexpr std::uint32_t MIN_DURATION = 3;
 
-    inline constexpr std::uint32_t DELAY_INCREMENT {1};
-    inline constexpr std::uint32_t MAX_DELAY {6};
+    inline constexpr std::uint32_t DELAY_INCREMENT = 1;
+    inline constexpr std::uint32_t MAX_DELAY = 6;
 
     constexpr std::uint32_t steps(Value value) {
         return Sixteenth * DIVISION / value;
@@ -57,8 +57,8 @@ namespace seq {
     public:
         using Type = std::uint32_t;
 
-        static constexpr std::uint32_t MIN {30};
-        static constexpr std::uint32_t MAX {240};
+        static constexpr std::uint32_t MIN = 30;
+        static constexpr std::uint32_t MAX = 240;
 
         constexpr Tempo() = default;
         constexpr explicit Tempo(std::uint32_t tempo)
@@ -67,7 +67,7 @@ namespace seq {
         constexpr operator std::uint32_t() const { return m_tempo; }
         constexpr auto operator<=>(const Tempo&) const = default;
     private:
-        std::uint32_t m_tempo {90};
+        std::uint32_t m_tempo = 90;
     };
 
     class TimeSignature {
@@ -94,8 +94,8 @@ namespace seq {
             return double(tempo) / (double(Quarter) / double(m_value)) * double(steps(m_value));
         }
 
-        Beats m_beats {4};
-        Value m_value {Quarter};
+        Beats m_beats = 4;
+        Value m_value = Quarter;
     };
 
     enum class Loudness {
@@ -110,7 +110,7 @@ namespace seq {
     };
 
     constexpr double amplitude(Loudness loudness) {
-        const double value {math::map(double(loudness), double(Loudness::Pianississimo), double(Loudness::Fortississimo), 0.2, 1.0)};
+        const double value = math::map(double(loudness), double(Loudness::Pianississimo), double(Loudness::Fortississimo), 0.2, 1.0);
         return value * value;
     }
 
@@ -120,8 +120,8 @@ namespace seq {
             : id(id), value(value), tuplet(tuplet), position(position) {}
 
         syn::NoteId id {};
-        Value value {Whole};
-        Tuplet tuplet {Tuplet::None};
+        Value value = Whole;
+        Tuplet tuplet = Tuplet::None;
         std::uint32_t position {};  // Local, inside a measure
         std::uint32_t delay {};  // Used for arpeggios
         bool legato {};
@@ -143,12 +143,12 @@ namespace seq {
     using Notes = std::set<Note>;
 
     struct ConstantLoudness {
-        Loudness loudness {Loudness::MezzoForte};
+        Loudness loudness = Loudness::MezzoForte;
     };
 
     struct VaryingLoudness {
-        Loudness loudness_begin {Loudness::MezzoForte};
-        Loudness loudness_end {Loudness::MezzoForte};
+        Loudness loudness_begin = Loudness::MezzoForte;
+        Loudness loudness_end = Loudness::MezzoForte;
     };
 
     using Dynamics = std::variant<ConstantLoudness, VaryingLoudness>;
@@ -217,10 +217,10 @@ namespace seq {
         template<std::contiguous_iterator MeasureIter>
         std::optional<ProvenanceNote<MeasureIter>> check_note_has_next(MeasureIter measure, NoteIter note, syn::InstrumentId instrument) const {
             {
-                const auto& notes {measure->instruments.at(instrument)};
+                const auto& notes = measure->instruments.at(instrument);
 
                 if (note != notes.end()) {
-                    const auto next_note {std::next(note)};
+                    const auto next_note = std::next(note);
 
                     if (next_note != notes.end()) {
                         if (
@@ -234,10 +234,10 @@ namespace seq {
             }
 
             if (note_last_in_measure(*measure, *note)) {
-                const auto next_measure {std::next(measure)};
+                const auto next_measure = std::next(measure);
 
                 if (next_measure != measures.end() && next_measure->equal_signature(*measure)) {
-                    const auto notes {next_measure->instruments.find(instrument)};
+                    const auto notes = next_measure->instruments.find(instrument);
 
                     if (notes == next_measure->instruments.end()) {
                         return std::nullopt;
@@ -266,10 +266,10 @@ namespace seq {
         template<std::contiguous_iterator MeasureIter>
         std::optional<ProvenanceNote<MeasureIter>> check_note_has_previous(MeasureIter measure, NoteIter note, syn::InstrumentId instrument) const {
             {
-                const auto& notes {measure->instruments.at(instrument)};
+                const auto& notes = measure->instruments.at(instrument);
 
                 if (note != notes.begin()) {
-                    const auto previous_note {std::prev(note)};
+                    const auto previous_note = std::prev(note);
 
                     if (
                         previous_note->id == note->id &&
@@ -281,10 +281,10 @@ namespace seq {
             }
 
             if (note_first_in_measure(*measure, *note) && measure != measures.begin()) {
-                const auto previous_measure {std::prev(measure)};
+                const auto previous_measure = std::prev(measure);
 
                 if (previous_measure->equal_signature(*measure)) {
-                    const auto notes {previous_measure->instruments.find(instrument)};
+                    const auto notes = previous_measure->instruments.find(instrument);
 
                     if (notes == previous_measure->instruments.end()) {
                         return std::nullopt;
@@ -397,7 +397,7 @@ namespace seq {
         std::uint32_t m_measure_position {};  // Local position in current measure
         bool m_playing {};
         bool m_metronome {};
-        bool m_in_time {true};  // If the player is able to keep up with the piece
+        bool m_in_time = true;  // If the player is able to keep up with the piece
     };
 
     struct SequencerError : std::runtime_error {

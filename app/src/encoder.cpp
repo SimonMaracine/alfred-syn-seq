@@ -36,13 +36,13 @@ namespace encoder {
     };
 
     utility::Buffer encode_wav(std::size_t count, const double* samples) {
-        static constexpr std::uint16_t number_channels {1};
-        static constexpr std::uint32_t frequency {audio::SAMPLE_FREQUENCY};
-        static constexpr std::uint16_t bits_per_sample {audio::BITS_PER_SAMPLE};
-        static constexpr std::uint16_t bytes_per_block {number_channels * (bits_per_sample / 8)};
-        static constexpr std::uint32_t bytes_per_sec {frequency * bytes_per_block};
+        static constexpr std::uint16_t number_channels = 1;
+        static constexpr std::uint32_t frequency = audio::SAMPLE_FREQUENCY;
+        static constexpr std::uint16_t bits_per_sample = audio::BITS_PER_SAMPLE;
+        static constexpr std::uint16_t bytes_per_block = number_channels * (bits_per_sample / 8);
+        static constexpr std::uint32_t bytes_per_sec = frequency * bytes_per_block;
 
-        const std::size_t DataSize {count * bytes_per_block};
+        const std::size_t DataSize = count * bytes_per_block;
 
         RiffChunk riff_chunk;
         riff_chunk.file_size = std::uint32_t(sizeof(RiffChunk) + sizeof(FormatChunk) + sizeof(DataChunk) + DataSize);

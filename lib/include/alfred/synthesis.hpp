@@ -41,16 +41,16 @@ namespace syn {
     };
 
     struct DescriptionAdsr {
-        double duration_attack {0.1};
-        double duration_decay {0.02};
-        double duration_release {0.2};
-        double value_sustain {0.8};
+        double duration_attack = 0.1;
+        double duration_decay = 0.02;
+        double duration_release = 0.2;
+        double value_sustain = 0.8;
     };
 
     struct DescriptionAdr {
-        double duration_attack {0.1};
-        double duration_decay {1.0};
-        double duration_release {0.2};
+        double duration_attack = 0.1;
+        double duration_decay = 1.0;
+        double duration_release = 0.2;
     };
 
     class EnvelopeAdsrLinear : public Envelope, public allocator::StaticAllocated<EnvelopeAdsrLinear, EnvelopeStorage> {
@@ -209,8 +209,8 @@ namespace syn {
     using InstrumentRange = std::pair<NoteId, NoteId>;
 
     constexpr NoteId note(NoteName name, NoteOctave octave) {
-        const std::uint32_t base {name};
-        const std::uint32_t multiplier {octave};
+        const std::uint32_t base = name;
+        const std::uint32_t multiplier = octave;
 
         if (base < 3) {
             return base + 12 * multiplier;
@@ -220,8 +220,8 @@ namespace syn {
     }
 
     constexpr std::pair<NoteName, NoteOctave> note(NoteId id) {
-        std::uint32_t octave {id / 12};
-        const std::uint32_t name {id % 12};
+        std::uint32_t octave = id / 12;
+        const std::uint32_t name = id % 12;
 
         if (name >= 3) {
             octave += 1;
@@ -246,15 +246,15 @@ namespace syn {
         EnvelopePtr envelope;  // Overall envelope
         double amplitude {};
         double time_on {};
-        double time_off {-std::numeric_limits<double>::infinity()};
+        double time_off = -std::numeric_limits<double>::infinity();
     };
 
     // In decibels
     using Volume = std::int32_t;
 
-    inline constexpr Volume VOLUME_MIN {-40};
-    inline constexpr Volume VOLUME_DEFAULT {};
-    inline constexpr Volume VOLUME_MAX {12};
+    inline constexpr Volume VOLUME_MIN = -40;
+    inline constexpr Volume VOLUME_DEFAULT = 0;
+    inline constexpr Volume VOLUME_MAX = 12;
 
     inline double amplitude(Volume volume) {
         return std::pow(10.0, double(volume) / 20.0);
@@ -271,13 +271,13 @@ namespace syn {
             OctaveSeventh
         };
 
-        inline constexpr int OCTAVES {7};
-        inline constexpr int EXTRA {4};
-        inline constexpr int NOTES {OCTAVES * 12 + EXTRA};
+        inline constexpr int OCTAVES = 7;
+        inline constexpr int EXTRA = 4;
+        inline constexpr int NOTES = OCTAVES * 12 + EXTRA;
 
-        inline constexpr NoteId ID_BEGIN {0};
-        inline constexpr NoteId ID_END {NOTES - 1};
-        inline constexpr InstrumentRange ID_FULL_RANGE {std::make_pair(ID_BEGIN, ID_END)};
+        inline constexpr NoteId ID_BEGIN = 0;
+        inline constexpr NoteId ID_END = NOTES - 1;
+        inline constexpr InstrumentRange ID_FULL_RANGE = std::make_pair(ID_BEGIN, ID_END);
     }
 
     // An instrument (or also called preset) describes how some voice should sound
@@ -342,7 +342,7 @@ namespace syn {
                 divisors[i] = 1.0 / divisor;
             }
 
-            const double sum {std::accumulate(divisors.begin(), divisors.end(), 0.0)};
+            const double sum = std::accumulate(divisors.begin(), divisors.end(), 0.0);
 
             for (double& divisor : divisors) {
                 divisor /= sum;

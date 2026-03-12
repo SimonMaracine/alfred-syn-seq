@@ -48,8 +48,8 @@ namespace synthesizer {
             return;
         }
 
-        if (const auto voice {find_voice(note, instrument)}; voice == m_voices.end()) {
-            syn::Voice& new_voice {m_voices.emplace_back()};
+        if (const auto voice = find_voice(note, instrument); voice == m_voices.end()) {
+            syn::Voice& new_voice = m_voices.emplace_back();
             new_voice.note = note;
             new_voice.instrument = instrument;
             new_voice.envelope = m_instruments.at(instrument)->new_envelope();
@@ -70,7 +70,7 @@ namespace synthesizer {
             return;
         }
 
-        if (const auto voice {find_voice(note, instrument)}; voice != m_voices.end()) {
+        if (const auto voice = find_voice(note, instrument); voice != m_voices.end()) {
             if (voice->time_on > voice->time_off) {
                 voice->time_off = time;
                 voice->envelope->note_off(time);
@@ -87,7 +87,7 @@ namespace synthesizer {
             return voice.envelope->done();
         });
 
-        auto size {m_voices.size()};
+        auto size = m_voices.size();
 
         while (size > m_max_voices) {
             // Remove the oldest voice policy
@@ -123,7 +123,7 @@ namespace synthesizer {
         for (const syn::Voice& voice : m_voices) {
             // The update function should take care of nicely stopping voices, if there are too many
 
-            const auto& instrument {m_instruments.at(voice.instrument)};
+            const auto& instrument = m_instruments.at(voice.instrument);
 
             output +=
                 voice.amplitude *
@@ -197,7 +197,7 @@ namespace synthesizer {
         update_voices(m_time);
 
         sample_update(m_time);
-        const double sample {sample_sound(m_time)};
+        const double sample = sample_sound(m_time);
 
         m_buffer.push_back(math::clamp_sample(sample));
 

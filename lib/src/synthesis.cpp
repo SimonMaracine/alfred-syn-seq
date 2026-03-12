@@ -27,12 +27,12 @@ namespace syn {
     }
 
     static double increment_of_exponential(double t, double duration, double top = 1.0, double bottom = 0.0) {
-        static constexpr double eps {1.0 / double(audio::SAMPLE_FREQUENCY)};
+        static constexpr double eps = 1.0 / double(audio::SAMPLE_FREQUENCY);
         return std::abs(exponential(t + eps, duration, top, bottom) - exponential(t, duration, top, bottom));
     }
 
     static double increment_of_inverse_exponential(double t, double duration, double bottom = 0.0) {
-        static constexpr double eps {1.0 / double(audio::SAMPLE_FREQUENCY)};
+        static constexpr double eps = 1.0 / double(audio::SAMPLE_FREQUENCY);
         return std::abs(inverse_exponential(t + eps, duration, bottom) - inverse_exponential(t, duration, bottom));
     }
 
@@ -291,13 +291,13 @@ namespace syn {
         }
 
         double square(double time, double frequency) {
-            const double value {std::sin(math::w(frequency) * time)};
+            const double value = std::sin(math::w(frequency) * time);
 
             return value >= 0.0 ? 1.0 : -1.0;
         }
 
         double square(double time, double frequency, LowFrequencyOscillator lfo) {
-            const double value {std::sin(math::w(frequency) * time + frequency_modulation(time, frequency, lfo))};
+            const double value = std::sin(math::w(frequency) * time + frequency_modulation(time, frequency, lfo));
 
             return value >= 0.0 ? 1.0 : -1.0;
         }
@@ -313,7 +313,7 @@ namespace syn {
         double sawtooth(double time, double frequency) {
             double result {};
 
-            for (double n {1.0}; n < 10.0; n++) {
+            for (double n = 1.0; n < 10.0; n++) {
                 result += std::sin(n * math::w(frequency) * time) / n;
             }
 
@@ -323,7 +323,7 @@ namespace syn {
         double sawtooth(double time, double frequency, LowFrequencyOscillator lfo) {
             double result {};
 
-            for (double n {1.0}; n < 10.0; n++) {
+            for (double n = 1.0; n < 10.0; n++) {
                 result += std::sin(n * math::w(frequency) * time + frequency_modulation(time, frequency, lfo)) / n;
             }
 
@@ -350,20 +350,20 @@ namespace syn {
     }
 
     double frequency(NoteId note) {
-        static constexpr double BASE_FREQUENCY {27.5};  // A0
-        static constexpr double STEP_FREQUENCY {1.059463094};  // 2.0 ** (1.0 / 12.0)
+        static constexpr double BASE_FREQUENCY = 27.5;  // A0
+        static constexpr double STEP_FREQUENCY = 1.059463094;  // 2.0 ** (1.0 / 12.0)
 
         return BASE_FREQUENCY * std::pow(STEP_FREQUENCY, double(note));
     }
 
     namespace util {
         double sound(double time, NoteId note, const double* sample, std::size_t size, double frequency) {
-            const double sample_duration {double(size) / double(audio::SAMPLE_FREQUENCY)};
+            const double sample_duration = double(size) / double(audio::SAMPLE_FREQUENCY);
 
-            const double pitch {syn::frequency(note) / frequency};
+            const double pitch = syn::frequency(note) / frequency;
             double _;
-            const double part {std::modf(time * pitch / sample_duration, &_)};
-            const auto index {std::size_t(part * double(size))};
+            const double part = std::modf(time * pitch / sample_duration, &_);
+            const auto index = std::size_t(part * double(size));
 
             return sample[index];
         }
@@ -373,7 +373,7 @@ namespace syn {
 
     namespace padsynth {
         static double default_profile(double frequency, double bandwidth) {
-            const double x {frequency / bandwidth};
+            const double x = frequency / bandwidth;
             return std::exp(-x * x) / bandwidth;
         }
 
@@ -402,20 +402,19 @@ namespace syn {
                 profile = default_profile;
             }
 
-            auto sample {std::make_unique<double[]>(size)};
-            auto frequency_amplitudes {std::make_unique<double[]>(size / 2)};
-            auto frequency_phases {std::make_unique<double[]>(size / 2)};
+            auto sample = std::make_unique<double[]>(size);
+            auto frequency_amplitudes = std::make_unique<double[]>(size / 2);
+            auto frequency_phases = std::make_unique<double[]>(size / 2);
 
-            for (int harmonic {1}; harmonic < number_harmonics; harmonic++) {
-                const double harmonic_bandwidth {
-                    (std::exp2(bandwidth / 1200.0) - 1.0) * frequency * double(harmonic)
-                };
+            for (int harmonic = 1; harmonic < number_harmonics; harmonic++) {
+                const double harmonic_bandwidth =
+                    (std::exp2(bandwidth / 1200.0) - 1.0) * frequency * double(harmonic);
 
-                const double bandwidth_i {harmonic_bandwidth / (2.0 * double(sample_rate))};
-                const double frequency_i {frequency * double(harmonic) / double(sample_rate)};
+                const double bandwidth_i = harmonic_bandwidth / (2.0 * double(sample_rate));
+                const double frequency_i = frequency * double(harmonic) / double(sample_rate);
 
                 for (std::size_t i {}; i < size / 2; i++) {
-                    const double harmonic_profile {profile(double(i) / double(size) - frequency_i, bandwidth_i)};
+                    const double harmonic_profile = profile(double(i) / double(size) - frequency_i, bandwidth_i);
                     frequency_amplitudes[i] += harmonic_profile * amplitude_harmonics[harmonic];
                 }
             }

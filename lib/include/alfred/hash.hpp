@@ -10,14 +10,14 @@ namespace hash {
     namespace internal {
         struct Variant32 {
             using Type = std::uint32_t;
-            static constexpr std::uint32_t FNV_OFFSET_BASIS {2166136261u};
-            static constexpr std::uint32_t FNV_PRIME {16777619u};
+            static constexpr std::uint32_t FNV_OFFSET_BASIS = 2166136261u;
+            static constexpr std::uint32_t FNV_PRIME = 16777619u;
         };
 
         struct Variant64 {
             using Type = std::uint64_t;
-            static constexpr std::uint64_t FNV_OFFSET_BASIS {14695981039346656037u};
-            static constexpr std::uint64_t FNV_PRIME {1099511628211u};
+            static constexpr std::uint64_t FNV_OFFSET_BASIS = 14695981039346656037u;
+            static constexpr std::uint64_t FNV_PRIME = 1099511628211u;
         };
 
         template<typename T>
@@ -38,7 +38,7 @@ namespace hash {
             constexpr bool operator==(const HashedStr other) const noexcept { return hash == other.hash; }
         private:
             static constexpr Type fnv1a(const char* const string) noexcept {
-                Type hash {T::FNV_OFFSET_BASIS};
+                Type hash = T::FNV_OFFSET_BASIS;
 
                 for (std::size_t i {}; string[i] != '\0'; i++) {
                     hash ^= Type(string[i]);

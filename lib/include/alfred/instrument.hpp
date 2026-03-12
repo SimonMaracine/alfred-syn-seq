@@ -228,8 +228,8 @@ namespace instrument {
             .value_sustain = 0.9
         };
 
-        static constexpr std::size_t SIZE {262144};
-        static constexpr double FREQUENCY {261.63};
+        static constexpr std::size_t SIZE = 262144;
+        static constexpr double FREQUENCY = 261.63;
 
         syn::padsynth::Sample m_sample;
         syn::Volume m_volume {};
@@ -259,10 +259,10 @@ namespace instrument {
             .value_sustain = 0.95
         };
 
-        static constexpr std::size_t SIZE {262144};
-        static constexpr double FREQUENCY {261.63};
-        static constexpr double LFO_FREQUENCY {8.0};
-        static constexpr double LFO_DEVIATION {0.07};
+        static constexpr std::size_t SIZE = 262144;
+        static constexpr double FREQUENCY = 261.63;
+        static constexpr double LFO_FREQUENCY = 8.0;
+        static constexpr double LFO_DEVIATION = 0.07;
 
         syn::padsynth::Sample m_sample;
         syn::Volume m_volume {};

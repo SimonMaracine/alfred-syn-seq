@@ -77,7 +77,7 @@ namespace seq {
 
         m_accumulator_time += dt;
 
-        const double step_time {calculate_step_time(m_measure, m_measure_position)};
+        const double step_time = calculate_step_time(m_measure, m_measure_position);
 
         // Advance with maximum one step per frame
         // If the frame time is larger than the step time, then the player will simply play at a lower and inconsistent speed
@@ -96,7 +96,7 @@ namespace seq {
         }
 
         for (auto& [instrument, execution] : m_executions) {
-            for (auto note {execution.notes_played.begin()}; note != execution.notes_played.end(); note++) {
+            for (auto note = execution.notes_played.begin(); note != execution.notes_played.end(); note++) {
                 if (m_position < note->position + note->duration) {
                     execution.notes_played.erase(execution.notes_played.begin(), note);
                     break;
@@ -112,7 +112,7 @@ namespace seq {
                 }
             }
 
-            for (auto note {execution.notes_unplayed.begin()}; note != execution.notes_unplayed.end(); note++) {
+            for (auto note = execution.notes_unplayed.begin(); note != execution.notes_unplayed.end(); note++) {
                 if (m_position < note->position) {
                     execution.notes_unplayed.erase(execution.notes_unplayed.begin(), note);
                     break;
@@ -152,13 +152,13 @@ namespace seq {
         Composition cloned_composition;
 
         // By default, simply reference the composition pointer
-        const Composition* composition {m_composition};
+        const Composition* composition = m_composition;
 
         // Make a full copy of the composition, add metronome and use a reference to the copied
         if (m_metronome) {
             cloned_composition = *m_composition;
 
-            for (auto measure {cloned_composition.measures.begin()}; measure != cloned_composition.measures.end(); measure++) {
+            for (auto measure = cloned_composition.measures.begin(); measure != cloned_composition.measures.end(); measure++) {
                 for (std::uint32_t i {}; i < measure->time_signature.measure_steps(); i += seq::steps(measure->time_signature.value())) {
                     measure->instruments[instrument::Metronome::static_id()].emplace(
                         i == 0 ? syn::note(syn::B, syn::Octave5) : syn::note(syn::A, syn::Octave5),
@@ -172,9 +172,9 @@ namespace seq {
             composition = &cloned_composition;
         }
 
-        for (auto measure {composition->measures.begin()}; measure != composition->measures.end(); measure++) {
+        for (auto measure = composition->measures.begin(); measure != composition->measures.end(); measure++) {
             for (const auto& [instrument, notes] : measure->instruments) {
-                for (auto note {notes.begin()}; note != notes.end(); note++) {
+                for (auto note = notes.begin(); note != notes.end(); note++) {
                     if (steps + note->position < position) {
                         continue;
                     }
@@ -187,8 +187,8 @@ namespace seq {
                         continue;
                     }
 
-                    NoteIter current_note {note};
-                    std::uint32_t duration {seq::steps(current_note->value, current_note->tuplet) - current_note->delay};
+                    NoteIter current_note = note;
+                    std::uint32_t duration = seq::steps(current_note->value, current_note->tuplet) - current_note->delay;
 
                     while (current_note->legato) {
                         const auto next_note {
@@ -243,7 +243,7 @@ namespace seq {
                     steps += measure.time_signature.measure_steps();
 
                     if (steps > position) {
-                        const std::uint32_t last_steps {measure.time_signature.measure_steps() - (steps - position)};
+                        const std::uint32_t last_steps = measure.time_signature.measure_steps() - (steps - position);
 
                         time += double(last_steps) * measure.time_signature.step_time(std::get<0>(measure.agogic).tempo);
 
@@ -287,11 +287,11 @@ namespace seq {
     }
 
     std::uint32_t Player::calculate_note_duration(ConstMeasureIter measure, syn::InstrumentId instrument, std::uint32_t position, std::uint32_t duration) const {
-        static constexpr double RELEASE_TIME {1.0 / 3.0};
+        static constexpr double RELEASE_TIME = 1.0 / 3.0;
 
-        const double step_time {calculate_step_time(measure, position)};
-        const double release_time {m_synthesizer->get_instrument(instrument).release_duration() * RELEASE_TIME};
-        const std::uint32_t release_duration {std::uint32_t(std::ceil(release_time / step_time))};
+        const double step_time = calculate_step_time(measure, position);
+        const double release_time = m_synthesizer->get_instrument(instrument).release_duration() * RELEASE_TIME;
+        const std::uint32_t release_duration = std::uint32_t(std::ceil(release_time / step_time));
 
         if (release_duration > duration) {
             return MIN_DURATION;

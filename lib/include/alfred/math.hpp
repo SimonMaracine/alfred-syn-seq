@@ -8,8 +8,8 @@
 struct fftw_plan_s;
 
 namespace math {
-    inline constexpr double PI {std::numbers::pi};
-    inline constexpr double TWO_PI {2.0 * std::numbers::pi};
+    inline constexpr double PI = std::numbers::pi;
+    inline constexpr double TWO_PI = 2.0 * std::numbers::pi;
 
     constexpr double w(double hertz) {
         return hertz * 2.0 * PI;

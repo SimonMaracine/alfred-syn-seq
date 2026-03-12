@@ -24,7 +24,7 @@ namespace audio {
     }
 
     const char* Audio::driver() {
-        const char* driver {SDL_GetCurrentAudioDriver()};
+        const char* driver = SDL_GetCurrentAudioDriver();
 
         if (!driver) {
             return "[...]";
@@ -34,13 +34,13 @@ namespace audio {
     }
 
     Audio::Device Audio::device() const {
-        const SDL_AudioDeviceID device {SDL_GetAudioStreamDevice(m_stream)};
+        const SDL_AudioDeviceID device = SDL_GetAudioStreamDevice(m_stream);
 
         if (!device) {
             throw AudioError(std::format("SDL_GetAudioStreamDevice: {}", SDL_GetError()));
         }
 
-        const char* name {SDL_GetAudioDeviceName(device)};
+        const char* name = SDL_GetAudioDeviceName(device);
 
         if (!name) {
             name = "[...]";
@@ -56,7 +56,7 @@ namespace audio {
     void Audio::query_devices() {
         int count {};
 
-        SDL_AudioDeviceID* devices {SDL_GetAudioPlaybackDevices(&count)};
+        SDL_AudioDeviceID* devices = SDL_GetAudioPlaybackDevices(&count);
 
         if (!devices) {
             throw AudioError(std::format("SDL_GetAudioPlaybackDevices: {}", SDL_GetError()));
@@ -65,7 +65,7 @@ namespace audio {
         m_devices.clear();
 
         for (int i {}; i < count; i++) {
-            const char* name {SDL_GetAudioDeviceName(devices[i])};
+            const char* name = SDL_GetAudioDeviceName(devices[i]);
 
             if (!name) {
                 name = "[...]";
@@ -141,7 +141,7 @@ namespace audio {
     }
 
     double Audio::volume() const {
-        const float gain {SDL_GetAudioStreamGain(m_stream)};
+        const float gain = SDL_GetAudioStreamGain(m_stream);
 
         if (gain == -1.0f) {
             throw AudioError(std::format("SDL_GetAudioStreamGain: {}", SDL_GetError()));
@@ -160,9 +160,9 @@ namespace audio {
     void Audio::stream_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int) noexcept {
         // This code is run under an internal SDL mutex
 
-        Audio& self {*static_cast<Audio*>(userdata)};
+        Audio& self = *static_cast<Audio*>(userdata);
 
-        const std::size_t samples {std::size_t(additional_amount) / sizeof(Resolution)};
+        const std::size_t samples = std::size_t(additional_amount) / sizeof(Resolution);
 
         if (g_buffer.size < samples) {
             g_buffer.size = samples;
