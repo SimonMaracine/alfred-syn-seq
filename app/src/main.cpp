@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
     }
 
     utility::set_property(SDL_PROP_APP_METADATA_NAME_STRING, "Alfred");
-    utility::set_property(SDL_PROP_APP_METADATA_VERSION_STRING, "0.3.0");
+    utility::set_property(SDL_PROP_APP_METADATA_VERSION_STRING, "0.4.0");
     utility::set_property(SDL_PROP_APP_METADATA_IDENTIFIER_STRING, "dev.simonmara.alfred");
     utility::set_property(SDL_PROP_APP_METADATA_CREATOR_STRING, "Simon");
     utility::set_property(SDL_PROP_APP_METADATA_URL_STRING, "https://github.com/SimonMaracine/alfred");
