@@ -18,21 +18,21 @@ Compositions can be rendered to uncompressed WAV files. One can choose to normal
 
 Compositions can be saved and opened from disk from the `File` menu. `Open Recent` displays recently saved and opened compositions.
 
-Alfred's synthesizer works differently whether the player is currently running or not. When the player is not running, the synthesizer is usually used for testing and so it's called *the test synthesizer*. However, when the player is running, the synthesizer automatically changes some of its parameters in order to play the composition.
+Alfred's synthesizer works differently depending on whether the player is currently running or not. When the player is not running, the synthesizer is usually used for testing and so it's called *the test synthesizer*. However, when the player is running, the synthesizer automatically changes some of its parameters in order to play the composition.
 
-The virtual keyboard always plays at full velocity.
-
+The virtual keyboard always plays at full velocity (loudness).
+ 
 ## Composition
 
-It is the main work area where measures and notes and placed, inserted, removed, edited etc.
+It is the main work area where measures and notes are placed, inserted, removed, edited etc.
 
-Camera is moved by dragging the mouse with `Right Click` or by scrolling the wheel. Hold `Shift` while scrolling to change the axis.
+Camera is moved by dragging the mouse with `Right Click` or by scrolling the wheel. Hold down `Shift` while scrolling to change the axis.
 
 Measures and notes are selected/deselected and new notes are placed with `Left Click`.
 
 Multiple notes can be selected with `Left Click` while holding down `Ctrl`.
 
-The player cursor can be moved by holding `Alt` and pressing `Left Click`.
+The player cursor can be moved by holding down `Alt` and pressing `Left Click`.
 
 ## Instruments & Synthesizer
 
@@ -80,9 +80,9 @@ The four `Up`, `Down`, `Left`, `Right` buttons to the left move the currently se
 
 The two `Left` and `Right` buttons change the delay of the currently selected notes.
 
-The `Whole`, `Half`, `Quarter`, `Eighth` and `Sixteenth` radio buttons changes the value of newly placed notes.
+The `Whole`, `Half`, `Quarter`, `Eighth` and `Sixteenth` radio buttons change the value of newly placed notes.
 
-`None` and `Triplet` radio buttons changes the tuplet mode of newly placed notes.
+`None` and `Triplet` radio buttons change the tuplet mode of newly placed notes.
 
 ## Output
 
