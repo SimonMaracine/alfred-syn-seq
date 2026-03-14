@@ -10,6 +10,7 @@ struct fftw_plan_s;
 namespace math {
     inline constexpr double PI = std::numbers::pi;
     inline constexpr double TWO_PI = 2.0 * std::numbers::pi;
+    inline constexpr double SMALL = 1.0e-6;
 
     constexpr double w(double hertz) {
         return hertz * 2.0 * PI;
@@ -29,7 +30,7 @@ namespace math {
         return std::clamp(sample, -1.0, 1.0);
     }
 
-    static constexpr double clamp_min(double x, double min = 1.0e-6) {
+    static constexpr double clamp_min(double x, double min = SMALL) {
         return std::max(x, min);
     }
 

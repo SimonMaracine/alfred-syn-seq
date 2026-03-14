@@ -267,4 +267,28 @@ namespace instrument {
         syn::padsynth::Sample m_sample;
         syn::Volume m_volume {};
     };
+
+    class Test : public syn::Instrument {
+    public:
+        ALFRED_INSTRUMENT_STATIC_NAME_ID("Test")
+        ALFRED_INSTRUMENT_DESCRIPTION_UNFINISHED()
+
+        double sound(double time, double time_on, syn::NoteId note) const noexcept override;
+
+        syn::Volume volume() const override { return m_volume; }
+        void volume(syn::Volume volume) override { m_volume = volume; }
+
+        syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdsrLinear>(ENVELOPE); }
+        double attack_duration() const override { return ENVELOPE.duration_attack; }
+        double release_duration() const override { return ENVELOPE.duration_release; }
+    private:
+        static constexpr syn::DescriptionAdsr ENVELOPE {
+            .duration_attack = 0.1,
+            .duration_decay = 0.0,
+            .duration_release = 0.1,
+            .value_sustain = 1.0
+        };
+
+        syn::Volume m_volume {};
+    };
 }

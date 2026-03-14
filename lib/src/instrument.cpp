@@ -143,4 +143,8 @@ namespace instrument {
     double Cello::sound(double time, double, syn::NoteId note) const noexcept {
         return syn::util::sound(time, note, m_sample.get(), SIZE, FREQUENCY);
     }
+
+    double Test::sound(double time, double, syn::NoteId note) const noexcept {
+        return syn::oscillator::sawtooth(time, syn::frequency(note), { 4.0, 0.05 });
+    }
 }

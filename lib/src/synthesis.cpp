@@ -10,28 +10,47 @@
 
 namespace syn {
     static constexpr double eps(double duration) {
+        assert(duration > 0.0);
+
         // Magic number comes from here: e ** -eps * t = 1 / 100
         return 4.605170186 / duration;
     }
 
     static constexpr double increment_of_linear(double height, double duration) {
+        assert(height >= 0.0 && height <= 1.0);
+        assert(duration > 0.0);
+
         return height / (duration * double(audio::SAMPLE_FREQUENCY));
     }
 
     static double exponential(double t, double duration, double top, double bottom) {
+        assert(duration > 0.0);
+        assert(top >= 0.0 && top <= 1.0);
+        assert(bottom >= 0.0 && bottom <= 1.0);
+
         return (top - bottom) * std::exp(-eps(duration) * t) + bottom;
     }
 
     static double inverse_exponential(double t, double duration, double bottom) {
+        assert(duration > 0.0);
+        assert(bottom >= 0.0 && bottom <= 1.0);
+
         return 1.0 - (1.0 - bottom) * std::exp(-eps(duration) * t);
     }
 
     static double increment_of_exponential(double t, double duration, double top = 1.0, double bottom = 0.0) {
+        assert(duration > 0.0);
+        assert(top >= 0.0 && top <= 1.0);
+        assert(bottom >= 0.0 && bottom <= 1.0);
+
         static constexpr double eps = 1.0 / double(audio::SAMPLE_FREQUENCY);
         return std::abs(exponential(t + eps, duration, top, bottom) - exponential(t, duration, top, bottom));
     }
 
     static double increment_of_inverse_exponential(double t, double duration, double bottom = 0.0) {
+        assert(duration > 0.0);
+        assert(bottom >= 0.0 && bottom <= 1.0);
+
         static constexpr double eps = 1.0 / double(audio::SAMPLE_FREQUENCY);
         return std::abs(inverse_exponential(t + eps, duration, bottom) - inverse_exponential(t, duration, bottom));
     }
@@ -39,14 +58,14 @@ namespace syn {
     void EnvelopeAdsrLinear::note_on(double) {
         m_segment = Segment::Attack;
 
-        m_attack_increment = increment_of_linear(1.0, m_description.duration_attack);
-        m_decay_increment = increment_of_linear(1.0 - m_description.value_sustain, m_description.duration_decay);
+        m_attack_increment = increment_of_linear(1.0, math::clamp_min(m_description.duration_attack));
+        m_decay_increment = increment_of_linear(1.0 - m_description.value_sustain, math::clamp_min(m_description.duration_decay));
     }
 
     void EnvelopeAdsrLinear::note_off(double) {
         m_segment = Segment::Release;
 
-        m_release_increment = increment_of_linear(m_description.value_sustain, m_description.duration_release);
+        m_release_increment = increment_of_linear(m_description.value_sustain, math::clamp_min(m_description.duration_release));
     }
 
     void EnvelopeAdsrLinear::update(double) {
@@ -115,7 +134,7 @@ namespace syn {
                 break;
             case Segment::Attack:
                 m_value_current += math::clamp_min(
-                    increment_of_inverse_exponential(time - m_time_note_on, m_description.duration_attack, m_value_note_on)
+                    increment_of_inverse_exponential(time - m_time_note_on, math::clamp_min(m_description.duration_attack), m_value_note_on)
                 );
 
                 if (m_value_current >= 1.0) {
@@ -127,7 +146,7 @@ namespace syn {
                 break;
             case Segment::Decay:
                 m_value_current -= math::clamp_min(
-                    increment_of_exponential(time - m_time_decay, m_description.duration_decay, 1.0, m_description.value_sustain)
+                    increment_of_exponential(time - m_time_decay, math::clamp_min(m_description.duration_decay), 1.0, m_description.value_sustain)
                 );
 
                 if (m_value_current <= m_description.value_sustain) {
@@ -142,7 +161,7 @@ namespace syn {
                 break;
             case Segment::Release:
                 m_value_current -= math::clamp_min(
-                    increment_of_exponential(time - m_time_note_off, m_description.duration_release, m_value_note_off)
+                    increment_of_exponential(time - m_time_note_off, math::clamp_min(m_description.duration_release), m_value_note_off)
                 );
 
                 if (m_value_current <= 0.0) {
@@ -311,25 +330,15 @@ namespace syn {
         }
 
         double sawtooth(double time, double frequency) {
-            double result {};
-
-            for (double n = 1.0; n < 10.0; n++) {
-                result += std::sin(n * math::w(frequency) * time) / n;
-            }
-
-            return 4.0 * result / (10.0 * math::PI);  // FIXME ...
+            return 1.0 / math::PI * std::fmod(math::w(frequency) * time, math::TWO_PI) - 1.0;
         }
 
         double sawtooth(double time, double frequency, LowFrequencyOscillator lfo) {
-            double result {};
-
-            for (double n = 1.0; n < 10.0; n++) {
-                result += std::sin(n * math::w(frequency) * time + frequency_modulation(time, frequency, lfo)) / n;
-            }
-
-            return 4.0 * result / (10.0 * math::PI);  // FIXME ...
+            return 1.0 / math::PI * std::fmod(math::w(frequency) * time + frequency_modulation(time, frequency, lfo), math::TWO_PI) - 1.0;
         }
     }
+
+    // https://en.wikipedia.org/wiki/Frequency_modulation#Sinusoidal_baseband_signal
 
     double frequency_modulation(double time, double frequency, LowFrequencyOscillator lfo) {
         return lfo.deviation * frequency * std::sin(math::w(lfo.frequency) * time);
