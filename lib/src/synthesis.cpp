@@ -301,40 +301,38 @@ namespace syn {
     }
 
     namespace oscillator {
-        double sine(double time, double frequency) {
-            return std::sin(math::w(frequency) * time);
+        double sine(double time, double frequency, double phase) {
+            return std::sin(math::w(frequency) * time + phase);
         }
 
-        double sine(double time, double frequency, LowFrequencyOscillator lfo) {
-            return std::sin(math::w(frequency) * time + frequency_modulation(time, frequency, lfo));
+        double sine(double time, double frequency, double phase, LowFrequencyOscillator lfo) {
+            return std::sin(math::w(frequency) * time + phase + frequency_modulation(time, frequency, lfo));
         }
 
-        double square(double time, double frequency) {
-            const double value = std::sin(math::w(frequency) * time);
-
+        double square(double time, double frequency, double phase) {
+            const double value = std::sin(math::w(frequency) * time + phase);
             return value >= 0.0 ? 1.0 : -1.0;
         }
 
-        double square(double time, double frequency, LowFrequencyOscillator lfo) {
-            const double value = std::sin(math::w(frequency) * time + frequency_modulation(time, frequency, lfo));
-
+        double square(double time, double frequency, double phase, LowFrequencyOscillator lfo) {
+            const double value = std::sin(math::w(frequency) * time + phase + frequency_modulation(time, frequency, lfo));
             return value >= 0.0 ? 1.0 : -1.0;
         }
 
-        double triangle(double time, double frequency) {
-            return 2.0 * std::asin(std::sin(math::w(frequency) * time)) / math::PI;
+        double triangle(double time, double frequency, double phase) {
+            return 2.0 * std::asin(std::sin(math::w(frequency) * time + phase)) / math::PI;
         }
 
-        double triangle(double time, double frequency, LowFrequencyOscillator lfo) {
-            return 2.0 * std::asin(std::sin(math::w(frequency) * time + frequency_modulation(time, frequency, lfo))) / math::PI;
+        double triangle(double time, double frequency, double phase, LowFrequencyOscillator lfo) {
+            return 2.0 * std::asin(std::sin(math::w(frequency) * time + phase + frequency_modulation(time, frequency, lfo))) / math::PI;
         }
 
-        double sawtooth(double time, double frequency) {
-            return 1.0 / math::PI * std::fmod(math::w(frequency) * time, math::TWO_PI) - 1.0;
+        double sawtooth(double time, double frequency, double phase) {
+            return 1.0 / math::PI * std::fmod(math::w(frequency) * time + phase, math::TWO_PI) - 1.0;
         }
 
-        double sawtooth(double time, double frequency, LowFrequencyOscillator lfo) {
-            return 1.0 / math::PI * std::fmod(math::w(frequency) * time + frequency_modulation(time, frequency, lfo), math::TWO_PI) - 1.0;
+        double sawtooth(double time, double frequency, double phase, LowFrequencyOscillator lfo) {
+            return 1.0 / math::PI * std::fmod(math::w(frequency) * time + phase + frequency_modulation(time, frequency, lfo), math::TWO_PI) - 1.0;
         }
     }
 
@@ -366,6 +364,20 @@ namespace syn {
     }
 
     namespace util {
+        std::vector<double> amplitudes(std::vector<double> divisors) {
+            for (const auto [i, divisor] : divisors | std::views::enumerate) {
+                divisors[i] = 1.0 / divisor;
+            }
+
+            const double sum = std::accumulate(divisors.begin(), divisors.end(), 0.0);
+
+            for (double& divisor : divisors) {
+                divisor /= sum;
+            }
+
+            return divisors;
+        }
+
         double sound(double time, NoteId note, const double* sample, std::size_t size, double frequency) {
             const double sample_duration = double(size) / double(audio::SAMPLE_FREQUENCY);
 

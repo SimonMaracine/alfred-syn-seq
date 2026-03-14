@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <array>
+#include <vector>
 #include <numeric>
 #include <algorithm>
 #include <ranges>
@@ -38,6 +39,11 @@ namespace syn {
 
         // If the envelope has finished its lifetime
         virtual bool done() const = 0;
+    };
+
+    enum class EnvelopeType {
+        Linear,
+        Exponential
     };
 
     struct DescriptionAdsr {
@@ -281,7 +287,7 @@ namespace syn {
     }
 
     // An instrument (or also called preset) describes how some voice should sound
-    // It comprises all the parameters that makes up a particular sound
+    // It comprises all the parameters that make up a particular sound
     struct Instrument {
         Instrument() = default;
         virtual ~Instrument() = default;
@@ -320,14 +326,21 @@ namespace syn {
     };
 
     namespace oscillator {
-        double sine(double time, double frequency);
-        double sine(double time, double frequency, LowFrequencyOscillator lfo);
-        double square(double time, double frequency);
-        double square(double time, double frequency, LowFrequencyOscillator lfo);
-        double triangle(double time, double frequency);
-        double triangle(double time, double frequency, LowFrequencyOscillator lfo);
-        double sawtooth(double time, double frequency);
-        double sawtooth(double time, double frequency, LowFrequencyOscillator lfo);
+        enum class Type {
+            Sine,
+            Square,
+            Triangle,
+            Sawtooth
+        };
+
+        double sine(double time, double frequency, double phase);
+        double sine(double time, double frequency, double phase, LowFrequencyOscillator lfo);
+        double square(double time, double frequency, double phase);
+        double square(double time, double frequency, double phase, LowFrequencyOscillator lfo);
+        double triangle(double time, double frequency, double phase);
+        double triangle(double time, double frequency, double phase, LowFrequencyOscillator lfo);
+        double sawtooth(double time, double frequency, double phase);
+        double sawtooth(double time, double frequency, double phase, LowFrequencyOscillator lfo);
     }
 
     double frequency_modulation(double time, double frequency, LowFrequencyOscillator lfo);
@@ -351,6 +364,7 @@ namespace syn {
             return divisors;
         }
 
+        std::vector<double> amplitudes(std::vector<double> divisors);
         double sound(double time, NoteId note, const double* sample, std::size_t size, double frequency);
     }
 
