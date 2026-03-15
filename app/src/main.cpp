@@ -7,6 +7,7 @@
 #include "application.hpp"
 #include "utility.hpp"
 #include "logging.hpp"
+#include "version.hpp"
 
 static const char* sample_frames(int argc, char** argv) {
     if (argc > 1) {
@@ -43,7 +44,7 @@ int main(int argc, char** argv) {
     }
 
     utility::set_property(SDL_PROP_APP_METADATA_NAME_STRING, "Alfred");
-    utility::set_property(SDL_PROP_APP_METADATA_VERSION_STRING, "0.4.0");
+    utility::set_property(SDL_PROP_APP_METADATA_VERSION_STRING, ALFRED_VERSION);
     utility::set_property(SDL_PROP_APP_METADATA_IDENTIFIER_STRING, "dev.simonmara.alfred");
     utility::set_property(SDL_PROP_APP_METADATA_CREATOR_STRING, "Simon");
     utility::set_property(SDL_PROP_APP_METADATA_URL_STRING, "https://github.com/SimonMaracine/alfred");

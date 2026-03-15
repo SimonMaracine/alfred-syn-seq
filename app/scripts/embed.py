@@ -2,7 +2,7 @@
 
 import sys
 import os
-from typing import Iterable
+
 
 def _contents(file_name: str, mode: str) -> str:
     with open(file_name, mode) as file:
@@ -15,15 +15,16 @@ def _contents_text(variable_name: str, file_name: str) -> str:
 
 #include <string_view>
 
-inline constexpr std::string_view {variable_name} =
+inline constexpr std::string_view ALFRED_{variable_name} =
     R"({_contents(file_name, "r")})";
 """
+
 
 def _contents_binary(variable_name: str, file_name: str) -> str:
     return f"""
 #pragma once
 
-inline constexpr unsigned char {variable_name}[] {{
+inline constexpr unsigned char ALFRED_{variable_name}[] {{
     {", ".join((f"{byte}" for byte in _contents(file_name, "rb")))}
 }};
 """

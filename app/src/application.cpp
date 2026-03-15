@@ -40,7 +40,7 @@ namespace application {
         desired_frame_time(FRAME_TIME_DEFAULT);
 
         try {
-            icons({ ICON64, ICON128 });
+            icons({ ALFRED_ICON64, ALFRED_ICON128 });
         } catch (const video::VideoError& e) {
             logging::error("Could not set icon: {}", e.what());
         }
@@ -93,9 +93,9 @@ namespace application {
 
         m_ui.volume = m_synthesizer.volume();
         m_ui.polyphony = int(m_synthesizer.polyphony());
-        m_ui.texture_play = image::Texture(m_renderer, image::Surface(PLAY));
-        m_ui.texture_pause = image::Texture(m_renderer, image::Surface(PAUSE));
-        m_ui.texture_rewind = image::Texture(m_renderer, image::Surface(REWIND));
+        m_ui.texture_play = image::Texture(m_renderer, image::Surface(ALFRED_PLAY));
+        m_ui.texture_pause = image::Texture(m_renderer, image::Surface(ALFRED_PAUSE));
+        m_ui.texture_rewind = image::Texture(m_renderer, image::Surface(ALFRED_REWIND));
 
         // Synthesizer update routine
         m_task_manager.add_repeatable_task([this] {

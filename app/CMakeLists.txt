@@ -19,6 +19,13 @@ add_resource("PLAY" "play.png" "binary")
 add_resource("PAUSE" "pause.png" "binary")
 add_resource("REWIND" "rewind.png" "binary")
 
+add_custom_command(
+    OUTPUT "include/version.hpp"
+    COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/scripts/version.py"
+    ARGS "${CMAKE_PROJECT_VERSION}"
+    VERBATIM
+)
+
 if(WIN32)
     if(ALFRED_DISTRIBUTION)
         # This also disables printing
@@ -37,6 +44,7 @@ add_executable(
     "include/play.png.hpp"
     "include/pause.png.hpp"
     "include/rewind.png.hpp"
+    "include/version.hpp"
     "src/application.cpp"
     "src/application.hpp"
     "src/composition.hpp"
