@@ -55,8 +55,7 @@ namespace audio {
 
     void Audio::query_devices() {
         int count {};
-
-        SDL_AudioDeviceID* devices = SDL_GetAudioPlaybackDevices(&count);
+        auto devices = std::unique_ptr<SDL_AudioDeviceID[], decltype(&SDL_free)>(SDL_GetAudioPlaybackDevices(&count), SDL_free);
 
         if (!devices) {
             throw AudioError(std::format("SDL_GetAudioPlaybackDevices: {}", SDL_GetError()));
@@ -64,7 +63,7 @@ namespace audio {
 
         m_devices.clear();
 
-        for (int i {}; i < count; i++) {
+        for (std::size_t i {}; i < std::size_t(count); i++) {
             const char* name = SDL_GetAudioDeviceName(devices[i]);
 
             if (!name) {
@@ -73,8 +72,6 @@ namespace audio {
 
             m_devices.emplace_back(devices[i], name);
         }
-
-        SDL_free(devices);
     }
 
     void Audio::open() {
