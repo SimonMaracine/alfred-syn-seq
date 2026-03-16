@@ -188,22 +188,22 @@ namespace instrument {
             return output;
         }
 
-        syn::EnvelopePtr DynamicInstrument::new_envelope() const {
+        syn::envelope::Ptr DynamicInstrument::new_envelope() const {
             switch (m_envelope_description.index()) {
                 case 0:
                     switch (m_envelope_type) {
-                        case syn::EnvelopeType::Linear:
-                            return std::make_unique<syn::EnvelopeAdsrLinear>(std::get<0>(m_envelope_description));
-                        case syn::EnvelopeType::Exponential:
-                            return std::make_unique<syn::EnvelopeAdsr>(std::get<0>(m_envelope_description));
+                        case syn::envelope::Type::Linear:
+                            return std::make_unique<syn::envelope::AdsrLinear>(std::get<0>(m_envelope_description));
+                        case syn::envelope::Type::Exponential:
+                            return std::make_unique<syn::envelope::Adsr>(std::get<0>(m_envelope_description));
                     }
                     std::unreachable();
                 case 1:
                     switch (m_envelope_type) {
-                        case syn::EnvelopeType::Linear:
-                            return std::make_unique<syn::EnvelopeAdrLinear>(std::get<1>(m_envelope_description));
-                        case syn::EnvelopeType::Exponential:
-                            return std::make_unique<syn::EnvelopeAdr>(std::get<1>(m_envelope_description));
+                        case syn::envelope::Type::Linear:
+                            return std::make_unique<syn::envelope::AdrLinear>(std::get<1>(m_envelope_description));
+                        case syn::envelope::Type::Exponential:
+                            return std::make_unique<syn::envelope::Adr>(std::get<1>(m_envelope_description));
                     }
                     std::unreachable();
             }

@@ -35,11 +35,11 @@ namespace instrument {
         syn::Volume volume() const override { return m_volume; }
         void volume(syn::Volume volume) override { m_volume = volume; }
 
-        syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdrLinear>(ENVELOPE); }
+        syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::AdrLinear>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
     private:
-        static constexpr syn::DescriptionAdr ENVELOPE {
+        static constexpr syn::envelope::DescriptionAdr ENVELOPE {
             .duration_attack = 0.007,
             .duration_decay = 0.15,
             .duration_release = 0.007
@@ -59,11 +59,11 @@ namespace instrument {
         syn::Volume volume() const override { return m_volume; }
         void volume(syn::Volume volume) override { m_volume = volume; }
 
-        syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
+        syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
     private:
-        static constexpr syn::DescriptionAdr ENVELOPE {
+        static constexpr syn::envelope::DescriptionAdr ENVELOPE {
             .duration_attack = 0.5,
             .duration_decay = 1.0,
             .duration_release = 0.7
@@ -82,11 +82,11 @@ namespace instrument {
         syn::Volume volume() const override { return m_volume; }
         void volume(syn::Volume volume) override { m_volume = volume; }
 
-        syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdsr>(ENVELOPE); }
+        syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::Adsr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
     private:
-        static constexpr syn::DescriptionAdsr ENVELOPE {
+        static constexpr syn::envelope::DescriptionAdsr ENVELOPE {
             .duration_attack = 0.15,
             .duration_decay = 0.02,
             .duration_release = 0.6,
@@ -106,11 +106,11 @@ namespace instrument {
         syn::Volume volume() const override { return m_volume; }
         void volume(syn::Volume volume) override { m_volume = volume; }
 
-        syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
+        syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
     private:
-        static constexpr syn::DescriptionAdr ENVELOPE {
+        static constexpr syn::envelope::DescriptionAdr ENVELOPE {
             .duration_attack = 0.01,
             .duration_decay = 0.15,
             .duration_release = 0.02
@@ -129,11 +129,11 @@ namespace instrument {
         syn::Volume volume() const override { return m_volume; }
         void volume(syn::Volume volume) override { m_volume = volume; }
 
-        syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
+        syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
     private:
-        static constexpr syn::DescriptionAdr ENVELOPE {
+        static constexpr syn::envelope::DescriptionAdr ENVELOPE {
             .duration_attack = 0.01,
             .duration_decay = 0.2,
             .duration_release = 0.03
@@ -152,11 +152,11 @@ namespace instrument {
         syn::Volume volume() const override { return m_volume; }
         void volume(syn::Volume volume) override { m_volume = volume; }
 
-        syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
+        syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
     private:
-        static constexpr syn::DescriptionAdr ENVELOPE {
+        static constexpr syn::envelope::DescriptionAdr ENVELOPE {
             .duration_attack = 0.01,
             .duration_decay = 0.15,
             .duration_release = 0.02
@@ -175,11 +175,11 @@ namespace instrument {
         syn::Volume volume() const override { return m_volume; }
         void volume(syn::Volume volume) override { m_volume = volume; }
 
-        syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
+        syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
     private:
-        static constexpr syn::DescriptionAdr ENVELOPE {
+        static constexpr syn::envelope::DescriptionAdr ENVELOPE {
             .duration_attack = 0.01,
             .duration_decay = 4.0,
             .duration_release = 0.7
@@ -199,11 +199,11 @@ namespace instrument {
         syn::Volume volume() const override { return m_volume; }
         void volume(syn::Volume volume) override { m_volume = volume; }
 
-        syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdr>(ENVELOPE); }
+        syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
     private:
-        static constexpr syn::DescriptionAdr ENVELOPE {
+        static constexpr syn::envelope::DescriptionAdr ENVELOPE {
             .duration_attack = 0.07,
             .duration_decay = 5.0,
             .duration_release = 0.3
@@ -224,11 +224,11 @@ namespace instrument {
         syn::Volume volume() const override { return m_volume; }
         void volume(syn::Volume volume) override { m_volume = volume; }
 
-        syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdsr>(ENVELOPE); }
+        syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::Adsr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
     private:
-        static constexpr syn::DescriptionAdsr ENVELOPE {
+        static constexpr syn::envelope::DescriptionAdsr ENVELOPE {
             .duration_attack = 0.2,
             .duration_decay = 0.03,
             .duration_release = 0.8,
@@ -255,11 +255,11 @@ namespace instrument {
         syn::Volume volume() const override { return m_volume; }
         void volume(syn::Volume volume) override { m_volume = volume; }
 
-        syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdsrLinear>(ENVELOPE); }
+        syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::AdsrLinear>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
     private:
-        static constexpr syn::DescriptionAdsr ENVELOPE {
+        static constexpr syn::envelope::DescriptionAdsr ENVELOPE {
             .duration_attack = 0.28,
             .duration_decay = 0.05,
             .duration_release = 0.25,
@@ -285,11 +285,11 @@ namespace instrument {
         syn::Volume volume() const override { return m_volume; }
         void volume(syn::Volume volume) override { m_volume = volume; }
 
-        syn::EnvelopePtr new_envelope() const override { return std::make_unique<syn::EnvelopeAdsrLinear>(ENVELOPE); }
+        syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::AdsrLinear>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
     private:
-        static constexpr syn::DescriptionAdsr ENVELOPE {
+        static constexpr syn::envelope::DescriptionAdsr ENVELOPE {
             .duration_attack = 0.1,
             .duration_decay = 0.0,
             .duration_release = 0.1,
@@ -318,7 +318,7 @@ namespace instrument {
                 std::string description,
                 syn::InstrumentRange range,
                 const EnvelopeDescription& envelope_description,
-                syn::EnvelopeType envelope_type,
+                syn::envelope::Type envelope_type,
                 std::vector<Partial> partials
             ) :
                 m_name(std::move(name)),
@@ -346,7 +346,7 @@ namespace instrument {
             syn::Volume volume() const override { return m_volume; }
             void volume(syn::Volume volume) override { m_volume = volume; }
 
-            syn::EnvelopePtr new_envelope() const override;
+            syn::envelope::Ptr new_envelope() const override;
 
             double attack_duration() const override;
             double release_duration() const override;
@@ -358,8 +358,8 @@ namespace instrument {
             syn::InstrumentId m_id {};
             syn::Volume m_volume {};
 
-            std::variant<syn::DescriptionAdsr, syn::DescriptionAdr> m_envelope_description;
-            syn::EnvelopeType m_envelope_type {};
+            std::variant<syn::envelope::DescriptionAdsr, syn::envelope::DescriptionAdr> m_envelope_description;
+            syn::envelope::Type m_envelope_type {};
 
             std::vector<Partial> m_partials;
             std::vector<double> m_amplitudes;

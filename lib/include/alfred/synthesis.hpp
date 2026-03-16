@@ -14,166 +14,168 @@
 #include "alfred/allocator.hpp"
 
 namespace syn {
-    using EnvelopeStorage = allocator::StaticAllocatorStorage<64, 96, 8>;
+    namespace envelope {
+        using Storage = allocator::StaticAllocatorStorage<64, 96, 8>;
 
-    // Abstract class representing an envelope
-    // Envelopes use a custom allocator; they are usually dynamically allocated
-    struct Envelope {
-        Envelope() = default;
-        virtual ~Envelope() = default;
+        // Abstract class representing an envelope
+        // Envelopes use a custom allocator; they are usually dynamically allocated
+        struct Envelope {
+            Envelope() = default;
+            virtual ~Envelope() = default;
 
-        Envelope(const Envelope&) = default;
-        Envelope& operator=(const Envelope&) = default;
-        Envelope(Envelope&&) = default;
-        Envelope& operator=(Envelope&&) = default;
+            Envelope(const Envelope&) = default;
+            Envelope& operator=(const Envelope&) = default;
+            Envelope(Envelope&&) = default;
+            Envelope& operator=(Envelope&&) = default;
 
-        // MIDI-like note events
-        virtual void note_on(double time) = 0;
-        virtual void note_off(double time) = 0;
+            // MIDI-like note events
+            virtual void note_on(double time) = 0;
+            virtual void note_off(double time) = 0;
 
-        // Called for every sample of output
-        virtual void update(double time) = 0;
+            // Called for every sample of output
+            virtual void update(double time) = 0;
 
-        // Get the current value
-        virtual double value() const = 0;
+            // Get the current value
+            virtual double value() const = 0;
 
-        // If the envelope has finished its lifetime
-        virtual bool done() const = 0;
-    };
+            // If the envelope has finished its lifetime
+            virtual bool done() const = 0;
+        };
 
-    enum class EnvelopeType {
-        Linear,
-        Exponential
-    };
+        enum class Type {
+            Linear,
+            Exponential
+        };
 
-    struct DescriptionAdsr {
-        double duration_attack = 0.1;
-        double duration_decay = 0.02;
-        double duration_release = 0.2;
-        double value_sustain = 0.8;
-    };
+        struct DescriptionAdsr {
+            double duration_attack = 0.1;
+            double duration_decay = 0.02;
+            double duration_release = 0.2;
+            double value_sustain = 0.8;
+        };
 
-    struct DescriptionAdr {
-        double duration_attack = 0.1;
-        double duration_decay = 1.0;
-        double duration_release = 0.2;
-    };
+        struct DescriptionAdr {
+            double duration_attack = 0.1;
+            double duration_decay = 1.0;
+            double duration_release = 0.2;
+        };
 
-    class EnvelopeAdsrLinear : public Envelope, public allocator::StaticAllocated<EnvelopeAdsrLinear, EnvelopeStorage> {
-    public:
-        explicit EnvelopeAdsrLinear(const DescriptionAdsr& description = {})
-            : m_description(description) {}
+        class AdsrLinear : public Envelope, public allocator::StaticAllocated<AdsrLinear, Storage> {
+        public:
+            explicit AdsrLinear(const DescriptionAdsr& description = {})
+                : m_description(description) {}
 
-        void note_on(double time) override;
-        void note_off(double time) override;
-        void update(double time) override;
-        double value() const override;
-        bool done() const override;
-    private:
-        enum class Segment {
-            None,
-            Attack,
-            Decay,
-            Sustain,
-            Release
-        } m_segment {};
+            void note_on(double time) override;
+            void note_off(double time) override;
+            void update(double time) override;
+            double value() const override;
+            bool done() const override;
+        private:
+            enum class Segment {
+                None,
+                Attack,
+                Decay,
+                Sustain,
+                Release
+            } m_segment {};
 
-        DescriptionAdsr m_description;
+            DescriptionAdsr m_description;
 
-        double m_value_current {};
+            double m_value_current {};
 
-        double m_attack_increment {};
-        double m_decay_increment {};
-        double m_release_increment {};
-    };
+            double m_attack_increment {};
+            double m_decay_increment {};
+            double m_release_increment {};
+        };
 
-    class EnvelopeAdsr : public Envelope, public allocator::StaticAllocated<EnvelopeAdsr, EnvelopeStorage> {
-    public:
-        explicit EnvelopeAdsr(const DescriptionAdsr& description = {})
-            : m_description(description) {}
+        class Adsr : public Envelope, public allocator::StaticAllocated<Adsr, Storage> {
+        public:
+            explicit Adsr(const DescriptionAdsr& description = {})
+                : m_description(description) {}
 
-        void note_on(double time) override;
-        void note_off(double time) override;
-        void update(double time) override;
-        double value() const override;
-        bool done() const override;
-    private:
-        enum class Segment {
-            None,
-            Attack,
-            Decay,
-            Sustain,
-            Release
-        } m_segment {};
+            void note_on(double time) override;
+            void note_off(double time) override;
+            void update(double time) override;
+            double value() const override;
+            bool done() const override;
+        private:
+            enum class Segment {
+                None,
+                Attack,
+                Decay,
+                Sustain,
+                Release
+            } m_segment {};
 
-        DescriptionAdsr m_description;
+            DescriptionAdsr m_description;
 
-        double m_time_note_on {};
-        double m_time_note_off {};
-        double m_time_decay {};
+            double m_time_note_on {};
+            double m_time_note_off {};
+            double m_time_decay {};
 
-        double m_value_current {};
-        double m_value_note_on {};
-        double m_value_note_off {};
-    };
+            double m_value_current {};
+            double m_value_note_on {};
+            double m_value_note_off {};
+        };
 
-    class EnvelopeAdrLinear : public Envelope, public allocator::StaticAllocated<EnvelopeAdrLinear, EnvelopeStorage> {
-    public:
-        explicit EnvelopeAdrLinear(const DescriptionAdr& description = {})
-            : m_description(description) {}
+        class AdrLinear : public Envelope, public allocator::StaticAllocated<AdrLinear, Storage> {
+        public:
+            explicit AdrLinear(const DescriptionAdr& description = {})
+                : m_description(description) {}
 
-        void note_on(double time) override;
-        void note_off(double time) override;
-        void update(double time) override;
-        double value() const override;
-        bool done() const override;
-    private:
-        enum class Segment {
-            None,
-            Attack,
-            Decay,
-            Release
-        } m_segment {};
+            void note_on(double time) override;
+            void note_off(double time) override;
+            void update(double time) override;
+            double value() const override;
+            bool done() const override;
+        private:
+            enum class Segment {
+                None,
+                Attack,
+                Decay,
+                Release
+            } m_segment {};
 
-        DescriptionAdr m_description;
+            DescriptionAdr m_description;
 
-        double m_value_current {};
+            double m_value_current {};
 
-        double m_attack_increment {};
-        double m_decay_increment {};
-        double m_release_increment {};
-    };
+            double m_attack_increment {};
+            double m_decay_increment {};
+            double m_release_increment {};
+        };
 
-    class EnvelopeAdr : public Envelope, public allocator::StaticAllocated<EnvelopeAdr, EnvelopeStorage> {
-    public:
-        explicit EnvelopeAdr(const DescriptionAdr& description = {})
-            : m_description(description) {}
+        class Adr : public Envelope, public allocator::StaticAllocated<Adr, Storage> {
+        public:
+            explicit Adr(const DescriptionAdr& description = {})
+                : m_description(description) {}
 
-        void note_on(double time) override;
-        void note_off(double time) override;
-        void update(double time) override;
-        double value() const override;
-        bool done() const override;
-    private:
-        enum class Segment {
-            None,
-            Attack,
-            Decay,
-            Release
-        } m_segment {};
+            void note_on(double time) override;
+            void note_off(double time) override;
+            void update(double time) override;
+            double value() const override;
+            bool done() const override;
+        private:
+            enum class Segment {
+                None,
+                Attack,
+                Decay,
+                Release
+            } m_segment {};
 
-        DescriptionAdr m_description;
+            DescriptionAdr m_description;
 
-        double m_time_note_on {};
-        double m_time_note_off {};
-        double m_time_decay {};
+            double m_time_note_on {};
+            double m_time_note_off {};
+            double m_time_decay {};
 
-        double m_value_current {};
-        double m_value_note_on {};
-        double m_value_note_off {};
-    };
+            double m_value_current {};
+            double m_value_note_on {};
+            double m_value_note_off {};
+        };
 
-    using EnvelopePtr = std::unique_ptr<Envelope>;
+        using Ptr = std::unique_ptr<Envelope>;
+    }
 
     enum NoteName : std::uint32_t {
         A,
@@ -249,7 +251,7 @@ namespace syn {
     struct Voice {
         NoteId note {};
         InstrumentId instrument {};
-        EnvelopePtr envelope;  // Overall envelope
+        envelope::Ptr envelope;  // Overall envelope
         double amplitude {};
         double time_on {};
         double time_off = -std::numeric_limits<double>::infinity();
@@ -313,7 +315,7 @@ namespace syn {
         virtual void volume(Volume volume) = 0;
 
         // Create a new envelope specific for this instrument
-        virtual EnvelopePtr new_envelope() const = 0;
+        virtual envelope::Ptr new_envelope() const = 0;
 
         // Get the attack and release durations
         virtual double attack_duration() const = 0;
