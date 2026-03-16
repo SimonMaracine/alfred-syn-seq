@@ -83,6 +83,7 @@ namespace application {
 
         auto& io = ImGui::GetIO();
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+        io.ConfigDockingNoDockingOver = true;
         io.ConfigWindowsResizeFromEdges = false;
         io.ConfigWindowsMoveFromTitleBarOnly = true;
         io.IniFilename = nullptr;
@@ -1416,8 +1417,8 @@ namespace application {
     }
 
     bool Application::time_signature() {
-        constexpr const char* BEATS[]{ "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16" };
-        constexpr const char* VALUE[]{ "1", "2", "4", "8", "16" };
+        constexpr const char* BEATS[] { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16" };
+        constexpr const char* VALUE[] { "1", "2", "4", "8", "16" };
 
         static constexpr auto flags{ ImGuiComboFlags_HeightSmall | ImGuiComboFlags_WidthFitPreview | ImGuiComboFlags_NoArrowButton };
 
@@ -1607,7 +1608,120 @@ namespace application {
 
     void Application::edit_instrument() {
         window_menu("Edit Instrument", m_edit_instrument_menu, [this] {
+            ImGui::InputText("Name", m_ui.preset.name, sizeof(m_ui.preset.name));
+            ImGui::InputText("Description", m_ui.preset.description, sizeof(m_ui.preset.description));
 
+            if (ImGui::InputScalarN("Range", ImGuiDataType_U32, m_ui.preset.range, 2)) {
+                m_ui.preset.range[0] = std::clamp(m_ui.preset.range[0], syn::keyboard::ID_BEGIN, syn::keyboard::ID_END);
+                m_ui.preset.range[1] = std::clamp(m_ui.preset.range[1], syn::keyboard::ID_BEGIN, syn::keyboard::ID_END);
+                m_ui.preset.range[0] = std::min(m_ui.preset.range[0], m_ui.preset.range[1]);
+            }
+
+            if (ImGui::InputDouble("Attack", &m_ui.preset.envelope_description.duration_attack, 0, 0, "%.3f")) {
+                m_ui.preset.envelope_description.duration_attack = std::clamp(m_ui.preset.envelope_description.duration_attack, 0.0, 10.0);
+            }
+
+            if (ImGui::InputDouble("Decay", &m_ui.preset.envelope_description.duration_decay, 0, 0, "%.3f")) {
+                m_ui.preset.envelope_description.duration_decay = std::clamp(m_ui.preset.envelope_description.duration_decay, 0.0, 10.0);
+            }
+
+            if (ImGui::InputDouble("Release", &m_ui.preset.envelope_description.duration_release, 0, 0, "%.3f")) {
+                m_ui.preset.envelope_description.duration_release = std::clamp(m_ui.preset.envelope_description.duration_release, 0.0, 10.0);
+            }
+
+            constexpr const char* ENVELOPE_TYPE[] { "Linear", "Exponential" };
+
+            if (ImGui::BeginCombo("Envelope Type", ENVELOPE_TYPE[m_ui.preset.envelope_type])) {
+                for (std::size_t i {}; i < std::size(ENVELOPE_TYPE); i++) {
+                    if (ImGui::Selectable(ENVELOPE_TYPE[i], m_ui.preset.envelope_type == int(i))) {
+                        m_ui.preset.envelope_type = ui::Preset::EnvelopeType(i);
+                    }
+                }
+
+                ImGui::EndCombo();
+            }
+
+            ImGui::Dummy(ui::rem(ImVec2(0.0f, 0.5f)));
+
+            if (ImGui::Button("Add Partial")) {
+                m_ui.preset.partials.emplace_back();
+            }
+
+            if (ImGui::BeginChild("Partials", ImVec2(0.0f, ui::rem(20.0f)), ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_Borders)) {
+                for (auto [id, partial] : m_ui.preset.partials | std::views::enumerate) {
+                    ImGui::PushID(int(id));
+
+                    ImGui::PushItemWidth(ui::rem(7.0f));
+
+                    constexpr const char* OSCILLATOR_TYPE[] { "Sine", "Square", "Triangle", "Sawtooth" };
+
+                    if (ImGui::BeginCombo("##Oscillator", OSCILLATOR_TYPE[partial.oscillator_type])) {
+                        for (std::size_t i {}; i < std::size(OSCILLATOR_TYPE); i++) {
+                            if (ImGui::Selectable(OSCILLATOR_TYPE[i], partial.oscillator_type == int(i))) {
+                                partial.oscillator_type = ui::Preset::Partial::OscillatorType(i);
+                            }
+                        }
+
+                        ImGui::EndCombo();
+                    }
+
+                    ImGui::PopItemWidth();
+
+                    ImGui::SameLine();
+
+                    ImGui::PushItemWidth(ui::rem(5.0f));
+
+                    if (ImGui::InputDouble("##Frequency", &partial.frequency_multiplier, 0, 0, "%.3f")) {
+                        partial.frequency_multiplier = std::clamp(partial.frequency_multiplier, 0.0, 15.0);
+                    }
+
+                    ImGui::SameLine();
+
+                    if (ImGui::InputDouble("##Amplitude", &partial.amplitude_divisor, 0, 0, "%.3f")) {
+                        partial.amplitude_divisor = std::clamp(partial.amplitude_divisor, 1.0, 100.0);
+                    }
+
+                    ImGui::SameLine();
+
+                    if (ImGui::InputDouble("##Phase", &partial.phase, 0, 0, "%.3f")) {
+                        partial.phase = std::clamp(partial.phase, 0.0, math::TWO_PI);
+                    }
+
+                    ImGui::SameLine();
+
+                    ImGui::Checkbox("##LFO", &partial.lfo.enabled);
+
+                    if (partial.lfo.enabled) {
+                        ImGui::SameLine();
+
+                        if (ImGui::InputDouble("##LFO Frequency", &partial.lfo.frequency, 0, 0, "%.3f")) {
+                            partial.lfo.frequency = std::clamp(partial.lfo.frequency, 1.0, 20.0);
+                        }
+
+                        ImGui::SameLine();
+
+                        if (ImGui::InputDouble("##LFO Deviation", &partial.lfo.deviation, 0, 0, "%.3f")) {
+                            partial.lfo.deviation = std::clamp(partial.lfo.deviation, 0.0, 1.0);
+                        }
+                    }
+
+                    ImGui::PopItemWidth();
+
+                    ImGui::PopID();
+                }
+            }
+
+            ImGui::EndChild();
+
+            if (ImGui::Button("Apply")) {
+
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Save")) {
+
+            }
         });
     }
 

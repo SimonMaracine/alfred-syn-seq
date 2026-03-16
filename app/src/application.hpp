@@ -248,6 +248,7 @@ namespace application {
             ui::Agogic agogic;
             ui::TimeSignature time_signature;
             ui::Composition composition;
+            ui::Preset preset;
             int octave = ui::OctaveFourth;
             int loudness = ui::LoudnessMezzoForte;
             int polyphony {};

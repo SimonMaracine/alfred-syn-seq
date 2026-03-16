@@ -2,6 +2,7 @@
 
 #include <utility>
 #include <stdexcept>
+#include <vector>
 #include <cstdint>
 
 #include <imgui.h>
@@ -139,6 +140,46 @@ namespace ui {
         char title[64] {};
         char author[64] {};
         short year {};
+    };
+
+    struct Preset {
+        char name[64] {};
+        char description[64] {};
+
+        unsigned int range[2] {};
+
+        struct {
+            double duration_attack {};
+            double duration_decay {};
+            double duration_release {};
+            double value_sustain {};
+        } envelope_description;
+
+        enum EnvelopeType {
+            Linear,
+            Exponential
+        } envelope_type {};
+
+        struct Partial {
+            enum OscillatorType {
+                Sine,
+                Square,
+                Triangle,
+                Sawtooth
+            } oscillator_type {};
+
+            double frequency_multiplier = 1.0;
+            double amplitude_divisor = 1.0;
+            double phase {};
+
+            struct {
+                bool enabled {};
+                double frequency {};
+                double deviation {};
+            } lfo;
+        };
+
+        std::vector<Partial> partials;
     };
 
     float rem(float size);
