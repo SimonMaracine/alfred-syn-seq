@@ -4,22 +4,22 @@
 #include <ranges>
 #include <cassert>
 
-#include "alfred/instrument.hpp"
+#include "alfred/instruments.hpp"
 #include "alfred/math.hpp"
 
 namespace synthesizer {
     Synthesizer::Synthesizer() {
-        m_instruments[instrument::Metronome::static_id()] = std::make_unique<instrument::Metronome>();
-        m_instruments[instrument::Bell::static_id()] = std::make_unique<instrument::Bell>();
-        m_instruments[instrument::Harmonica::static_id()] = std::make_unique<instrument::Harmonica>();
-        m_instruments[instrument::DrumBass::static_id()] = std::make_unique<instrument::DrumBass>();
-        m_instruments[instrument::DrumSnare::static_id()] = std::make_unique<instrument::DrumSnare>();
-        m_instruments[instrument::DrumHiHat::static_id()] = std::make_unique<instrument::DrumHiHat>();
-        m_instruments[instrument::SynthPiano::static_id()] = std::make_unique<instrument::SynthPiano>();
-        m_instruments[instrument::Guitar::static_id()] = std::make_unique<instrument::Guitar>();
-        m_instruments[instrument::Strings::static_id()] = std::make_unique<instrument::Strings>();
-        m_instruments[instrument::Cello::static_id()] = std::make_unique<instrument::Cello>();
-        m_instruments[instrument::Test::static_id()] = std::make_unique<instrument::Test>();
+        m_instruments[instruments::Metronome::static_id()] = std::make_unique<instruments::Metronome>();
+        m_instruments[instruments::Bell::static_id()] = std::make_unique<instruments::Bell>();
+        m_instruments[instruments::Harmonica::static_id()] = std::make_unique<instruments::Harmonica>();
+        m_instruments[instruments::DrumBass::static_id()] = std::make_unique<instruments::DrumBass>();
+        m_instruments[instruments::DrumSnare::static_id()] = std::make_unique<instruments::DrumSnare>();
+        m_instruments[instruments::DrumHiHat::static_id()] = std::make_unique<instruments::DrumHiHat>();
+        m_instruments[instruments::SynthPiano::static_id()] = std::make_unique<instruments::SynthPiano>();
+        m_instruments[instruments::Guitar::static_id()] = std::make_unique<instruments::Guitar>();
+        m_instruments[instruments::Strings::static_id()] = std::make_unique<instruments::Strings>();
+        m_instruments[instruments::Cello::static_id()] = std::make_unique<instruments::Cello>();
+        m_instruments[instruments::Test::static_id()] = std::make_unique<instruments::Test>();
     }
 
     void Synthesizer::for_each_instrument(const std::function<void(const syn::Instrument&)>& function) const {

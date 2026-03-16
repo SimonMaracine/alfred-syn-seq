@@ -4,7 +4,7 @@
 #include <cmath>
 #include <cassert>
 
-#include <alfred/instrument.hpp>
+#include <alfred/instruments.hpp>
 
 namespace seq {
     std::uint32_t Composition::size() const {
@@ -160,7 +160,7 @@ namespace seq {
 
             for (auto measure = cloned_composition.measures.begin(); measure != cloned_composition.measures.end(); measure++) {
                 for (std::uint32_t i {}; i < measure->time_signature.measure_steps(); i += seq::steps(measure->time_signature.value())) {
-                    measure->instruments[instrument::Metronome::static_id()].emplace(
+                    measure->instruments[instruments::Metronome::static_id()].emplace(
                         i == 0 ? syn::note(syn::B, syn::Octave5) : syn::note(syn::A, syn::Octave5),
                         Sixteenth,
                         i,
@@ -301,7 +301,7 @@ namespace seq {
     }
 
     double Player::calculate_note_loudness(ConstMeasureIter measure, syn::InstrumentId instrument, std::uint32_t position, std::uint32_t duration) {
-        if (instrument == instrument::Metronome::static_id()) {
+        if (instrument == instruments::Metronome::static_id()) {
             return amplitude(Loudness::Fortississimo);
         }
 

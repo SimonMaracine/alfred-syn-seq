@@ -12,7 +12,7 @@
 #include <cassert>
 
 #include <SDL3/SDL.h>
-#include <alfred/instrument.hpp>
+#include <alfred/instruments.hpp>
 #include <alfred/math.hpp>
 #include <imgui_internal.h>
 
@@ -87,7 +87,7 @@ namespace application {
         io.ConfigWindowsMoveFromTitleBarOnly = true;
         io.IniFilename = nullptr;
 
-        m_instrument = instrument::SynthPiano::static_id();
+        m_instrument = instruments::SynthPiano::static_id();
         m_player = seq::Player(m_synthesizer, m_composition, [this] { stop_player(); });
         m_composition_selected_measure = m_composition.measures.end();
 
@@ -234,6 +234,11 @@ namespace application {
                 ImGui::EndMenu();
             }
 
+            if (ImGui::BeginMenu("Instrument")) {
+                main_menu_bar_instrument();
+                ImGui::EndMenu();
+            }
+
             if (ImGui::BeginMenu("Options")) {
                 main_menu_bar_options();
                 ImGui::EndMenu();
@@ -319,6 +324,22 @@ namespace application {
 
         if (ImGui::MenuItem("Mixer")) {
             open_composition_mixer();
+        }
+    }
+
+    void Application::main_menu_bar_instrument() {
+        if (ImGui::MenuItem("Create")) {
+
+        }
+
+        if (ImGui::BeginMenu("Edit")) {
+            ImGui::MenuItem("Some Inst.");
+
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::MenuItem("Load")) {
+
         }
     }
 

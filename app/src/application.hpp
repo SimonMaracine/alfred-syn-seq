@@ -82,6 +82,7 @@ namespace application {
         void main_menu_bar_file();
         void main_menu_bar_edit();
         void main_menu_bar_composition();
+        void main_menu_bar_instrument();
         void main_menu_bar_options();
         void main_menu_bar_audio() const;
         void main_menu_bar_help();

@@ -8,8 +8,9 @@ target_sources(
     alfred_lib
     PRIVATE
         "src/audio.cpp"
-        "src/instrument.cpp"
+        "src/instruments.cpp"
         "src/math.cpp"
+        "src/preset.cpp"
         "src/synthesis.cpp"
         "src/synthesizer.cpp"
     PUBLIC
@@ -20,8 +21,9 @@ target_sources(
             "include/alfred/allocator.hpp"
             "include/alfred/audio.hpp"
             "include/alfred/hash.hpp"
-            "include/alfred/instrument.hpp"
+            "include/alfred/instruments.hpp"
             "include/alfred/math.hpp"
+            "include/alfred/preset.hpp"
             "include/alfred/synthesis.hpp"
             "include/alfred/synthesizer.hpp"
 )

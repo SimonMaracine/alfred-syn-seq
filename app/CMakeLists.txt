@@ -59,6 +59,8 @@ add_executable(
     "src/logging.cpp"
     "src/logging.hpp"
     "src/main.cpp"
+    "src/preset.cpp"
+    "src/preset.hpp"
     "src/sequencer.cpp"
     "src/sequencer.hpp"
     "src/task.cpp"
