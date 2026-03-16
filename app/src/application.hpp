@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <optional>
 #include <stack>
+#include <functional>
 
 #include <imgui.h>
 #include <alfred/synthesizer.hpp>
@@ -111,8 +112,10 @@ namespace application {
         bool agogic();
         void composition_metadata();
         void composition_mixer();
+        void edit_instrument();
         void render_composition();
         void debug() const;
+        static void window_menu(const char* name, bool& open, const std::function<void()> &window);
 
         void keyboard_input(unsigned int key, bool down);
         void composition_mouse_pressed(ImVec2 origin);
@@ -203,6 +206,7 @@ namespace application {
         void file_save();
         void open_composition_metadata();
         void open_composition_mixer();
+        void open_edit_instrument();
         void open_render_composition();
         void reset_render_composition();
         void start_render_composition();
@@ -263,6 +267,7 @@ namespace application {
         bool m_composition_not_saved {};
         bool m_composition_metadata_menu {};
         bool m_composition_mixer_menu {};
+        bool m_edit_instrument_menu {};
         bool m_render_composition_menu {};
         bool m_render_in_progress {};
         bool m_invalidate_ui_dock_builder {};

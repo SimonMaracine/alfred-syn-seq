@@ -191,6 +191,7 @@ namespace application {
         composition();
         composition_metadata();
         composition_mixer();
+        edit_instrument();
         render_composition();
         shortcuts();
 
@@ -329,7 +330,7 @@ namespace application {
 
     void Application::main_menu_bar_instrument() {
         if (ImGui::MenuItem("Create")) {
-
+            open_edit_instrument();
         }
 
         if (ImGui::BeginMenu("Edit")) {
@@ -1555,17 +1556,7 @@ namespace application {
     }
 
     void Application::composition_metadata() {
-        if (!m_composition_metadata_menu) {
-            return;
-        }
-
-        ImGui::SetNextWindowPos(ImVec2(ImGui::GetMainViewport()->Size.x / 2.0f, ImGui::GetMainViewport()->Size.y / 2.0f), ImGuiCond_Once, ImVec2(0.5f, 0.5f));
-
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
-
-        static constexpr auto flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDocking;
-
-        if (ImGui::Begin("Composition Metadata", &m_composition_metadata_menu, flags)) {
+        window_menu("Composition Metadata", m_composition_metadata_menu, [this] {
             if (ImGui::InputText("Title", m_ui.composition.title, sizeof(m_ui.composition.title))) {
                 m_composition.title = m_ui.composition.title;
                 modify_composition_metadata();
@@ -1580,25 +1571,11 @@ namespace application {
                 m_composition.year = std::chrono::year(m_ui.composition.year);
                 modify_composition_metadata();
             }
-        }
-
-        ImGui::End();
-
-        ImGui::PopStyleVar();
+        });
     }
 
     void Application::composition_mixer() {
-        if (!m_composition_mixer_menu) {
-            return;
-        }
-
-        ImGui::SetNextWindowPos(ImVec2(ImGui::GetMainViewport()->Size.x / 2.0f, ImGui::GetMainViewport()->Size.y / 2.0f), ImGuiCond_Once, ImVec2(0.5f, 0.5f));
-
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
-
-        static constexpr auto flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDocking;
-
-        if (ImGui::Begin("Composition Mixer", &m_composition_mixer_menu, flags)) {
+        window_menu("Composition Mixer", m_composition_mixer_menu, [this] {
             const auto instruments = active_instruments();
 
             if (instruments.empty()) {
@@ -1625,25 +1602,17 @@ namespace application {
 
                 ImGui::PopID();
             }
-        }
+        });
+    }
 
-        ImGui::End();
+    void Application::edit_instrument() {
+        window_menu("Edit Instrument", m_edit_instrument_menu, [this] {
 
-        ImGui::PopStyleVar();
+        });
     }
 
     void Application::render_composition() {
-        if (!m_render_composition_menu) {
-            return;
-        }
-
-        ImGui::SetNextWindowPos(ImVec2(ImGui::GetMainViewport()->Size.x / 2.0f, ImGui::GetMainViewport()->Size.y / 2.0f), ImGuiCond_Once, ImVec2(0.5f, 0.5f));
-
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
-
-        static constexpr auto flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDocking;
-
-        if (ImGui::Begin("Render Composition", &m_render_composition_menu, flags)) {
+        window_menu("Render Composition", m_render_composition_menu, [this] {
             ImGui::Text("Render and export to a raw WAV file:");
 
             ImGui::Dummy(ui::rem(ImVec2(0.0f, 0.5f)));
@@ -1669,11 +1638,7 @@ namespace application {
             }
 
             ImGui::EndDisabled();
-        }
-
-        ImGui::End();
-
-        ImGui::PopStyleVar();
+        });
     }
 
     void Application::debug() const {
@@ -1688,6 +1653,26 @@ namespace application {
 
         ImGui::End();
 #endif
+    }
+
+    void Application::window_menu(const char* name, bool& open, const std::function<void()>& window) {
+        if (!open) {
+            return;
+        }
+
+        ImGui::SetNextWindowPos(ImVec2(ImGui::GetMainViewport()->Size.x / 2.0f, ImGui::GetMainViewport()->Size.y / 2.0f), ImGuiCond_Once, ImVec2(0.5f, 0.5f));
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
+
+        static constexpr auto flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDocking;
+
+        if (ImGui::Begin(name, &open, flags)) {
+            window();
+        }
+
+        ImGui::End();
+
+        ImGui::PopStyleVar();
     }
 
     void Application::keyboard_input(unsigned int key, bool down) {
@@ -3071,6 +3056,10 @@ namespace application {
 
     void Application::open_composition_mixer() {
         m_composition_mixer_menu = true;
+    }
+
+    void Application::open_edit_instrument() {
+        m_edit_instrument_menu = true;
     }
 
     void Application::open_render_composition() {
