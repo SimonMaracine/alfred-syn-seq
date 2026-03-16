@@ -36,53 +36,34 @@ namespace logging {
     }
 
     void println_console([[maybe_unused]] Severity severity, [[maybe_unused]] const std::source_location& location, [[maybe_unused]] TimeOfDay time_of_day, [[maybe_unused]] const std::string& message) {
-        // This is already thread safe
+        // Printing to console is already thread safe
 
-        // Distribution build for windows doesn't have a console, so there is no printing available
-        // Keep printing for Linux though
-#if !(defined(ALFRED_WINDOWS) && defined(ALFRED_DISTRIBUTION))
+        // Distribution build for Windows doesn't have a console, so there is no printing available
+        // Disable printing for Linux too
+#ifndef ALFRED_DISTRIBUTION
     #ifdef __cpp_lib_print
-        #ifdef ALFRED_DISTRIBUTION
-            std::println(
-                stderr,
-                "[{} {}] {}",
-                severity_to_string(severity),
-                time_of_day,
-                message
-            );
-        #else
-            std::println(
-                stderr,
-                "[{} {} {} {} {}:{}] {}",
-                severity_to_string(severity),
-                time_of_day,
-                location.file_name(),
-                location.function_name(),
-                location.line(),
-                location.column(),
-                message
-            );
-        #endif
+        std::println(
+            stderr,
+            "[{} {} {} {} {}:{}] {}",
+            severity_to_string(severity),
+            time_of_day,
+            location.file_name(),
+            location.function_name(),
+            location.line(),
+            location.column(),
+            message
+        );
     #else
-        #ifdef ALFRED_DISTRIBUTION
-            std::cerr << std::format(
-                "[{} {}] {}\n",
-                severity_to_string(severity),
-                time_of_day,
-                message
-            );
-        #else
-            std::cerr << std::format(
-                "[{} {} {} {} {}:{}] {}\n",
-                severity_to_string(severity),
-                time_of_day,
-                location.file_name(),
-                location.function_name(),
-                location.line(),
-                location.column(),
-                message
-            );
-        #endif
+        std::cerr << std::format(
+            "[{} {} {} {} {}:{}] {}\n",
+            severity_to_string(severity),
+            time_of_day,
+            location.file_name(),
+            location.function_name(),
+            location.line(),
+            location.column(),
+            message
+        );
     #endif
 #endif
     }
