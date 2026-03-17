@@ -29,18 +29,25 @@ namespace synthesizer {
         // Stop any current voice
         virtual void silence() = 0;
 
-        // Silence the synthesizer after calling this
+        // Set the max voices; silence the synthesizer after calling this
         virtual void polyphony(std::size_t max_voices) = 0;
 
-        std::size_t current_voices() const { return m_voices.size(); }
-        std::size_t polyphony() const { return m_max_voices; }
+        // Add external instruments to the storage
+        virtual void store_instrument(std::unique_ptr<syn::Instrument> instrument) = 0;
 
         // Instruments/presets interrogation/mutation
+        // Writing to the instruments' data can lead to race conditions
+        // Otherwise just retrieving the instrument objects themselves is fine
         void for_each_instrument(const std::function<void(const syn::Instrument&)>& function) const;
         void for_each_instrument(const std::function<void(syn::Instrument&)>& function);
         const syn::Instrument& get_instrument(syn::InstrumentId instrument) const;
         syn::Instrument& get_instrument(syn::InstrumentId instrument);
+
+        // Get the current voice and max voice counts
+        std::size_t current_voices() const { return m_voices.size(); }
+        std::size_t polyphony() const { return m_max_voices; }
     protected:
+        void insert_instrument(std::unique_ptr<syn::Instrument> instrument);
         void note_on(double time, syn::NoteId note, syn::InstrumentId instrument, syn::Velocity velocity);
         void note_off(double time, syn::NoteId note, syn::InstrumentId instrument);
         void set_polyphony(std::size_t max_voices);
@@ -49,13 +56,18 @@ namespace synthesizer {
         void sample_update(double time) const noexcept;
         double sample_sound(double time) const noexcept;
 
+        // Instruments storage
         std::unordered_map<syn::InstrumentId, std::unique_ptr<syn::Instrument>> m_instruments;
+
+        // Current "active" voices that produce sounds
         std::vector<syn::Voice> m_voices;
+
         std::size_t m_max_voices = 4;
     };
 
     // Real time synthesizer whose output is the computer speakers
     // Tied to the clock time of the audio device
+    // The audio stream callback, which is running from a different thread, should only read data from the synthesizer
     class RealSynthesizer : public Synthesizer, public audio::Audio {
     public:
         using Synthesizer::polyphony;
@@ -67,6 +79,7 @@ namespace synthesizer {
         double update() override;
         void silence() override;
         void polyphony(std::size_t max_voices) override;
+        void store_instrument(std::unique_ptr<syn::Instrument> instrument) override;
     private:
         void callback_update() noexcept override;
         double callback_sound() const noexcept override;
@@ -84,6 +97,7 @@ namespace synthesizer {
         double update() override;
         void silence() override;
         void polyphony(std::size_t max_voices) override;
+        void store_instrument(std::unique_ptr<syn::Instrument> instrument) override;
 
         // Invalidate this synthesizer
         void reset();

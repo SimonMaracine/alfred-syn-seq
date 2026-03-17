@@ -1,5 +1,7 @@
 #include "alfred/preset.hpp"
 
+#include <ranges>
+
 namespace preset {
     double RuntimeInstrument::sound(double time, double, syn::NoteId note) const noexcept {
         double output {};

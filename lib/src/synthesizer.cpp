@@ -9,6 +9,7 @@
 
 namespace synthesizer {
     Synthesizer::Synthesizer() {
+        // Built-in instruments
         m_instruments[instruments::Metronome::static_id()] = std::make_unique<instruments::Metronome>();
         m_instruments[instruments::Bell::static_id()] = std::make_unique<instruments::Bell>();
         m_instruments[instruments::Harmonica::static_id()] = std::make_unique<instruments::Harmonica>();
@@ -40,6 +41,11 @@ namespace synthesizer {
 
     syn::Instrument& Synthesizer::get_instrument(syn::InstrumentId instrument) {
         return *m_instruments.at(instrument);
+    }
+
+    void Synthesizer::insert_instrument(std::unique_ptr<syn::Instrument> instrument) {
+        // Add new or override if already existing
+        m_instruments[instrument->id()] = std::move(instrument);
     }
 
     void Synthesizer::note_on(double time, syn::NoteId note, syn::InstrumentId instrument, syn::Velocity velocity) {
@@ -124,6 +130,8 @@ namespace synthesizer {
         for (const syn::Voice& voice : m_voices) {
             // The update function should take care of nicely stopping voices, if there are too many
 
+            // This throws, if the voice's instrument somehow isn't found
+            // It is important that this function only reads data from the synthesizer
             const auto& instrument = m_instruments.at(voice.instrument);
 
             output +=
@@ -178,6 +186,12 @@ namespace synthesizer {
         set_polyphony(max_voices);
     }
 
+    void RealSynthesizer::store_instrument(std::unique_ptr<syn::Instrument> instrument) {
+        audio::AudioLockGuard guard {this};
+
+        insert_instrument(std::move(instrument));
+    }
+
     void RealSynthesizer::callback_update() noexcept {
         sample_update(m_time);
     }
@@ -214,6 +228,10 @@ namespace synthesizer {
 
     void VirtualSynthesizer::polyphony(std::size_t max_voices) {
         set_polyphony(max_voices);
+    }
+
+    void VirtualSynthesizer::store_instrument(std::unique_ptr<syn::Instrument> instrument) {
+        insert_instrument(std::move(instrument));
     }
 
     void VirtualSynthesizer::reset() {

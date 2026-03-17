@@ -1755,7 +1755,9 @@ namespace application {
             ImGui::EndChild();
 
             if (ImGui::Button("Store into Synthesizer")) {
-
+                m_synthesizer.store_instrument(create_runtime_instrument_from_preset(get_preset(m_ui.preset)));
+                set_composition_instrument_colors();
+                LOG_DEBUG("Created and stored a new runtime instrument");
             }
 
             ImGui::SameLine();
@@ -3130,6 +3132,17 @@ namespace application {
         ImColor color_ = ImGui::GetStyle().Colors[color];
         color_.Value.w = opacity;
         return color_;
+    }
+
+    std::unique_ptr<preset::RuntimeInstrument> Application::create_runtime_instrument_from_preset(preset::Preset preset) {
+        return std::make_unique<preset::RuntimeInstrument>(
+            std::move(preset.name),
+            std::move(preset.description),
+            std::move(preset.range),
+            std::move(preset.envelope_description),
+            preset.envelope_type,
+            std::move(preset.partials)
+        );
     }
 
     void Application::composition_save_file_dialog(void* userdata, const char* const* filelist, int) {

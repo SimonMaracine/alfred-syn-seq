@@ -5,7 +5,6 @@
 #include <vector>
 #include <numeric>
 #include <algorithm>
-#include <ranges>
 #include <limits>
 #include <utility>
 #include <cmath>
@@ -353,8 +352,8 @@ namespace syn {
     namespace util {
         template<std::size_t N>
         constexpr std::array<double, N> amplitudes(std::array<double, N> divisors) {
-            for (const auto [i, divisor] : divisors | std::views::enumerate) {
-                divisors[i] = 1.0 / divisor;
+            for (std::size_t i {}; i < divisors.size(); i++) {
+                divisors[i] = 1.0 / divisors[i];
             }
 
             const double sum = std::accumulate(divisors.begin(), divisors.end(), 0.0);
