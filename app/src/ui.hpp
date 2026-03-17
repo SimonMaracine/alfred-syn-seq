@@ -7,6 +7,8 @@
 
 #include <imgui.h>
 
+#include <alfred/synthesis.hpp>
+
 // Functions and definitions used by the UI of the application
 
 namespace ui {
@@ -146,18 +148,20 @@ namespace ui {
         char name[64] {};
         char description[64] {};
 
-        unsigned int range[2] {};
+        unsigned int range[2] { syn::keyboard::ID_BEGIN, syn::keyboard::ID_END };
 
         struct {
-            double duration_attack {};
-            double duration_decay {};
-            double duration_release {};
-            double value_sustain {};
+            double duration_attack = 0.1;
+            double duration_decay = 0.1;
+            double duration_release = 0.1;
+            double value_sustain = 0.9;
         } envelope_description;
 
         enum EnvelopeType {
-            Linear,
-            Exponential
+            AdsrLinear,
+            AdsrExponential,
+            AdrLinear,
+            AdrExponential
         } envelope_type {};
 
         struct Partial {
@@ -174,8 +178,8 @@ namespace ui {
 
             struct {
                 bool enabled {};
-                double frequency {};
-                double deviation {};
+                double frequency = 1.0;
+                double deviation = 0.1;
             } lfo;
         };
 

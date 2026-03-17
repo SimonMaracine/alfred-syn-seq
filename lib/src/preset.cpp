@@ -5,7 +5,7 @@ namespace preset {
         double output {};
 
         for (const auto& [i, partial] : m_partials | std::views::enumerate) {
-            switch (partial.type) {
+            switch (partial.oscillator_type) {
                 case syn::oscillator::Type::Sine:
                     if (partial.lfo) {
                         output += m_amplitudes[i] * syn::oscillator::sine(time, partial.frequency_multiplier * syn::frequency(note), partial.phase, *partial.lfo);

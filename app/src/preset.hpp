@@ -45,7 +45,7 @@ namespace preset {
     template<typename Archive>
     void save(Archive& archive, const Partial& self, const std::uint32_t) {
         archive(
-            cereal::make_nvp("type", self.type),
+            cereal::make_nvp("oscillator_type", self.oscillator_type),
             cereal::make_nvp("frequency_multiplier", self.frequency_multiplier),
             cereal::make_nvp("amplitude_divisor", self.amplitude_divisor),
             cereal::make_nvp("phase", self.phase),
@@ -56,7 +56,7 @@ namespace preset {
     template<typename Archive>
     void load(Archive& archive, Partial& self, const std::uint32_t) {
         archive(
-            cereal::make_nvp("type", self.type),
+            cereal::make_nvp("oscillator_type", self.oscillator_type),
             cereal::make_nvp("frequency_multiplier", self.frequency_multiplier),
             cereal::make_nvp("amplitude_divisor", self.amplitude_divisor),
             cereal::make_nvp("phase", self.phase),

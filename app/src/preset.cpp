@@ -17,7 +17,7 @@ namespace preset {
 
         try {
             cereal::XMLOutputArchive archive {stream};
-            archive(preset);
+            archive(cereal::make_nvp("preset", preset));
         } catch (const cereal::Exception& e) {
             throw PresetError(std::format("Could not write to stream: {}", e.what()));
         } catch (...) {
@@ -33,7 +33,7 @@ namespace preset {
 
         try {
             cereal::XMLInputArchive archive {stream};
-            archive(preset);
+            archive(cereal::make_nvp("preset", preset));
         } catch (const cereal::Exception& e) {
             throw PresetError(std::format("Could not read from stream: {}", e.what()));
         } catch (...) {

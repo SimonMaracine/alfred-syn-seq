@@ -18,6 +18,7 @@
 #include "task.hpp"
 #include "image.hpp"
 #include "flat_set.hpp"
+#include "preset.hpp"
 
 namespace application {
     using MeasureIter = seq::MeasureIter;
@@ -112,7 +113,7 @@ namespace application {
         bool agogic();
         void composition_metadata();
         void composition_mixer();
-        void edit_instrument();
+        void create_instrument();
         void render_composition();
         void debug() const;
         static void window_menu(const char* name, bool& open, const std::function<void()> &window);
@@ -191,8 +192,11 @@ namespace application {
         std::optional<ProvenanceNote> check_note_has_previous(const ProvenanceNote& provenance_note) const;
         static Time elapsed_seconds_to_time(double elapsed_seconds);
         static seq::Value get_value(ui::Value value);
+        static preset::Preset get_preset(const ui::Preset& preset);
+        static ui::Preset get_preset(const preset::Preset& preset);
         static const ImVec4& color(ImGuiCol color);
         static ImColor color_opacity(ImGuiCol color, float opacity);
+
         static void composition_save_file_dialog(void* userdata, const char* const* filelist, int filter);
         static void composition_open_file_dialog(void* userdata, const char* const* filelist, int filter);
         static void composition_save(const std::filesystem::path& path, const composition::Composition& composition);
@@ -201,13 +205,24 @@ namespace application {
         bool composition_save();
         bool composition_open(std::filesystem::path path);
         void composition_new();
-        void file_new();
-        void file_open();
-        void file_save();
+        void composition_file_new();
+        void composition_file_open();
+        void composition_file_save();
+
+        static void preset_save_file_dialog(void* userdata, const char* const* filelist, int filter);
+        static void preset_open_file_dialog(void* userdata, const char* const* filelist, int filter);
+        static void preset_save(const std::filesystem::path& path, const preset::Preset& preset);
+        static void preset_open(const std::filesystem::path& path, preset::Preset& preset);
+        bool preset_save(std::filesystem::path path) const;
+        bool preset_open(const std::filesystem::path& path);
+        void preset_file_save();
+        void preset_file_open();
+
         void open_composition_metadata();
         void open_composition_mixer();
-        void open_edit_instrument();
+        void open_create_instrument();
         void open_render_composition();
+
         void reset_render_composition();
         void start_render_composition();
         void do_render_composition(const task::AsyncTask& task, std::filesystem::path&& file_path, seq::Composition&& composition, bool normalize);
@@ -268,7 +283,7 @@ namespace application {
         bool m_composition_not_saved {};
         bool m_composition_metadata_menu {};
         bool m_composition_mixer_menu {};
-        bool m_edit_instrument_menu {};
+        bool m_create_instrument_menu {};
         bool m_render_composition_menu {};
         bool m_render_in_progress {};
         bool m_invalidate_ui_dock_builder {};

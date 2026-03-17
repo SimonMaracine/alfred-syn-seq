@@ -13,7 +13,7 @@
 
 namespace preset {
     struct Partial {
-        syn::oscillator::Type type {};
+        syn::oscillator::Type oscillator_type {};
         double frequency_multiplier = 1.0;
         double amplitude_divisor = 1.0;
         double phase {};

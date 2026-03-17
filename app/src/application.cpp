@@ -192,7 +192,7 @@ namespace application {
         composition();
         composition_metadata();
         composition_mixer();
-        edit_instrument();
+        create_instrument();
         render_composition();
         shortcuts();
 
@@ -262,7 +262,7 @@ namespace application {
 
     void Application::main_menu_bar_file() {
         if (ImGui::MenuItem("New", "Ctrl+N", false, !m_player.playing())) {
-            file_new();
+            composition_file_new();
         }
 
         if (ImGui::BeginMenu("Open Recent")) {
@@ -285,11 +285,11 @@ namespace application {
         }
 
         if (ImGui::MenuItem("Open", "Ctrl+O", false, !m_player.playing())) {
-            file_open();
+            composition_file_open();
         }
 
         if (ImGui::MenuItem("Save", "Ctrl+S", false, !m_player.playing())) {
-            file_save();
+            composition_file_save();
         }
 
         if (ImGui::MenuItem("Render", "Ctrl+R", false, !m_player.playing())) {
@@ -331,7 +331,7 @@ namespace application {
 
     void Application::main_menu_bar_instrument() {
         if (ImGui::MenuItem("Create")) {
-            open_edit_instrument();
+            open_create_instrument();
         }
 
         if (ImGui::BeginMenu("Edit")) {
@@ -341,7 +341,7 @@ namespace application {
         }
 
         if (ImGui::MenuItem("Load")) {
-
+            preset_file_open();
         }
     }
 
@@ -1263,15 +1263,15 @@ namespace application {
     void Application::shortcuts() {
         if (!m_player.playing()) {
             if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_N, ImGuiInputFlags_RouteAlways)) {
-                file_new();
+                composition_file_new();
             }
 
             if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_O, ImGuiInputFlags_RouteAlways)) {
-                file_open();
+                composition_file_open();
             }
 
             if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_S, ImGuiInputFlags_RouteAlways)) {
-                file_save();
+                composition_file_save();
             }
 
             if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_Z, ImGuiInputFlags_RouteAlways)) {
@@ -1291,7 +1291,7 @@ namespace application {
             }
         }
 
-        if (ImGui::Shortcut(ImGuiKey_Space, ImGuiInputFlags_RouteAlways)) {
+        if (ImGui::Shortcut(ImGuiKey_Space, ImGuiInputFlags_RouteGlobal)) {
             if (m_player.playing()) {
                 stop_player();
             } else {
@@ -1299,7 +1299,7 @@ namespace application {
             }
         }
 
-        if (ImGui::Shortcut(ImGuiKey_Backspace, ImGuiInputFlags_RouteAlways)) {
+        if (ImGui::Shortcut(ImGuiKey_Backspace, ImGuiInputFlags_RouteGlobal)) {
             seek_player(0);
         }
 
@@ -1307,7 +1307,7 @@ namespace application {
             m_data.show_keyboard = !m_data.show_keyboard;
         }
 
-        if (ImGui::Shortcut(ImGuiKey_Tab, ImGuiInputFlags_RouteAlways)) {
+        if (ImGui::Shortcut(ImGuiKey_Tab, ImGuiInputFlags_RouteGlobal)) {
             switch (m_ui.tool) {
                 case ui::ToolMeasure:
                     m_ui.tool = ui::ToolNote;
@@ -1606,9 +1606,12 @@ namespace application {
         });
     }
 
-    void Application::edit_instrument() {
-        window_menu("Edit Instrument", m_edit_instrument_menu, [this] {
+    void Application::create_instrument() {
+        window_menu("Create Instrument", m_create_instrument_menu, [this] {
             ImGui::InputText("Name", m_ui.preset.name, sizeof(m_ui.preset.name));
+
+            ImGui::SetItemTooltip("Has to be unique across all instruments in a synthesizer's storage");
+
             ImGui::InputText("Description", m_ui.preset.description, sizeof(m_ui.preset.description));
 
             if (ImGui::InputScalarN("Range", ImGuiDataType_U32, m_ui.preset.range, 2)) {
@@ -1629,7 +1632,19 @@ namespace application {
                 m_ui.preset.envelope_description.duration_release = std::clamp(m_ui.preset.envelope_description.duration_release, 0.0, 10.0);
             }
 
-            constexpr const char* ENVELOPE_TYPE[] { "Linear", "Exponential" };
+            switch (m_ui.preset.envelope_type) {
+                case ui::Preset::AdsrLinear:
+                case ui::Preset::AdsrExponential:
+                    if (ImGui::InputDouble("Sustain", &m_ui.preset.envelope_description.value_sustain, 0, 0, "%.3f")) {
+                        m_ui.preset.envelope_description.value_sustain = std::clamp(m_ui.preset.envelope_description.value_sustain, 0.0, 1.0);
+                    }
+                    break;
+                case ui::Preset::AdrLinear:
+                case ui::Preset::AdrExponential:
+                    break;
+            }
+
+            constexpr const char* ENVELOPE_TYPE[] { "ADSR Linear", "ADSR Exponential", "ADR Linear", "ADR Exponential" };
 
             if (ImGui::BeginCombo("Envelope Type", ENVELOPE_TYPE[m_ui.preset.envelope_type])) {
                 for (std::size_t i {}; i < std::size(ENVELOPE_TYPE); i++) {
@@ -1647,9 +1662,21 @@ namespace application {
                 m_ui.preset.partials.emplace_back();
             }
 
-            if (ImGui::BeginChild("Partials", ImVec2(0.0f, ui::rem(20.0f)), ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_Borders)) {
+            if (ImGui::BeginChild("Partials", ImVec2(0.0f, ui::rem(20.0f)), ImGuiChildFlags_AutoResizeX)) {
                 for (auto [id, partial] : m_ui.preset.partials | std::views::enumerate) {
                     ImGui::PushID(int(id));
+
+                    if (ImGui::Button("X")) {
+                        m_task_manager.add_immediate_task([this, index = id] {
+                            m_ui.preset.partials.erase(std::next(m_ui.preset.partials.begin(), index));
+                        });
+                    }
+
+                    ImGui::SameLine();
+
+                    ImGui::Text("%ld.", id + 1);
+
+                    ImGui::SameLine();
 
                     ImGui::PushItemWidth(ui::rem(7.0f));
 
@@ -1665,21 +1692,27 @@ namespace application {
                         ImGui::EndCombo();
                     }
 
+                    ImGui::SetItemTooltip("Oscillator");
+
                     ImGui::PopItemWidth();
 
                     ImGui::SameLine();
 
                     ImGui::PushItemWidth(ui::rem(5.0f));
 
-                    if (ImGui::InputDouble("##Frequency", &partial.frequency_multiplier, 0, 0, "%.3f")) {
+                    if (ImGui::InputDouble("##Frequency Multiplier", &partial.frequency_multiplier, 0, 0, "%.3f")) {
                         partial.frequency_multiplier = std::clamp(partial.frequency_multiplier, 0.0, 15.0);
                     }
 
+                    ImGui::SetItemTooltip("Frequency Multiplier");
+
                     ImGui::SameLine();
 
-                    if (ImGui::InputDouble("##Amplitude", &partial.amplitude_divisor, 0, 0, "%.3f")) {
+                    if (ImGui::InputDouble("##Amplitude Divisor", &partial.amplitude_divisor, 0, 0, "%.3f")) {
                         partial.amplitude_divisor = std::clamp(partial.amplitude_divisor, 1.0, 100.0);
                     }
+
+                    ImGui::SetItemTooltip("Amplitude Divisor");
 
                     ImGui::SameLine();
 
@@ -1687,9 +1720,13 @@ namespace application {
                         partial.phase = std::clamp(partial.phase, 0.0, math::TWO_PI);
                     }
 
+                    ImGui::SetItemTooltip("Phase");
+
                     ImGui::SameLine();
 
                     ImGui::Checkbox("##LFO", &partial.lfo.enabled);
+
+                    ImGui::SetItemTooltip("LFO");
 
                     if (partial.lfo.enabled) {
                         ImGui::SameLine();
@@ -1698,11 +1735,15 @@ namespace application {
                             partial.lfo.frequency = std::clamp(partial.lfo.frequency, 1.0, 20.0);
                         }
 
+                        ImGui::SetItemTooltip("LFO Frequency");
+
                         ImGui::SameLine();
 
                         if (ImGui::InputDouble("##LFO Deviation", &partial.lfo.deviation, 0, 0, "%.3f")) {
                             partial.lfo.deviation = std::clamp(partial.lfo.deviation, 0.0, 1.0);
                         }
+
+                        ImGui::SetItemTooltip("LFO Deviation");
                     }
 
                     ImGui::PopItemWidth();
@@ -1713,14 +1754,14 @@ namespace application {
 
             ImGui::EndChild();
 
-            if (ImGui::Button("Apply")) {
+            if (ImGui::Button("Store into Synthesizer")) {
 
             }
 
             ImGui::SameLine();
 
-            if (ImGui::Button("Save")) {
-
+            if (ImGui::Button("Save to File")) {
+                preset_file_save();
             }
         });
     }
@@ -2964,6 +3005,123 @@ namespace application {
         std::unreachable();
     }
 
+    preset::Preset Application::get_preset(const ui::Preset& preset) {
+        preset::Preset result_preset;
+
+        result_preset.name = preset.name;
+        result_preset.description = preset.description;
+        result_preset.range = std::make_pair(preset.range[0], preset.range[1]);
+
+        switch (preset.envelope_type) {
+            case ui::Preset::AdsrLinear:
+            case ui::Preset::AdsrExponential:
+                result_preset.envelope_description = syn::envelope::DescriptionAdsr {
+                    .duration_attack = preset.envelope_description.duration_attack,
+                    .duration_decay = preset.envelope_description.duration_decay,
+                    .duration_release = preset.envelope_description.duration_release,
+                    .value_sustain = preset.envelope_description.value_sustain,
+                };
+                break;
+            case ui::Preset::AdrLinear:
+            case ui::Preset::AdrExponential:
+                result_preset.envelope_description = syn::envelope::DescriptionAdr {
+                    .duration_attack = preset.envelope_description.duration_attack,
+                    .duration_decay = preset.envelope_description.duration_decay,
+                    .duration_release = preset.envelope_description.duration_release,
+                };
+                break;
+        }
+
+        switch (preset.envelope_type) {
+            case ui::Preset::AdsrLinear:
+            case ui::Preset::AdrLinear:
+                result_preset.envelope_type = syn::envelope::Type::Linear;
+                break;
+            case ui::Preset::AdsrExponential:
+            case ui::Preset::AdrExponential:
+                result_preset.envelope_type = syn::envelope::Type::Exponential;
+                break;
+        }
+
+        for (const ui::Preset::Partial& partial : preset.partials) {
+            result_preset.partials.emplace_back(
+                syn::oscillator::Type(partial.oscillator_type),
+                partial.frequency_multiplier,
+                partial.amplitude_divisor,
+                partial.phase,
+                partial.lfo.enabled
+                    ?
+                    std::make_optional(syn::LowFrequencyOscillator { .frequency = partial.lfo.frequency, .deviation = partial.lfo.deviation })
+                    :
+                    std::nullopt
+            );
+        }
+
+        return result_preset;
+    }
+
+    ui::Preset Application::get_preset(const preset::Preset& preset) {
+        ui::Preset result_preset;
+
+        std::strncpy(result_preset.name, preset.name.c_str(), sizeof(result_preset.name));
+        std::strncpy(result_preset.description, preset.description.c_str(), sizeof(result_preset.description));
+        result_preset.range[0] = preset.range.first;
+        result_preset.range[1] = preset.range.second;
+
+        switch (preset.envelope_description.index()) {
+            case 0:
+                result_preset.envelope_description.duration_attack = std::get<0>(preset.envelope_description).duration_attack;
+                result_preset.envelope_description.duration_decay = std::get<0>(preset.envelope_description).duration_decay;
+                result_preset.envelope_description.duration_release = std::get<0>(preset.envelope_description).duration_release;
+                result_preset.envelope_description.value_sustain = std::get<0>(preset.envelope_description).value_sustain;
+
+                switch (preset.envelope_type) {
+                    case syn::envelope::Type::Linear:
+                        result_preset.envelope_type = ui::Preset::AdsrLinear;
+                        break;
+                    case syn::envelope::Type::Exponential:
+                        result_preset.envelope_type = ui::Preset::AdsrExponential;
+                        break;
+                }
+
+                break;
+            case 1:
+                result_preset.envelope_description.duration_attack = std::get<1>(preset.envelope_description).duration_attack;
+                result_preset.envelope_description.duration_decay = std::get<1>(preset.envelope_description).duration_decay;
+                result_preset.envelope_description.duration_release = std::get<1>(preset.envelope_description).duration_release;
+
+                switch (preset.envelope_type) {
+                    case syn::envelope::Type::Linear:
+                        result_preset.envelope_type = ui::Preset::AdrLinear;
+                        break;
+                    case syn::envelope::Type::Exponential:
+                        result_preset.envelope_type = ui::Preset::AdrExponential;
+                        break;
+                }
+
+                break;
+        }
+
+        for (const preset::Partial& partial : preset.partials) {
+            ui::Preset::Partial& result_partial = result_preset.partials.emplace_back();
+
+            result_partial.oscillator_type = ui::Preset::Partial::OscillatorType(partial.oscillator_type);
+            result_partial.frequency_multiplier = partial.frequency_multiplier;
+            result_partial.amplitude_divisor = partial.amplitude_divisor;
+            result_partial.phase = partial.phase;
+
+            if (!partial.lfo) {
+                result_partial.lfo.enabled = false;
+            } else {
+                result_partial.lfo.enabled = true;
+                result_partial.lfo.frequency = partial.lfo->frequency;
+                result_partial.lfo.deviation = partial.lfo->deviation;
+            }
+        }
+
+        return result_preset;
+    }
+
     const ImVec4& Application::color(ImGuiCol color) {
         return ImGui::GetStyle().Colors[color];
     }
@@ -2987,7 +3145,7 @@ namespace application {
 
         if (const char* file = filelist[0]; file) {
             self.m_task_manager.add_immediate_thread_safe_task([&self, file = std::string(file)] mutable {
-                self.composition_save(std::move(file));
+                (void) self.composition_save(std::move(file));
             });
         }
     }
@@ -3123,11 +3281,11 @@ namespace application {
         reset_composition_instrument_colors();
     }
 
-    void Application::file_new() {
+    void Application::composition_file_new() {
         composition_new();
     }
 
-    void Application::file_open() {
+    void Application::composition_file_open() {
         constexpr SDL_DialogFileFilter filters[] {
             { "Alfred files", "alfred" },
             { "All files", "*" }
@@ -3144,7 +3302,7 @@ namespace application {
         );
     }
 
-    void Application::file_save() {
+    void Application::composition_file_save() {
         constexpr SDL_DialogFileFilter filters[] {
             { "Alfred files", "alfred" },
             { "All files", "*" }
@@ -3160,8 +3318,132 @@ namespace application {
                 nullptr
             );
         } else {
-            composition_save();
+            (void) composition_save();
         }
+    }
+
+    void Application::preset_save_file_dialog(void* userdata, const char* const* filelist, int) {
+        Application& self = *static_cast<Application*>(userdata);
+
+        if (!filelist) {
+            self.m_task_manager.add_immediate_thread_safe_task([error = std::string(SDL_GetError())] {
+                logging::error("An error occurred while handling the file dialog: {}", error);
+            });
+
+            return;
+        }
+
+        if (const char* file = filelist[0]; file) {
+            self.m_task_manager.add_immediate_thread_safe_task([&self, file = std::string(file)] mutable {
+                (void) self.preset_save(std::move(file));
+            });
+        }
+    }
+
+    void Application::preset_open_file_dialog(void* userdata, const char* const* filelist, int) {
+        Application& self = *static_cast<Application*>(userdata);
+
+        if (!filelist) {
+            self.m_task_manager.add_immediate_thread_safe_task([error = std::string(SDL_GetError())] {
+                logging::error("An error occurred while handling the file dialog: {}", error);
+            });
+
+            return;
+        }
+
+        if (const char* file = filelist[0]; file) {
+            self.m_task_manager.add_immediate_thread_safe_task([&self, file = std::string(file)] mutable {
+                (void) self.preset_open(std::move(file));
+            });
+        }
+    }
+
+    void Application::preset_save(const std::filesystem::path& path, const preset::Preset& preset) {
+        utility::Buffer buffer;
+        preset::export_preset(preset, buffer);
+        utility::write_file(path, buffer);
+
+        logging::information("Saved preset to `{}`", path.string().c_str());
+    }
+
+    void Application::preset_open(const std::filesystem::path& path, preset::Preset& preset) {
+        utility::Buffer buffer;
+        utility::read_file(path, buffer);
+        preset::import_preset(preset, buffer);
+
+        logging::information("Opened preset from `{}`", path.string().c_str());
+    }
+
+    bool Application::preset_save(std::filesystem::path path) const {
+        path.replace_extension("preset");
+
+        try {
+            preset_save(path, get_preset(m_ui.preset));
+        } catch (const preset::PresetError& e) {
+            logging::error("Could not save preset: {}", e.what());
+            return false;
+        } catch (const utility::FilerError& e) {
+            logging::error("Could not save preset: {}", e.what());
+            return false;
+        }
+
+        return true;
+    }
+
+    bool Application::preset_open(const std::filesystem::path &path) {
+        if (path.extension() != ".preset") {
+            LOG_WARNING("Preset file has the wrong extension");
+        }
+
+        preset::Preset preset;
+
+        try {
+            preset_open(path, preset);
+        } catch (const preset::PresetError& e) {
+            logging::error("Could not open preset: {}", e.what());
+            return false;
+        } catch (const utility::FilerError& e) {
+            logging::error("Could not open preset: {}", e.what());
+            return false;
+        }
+
+        m_ui.preset = get_preset(preset);
+        open_create_instrument();
+
+        return true;
+    }
+
+    void Application::preset_file_save() {
+        constexpr SDL_DialogFileFilter filters[] {
+            { "Preset files", "preset" },
+            { "All files", "*" }
+        };
+
+        SDL_ShowSaveFileDialog(
+            &Application::preset_save_file_dialog,
+            this,
+            m_window,
+            filters,
+            std::size(filters),
+            nullptr
+        );
+    }
+
+    void Application::preset_file_open() {
+        constexpr SDL_DialogFileFilter filters[] {
+            { "Preset files", "preset" },
+            { "All files", "*" }
+        };
+
+        SDL_ShowOpenFileDialog(
+            &Application::preset_open_file_dialog,
+            this,
+            m_window,
+            filters,
+            std::size(filters),
+            nullptr,
+            false
+        );
     }
 
     void Application::open_composition_metadata() {
@@ -3172,8 +3454,8 @@ namespace application {
         m_composition_mixer_menu = true;
     }
 
-    void Application::open_edit_instrument() {
-        m_edit_instrument_menu = true;
+    void Application::open_create_instrument() {
+        m_create_instrument_menu = true;
     }
 
     void Application::open_render_composition() {
