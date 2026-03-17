@@ -26,10 +26,13 @@ namespace synthesizer {
         // Regularly called in order to keep the synthesizer functional
         virtual double update() = 0;
 
-        // Stop any current voice
+        // Smoothly stop any current voice
         virtual void silence() = 0;
 
-        // Set the max voices; silence the synthesizer after calling this
+        // Abruptly stop any current voice
+        virtual void silence_immediately() = 0;
+
+        // Set the max voices; abruptly silence the synthesizer after calling this
         virtual void polyphony(std::size_t max_voices) = 0;
 
         // Add external instruments to the storage
@@ -50,6 +53,7 @@ namespace synthesizer {
         void insert_instrument(std::unique_ptr<syn::Instrument> instrument);
         void note_on(double time, syn::NoteId note, syn::InstrumentId instrument, syn::Velocity velocity);
         void note_off(double time, syn::NoteId note, syn::InstrumentId instrument);
+        static void note_off(double time, syn::Voice& voice);
         void set_polyphony(std::size_t max_voices);
         void update_voices(double time);
         std::vector<syn::Voice>::iterator find_voice(syn::NoteId note, syn::InstrumentId instrument);
@@ -78,6 +82,7 @@ namespace synthesizer {
         void note_off(syn::NoteId note, syn::InstrumentId instrument) override;
         double update() override;
         void silence() override;
+        void silence_immediately() override;
         void polyphony(std::size_t max_voices) override;
         void store_instrument(std::unique_ptr<syn::Instrument> instrument) override;
     private:
@@ -96,6 +101,7 @@ namespace synthesizer {
         void note_off(syn::NoteId note, syn::InstrumentId instrument) override;
         double update() override;
         void silence() override;
+        void silence_immediately() override;
         void polyphony(std::size_t max_voices) override;
         void store_instrument(std::unique_ptr<syn::Instrument> instrument) override;
 

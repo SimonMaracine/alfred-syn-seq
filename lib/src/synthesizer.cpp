@@ -85,6 +85,13 @@ namespace synthesizer {
         }
     }
 
+    void Synthesizer::note_off(double time, syn::Voice& voice) {
+        if (voice.time_on > voice.time_off) {
+            voice.time_off = time;
+            voice.envelope->note_off(time);
+        }
+    }
+
     void Synthesizer::set_polyphony(std::size_t max_voices) {
         m_max_voices = std::clamp(max_voices, MIN_VOICES, MAX_VOICES);
     }
@@ -103,10 +110,7 @@ namespace synthesizer {
             })};
 
             // Simply force a note off on the voice and don't abruptly interrupt it
-            if (oldest_voice->time_on > oldest_voice->time_off) {
-                oldest_voice->time_off = time;
-                oldest_voice->envelope->note_off(time);
-            }
+            note_off(time, *oldest_voice);
 
             size--;
         }
@@ -176,6 +180,14 @@ namespace synthesizer {
     void RealSynthesizer::silence() {
         audio::AudioLockGuard guard {this};
 
+        for (syn::Voice& voice : m_voices) {
+            Synthesizer::note_off(m_time, voice);
+        }
+    }
+
+    void RealSynthesizer::silence_immediately() {
+        audio::AudioLockGuard guard {this};
+
         m_time = 0.0;
         m_voices.clear();
     }
@@ -222,6 +234,12 @@ namespace synthesizer {
     }
 
     void VirtualSynthesizer::silence() {
+        for (syn::Voice& voice : m_voices) {
+            Synthesizer::note_off(m_time, voice);
+        }
+    }
+
+    void VirtualSynthesizer::silence_immediately() {
         m_time = 0.0;
         m_voices.clear();
     }

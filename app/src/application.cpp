@@ -573,7 +573,7 @@ namespace application {
 
             if (ImGui::SliderInt("##polyphony", &m_ui.polyphony, int(synthesizer::MIN_VOICES), int(synthesizer::MAX_VOICES))) {
                 m_synthesizer.polyphony(std::size_t(m_ui.polyphony));
-                m_synthesizer.silence();
+                m_synthesizer.silence_immediately();
             }
         }
 
