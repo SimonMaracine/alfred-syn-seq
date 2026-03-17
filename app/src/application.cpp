@@ -3495,11 +3495,30 @@ namespace application {
 
         m_render_in_progress = true;
 
-        m_task_manager.add_async_task([this, path = std::filesystem::path(m_ui.render_file_path), composition = m_composition, normalize = m_ui.render_normalize](task::AsyncTask& task) mutable {
+        // Create the synthesizer here and set up all the parameters here before in the main thread, not during the async task, in the other thread
+        // We must copy all the data in this instant and work with them later whenever the other thread starts
+        synthesizer::VirtualSynthesizer synthesizer;
+        synthesizer.merge_instruments(m_synthesizer);
+
+        m_task_manager.add_async_task([
+            this,
+            synthesizer = std::move(synthesizer),
+            path = std::filesystem::path(m_ui.render_file_path),
+            composition = m_composition,
+            normalize = m_ui.render_normalize,
+            render_progress = &m_ui.render_progress
+        ](task::AsyncTask& task) mutable {
             path.replace_extension("wav");
 
             try {
-                do_render_composition(task, std::move(path), std::move(composition), normalize);
+                RenderCompositionParameters parameters;
+                parameters.synthesizer = std::move(synthesizer);
+                parameters.file_path = std::move(path);
+                parameters.composition = std::move(composition);
+                parameters.normalize = normalize;
+                parameters.render_progress = render_progress;
+
+                do_render_composition(task, m_task_manager, std::move(parameters));
             } catch (const seq::SequencerError& e) {
                 logging::error("Error rendering composition: {}", e.what());
             } catch (const encoder::EncoderError& e) {
@@ -3524,19 +3543,18 @@ namespace application {
         });
     }
 
-    void Application::do_render_composition(const task::AsyncTask& task, std::filesystem::path&& file_path, seq::Composition&& composition, bool normalize) {
+    void Application::do_render_composition(const task::AsyncTask& task, task::TaskManager& task_manager, RenderCompositionParameters parameters) {
         using namespace std::chrono_literals;
         using TimePoint = std::chrono::time_point<std::chrono::system_clock>;
 
         bool rendering = true;
 
-        synthesizer::VirtualSynthesizer synthesizer;
-        seq::Player player {synthesizer, composition, [&] { rendering = false; }};
+        seq::Player player {parameters.synthesizer, parameters.composition, [&rendering] { rendering = false; }};
 
-        synthesizer.polyphony(optimal_composition_voices(composition));
-        set_synthesizer_instrument_volumes(synthesizer);
+        parameters.synthesizer.polyphony(optimal_composition_voices(parameters.composition));
+        set_synthesizer_instrument_volumes(parameters.synthesizer, parameters.composition);
 
-        logging::debug("Starting rendering composition to `{}`", file_path.string().c_str());
+        logging::debug("Starting rendering composition to `{}`", parameters.file_path.string().c_str());
 
         player.start();
 
@@ -3544,12 +3562,12 @@ namespace application {
         TimePoint time_last_update = time_start;
 
         for (int i {}; i < audio::SAMPLE_FREQUENCY / 10; i++) {
-            synthesizer.update();
+            parameters.synthesizer.update();
         }
 
         while (rendering) {
             player.update(1.0 / double(audio::SAMPLE_FREQUENCY));
-            synthesizer.update();
+            parameters.synthesizer.update();
 
             assert(player.in_time());
 
@@ -3563,27 +3581,27 @@ namespace application {
             if (time_now - time_last_update > 0.1s) {
                 time_last_update = time_now;
 
-                m_task_manager.add_immediate_thread_safe_task([this, position = player.position(), size = composition.size()] {
-                    m_ui.render_progress = math::map(float(position), 0.0f, float(size), 0.0f, 0.95f);
+                task_manager.add_immediate_thread_safe_task([render_progress = parameters.render_progress, position = player.position(), size = parameters.composition.size()] {
+                    *render_progress = math::map(float(position), 0.0f, float(size), 0.0f, 0.95f);
                 });
             }
         }
 
         for (int i {}; i < audio::SAMPLE_FREQUENCY / 2; i++) {
-            synthesizer.update();
+            parameters.synthesizer.update();
         }
 
         const TimePoint time_stop = std::chrono::system_clock::now();
 
-        if (normalize) {
+        if (parameters.normalize) {
             LOG_INFORMATION("Normalizing composition");
-            math::normalize(synthesizer.get_buffer_data(), synthesizer.get_buffer_size());
+            math::normalize(parameters.synthesizer.get_buffer_data(), parameters.synthesizer.get_buffer_size());
         }
 
-        utility::write_file(std::move(file_path), encoder::encode_wav(synthesizer.get_buffer_size(), synthesizer.get_buffer_data()));
+        utility::write_file(parameters.file_path, encoder::encode_wav(parameters.synthesizer.get_buffer_size(), parameters.synthesizer.get_buffer_data()));
 
-        m_task_manager.add_immediate_thread_safe_task([this] {
-            m_ui.render_progress = 1.0f;
+        task_manager.add_immediate_thread_safe_task([render_progress = parameters.render_progress] {
+            *render_progress = 1.0f;
         });
 
         logging::information("Done rendering composition in {}", std::chrono::duration_cast<std::chrono::seconds>(time_stop - time_start));
@@ -3675,10 +3693,14 @@ namespace application {
         }
     }
 
-    void Application::set_synthesizer_instrument_volumes(synthesizer::Synthesizer& synthesizer) {
+    void Application::set_synthesizer_instrument_volumes(synthesizer::Synthesizer& synthesizer) const {
+        set_synthesizer_instrument_volumes(synthesizer, m_composition);
+    }
+
+    void Application::set_synthesizer_instrument_volumes(synthesizer::Synthesizer& synthesizer, const composition::Composition& composition) {
         reset_synthesizer_instrument_volumes(synthesizer);
 
-        for (const auto& [instrument, volume] : m_composition.instrument_volumes) {
+        for (const auto& [instrument, volume] : composition.instrument_volumes) {
             synthesizer.get_instrument(instrument).volume(volume);
         }
     }

@@ -1,5 +1,7 @@
 #include "alfred/instruments.hpp"
 
+#include <cstring>
+
 #include "alfred/math.hpp"
 #include "alfred/audio.hpp"
 
@@ -109,6 +111,22 @@ namespace instruments {
         );
     }
 
+    Strings::Strings(const Strings& other) {
+        m_sample = std::make_unique<double[]>(SIZE);
+        std::memcpy(m_sample.get(), other.m_sample.get(), SIZE * sizeof(double));
+
+        m_volume = other.m_volume;
+    }
+
+    Strings& Strings::operator=(const Strings& other) {
+        m_sample = std::make_unique<double[]>(SIZE);
+        std::memcpy(m_sample.get(), other.m_sample.get(), SIZE * sizeof(double));
+
+        m_volume = other.m_volume;
+
+        return *this;
+    }
+
     double Strings::sound(double time, double, syn::NoteId note) const noexcept {
         return syn::util::sound(time, note, m_sample.get(), SIZE, FREQUENCY);
     }
@@ -138,6 +156,22 @@ namespace instruments {
             m_sample[i] *= 1.0 + LFO_DEVIATION * (syn::oscillator::sine(t, LFO_FREQUENCY, 0.0) - 1.0);
             t += 1.0 / double(audio::SAMPLE_FREQUENCY);
         }
+    }
+
+    Cello::Cello(const Cello& other) {
+        m_sample = std::make_unique<double[]>(SIZE);
+        std::memcpy(m_sample.get(), other.m_sample.get(), SIZE * sizeof(double));
+
+        m_volume = other.m_volume;
+    }
+
+    Cello& Cello::operator=(const Cello& other) {
+        m_sample = std::make_unique<double[]>(SIZE);
+        std::memcpy(m_sample.get(), other.m_sample.get(), SIZE * sizeof(double));
+
+        m_volume = other.m_volume;
+
+        return *this;
     }
 
     double Cello::sound(double time, double, syn::NoteId note) const noexcept {

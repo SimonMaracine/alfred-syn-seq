@@ -289,6 +289,7 @@ namespace syn {
 
     // An instrument (or also called preset) describes how some voice should sound
     // It comprises all the parameters that make up a particular sound
+    // Instruments must have working copy and move constructors
     struct Instrument {
         Instrument() = default;
         virtual ~Instrument() = default;
@@ -319,6 +320,8 @@ namespace syn {
         // Get the attack and release durations
         virtual double attack_duration() const = 0;
         virtual double release_duration() const = 0;
+
+        virtual std::unique_ptr<Instrument> clone() const = 0;
     };
 
     struct LowFrequencyOscillator {

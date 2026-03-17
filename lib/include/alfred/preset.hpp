@@ -72,6 +72,8 @@ namespace preset {
 
         double attack_duration() const override;
         double release_duration() const override;
+
+        std::unique_ptr<Instrument> clone() const override { return std::make_unique<RuntimeInstrument>(*this); }
     private:
         std::string m_name;
         std::string m_description;

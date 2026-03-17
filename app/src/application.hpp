@@ -224,9 +224,17 @@ namespace application {
         void open_create_instrument();
         void open_render_composition();
 
+        struct RenderCompositionParameters {
+            synthesizer::VirtualSynthesizer synthesizer;
+            std::filesystem::path file_path;
+            composition::Composition composition;
+            bool normalize {};
+            float* render_progress {};
+        };
+
         void reset_render_composition();
         void start_render_composition();
-        void do_render_composition(const task::AsyncTask& task, std::filesystem::path&& file_path, seq::Composition&& composition, bool normalize);
+        static void do_render_composition(const task::AsyncTask& task, task::TaskManager& task_manager, RenderCompositionParameters parameters);
         static std::size_t max_composition_voices(const seq::Composition& composition);
         static std::size_t optimal_composition_voices(const seq::Composition& composition);
         static void strip_composition_empty_instruments(seq::Composition& composition);
@@ -234,7 +242,8 @@ namespace application {
         void redo();
         void remember_composition();
         void keep_player_cursor_valid();
-        void set_synthesizer_instrument_volumes(synthesizer::Synthesizer& synthesizer);
+        void set_synthesizer_instrument_volumes(synthesizer::Synthesizer& synthesizer) const;
+        static void set_synthesizer_instrument_volumes(synthesizer::Synthesizer& synthesizer, const composition::Composition& composition);
         static void reset_synthesizer_instrument_volumes(synthesizer::Synthesizer& synthesizer);
         void set_composition_instrument_colors();
         void reset_composition_instrument_colors();

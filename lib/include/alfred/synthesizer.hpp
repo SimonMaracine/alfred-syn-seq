@@ -19,6 +19,11 @@ namespace synthesizer {
         Synthesizer();
         virtual ~Synthesizer() = default;
 
+        Synthesizer(const Synthesizer&) = delete;
+        Synthesizer& operator=(const Synthesizer&) = delete;
+        Synthesizer(Synthesizer&&) = default;
+        Synthesizer& operator=(Synthesizer&&) = default;
+
         // MIDI-like note events
         virtual void note_on(syn::NoteId note, syn::InstrumentId instrument, syn::Velocity velocity) = 0;
         virtual void note_off(syn::NoteId note, syn::InstrumentId instrument) = 0;
@@ -45,6 +50,10 @@ namespace synthesizer {
         void for_each_instrument(const std::function<void(syn::Instrument&)>& function);
         const syn::Instrument& get_instrument(syn::InstrumentId instrument) const;
         syn::Instrument& get_instrument(syn::InstrumentId instrument);
+
+        // Merge other synthesizer's instruments into this synthesizer
+        // If both this and other have the same instrument ID, then other's instrument will not replace this
+        void merge_instruments(const Synthesizer& other);
 
         // Get the current voice and max voice counts
         std::size_t current_voices() const { return m_voices.size(); }

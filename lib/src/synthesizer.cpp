@@ -43,6 +43,18 @@ namespace synthesizer {
         return *m_instruments.at(instrument);
     }
 
+    void Synthesizer::merge_instruments(const Synthesizer& other) {
+        // Need to make a deep copy of the instruments in this fashion
+        std::unordered_map<syn::InstrumentId, std::unique_ptr<syn::Instrument>> instruments;
+
+        for (const auto& [id, instrument] : other.m_instruments) {
+            instruments[id] = instrument->clone();
+        }
+
+        // auto instruments = other.m_instruments;
+        m_instruments.merge(std::move(instruments));
+    }
+
     void Synthesizer::insert_instrument(std::unique_ptr<syn::Instrument> instrument) {
         // Add new or override if already existing
         m_instruments[instrument->id()] = std::move(instrument);

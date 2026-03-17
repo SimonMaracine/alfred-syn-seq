@@ -31,6 +31,8 @@ namespace instruments {
         syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::AdrLinear>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
+
+        std::unique_ptr<Instrument> clone() const override { return std::make_unique<Metronome>(*this); }
     private:
         static constexpr syn::envelope::DescriptionAdr ENVELOPE {
             .duration_attack = 0.007,
@@ -55,6 +57,8 @@ namespace instruments {
         syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
+
+        std::unique_ptr<Instrument> clone() const override { return std::make_unique<Bell>(*this); }
     private:
         static constexpr syn::envelope::DescriptionAdr ENVELOPE {
             .duration_attack = 0.5,
@@ -78,6 +82,8 @@ namespace instruments {
         syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::Adsr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
+
+        std::unique_ptr<Instrument> clone() const override { return std::make_unique<Harmonica>(*this); }
     private:
         static constexpr syn::envelope::DescriptionAdsr ENVELOPE {
             .duration_attack = 0.15,
@@ -102,6 +108,8 @@ namespace instruments {
         syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
+
+        std::unique_ptr<Instrument> clone() const override { return std::make_unique<DrumBass>(*this); }
     private:
         static constexpr syn::envelope::DescriptionAdr ENVELOPE {
             .duration_attack = 0.01,
@@ -125,6 +133,8 @@ namespace instruments {
         syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
+
+        std::unique_ptr<Instrument> clone() const override { return std::make_unique<DrumSnare>(*this); }
     private:
         static constexpr syn::envelope::DescriptionAdr ENVELOPE {
             .duration_attack = 0.01,
@@ -148,6 +158,8 @@ namespace instruments {
         syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
+
+        std::unique_ptr<Instrument> clone() const override { return std::make_unique<DrumHiHat>(*this); }
     private:
         static constexpr syn::envelope::DescriptionAdr ENVELOPE {
             .duration_attack = 0.01,
@@ -171,6 +183,8 @@ namespace instruments {
         syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
+
+        std::unique_ptr<Instrument> clone() const override { return std::make_unique<SynthPiano>(*this); }
     private:
         static constexpr syn::envelope::DescriptionAdr ENVELOPE {
             .duration_attack = 0.01,
@@ -195,6 +209,8 @@ namespace instruments {
         syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
+
+        std::unique_ptr<Instrument> clone() const override { return std::make_unique<Guitar>(*this); }
     private:
         static constexpr syn::envelope::DescriptionAdr ENVELOPE {
             .duration_attack = 0.07,
@@ -208,6 +224,10 @@ namespace instruments {
     class Strings : public syn::Instrument {
     public:
         Strings();
+        Strings(const Strings& other);
+        Strings& operator=(const Strings& other);
+        Strings(Strings&& other) = default;
+        Strings& operator=(Strings&& other) = default;
 
         ALFRED_INSTRUMENT_STATIC_NAME_ID("Strings?")
         ALFRED_INSTRUMENT_DESCRIPTION_UNFINISHED()
@@ -220,6 +240,8 @@ namespace instruments {
         syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::Adsr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
+
+        std::unique_ptr<Instrument> clone() const override { return std::make_unique<Strings>(*this); }
     private:
         static constexpr syn::envelope::DescriptionAdsr ENVELOPE {
             .duration_attack = 0.2,
@@ -238,6 +260,10 @@ namespace instruments {
     class Cello : public syn::Instrument {
     public:
         Cello();
+        Cello(const Cello& other);
+        Cello& operator=(const Cello& other);
+        Cello(Cello&& other) = default;
+        Cello& operator=(Cello&& other) = default;
 
         ALFRED_INSTRUMENT_STATIC_NAME_ID("Cello")
         ALFRED_INSTRUMENT_DESCRIPTION("It's close, but not quite; sounds nice though")
@@ -251,6 +277,8 @@ namespace instruments {
         syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::AdsrLinear>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
+
+        std::unique_ptr<Instrument> clone() const override { return std::make_unique<Cello>(*this); }
     private:
         static constexpr syn::envelope::DescriptionAdsr ENVELOPE {
             .duration_attack = 0.28,
@@ -281,6 +309,8 @@ namespace instruments {
         syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::AdsrLinear>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
+
+        std::unique_ptr<Instrument> clone() const override { return std::make_unique<Test>(*this); }
     private:
         static constexpr syn::envelope::DescriptionAdsr ENVELOPE {
             .duration_attack = 0.1,

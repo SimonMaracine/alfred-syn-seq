@@ -17,7 +17,7 @@ namespace task {
     using RepeatableTaskFunction = std::function<bool()>;
     using DelayedTaskFunction = std::function<void()>;
     using ContinuousTaskFunction = std::function<bool()>;
-    using AsyncTaskFunction = std::function<void(AsyncTask&)>;
+    using AsyncTaskFunction = std::move_only_function<void(AsyncTask&)>;
 
     class ImmediateTask {
     public:
