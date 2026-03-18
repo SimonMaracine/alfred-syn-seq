@@ -196,7 +196,6 @@ namespace application {
         static ui::Preset get_preset(const preset::Preset& preset);
         static const ImVec4& color(ImGuiCol color);
         static ImColor color_opacity(ImGuiCol color, float opacity);
-        static std::unique_ptr<preset::RuntimeInstrument> create_runtime_instrument_from_preset(preset::Preset preset);
 
         static void composition_save_file_dialog(void* userdata, const char* const* filelist, int filter);
         static void composition_open_file_dialog(void* userdata, const char* const* filelist, int filter);

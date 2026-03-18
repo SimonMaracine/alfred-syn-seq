@@ -6,7 +6,7 @@ namespace preset {
     double RuntimeInstrument::sound(double time, double, syn::NoteId note) const noexcept {
         double output {};
 
-        for (const auto& [i, partial] : m_partials | std::views::enumerate) {
+        for (const auto& [i, partial] : m_preset.partials | std::views::enumerate) {
             switch (partial.oscillator_type) {
                 case syn::oscillator::Type::Sine:
                     if (partial.lfo) {
@@ -43,21 +43,21 @@ namespace preset {
     }
 
     syn::envelope::Ptr RuntimeInstrument::new_envelope() const {
-        switch (m_envelope_description.index()) {
+        switch (m_preset.envelope_description.index()) {
             case 0:
-                switch (m_envelope_type) {
+                switch (m_preset.envelope_type) {
                     case syn::envelope::Type::Linear:
-                        return std::make_unique<syn::envelope::AdsrLinear>(std::get<0>(m_envelope_description));
+                        return std::make_unique<syn::envelope::AdsrLinear>(std::get<0>(m_preset.envelope_description));
                     case syn::envelope::Type::Exponential:
-                        return std::make_unique<syn::envelope::Adsr>(std::get<0>(m_envelope_description));
+                        return std::make_unique<syn::envelope::Adsr>(std::get<0>(m_preset.envelope_description));
                 }
                 std::unreachable();
             case 1:
-                switch (m_envelope_type) {
+                switch (m_preset.envelope_type) {
                     case syn::envelope::Type::Linear:
-                        return std::make_unique<syn::envelope::AdrLinear>(std::get<1>(m_envelope_description));
+                        return std::make_unique<syn::envelope::AdrLinear>(std::get<1>(m_preset.envelope_description));
                     case syn::envelope::Type::Exponential:
-                        return std::make_unique<syn::envelope::Adr>(std::get<1>(m_envelope_description));
+                        return std::make_unique<syn::envelope::Adr>(std::get<1>(m_preset.envelope_description));
                 }
                 std::unreachable();
         }
@@ -66,22 +66,22 @@ namespace preset {
     }
 
     double RuntimeInstrument::attack_duration() const {
-        switch (m_envelope_description.index()) {
+        switch (m_preset.envelope_description.index()) {
             case 0:
-                return std::get<0>(m_envelope_description).duration_attack;
+                return std::get<0>(m_preset.envelope_description).duration_attack;
             case 1:
-                return std::get<1>(m_envelope_description).duration_attack;
+                return std::get<1>(m_preset.envelope_description).duration_attack;
         }
 
         std::unreachable();
     }
 
     double RuntimeInstrument::release_duration() const {
-        switch (m_envelope_description.index()) {
+        switch (m_preset.envelope_description.index()) {
             case 0:
-                return std::get<0>(m_envelope_description).duration_release;
+                return std::get<0>(m_preset.envelope_description).duration_release;
             case 1:
-                return std::get<1>(m_envelope_description).duration_release;
+                return std::get<1>(m_preset.envelope_description).duration_release;
         }
 
         std::unreachable();

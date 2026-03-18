@@ -63,42 +63,33 @@ namespace preset {
             cereal::make_nvp("lfo", self.lfo)
         );
     }
+
+    template<typename Archive>
+        void save(Archive& archive, const Preset& self, const std::uint32_t) {
+        archive(
+            cereal::make_nvp("name", self.name),
+            cereal::make_nvp("description", self.description),
+            cereal::make_nvp("range", self.range),
+            cereal::make_nvp("envelope_description", self.envelope_description),
+            cereal::make_nvp("envelope_type", self.envelope_type),
+            cereal::make_nvp("partials", self.partials)
+        );
+    }
+
+    template<typename Archive>
+    void load(Archive& archive, Preset& self, const std::uint32_t) {
+        archive(
+            cereal::make_nvp("name", self.name),
+            cereal::make_nvp("description", self.description),
+            cereal::make_nvp("range", self.range),
+            cereal::make_nvp("envelope_description", self.envelope_description),
+            cereal::make_nvp("envelope_type", self.envelope_type),
+            cereal::make_nvp("partials", self.partials)
+        );
+    }
 }
 
 namespace preset {
-    struct Preset {
-        std::string name;
-        std::string description;
-        syn::InstrumentRange range;
-        std::variant<syn::envelope::DescriptionAdsr, syn::envelope::DescriptionAdr> envelope_description;
-        syn::envelope::Type envelope_type {};
-        std::vector<Partial> partials;
-
-        template<typename Archive>
-        void save(Archive& archive, const std::uint32_t) const {
-            archive(
-                cereal::make_nvp("name", name),
-                cereal::make_nvp("description", description),
-                cereal::make_nvp("range", range),
-                cereal::make_nvp("envelope_description", envelope_description),
-                cereal::make_nvp("envelope_type", envelope_type),
-                cereal::make_nvp("partials", partials)
-            );
-        }
-
-        template<typename Archive>
-        void load(Archive& archive, const std::uint32_t) {
-            archive(
-                cereal::make_nvp("name", name),
-                cereal::make_nvp("description", description),
-                cereal::make_nvp("range", range),
-                cereal::make_nvp("envelope_description", envelope_description),
-                cereal::make_nvp("envelope_type", envelope_type),
-                cereal::make_nvp("partials", partials)
-            );
-        }
-    };
-
     void export_preset(const Preset& preset, utility::Buffer& buffer);
     void import_preset(Preset& preset, const utility::Buffer& buffer);
 

@@ -335,7 +335,16 @@ namespace application {
         }
 
         if (ImGui::BeginMenu("Edit")) {
-            ImGui::MenuItem("Some Inst.");
+            m_synthesizer.for_each_instrument([this](const syn::Instrument& instrument) {
+                const auto* runtime_instrument = dynamic_cast<const preset::RuntimeInstrument*>(&instrument);
+
+                if (runtime_instrument) {
+                    if (ImGui::MenuItem(runtime_instrument->name())) {
+                        m_ui.preset = get_preset(runtime_instrument->preset());
+                        open_create_instrument();
+                    }
+                }
+            });
 
             ImGui::EndMenu();
         }
@@ -1755,7 +1764,7 @@ namespace application {
             ImGui::EndChild();
 
             if (ImGui::Button("Store into Synthesizer")) {
-                m_synthesizer.store_instrument(create_runtime_instrument_from_preset(get_preset(m_ui.preset)));
+                m_synthesizer.store_instrument(std::make_unique<preset::RuntimeInstrument>(get_preset(m_ui.preset)));
                 set_composition_instrument_colors();
                 LOG_DEBUG("Created and stored a new runtime instrument");
             }
@@ -3065,8 +3074,8 @@ namespace application {
     ui::Preset Application::get_preset(const preset::Preset& preset) {
         ui::Preset result_preset;
 
-        std::strncpy(result_preset.name, preset.name.c_str(), sizeof(result_preset.name));
-        std::strncpy(result_preset.description, preset.description.c_str(), sizeof(result_preset.description));
+        std::strncpy(result_preset.name, preset.name.c_str(), sizeof(result_preset.name) - 1);
+        std::strncpy(result_preset.description, preset.description.c_str(), sizeof(result_preset.description) - 1);
         result_preset.range[0] = preset.range.first;
         result_preset.range[1] = preset.range.second;
 
@@ -3132,17 +3141,6 @@ namespace application {
         ImColor color_ = ImGui::GetStyle().Colors[color];
         color_.Value.w = opacity;
         return color_;
-    }
-
-    std::unique_ptr<preset::RuntimeInstrument> Application::create_runtime_instrument_from_preset(preset::Preset preset) {
-        return std::make_unique<preset::RuntimeInstrument>(
-            std::move(preset.name),
-            std::move(preset.description),
-            std::move(preset.range),
-            std::move(preset.envelope_description),
-            preset.envelope_type,
-            std::move(preset.partials)
-        );
     }
 
     void Application::composition_save_file_dialog(void* userdata, const char* const* filelist, int) {
