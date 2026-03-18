@@ -98,12 +98,14 @@ cmake --build --preset build-dist-win
 #### Linux
 
 ```txt
+cmake --preset conf-dist-nix
 cmake --build --preset build-dist-nix --target install
 ```
 
 #### Windows
 
 ```txt
+cmake --preset conf-dist-win
 cmake --build --preset build-dist-win --target install
 ```
 

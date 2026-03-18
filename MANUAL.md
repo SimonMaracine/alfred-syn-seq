@@ -21,6 +21,8 @@ Compositions can be saved and opened from disk from the `File` menu. `Open Recen
 Alfred's synthesizer works differently depending on whether the player is currently running or not. When the player is not running, the synthesizer is usually used for testing and so it's called *the test synthesizer*. However, when the player is running, the synthesizer automatically changes some of its parameters in order to play the composition.
 
 The virtual keyboard always plays at full velocity (loudness).
+
+One can edit and create new instruments or presets from the `Instrument` menu. `Create` brings up the menu with the last parameters. `Edit` brings up the menu with the parameters of an existing instrument. `Load` loads a preset file from disk. From the `Create Instrument` menu one can save the current parameters to preset file on disk or to store the instrument into the synthesizer, whether creating a new one or updating an existing one.
  
 ## Composition
 
