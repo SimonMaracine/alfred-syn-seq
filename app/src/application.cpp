@@ -27,6 +27,9 @@
 #include "pause.png.hpp"
 #include "rewind.png.hpp"
 
+using namespace std::chrono_literals;
+using namespace std::string_literals;
+
 namespace application {
     static constexpr ImVec2 STEP_SIZE {1.0f / ui::FONT_SIZE, 18.0f / ui::FONT_SIZE};
     static constexpr float COMPOSITION_LEFT = 40.0f / ui::FONT_SIZE;
@@ -35,6 +38,8 @@ namespace application {
     static constexpr int ADD_MEASURES = 4;
     static constexpr unsigned long long FRAME_TIME_DEFAULT = 16;
     static constexpr unsigned long long FRAME_TIME_PLAYBACK = 4;
+    static constexpr std::size_t MAX_MESSAGE_COUNT = 4;
+    static constexpr std::chrono::system_clock::duration MAX_MESSAGE_DURATION = 6s;
 
     void Application::on_start() {
         desired_frame_time(FRAME_TIME_DEFAULT);
@@ -52,9 +57,11 @@ namespace application {
         } catch (const data::DataError& e) {
             m_data = {};
             logging::warning("Could not import data: {}", e.what());
+            notify_message("Could not import data");
         } catch (const utility::FilerError& e) {
             m_data = {};
             logging::warning("Could not import data: {}", e.what());
+            notify_message("Could not import data");
         }
 
         m_synthesizer.open();
@@ -104,6 +111,8 @@ namespace application {
             m_ui.past_output_sample_abs = std::max(m_ui.past_output_sample_abs, std::abs(m_ui.current_output_sample));
             return false;
         }, video::MAX_DELTA);
+
+        notify_message("Welcome! Be sure to check out the manual from the source repository.");
     }
 
     void Application::on_stop() {
@@ -112,14 +121,15 @@ namespace application {
             data::export_data(m_data, buffer);
             utility::write_file(utility::data_file_path("simonmara", "alfred") / "alfred.dat", buffer);
         } catch (const data::DataError& e) {
-            logging::warning("Could not export data: {}", e.what());
+            logging::error("Could not export data: {}", e.what());
         } catch (const utility::FilerError& e) {
-            logging::warning("Could not export data: {}", e.what());
+            logging::error("Could not export data: {}", e.what());
         }
     }
 
     void Application::on_update() {
         m_player.update(frame_time());
+        update_messages();
 
         static constexpr double SPEED = 0.2;
 
@@ -190,6 +200,7 @@ namespace application {
         playback();
         tools();
         composition();
+        messages();
         composition_metadata();
         composition_mixer();
         create_instrument();
@@ -274,6 +285,7 @@ namespace application {
                         m_task_manager.add_immediate_task([this, &file_path] {
                             m_data.recent_compositions.erase(file_path);
                             logging::information("Erased invalid composition from the list");
+                            notify_message("Erased invalid composition from the list");
                         });
                     }
                 }
@@ -1767,6 +1779,7 @@ namespace application {
                 m_synthesizer.store_instrument(std::make_unique<preset::RuntimeInstrument>(get_preset(m_ui.preset)));
                 set_composition_instrument_colors();
                 LOG_DEBUG("Created and stored a new runtime instrument");
+                notify_message("Created and stored a new runtime instrument");
             }
 
             ImGui::SameLine();
@@ -1805,6 +1818,27 @@ namespace application {
 
             ImGui::EndDisabled();
         });
+    }
+
+    void Application::messages() const {
+        for (const auto& [i, message] : m_messages.messages | std::views::reverse | std::views::enumerate) {
+            static constexpr auto flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
+            const auto size = ui::rem(ImVec2(18.0f, 5.0f));
+            const float offset_y = float(i) * (size.y + ui::rem(0.5f));
+
+            ImGui::SetNextWindowPos(ImGui::GetMainViewport()->Size - size - ui::rem(ImVec2(0.5f, 0.5f)) - ImVec2(0.0f, offset_y), ImGuiCond_Always);
+            ImGui::SetNextWindowSize(size);
+
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
+
+            if (ImGui::Begin(("Message"s + std::to_string(message.sequence)).c_str(), nullptr, flags)) {
+                ImGui::TextWrapped("%s", message.message.c_str());
+            }
+
+            ImGui::End();
+
+            ImGui::PopStyleVar();
+        }
     }
 
     void Application::debug() const {
@@ -2065,6 +2099,7 @@ namespace application {
             // Reset back
             set_time_signature(m_ui.time_signature, *m_composition_selected_measure);
             LOG_DEBUG("Cannot change time signature in this state");
+            notify_message("Cannot change time signature in this state");
         }
     }
 
@@ -2197,6 +2232,7 @@ namespace application {
 
         if (m_ui.tuplet != ui::TupletNone && m_ui.value == ui::ValueSixteenth) {
             LOG_DEBUG("Cannot create a tuplet out of a sixteenth note");
+            notify_message("Cannot create a tuplet out of a sixteenth note");
             return;
         }
 
@@ -2226,6 +2262,7 @@ namespace application {
             }()
         ) {
             LOG_DEBUG("Cannot place note here");
+            notify_message("Cannot place note here");
             return;
         }
 
@@ -2295,10 +2332,12 @@ namespace application {
                 if (const auto next_note = check_note_has_next(selected_note); next_note) {
                     if (next_note->note()->delay > 0) {
                         LOG_DEBUG("Note cannot have legato");
+                        notify_message("Note cannot have legato");
                         continue;
                     }
                 } else {
                     LOG_DEBUG("Note cannot have legato");
+                    notify_message("Note cannot have legato");
                     continue;
                 }
             }
@@ -2340,6 +2379,7 @@ namespace application {
             }()
         ) {
             LOG_DEBUG("Cannot shift notes here");
+            notify_message("Cannot shift notes here");
             return;
         }
 
@@ -2392,6 +2432,7 @@ namespace application {
             }()
         ) {
             LOG_DEBUG("Cannot shift notes here");
+            notify_message("Cannot shift notes here");
             return;
         }
 
@@ -2448,6 +2489,7 @@ namespace application {
             }()
         ) {
             LOG_DEBUG("Cannot shift notes here");
+            notify_message("Cannot shift notes here");
             return;
         }
 
@@ -2499,6 +2541,7 @@ namespace application {
             }()
         ) {
             LOG_DEBUG("Cannot shift notes here");
+            notify_message("Cannot shift notes here");
             return;
         }
 
@@ -2528,12 +2571,14 @@ namespace application {
         for (ProvenanceNote& selected_note : m_composition_selected_notes) {
             if (selected_note.note()->delay == seq::MAX_DELAY) {
                 LOG_DEBUG("Cannot add any more delay to note");
+                notify_message("Cannot add any more delay to note");
                 continue;
             }
 
             if (const auto previous_note = check_note_has_previous(selected_note); previous_note) {
                 if (previous_note->note()->legato) {
                     LOG_DEBUG("Cannot add delay to note");
+                    notify_message("Cannot add delay to note");
                     continue;
                 }
             }
@@ -2556,6 +2601,7 @@ namespace application {
         for (ProvenanceNote& selected_note : m_composition_selected_notes) {
             if (selected_note.note()->delay == 0) {
                 LOG_DEBUG("Cannot remove any more delay from note");
+                notify_message("Cannot remove any more delay from note");
                 continue;
             }
 
@@ -3147,8 +3193,9 @@ namespace application {
         Application& self = *static_cast<Application*>(userdata);
 
         if (!filelist) {
-            self.m_task_manager.add_immediate_thread_safe_task([error = std::string(SDL_GetError())] {
+            self.m_task_manager.add_immediate_thread_safe_task([&self, error = std::string(SDL_GetError())] {
                 logging::error("An error occurred while handling the file dialog: {}", error);
+                self.notify_message("An error occurred while handling the file dialog");
             });
 
             return;
@@ -3165,8 +3212,9 @@ namespace application {
         Application& self = *static_cast<Application*>(userdata);
 
         if (!filelist) {
-            self.m_task_manager.add_immediate_thread_safe_task([error = std::string(SDL_GetError())] {
+            self.m_task_manager.add_immediate_thread_safe_task([&self, error = std::string(SDL_GetError())] {
                 logging::error("An error occurred while handling the file dialog: {}", error);
+                self.notify_message("An error occurred while handling the file dialog");
             });
 
             return;
@@ -3179,20 +3227,16 @@ namespace application {
         }
     }
 
-    void Application::composition_save(const std::filesystem::path& path, const composition::Composition& composition) {
+    void Application::composition_write(const std::filesystem::path& path, const composition::Composition& composition) {
         utility::Buffer buffer;
         composition::export_composition(composition, buffer);
         utility::write_file(path, buffer);
-
-        logging::information("Saved composition to `{}`", path.string().c_str());
     }
 
-    void Application::composition_open(const std::filesystem::path& path, composition::Composition& composition) {
+    void Application::composition_read(const std::filesystem::path& path, composition::Composition& composition) {
         utility::Buffer buffer;
         utility::read_file(path, buffer);
         composition::import_composition(composition, buffer);
-
-        logging::information("Opened composition from `{}`", path.string().c_str());
     }
 
     bool Application::composition_save(std::filesystem::path path) {
@@ -3201,12 +3245,17 @@ namespace application {
         strip_composition_empty_instruments(m_composition);
 
         try {
-            composition_save(path, m_composition);
+            composition_write(path, m_composition);
+
+            logging::information("Written composition to `{}`", path.string().c_str());
+            notify_message("Written composition");
         } catch (const composition::CompositionError& e) {
             logging::error("Could not save composition: {}", e.what());
+            notify_message("Could not save composition");
             return false;
         } catch (const utility::FilerError& e) {
             logging::error("Could not save composition: {}", e.what());
+            notify_message("Could not save composition");
             return false;
         }
 
@@ -3229,12 +3278,17 @@ namespace application {
         strip_composition_empty_instruments(m_composition);
 
         try {
-            composition_save(m_composition_path, m_composition);
+            composition_write(m_composition_path, m_composition);
+
+            logging::information("Written composition to `{}`", m_composition_path.string().c_str());
+            notify_message("Written composition");
         } catch (const composition::CompositionError& e) {
             logging::error("Could not save composition: {}", e.what());
+            notify_message("Could not save composition");
             return false;
         } catch (const utility::FilerError& e) {
             logging::error("Could not save composition: {}", e.what());
+            notify_message("Could not save composition");
             return false;
         }
 
@@ -3252,14 +3306,19 @@ namespace application {
         }
 
         try {
-            composition_open(path, m_composition);
+            composition_read(path, m_composition);
+
+            logging::information("Read composition from `{}`", path.string().c_str());
+            notify_message("Read composition");
         } catch (const composition::CompositionError& e) {
             m_composition = {};
             logging::error("Could not open composition: {}", e.what());
+            notify_message("Could not open composition");
             return false;
         } catch (const utility::FilerError& e) {
             m_composition = {};
             logging::error("Could not open composition: {}", e.what());
+            notify_message("Could not open composition");
             return false;
         }
 
@@ -3337,8 +3396,9 @@ namespace application {
         Application& self = *static_cast<Application*>(userdata);
 
         if (!filelist) {
-            self.m_task_manager.add_immediate_thread_safe_task([error = std::string(SDL_GetError())] {
+            self.m_task_manager.add_immediate_thread_safe_task([&self, error = std::string(SDL_GetError())] {
                 logging::error("An error occurred while handling the file dialog: {}", error);
+                self.notify_message("An error occurred while handling the file dialog");
             });
 
             return;
@@ -3355,8 +3415,9 @@ namespace application {
         Application& self = *static_cast<Application*>(userdata);
 
         if (!filelist) {
-            self.m_task_manager.add_immediate_thread_safe_task([error = std::string(SDL_GetError())] {
+            self.m_task_manager.add_immediate_thread_safe_task([&self, error = std::string(SDL_GetError())] {
                 logging::error("An error occurred while handling the file dialog: {}", error);
+                self.notify_message("An error occurred while handling the file dialog");
             });
 
             return;
@@ -3369,32 +3430,33 @@ namespace application {
         }
     }
 
-    void Application::preset_save(const std::filesystem::path& path, const preset::Preset& preset) {
+    void Application::preset_write(const std::filesystem::path& path, const preset::Preset& preset) {
         utility::Buffer buffer;
         preset::export_preset(preset, buffer);
         utility::write_file(path, buffer);
-
-        logging::information("Saved preset to `{}`", path.string().c_str());
     }
 
-    void Application::preset_open(const std::filesystem::path& path, preset::Preset& preset) {
+    void Application::preset_read(const std::filesystem::path& path, preset::Preset& preset) {
         utility::Buffer buffer;
         utility::read_file(path, buffer);
         preset::import_preset(preset, buffer);
-
-        logging::information("Opened preset from `{}`", path.string().c_str());
     }
 
     bool Application::preset_save(std::filesystem::path path) const {
         path.replace_extension("preset");
 
         try {
-            preset_save(path, get_preset(m_ui.preset));
+            preset_write(path, get_preset(m_ui.preset));
+
+            logging::information("Written preset to `{}`", path.string().c_str());
+            notify_message("Written preset");
         } catch (const preset::PresetError& e) {
             logging::error("Could not save preset: {}", e.what());
+            notify_message("Could not save preset");
             return false;
         } catch (const utility::FilerError& e) {
             logging::error("Could not save preset: {}", e.what());
+            notify_message("Could not save preset");
             return false;
         }
 
@@ -3409,12 +3471,17 @@ namespace application {
         preset::Preset preset;
 
         try {
-            preset_open(path, preset);
+            preset_read(path, preset);
+
+            logging::information("Read preset from `{}`", path.string().c_str());
+            notify_message("Read preset");
         } catch (const preset::PresetError& e) {
             logging::error("Could not open preset: {}", e.what());
+            notify_message("Could not open preset");
             return false;
         } catch (const utility::FilerError& e) {
             logging::error("Could not open preset: {}", e.what());
+            notify_message("Could not open preset");
             return false;
         }
 
@@ -3516,13 +3583,16 @@ namespace application {
                 parameters.normalize = normalize;
                 parameters.render_progress = render_progress;
 
-                do_render_composition(task, m_task_manager, std::move(parameters));
+                do_render_composition(task, m_task_manager, [this](std::string message) { notify_message(std::move(message)); }, std::move(parameters));
             } catch (const seq::SequencerError& e) {
                 logging::error("Error rendering composition: {}", e.what());
+                notify_message("Error rendering composition");
             } catch (const encoder::EncoderError& e) {
                 logging::error("Error rendering composition: {}", e.what());
+                notify_message("Error rendering composition");
             } catch (const utility::FilerError& e) {
                 logging::error("Error rendering composition: {}", e.what());
+                notify_message("Error rendering composition");
             } catch (...) {
                 m_task_manager.add_immediate_thread_safe_task([this] {
                     m_render_in_progress = false;
@@ -3541,7 +3611,7 @@ namespace application {
         });
     }
 
-    void Application::do_render_composition(const task::AsyncTask& task, task::TaskManager& task_manager, RenderCompositionParameters parameters) {
+    void Application::do_render_composition(const task::AsyncTask& task, task::TaskManager& task_manager, const NotifyMessage& notify_message, RenderCompositionParameters parameters) {
         using namespace std::chrono_literals;
         using TimePoint = std::chrono::time_point<std::chrono::system_clock>;
 
@@ -3571,6 +3641,7 @@ namespace application {
 
             if (task.stop_requested()) {
                 logging::information("Interrupted rendering composition");
+                notify_message("Interrupted rendering composition");
                 return;
             }
 
@@ -3603,6 +3674,7 @@ namespace application {
         });
 
         logging::information("Done rendering composition in {}", std::chrono::duration_cast<std::chrono::seconds>(time_stop - time_start));
+        notify_message("Done rendering composition");
     }
 
     std::size_t Application::max_composition_voices(const seq::Composition& composition) {
@@ -3722,5 +3794,28 @@ namespace application {
             m_ui.colors[instrument.id()] = ui::ColorIndex(index);
             index = (index + 1) % std::size(ui::COLORS);
         });
+    }
+
+    void Application::notify_message(std::string message) const {
+        m_messages.messages.emplace_back(std::move(message), std::chrono::system_clock::now(), m_messages.sequence);
+        m_messages.sequence++;
+
+        while (m_messages.messages.size() > MAX_MESSAGE_COUNT) {
+            m_messages.messages.erase(m_messages.messages.begin());
+        }
+    }
+
+    void Application::update_messages() {
+        const auto time_now = std::chrono::system_clock::now();
+
+        for (const Message& message : m_messages.messages) {
+            if (time_now - message.time > MAX_MESSAGE_DURATION) {
+                m_task_manager.add_immediate_task([this, sequence = message.sequence] {
+                    std::erase_if(m_messages.messages, [sequence](const auto& message) {
+                        return message.sequence == sequence;
+                    });
+                });
+            }
+        }
     }
 }

@@ -5,6 +5,8 @@
 #include <filesystem>
 #include <optional>
 #include <stack>
+#include <string>
+#include <chrono>
 #include <functional>
 
 #include <imgui.h>
@@ -115,6 +117,7 @@ namespace application {
         void composition_mixer();
         void create_instrument();
         void render_composition();
+        void messages() const;
         void debug() const;
         static void window_menu(const char* name, bool& open, const std::function<void()> &window);
 
@@ -199,8 +202,8 @@ namespace application {
 
         static void composition_save_file_dialog(void* userdata, const char* const* filelist, int filter);
         static void composition_open_file_dialog(void* userdata, const char* const* filelist, int filter);
-        static void composition_save(const std::filesystem::path& path, const composition::Composition& composition);
-        static void composition_open(const std::filesystem::path& path, composition::Composition& composition);
+        static void composition_write(const std::filesystem::path& path, const composition::Composition& composition);
+        static void composition_read(const std::filesystem::path& path, composition::Composition& composition);
         bool composition_save(std::filesystem::path path);
         bool composition_save();
         bool composition_open(std::filesystem::path path);
@@ -211,8 +214,8 @@ namespace application {
 
         static void preset_save_file_dialog(void* userdata, const char* const* filelist, int filter);
         static void preset_open_file_dialog(void* userdata, const char* const* filelist, int filter);
-        static void preset_save(const std::filesystem::path& path, const preset::Preset& preset);
-        static void preset_open(const std::filesystem::path& path, preset::Preset& preset);
+        static void preset_write(const std::filesystem::path& path, const preset::Preset& preset);
+        static void preset_read(const std::filesystem::path& path, preset::Preset& preset);
         bool preset_save(std::filesystem::path path) const;
         bool preset_open(const std::filesystem::path& path);
         void preset_file_save();
@@ -231,9 +234,11 @@ namespace application {
             float* render_progress {};
         };
 
+        using NotifyMessage = std::function<void(std::string)>;
+
         void reset_render_composition();
         void start_render_composition();
-        static void do_render_composition(const task::AsyncTask& task, task::TaskManager& task_manager, RenderCompositionParameters parameters);
+        static void do_render_composition(const task::AsyncTask& task, task::TaskManager& task_manager, const NotifyMessage& notify_message, RenderCompositionParameters parameters);
         static std::size_t max_composition_voices(const seq::Composition& composition);
         static std::size_t optimal_composition_voices(const seq::Composition& composition);
         static void strip_composition_empty_instruments(seq::Composition& composition);
@@ -246,6 +251,20 @@ namespace application {
         static void reset_synthesizer_instrument_volumes(synthesizer::Synthesizer& synthesizer);
         void set_composition_instrument_colors();
         void reset_composition_instrument_colors();
+
+        struct Message {
+            std::string message;
+            std::chrono::system_clock::time_point time {};
+            std::uint32_t sequence {};
+        };
+
+        void notify_message(std::string message) const;
+        void update_messages();
+
+        mutable struct {
+            std::vector<Message> messages;
+            std::uint32_t sequence {};
+        } m_messages;
 
         data::Data m_data;
         task::TaskManager m_task_manager;
