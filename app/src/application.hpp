@@ -117,9 +117,9 @@ namespace application {
         void composition_mixer();
         void create_instrument();
         void render_composition();
-        void messages() const;
+        void messages();
         void debug() const;
-        static void window_menu(const char* name, bool& open, const std::function<void()> &window);
+        static void window_menu(const char* name, bool& open, const std::function<void()>& window);
 
         void keyboard_input(unsigned int key, bool down);
         void composition_mouse_pressed(ImVec2 origin);
@@ -261,6 +261,7 @@ namespace application {
 
         void notify_message(std::string message) const;
         void update_messages();
+        void erase_message(const Message& message);
 
         mutable struct {
             std::vector<Message> messages;

@@ -39,7 +39,7 @@ namespace application {
     static constexpr unsigned long long FRAME_TIME_DEFAULT = 16;
     static constexpr unsigned long long FRAME_TIME_PLAYBACK = 4;
     static constexpr std::size_t MAX_MESSAGE_COUNT = 4;
-    static constexpr std::chrono::system_clock::duration MAX_MESSAGE_DURATION = 6s;
+    static constexpr std::chrono::system_clock::duration MAX_MESSAGE_DURATION = 7s;
 
     void Application::on_start() {
         desired_frame_time(FRAME_TIME_DEFAULT);
@@ -1641,22 +1641,22 @@ namespace application {
                 m_ui.preset.range[0] = std::min(m_ui.preset.range[0], m_ui.preset.range[1]);
             }
 
-            if (ImGui::InputDouble("Attack", &m_ui.preset.envelope_description.duration_attack, 0, 0, "%.3f")) {
+            if (ImGui::InputDouble("Attack", &m_ui.preset.envelope_description.duration_attack, 0.0, 0.0, "%.3f")) {
                 m_ui.preset.envelope_description.duration_attack = std::clamp(m_ui.preset.envelope_description.duration_attack, 0.0, 10.0);
             }
 
-            if (ImGui::InputDouble("Decay", &m_ui.preset.envelope_description.duration_decay, 0, 0, "%.3f")) {
+            if (ImGui::InputDouble("Decay", &m_ui.preset.envelope_description.duration_decay, 0.0, 0.0, "%.3f")) {
                 m_ui.preset.envelope_description.duration_decay = std::clamp(m_ui.preset.envelope_description.duration_decay, 0.0, 10.0);
             }
 
-            if (ImGui::InputDouble("Release", &m_ui.preset.envelope_description.duration_release, 0, 0, "%.3f")) {
+            if (ImGui::InputDouble("Release", &m_ui.preset.envelope_description.duration_release, 0.0, 0.0, "%.3f")) {
                 m_ui.preset.envelope_description.duration_release = std::clamp(m_ui.preset.envelope_description.duration_release, 0.0, 10.0);
             }
 
             switch (m_ui.preset.envelope_type) {
                 case ui::Preset::AdsrLinear:
                 case ui::Preset::AdsrExponential:
-                    if (ImGui::InputDouble("Sustain", &m_ui.preset.envelope_description.value_sustain, 0, 0, "%.3f")) {
+                    if (ImGui::InputDouble("Sustain", &m_ui.preset.envelope_description.value_sustain, 0.0, 0.0, "%.3f")) {
                         m_ui.preset.envelope_description.value_sustain = std::clamp(m_ui.preset.envelope_description.value_sustain, 0.0, 1.0);
                     }
                     break;
@@ -1721,7 +1721,7 @@ namespace application {
 
                     ImGui::PushItemWidth(ui::rem(5.0f));
 
-                    if (ImGui::InputDouble("##Frequency Multiplier", &partial.frequency_multiplier, 0, 0, "%.3f")) {
+                    if (ImGui::InputDouble("##Frequency Multiplier", &partial.frequency_multiplier, 0.0, 0.0, "%.3f")) {
                         partial.frequency_multiplier = std::clamp(partial.frequency_multiplier, 0.0, 15.0);
                     }
 
@@ -1729,7 +1729,7 @@ namespace application {
 
                     ImGui::SameLine();
 
-                    if (ImGui::InputDouble("##Amplitude Divisor", &partial.amplitude_divisor, 0, 0, "%.3f")) {
+                    if (ImGui::InputDouble("##Amplitude Divisor", &partial.amplitude_divisor, 0.0, 0.0, "%.3f")) {
                         partial.amplitude_divisor = std::clamp(partial.amplitude_divisor, 1.0, 100.0);
                     }
 
@@ -1737,7 +1737,7 @@ namespace application {
 
                     ImGui::SameLine();
 
-                    if (ImGui::InputDouble("##Phase", &partial.phase, 0, 0, "%.3f")) {
+                    if (ImGui::InputDouble("##Phase", &partial.phase, 0.0, 0.0, "%.3f")) {
                         partial.phase = std::clamp(partial.phase, 0.0, math::TWO_PI);
                     }
 
@@ -1752,7 +1752,7 @@ namespace application {
                     if (partial.lfo.enabled) {
                         ImGui::SameLine();
 
-                        if (ImGui::InputDouble("##LFO Frequency", &partial.lfo.frequency, 0, 0, "%.3f")) {
+                        if (ImGui::InputDouble("##LFO Frequency", &partial.lfo.frequency, 0.0, 0.0, "%.3f")) {
                             partial.lfo.frequency = std::clamp(partial.lfo.frequency, 1.0, 20.0);
                         }
 
@@ -1760,7 +1760,7 @@ namespace application {
 
                         ImGui::SameLine();
 
-                        if (ImGui::InputDouble("##LFO Deviation", &partial.lfo.deviation, 0, 0, "%.3f")) {
+                        if (ImGui::InputDouble("##LFO Deviation", &partial.lfo.deviation, 0.0, 0.0, "%.3f")) {
                             partial.lfo.deviation = std::clamp(partial.lfo.deviation, 0.0, 1.0);
                         }
 
@@ -1820,7 +1820,7 @@ namespace application {
         });
     }
 
-    void Application::messages() const {
+    void Application::messages() {
         for (const auto& [i, message] : m_messages.messages | std::views::reverse | std::views::enumerate) {
             static constexpr auto flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
             const auto size = ui::rem(ImVec2(18.0f, 5.0f));
@@ -1834,6 +1834,10 @@ namespace application {
 
             if (ImGui::Begin(("Message"s + std::to_string(message.sequence)).c_str(), nullptr, flags)) {
                 ImGui::TextWrapped("%s", message.message.c_str());
+
+                if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+                    erase_message(message);
+                }
             }
 
             ImGui::End();
@@ -3812,11 +3816,7 @@ namespace application {
 
         for (Message& message : m_messages.messages) {
             if (time_now - message.time > MAX_MESSAGE_DURATION) {
-                m_task_manager.add_immediate_task([this, sequence = message.sequence] {
-                    std::erase_if(m_messages.messages, [sequence](const auto& message) {
-                        return message.sequence == sequence;
-                    });
-                });
+                erase_message(message);
             }
 
             static constexpr float MAX_DURATION = std::chrono::duration<float>(MAX_MESSAGE_DURATION).count();
@@ -3824,5 +3824,13 @@ namespace application {
 
             message.opacity = std::clamp(math::map(elapsed, MAX_DURATION - 1.0f, MAX_DURATION, 1.0f, 0.0f), 0.0f, 1.0f);
         }
+    }
+
+    void Application::erase_message(const Message& message) {
+        m_task_manager.add_immediate_task([this, sequence = message.sequence] {
+            std::erase_if(m_messages.messages, [sequence](const auto& message) {
+                return message.sequence == sequence;
+            });
+        });
     }
 }
