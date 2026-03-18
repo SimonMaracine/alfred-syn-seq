@@ -1830,6 +1830,7 @@ namespace application {
             ImGui::SetNextWindowSize(size);
 
             ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, message.opacity);
 
             if (ImGui::Begin(("Message"s + std::to_string(message.sequence)).c_str(), nullptr, flags)) {
                 ImGui::TextWrapped("%s", message.message.c_str());
@@ -1837,6 +1838,7 @@ namespace application {
 
             ImGui::End();
 
+            ImGui::PopStyleVar();
             ImGui::PopStyleVar();
         }
     }
@@ -3808,7 +3810,7 @@ namespace application {
     void Application::update_messages() {
         const auto time_now = std::chrono::system_clock::now();
 
-        for (const Message& message : m_messages.messages) {
+        for (Message& message : m_messages.messages) {
             if (time_now - message.time > MAX_MESSAGE_DURATION) {
                 m_task_manager.add_immediate_task([this, sequence = message.sequence] {
                     std::erase_if(m_messages.messages, [sequence](const auto& message) {
@@ -3816,6 +3818,11 @@ namespace application {
                     });
                 });
             }
+
+            static constexpr float MAX_DURATION = std::chrono::duration<float>(MAX_MESSAGE_DURATION).count();
+            const float elapsed = std::chrono::duration<float>(time_now - message.time).count();
+
+            message.opacity = std::clamp(math::map(elapsed, MAX_DURATION - 1.0f, MAX_DURATION, 1.0f, 0.0f), 0.0f, 1.0f);
         }
     }
 }

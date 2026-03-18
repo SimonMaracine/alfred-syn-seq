@@ -256,6 +256,7 @@ namespace application {
             std::string message;
             std::chrono::system_clock::time_point time {};
             std::uint32_t sequence {};
+            float opacity = 1.0f;
         };
 
         void notify_message(std::string message) const;
