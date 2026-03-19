@@ -2640,7 +2640,7 @@ namespace application {
         m_player.start();
     }
 
-    void Application::stop_player() {
+    void Application::stop_player() {  // FIXME stopping the player doesn't instantly stop the synthesizer voices, but we instantly change volume and polyphony
         m_player.stop();
         desired_frame_time(FRAME_TIME_DEFAULT);
         reset_synthesizer_instrument_volumes(m_synthesizer);
@@ -3715,18 +3715,18 @@ namespace application {
 
     void Application::strip_composition_empty_instruments(seq::Composition& composition) {
         for (seq::Measure& measure : composition.measures) {
-            for (auto iter = measure.instruments.begin(); iter != measure.instruments.end();) {
-                if (iter->second.empty()) {
-                    iter = measure.instruments.erase(iter);
+            for (auto instrument = measure.instruments.begin(); instrument != measure.instruments.end();) {
+                if (instrument->second.empty()) {
+                    instrument = measure.instruments.erase(instrument);
                     continue;
                 }
 
-                iter++;
+                instrument++;
             }
         }
     }
 
-    void Application::undo() {
+    void Application::undo() {  // FIXME undo/redo stack limit
         assert(!m_composition_history.undo.empty());
 
         m_composition_history.redo.emplace(m_composition, m_composition_camera);
