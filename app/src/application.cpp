@@ -1775,6 +1775,8 @@ namespace application {
 
             ImGui::EndChild();
 
+            ImGui::BeginDisabled(*m_ui.preset.name == 0);
+
             if (ImGui::Button("Store into Synthesizer")) {
                 m_synthesizer.store_instrument(std::make_unique<preset::RuntimeInstrument>(get_preset(m_ui.preset)));
                 set_composition_instrument_colors();
@@ -1787,6 +1789,8 @@ namespace application {
             if (ImGui::Button("Save to File")) {
                 preset_file_save();
             }
+
+            ImGui::EndDisabled();
         });
     }
 
