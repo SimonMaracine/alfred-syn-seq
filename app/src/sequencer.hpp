@@ -42,7 +42,7 @@ namespace seq {
     inline constexpr std::uint32_t MIN_DURATION = 3;
 
     inline constexpr std::uint32_t DELAY_INCREMENT = 1;
-    inline constexpr std::uint32_t MAX_DELAY = 6;
+    inline constexpr std::uint32_t MAX_DELAY = 10;
 
     constexpr std::uint32_t steps(Value value) {
         return Sixteenth * DIVISION / value;

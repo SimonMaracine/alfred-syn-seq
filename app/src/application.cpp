@@ -2575,7 +2575,10 @@ namespace application {
         remember_composition();
 
         for (ProvenanceNote& selected_note : m_composition_selected_notes) {
-            if (selected_note.note()->delay == seq::MAX_DELAY) {
+            if (
+                selected_note.note()->delay == seq::MAX_DELAY ||
+                seq::steps(selected_note.note()->value, selected_note.note()->tuplet) - selected_note.note()->delay < seq::DIVISION
+            ) {
                 LOG_DEBUG("Cannot add any more delay to note");
                 notify_message("Cannot add any more delay to note");
                 continue;
