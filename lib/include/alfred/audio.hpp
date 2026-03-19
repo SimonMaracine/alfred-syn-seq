@@ -57,7 +57,7 @@ namespace audio {
         void resume() const;
 
         // Stop the audio device
-        void halt() const;
+        void pause() const;
 
         // Lock/unlock the internal mutex
         void lock() const;

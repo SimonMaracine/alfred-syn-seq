@@ -8,6 +8,8 @@
 #include "alfred/math.hpp"
 
 namespace synthesizer {
+    static constexpr double TIME_FOR_RESET = 10.0;
+
     Synthesizer::Synthesizer() {
         // Built-in instruments
         m_instruments[instruments::Metronome::static_id()] = std::make_unique<instruments::Metronome>();
@@ -63,7 +65,7 @@ namespace synthesizer {
     void Synthesizer::note_on(double time, syn::NoteId note, syn::InstrumentId instrument, syn::Velocity velocity) {
         assert(velocity >= 0.0 && velocity <= 1.0);
 
-        if (const auto [begin, end] {m_instruments.at(instrument)->range()}; note < begin || note > end) {
+        if (const auto [begin, end] = m_instruments.at(instrument)->range(); note < begin || note > end) {
             return;
         }
 
@@ -85,15 +87,12 @@ namespace synthesizer {
     }
 
     void Synthesizer::note_off(double time, syn::NoteId note, syn::InstrumentId instrument) {
-        if (const auto [begin, end] {m_instruments.at(instrument)->range()}; note < begin || note > end) {
+        if (const auto [begin, end] = m_instruments.at(instrument)->range(); note < begin || note > end) {
             return;
         }
 
         if (const auto voice = find_voice(note, instrument); voice != m_voices.end()) {
-            if (voice->time_on > voice->time_off) {
-                voice->time_off = time;
-                voice->envelope->note_off(time);
-            }
+            note_off(time, *voice);
         }
     }
 
@@ -117,9 +116,9 @@ namespace synthesizer {
 
         while (size > m_max_voices) {
             // Remove the oldest voice policy
-            const auto oldest_voice {std::ranges::min_element(m_voices, [](const auto& lhs, const auto& rhs) {
+            const auto oldest_voice = std::ranges::min_element(m_voices, [](const auto& lhs, const auto& rhs) {
                 return lhs.time_on < rhs.time_on;
-            })};
+            });
 
             // Simply force a note off on the voice and don't abruptly interrupt it
             note_off(time, *oldest_voice);
@@ -166,7 +165,7 @@ namespace synthesizer {
         }
 
         // Prevent audio from being processed in the base class destructor, causing pure virtual function calls
-        halt();
+        pause();
     }
 
     void RealSynthesizer::note_on(syn::NoteId note, syn::InstrumentId instrument, syn::Velocity velocity) {
@@ -185,6 +184,17 @@ namespace synthesizer {
         audio::AudioLockGuard guard {this};
 
         update_voices(m_time);
+
+        // Time is of course monotonic
+        if (!m_voices.empty()) {
+            m_time_sound = m_time;
+        }
+
+        // Reset the time after a certain period of inactivity in order to never lose precision
+        if (m_time - m_time_sound > TIME_FOR_RESET) {
+            m_time_sound = 0.0;
+            silence_immediately();
+        }
 
         return sample();
     }

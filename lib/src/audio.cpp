@@ -107,7 +107,7 @@ namespace audio {
         }
     }
 
-    void Audio::halt() const {
+    void Audio::pause() const {
         if (!SDL_PauseAudioStreamDevice(m_stream)) {
             throw AudioError(std::format("SDL_PauseAudioStreamDevice: {}", SDL_GetError()));
         }

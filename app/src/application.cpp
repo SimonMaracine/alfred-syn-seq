@@ -1856,6 +1856,7 @@ namespace application {
         if (ImGui::Begin("Debug", nullptr, ImGuiWindowFlags_NoDocking)) {
             ImGui::Text("Frame time: %f", frame_time());
             ImGui::Text("m_synthesizer.current_voices() %zu", m_synthesizer.current_voices());
+            ImGui::Text("m_synthesizer.time() %.03f", m_synthesizer.time());
             ImGui::Text("m_player.get_position() %u", m_player.position());
             ImGui::Text("m_composition_not_compiled %d", m_composition_not_compiled);
             ImGui::Text("m_composition_not_saved %d", m_composition_not_saved);
@@ -1886,13 +1887,11 @@ namespace application {
     }
 
     void Application::keyboard_input(unsigned int key, bool down) {
-        auto update {
-            [this, down](syn::NoteId id) {
-                if (down) {
-                    m_synthesizer.note_on(id + m_octave * 12, m_instrument, seq::amplitude(seq::Loudness::Fortississimo));
-                } else {
-                    m_synthesizer.note_off(id + m_octave * 12, m_instrument);
-                }
+        auto update = [this, down](syn::NoteId id) {
+            if (down) {
+                m_synthesizer.note_on(id + m_octave * 12, m_instrument, seq::amplitude(seq::Loudness::Fortississimo));
+            } else {
+                m_synthesizer.note_off(id + m_octave * 12, m_instrument);
             }
         };
 

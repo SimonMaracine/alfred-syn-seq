@@ -94,9 +94,15 @@ namespace synthesizer {
         void silence_immediately() override;
         void polyphony(std::size_t max_voices) override;
         void store_instrument(std::unique_ptr<syn::Instrument> instrument) override;
+
+        // Get the time (not wall clock time)
+        double time() const { return m_time; }
     private:
         void callback_update() noexcept override;
         double callback_sound() const noexcept override;
+
+        // Time when there is at least one voice
+        double m_time_sound {};
     };
 
     // Synthesizer whose output is an internal buffer
