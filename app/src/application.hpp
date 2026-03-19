@@ -37,10 +37,7 @@ namespace application {
         MeasureIter measure() const { return m_measure; }
         std::uint32_t position() const { return m_position; }
         std::uint32_t global_position() const { return m_global_position; }
-
-        std::uint32_t measure_position() const {
-            return m_global_position - m_position;
-        }
+        std::uint32_t measure_position() const { return m_global_position - m_position; }
     private:
         syn::NoteId m_id {};
         MeasureIter m_measure;

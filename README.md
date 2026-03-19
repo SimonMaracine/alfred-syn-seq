@@ -1,6 +1,6 @@
 # Alfred
 
-A free and open source cross-platform synthesizer and sequencer program.
+A free and open source cross-platform **synthesizer**, **sequencer** and **composition editor** program.
 
 It comprises a digital multi-timbral synthesizer using additive and wavetable methods, and an interface to compose and play music.
 
@@ -17,7 +17,7 @@ Read the manual [here](MANUAL.md).
 Alfred is split into two:
 
 - A synthesizer library worrying about synthesis-related things almost exclusively
-- A sequencer GUI application which enables playing notes and music, and which loosely models some sheet music concepts
+- A sequencer and composition editor GUI application which enables playing notes and editing music, and which loosely models some sheet music concepts
 
 Currently, Alfred is in its infancy, so its current instruments are not well-made, and it is still missing some important features, which will probably be addressed with time:
 
@@ -26,7 +26,7 @@ Currently, Alfred is in its infancy, so its current instruments are not well-mad
 - Support for MIDI keyboard controllers
 - Presenting errors nicely instead of just silently logging them
 
-Alfred works with 16-bit samples, one channel, and frequency 44100 Hz.
+Alfred works with 16-bit samples, one channel, and frequency of 44100 Hz.
 
 ![Screenshot](gfx/screenshots/1.png)
 
@@ -46,7 +46,7 @@ Alfred is solely 64-bit software.
 
 Build in distribution/release mode for the best audio experience! Compiled without optimizations, due to low performance, the audio output can sometimes sound glitchy and bad!
 
-**Distribution** mode means compiling without assertions, without additional debug code and generally for system integration. It differs from release mode, which merely means compiling with optimization flags enabled.
+*Distribution* mode means compiling without assertions, without additional debug code and generally for system integration. It differs from release mode, which merely means compiling with optimization flags enabled.
 
 ### Requirements
 
