@@ -1269,7 +1269,8 @@ namespace application {
     }
 
     void Application::composition_pitch(const Draw& draw, const HoveredNote& hovered_note) const {
-        const ImColor& COLOR = color(ImGuiCol_Text);
+        const auto [begin, end] = m_synthesizer.get_instrument(m_instrument).range();
+        const ImColor& COLOR = hovered_note.id() >= begin && hovered_note.id() <= end ? color(ImGuiCol_Text) : color(ImGuiCol_PlotLinesHovered);
 
         char note_pitch[4] {};
         note_to_string(hovered_note.id(), note_pitch);
