@@ -3732,7 +3732,7 @@ namespace application {
         }
     }
 
-    void Application::undo() {  // FIXME undo/redo stack limit
+    void Application::undo() {
         assert(!m_composition_history.undo.empty());
 
         seq::Composition& composition = m_composition;
@@ -3774,7 +3774,7 @@ namespace application {
 
         // Set a limit to the stack size
         // Erase multiple elements occasionally, instead of erasing for every change
-        if (m_composition_history.undo.size() > 100) {
+        if (m_composition_history.undo.size() > 90) {
             m_composition_history.undo.erase(m_composition_history.undo.begin(), std::next(m_composition_history.undo.begin(), 30));
         }
     }
