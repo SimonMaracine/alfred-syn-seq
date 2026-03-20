@@ -71,10 +71,11 @@ namespace instruments {
 
     class Harmonica : public syn::Instrument {
     public:
-        ALFRED_INSTRUMENT_STATIC_NAME_ID("Harmonica?")
-        ALFRED_INSTRUMENT_DESCRIPTION_UNFINISHED()
+        ALFRED_INSTRUMENT_STATIC_NAME_ID("Harmonica")
+        ALFRED_INSTRUMENT_DESCRIPTION("Isn't it easy to play a virtual harmonica?")
 
         double sound(double time, double time_on, syn::NoteId note) const noexcept override;
+        syn::InstrumentRange range() const override { return { syn::note(syn::A, syn::Octave3), syn::note(syn::C, syn::Octave6) }; }
 
         syn::Volume volume() const override { return m_volume; }
         void volume(syn::Volume volume) override { m_volume = volume; }
@@ -88,7 +89,7 @@ namespace instruments {
         static constexpr syn::envelope::DescriptionAdsr ENVELOPE {
             .duration_attack = 0.15,
             .duration_decay = 0.02,
-            .duration_release = 0.6,
+            .duration_release = 0.3,
             .value_sustain = 0.7
         };
 
