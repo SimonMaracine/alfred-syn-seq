@@ -4,7 +4,6 @@
 #include <unordered_map>
 #include <filesystem>
 #include <optional>
-#include <stack>
 #include <string>
 #include <chrono>
 #include <functional>
@@ -64,7 +63,7 @@ namespace application {
             ImVec2 camera;
         };
 
-        using Stack = std::stack<Point, std::vector<Point>>;
+        using Stack = std::vector<Point>;
 
         Stack undo;
         Stack redo;

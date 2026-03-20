@@ -1861,6 +1861,8 @@ namespace application {
             ImGui::Text("m_player.get_position() %u", m_player.position());
             ImGui::Text("m_composition_not_compiled %d", m_composition_not_compiled);
             ImGui::Text("m_composition_not_saved %d", m_composition_not_saved);
+            ImGui::Text("m_composition_history.undo.size() %zu", m_composition_history.undo.size());
+            ImGui::Text("m_composition_history.redo.size() %zu", m_composition_history.redo.size());
         }
 
         ImGui::End();
@@ -3733,13 +3735,14 @@ namespace application {
     void Application::undo() {  // FIXME undo/redo stack limit
         assert(!m_composition_history.undo.empty());
 
-        m_composition_history.redo.emplace(m_composition, m_composition_camera);
-
         seq::Composition& composition = m_composition;
-        composition = std::move(m_composition_history.undo.top().composition);
-        m_composition_camera = m_composition_history.undo.top().camera;
 
-        m_composition_history.undo.pop();
+        m_composition_history.redo.emplace_back(std::move(composition), m_composition_camera);
+
+        composition = std::move(m_composition_history.undo.back().composition);
+        m_composition_camera = m_composition_history.undo.back().camera;
+
+        m_composition_history.undo.pop_back();
 
         modify_composition();
         reset_composition_selection();
@@ -3749,13 +3752,14 @@ namespace application {
     void Application::redo() {
         assert(!m_composition_history.redo.empty());
 
-        m_composition_history.undo.emplace(m_composition, m_composition_camera);
-
         seq::Composition& composition = m_composition;
-        composition = std::move(m_composition_history.redo.top().composition);
-        m_composition_camera = m_composition_history.redo.top().camera;
 
-        m_composition_history.redo.pop();
+        m_composition_history.undo.emplace_back(std::move(composition), m_composition_camera);
+
+        composition = std::move(m_composition_history.redo.back().composition);
+        m_composition_camera = m_composition_history.redo.back().camera;
+
+        m_composition_history.redo.pop_back();
 
         modify_composition();
         reset_composition_selection();
@@ -3763,10 +3767,15 @@ namespace application {
     }
 
     void Application::remember_composition() {
-        m_composition_history.undo.emplace(m_composition, m_composition_camera);
+        seq::Composition& composition = m_composition;
 
-        while (!m_composition_history.redo.empty()) {
-            m_composition_history.redo.pop();
+        m_composition_history.undo.emplace_back(composition, m_composition_camera);
+        m_composition_history.redo.clear();
+
+        // Set a limit to the stack size
+        // Erase multiple elements occasionally, instead of erasing for every change
+        if (m_composition_history.undo.size() > 100) {
+            m_composition_history.undo.erase(m_composition_history.undo.begin(), std::next(m_composition_history.undo.begin(), 30));
         }
     }
 
