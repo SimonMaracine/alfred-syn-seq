@@ -23,6 +23,9 @@ namespace synthesizer {
         m_instruments[instruments::Strings::static_id()] = std::make_unique<instruments::Strings>();
         m_instruments[instruments::Cello::static_id()] = std::make_unique<instruments::Cello>();
         m_instruments[instruments::Test::static_id()] = std::make_unique<instruments::Test>();
+
+        // Small optimization
+        m_voices.reserve(50);
     }
 
     void Synthesizer::for_each_instrument(const std::function<void(const syn::Instrument&)>& function) const {
