@@ -36,15 +36,7 @@ namespace preset {
     // Template for any kind of runtime-defined instrument
     class RuntimeInstrument : public syn::Instrument {
     public:
-        explicit RuntimeInstrument(Preset preset)
-            : m_preset(std::move(preset)), m_id(hash::HashedStr32(preset.name))
-        {
-            for (const Partial& partial : m_preset.partials) {
-                m_amplitudes.push_back(partial.amplitude_divisor);
-            }
-
-            m_amplitudes = syn::util::amplitudes(std::move(m_amplitudes));
-        }
+        explicit RuntimeInstrument(Preset preset);
 
         // Retrieve a read only reference to the parameters that make up this instrument
         const Preset& preset() const { return m_preset; }

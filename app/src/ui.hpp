@@ -169,7 +169,8 @@ namespace ui {
                 Sine,
                 Square,
                 Triangle,
-                Sawtooth
+                Sawtooth,
+                Noise
             } oscillator_type {};
 
             double frequency_multiplier = 1.0;

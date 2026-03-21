@@ -334,7 +334,8 @@ namespace syn {
             Sine,
             Square,
             Triangle,
-            Sawtooth
+            Sawtooth,
+            Noise
         };
 
         double sine(double time, double frequency, double phase);

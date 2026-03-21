@@ -3,6 +3,16 @@
 #include <ranges>
 
 namespace preset {
+    RuntimeInstrument::RuntimeInstrument(Preset preset)
+        : m_preset(std::move(preset)), m_id(hash::HashedStr32(preset.name))
+    {
+        for (const Partial& partial : m_preset.partials) {
+            m_amplitudes.push_back(partial.amplitude_divisor);
+        }
+
+        m_amplitudes = syn::util::amplitudes(std::move(m_amplitudes));
+    }
+
     double RuntimeInstrument::sound(double time, double, syn::NoteId note) const noexcept {
         double output {};
 
@@ -36,6 +46,10 @@ namespace preset {
                         output += m_amplitudes[i] * syn::oscillator::sawtooth(time, partial.frequency_multiplier * syn::frequency(note), partial.phase);
                     }
                     break;
+                case syn::oscillator::Type::Noise:
+                    output += m_amplitudes[i] * syn::noise();
+                    break;
+
             }
         }
 

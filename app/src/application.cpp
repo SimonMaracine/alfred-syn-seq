@@ -1702,7 +1702,7 @@ namespace application {
 
                     ImGui::PushItemWidth(ui::rem(7.0f));
 
-                    constexpr const char* OSCILLATOR_TYPE[] { "Sine", "Square", "Triangle", "Sawtooth" };
+                    constexpr const char* OSCILLATOR_TYPE[] { "Sine", "Square", "Triangle", "Sawtooth", "Noise" };
 
                     if (ImGui::BeginCombo("##Oscillator", OSCILLATOR_TYPE[partial.oscillator_type])) {
                         for (std::size_t i {}; i < std::size(OSCILLATOR_TYPE); i++) {
@@ -1722,13 +1722,17 @@ namespace application {
 
                     ImGui::PushItemWidth(ui::rem(5.0f));
 
-                    if (ImGui::InputDouble("##Frequency Multiplier", &partial.frequency_multiplier, 0.0, 0.0, "%.3f")) {
-                        partial.frequency_multiplier = std::clamp(partial.frequency_multiplier, 0.0, 15.0);
+                    const bool noise_type = partial.oscillator_type == ui::Preset::Partial::Noise;
+
+                    if (!noise_type) {
+                        if (ImGui::InputDouble("##Frequency Multiplier", &partial.frequency_multiplier, 0.0, 0.0, "%.3f")) {
+                            partial.frequency_multiplier = std::clamp(partial.frequency_multiplier, 0.0, 15.0);
+                        }
+
+                        ImGui::SetItemTooltip("Frequency Multiplier");
+
+                        ImGui::SameLine();
                     }
-
-                    ImGui::SetItemTooltip("Frequency Multiplier");
-
-                    ImGui::SameLine();
 
                     if (ImGui::InputDouble("##Amplitude Divisor", &partial.amplitude_divisor, 0.0, 0.0, "%.3f")) {
                         partial.amplitude_divisor = std::clamp(partial.amplitude_divisor, 1.0, 100.0);
@@ -1736,36 +1740,38 @@ namespace application {
 
                     ImGui::SetItemTooltip("Amplitude Divisor");
 
-                    ImGui::SameLine();
-
-                    if (ImGui::InputDouble("##Phase", &partial.phase, 0.0, 0.0, "%.3f")) {
-                        partial.phase = std::clamp(partial.phase, 0.0, math::TWO_PI);
-                    }
-
-                    ImGui::SetItemTooltip("Phase");
-
-                    ImGui::SameLine();
-
-                    ImGui::Checkbox("##LFO", &partial.lfo.enabled);
-
-                    ImGui::SetItemTooltip("LFO");
-
-                    if (partial.lfo.enabled) {
+                    if (!noise_type) {
                         ImGui::SameLine();
 
-                        if (ImGui::InputDouble("##LFO Frequency", &partial.lfo.frequency, 0.0, 0.0, "%.3f")) {
-                            partial.lfo.frequency = std::clamp(partial.lfo.frequency, 1.0, 20.0);
+                        if (ImGui::InputDouble("##Phase", &partial.phase, 0.0, 0.0, "%.3f")) {
+                            partial.phase = std::clamp(partial.phase, 0.0, math::TWO_PI);
                         }
 
-                        ImGui::SetItemTooltip("LFO Frequency");
+                        ImGui::SetItemTooltip("Phase");
 
                         ImGui::SameLine();
 
-                        if (ImGui::InputDouble("##LFO Deviation", &partial.lfo.deviation, 0.0, 0.0, "%.3f")) {
-                            partial.lfo.deviation = std::clamp(partial.lfo.deviation, 0.0, 1.0);
-                        }
+                        ImGui::Checkbox("##LFO", &partial.lfo.enabled);
 
-                        ImGui::SetItemTooltip("LFO Deviation");
+                        ImGui::SetItemTooltip("LFO");
+
+                        if (partial.lfo.enabled) {
+                            ImGui::SameLine();
+
+                            if (ImGui::InputDouble("##LFO Frequency", &partial.lfo.frequency, 0.0, 0.0, "%.3f")) {
+                                partial.lfo.frequency = std::clamp(partial.lfo.frequency, 1.0, 20.0);
+                            }
+
+                            ImGui::SetItemTooltip("LFO Frequency");
+
+                            ImGui::SameLine();
+
+                            if (ImGui::InputDouble("##LFO Deviation", &partial.lfo.deviation, 0.0, 0.0, "%.3f")) {
+                                partial.lfo.deviation = std::clamp(partial.lfo.deviation, 0.0, 1.0);
+                            }
+
+                            ImGui::SetItemTooltip("LFO Deviation");
+                        }
                     }
 
                     ImGui::PopItemWidth();
