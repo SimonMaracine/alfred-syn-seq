@@ -32,6 +32,7 @@ target_sources(
 target_include_directories(imgui PRIVATE "${ALFRED_SDL_INCLUDE_DIRECTORY}")
 
 set_target_cpp_mode(imgui)
+enable_target_ipo(imgui)
 
 target_compile_definitions(imgui PUBLIC "IMGUI_DEFINE_MATH_OPERATORS" "IMGUI_DISABLE_OBSOLETE_FUNCTIONS")
 
