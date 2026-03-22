@@ -12,7 +12,6 @@ target_sources(
         "extern/imgui/imgui_tables.cpp"
         "extern/imgui/imgui_widgets.cpp"
         "extern/imgui/imgui.cpp"
-
         "extern/imgui/backends/imgui_impl_sdl3.cpp"
         "extern/imgui/backends/imgui_impl_sdlrenderer3.cpp"
     PUBLIC
@@ -26,7 +25,6 @@ target_sources(
             "extern/imgui/imstb_rectpack.h"
             "extern/imgui/imstb_textedit.h"
             "extern/imgui/imstb_truetype.h"
-
             "extern/imgui/backends/imgui_impl_sdl3.h"
             "extern/imgui/backends/imgui_impl_sdlrenderer3.h"
 )

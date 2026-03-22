@@ -38,6 +38,7 @@ endif()
 set_target_cpp_mode(alfred_lib)
 set_target_warnings(alfred_lib)
 enable_target_diagnostics(alfred_lib)
+enable_target_ipo(alfred_lib)
 
 if(ALFRED_DISTRIBUTION)
     target_compile_definitions(alfred_lib PRIVATE "NDEBUG")

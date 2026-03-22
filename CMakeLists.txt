@@ -4,7 +4,7 @@ project(
     "alfred-syn-seq"
     VERSION "0.6.0"
     DESCRIPTION "A cross-platform synthesizer, sequencer and composition editor program"
-    HOMEPAGE_URL "https://github.com/SimonMaracine/alfred"
+    HOMEPAGE_URL "https://github.com/SimonMaracine/alfred-syn-seq"
     LANGUAGES CXX
 )
 
@@ -16,6 +16,7 @@ set(BUILD_SHARED_LIBS OFF)
 
 include(cmake/sanity_checks.cmake)
 include(cmake/target_options.cmake)
+include(cmake/ipo.cmake)
 include(cmake/sdl.cmake)
 
 add_subdirectory(lib)
