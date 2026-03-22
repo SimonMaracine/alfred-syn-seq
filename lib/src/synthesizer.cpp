@@ -13,7 +13,7 @@ namespace synthesizer {
     Synthesizer::Synthesizer() {
         // Built-in instruments
         m_instruments[instruments::Metronome::static_id()] = std::make_unique<instruments::Metronome>();
-        m_instruments[instruments::Bell::static_id()] = std::make_unique<instruments::Bell>();
+        m_instruments[instruments::Ghost::static_id()] = std::make_unique<instruments::Ghost>();
         m_instruments[instruments::Harmonica::static_id()] = std::make_unique<instruments::Harmonica>();
         m_instruments[instruments::DrumBass::static_id()] = std::make_unique<instruments::DrumBass>();
         m_instruments[instruments::DrumSnare::static_id()] = std::make_unique<instruments::DrumSnare>();

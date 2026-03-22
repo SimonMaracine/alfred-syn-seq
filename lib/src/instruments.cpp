@@ -16,11 +16,11 @@ namespace instruments {
             amp[3] * syn::noise();
     }
 
-    double Bell::sound(double time, double, syn::NoteId note) const noexcept {
+    double Ghost::sound(double time, double, syn::NoteId note) const noexcept {
         static constexpr auto amp = syn::util::amplitudes(std::array { 1.0, 2.0, 4.0 });
 
         return
-            amp[0] * syn::oscillator::sine(time, 1.0 * syn::frequency(note), 0.0, { 5.0, 0.001 }) +
+            amp[0] * syn::oscillator::sine(time, 1.0 * syn::frequency(note), 0.0, { 5.0, 0.02 }) +
             amp[1] * syn::oscillator::sine(time, 2.0 * syn::frequency(note), 0.0) +
             amp[2] * syn::oscillator::sine(time, 4.0 * syn::frequency(note), 0.0);
     }

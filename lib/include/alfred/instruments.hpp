@@ -43,10 +43,10 @@ namespace instruments {
         syn::Volume m_volume {};
     };
 
-    class Bell : public syn::Instrument {
+    class Ghost : public syn::Instrument {
     public:
-        ALFRED_INSTRUMENT_STATIC_NAME_ID("Bell?")
-        ALFRED_INSTRUMENT_DESCRIPTION_UNFINISHED()
+        ALFRED_INSTRUMENT_STATIC_NAME_ID("Ghost")
+        ALFRED_INSTRUMENT_DESCRIPTION("Here to haunt you")
 
         double sound(double time, double time_on, syn::NoteId note) const noexcept override;
         syn::InstrumentRange range() const override { return { syn::note(syn::C, syn::Octave2), syn::note(syn::C, syn::Octave6) }; }
@@ -58,12 +58,12 @@ namespace instruments {
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
 
-        std::unique_ptr<Instrument> clone() const override { return std::make_unique<Bell>(*this); }
+        std::unique_ptr<Instrument> clone() const override { return std::make_unique<Ghost>(*this); }
     private:
         static constexpr syn::envelope::DescriptionAdr ENVELOPE {
-            .duration_attack = 0.5,
-            .duration_decay = 1.0,
-            .duration_release = 0.7
+            .duration_attack = 0.7,
+            .duration_decay = 1.5,
+            .duration_release = 1.0
         };
 
         syn::Volume m_volume {};
