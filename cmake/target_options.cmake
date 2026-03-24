@@ -31,7 +31,7 @@ function(enable_target_diagnostics target)
 endfunction()
 
 function(enable_target_ipo target)
-    if(ALFRED_IPO_SUPPORTED)
+    if(ALFRED_IPO_SUPPORTED AND NOT ALFRED_ASAN)
         set_target_properties(${target} PROPERTIES INTERPROCEDURAL_OPTIMIZATION ON)
     endif()
 endfunction()
