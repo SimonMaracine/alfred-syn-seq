@@ -22,7 +22,6 @@ namespace synthesizer {
         m_instruments[instruments::Guitar::static_id()] = std::make_unique<instruments::Guitar>();
         m_instruments[instruments::Strings::static_id()] = std::make_unique<instruments::Strings>();
         m_instruments[instruments::Cello::static_id()] = std::make_unique<instruments::Cello>();
-        m_instruments[instruments::Test::static_id()] = std::make_unique<instruments::Test>();
 
         // Small optimization
         m_voices.reserve(50);
@@ -155,7 +154,7 @@ namespace synthesizer {
             output +=
                 voice.amplitude *
                 voice.envelope->value() *
-                syn::amplitude(instrument->volume()) *  // FIXME technically a race condition
+                syn::amplitude(instrument->volume()) *
                 instrument->sound(time, voice.time_on, voice.note);
         }
 

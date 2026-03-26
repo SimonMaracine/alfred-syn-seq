@@ -6,6 +6,12 @@
 #include "alfred/audio.hpp"
 
 namespace instruments {
+    static std::unique_ptr<double[]> copy(const std::unique_ptr<double[]>& ptr, std::size_t size) {
+        auto array = std::make_unique<double[]>(size);
+        std::memcpy(array.get(), ptr.get(), size * sizeof(double));
+        return array;
+    }
+
     double Metronome::sound(double time, double, syn::NoteId note) const noexcept {
         static constexpr auto amp = syn::util::amplitudes(std::array { 1.0, 2.0, 4.0, 25.0 });
 
@@ -112,16 +118,12 @@ namespace instruments {
     }
 
     Strings::Strings(const Strings& other) {
-        m_sample = std::make_unique<double[]>(SIZE);
-        std::memcpy(m_sample.get(), other.m_sample.get(), SIZE * sizeof(double));
-
+        m_sample = copy(other.m_sample, SIZE);
         m_volume = other.m_volume;
     }
 
     Strings& Strings::operator=(const Strings& other) {
-        m_sample = std::make_unique<double[]>(SIZE);
-        std::memcpy(m_sample.get(), other.m_sample.get(), SIZE * sizeof(double));
-
+        m_sample = copy(other.m_sample, SIZE);
         m_volume = other.m_volume;
 
         return *this;
@@ -159,26 +161,18 @@ namespace instruments {
     }
 
     Cello::Cello(const Cello& other) {
-        m_sample = std::make_unique<double[]>(SIZE);
-        std::memcpy(m_sample.get(), other.m_sample.get(), SIZE * sizeof(double));
-
+        m_sample = copy(other.m_sample, SIZE);
         m_volume = other.m_volume;
     }
 
     Cello& Cello::operator=(const Cello& other) {
-        m_sample = std::make_unique<double[]>(SIZE);
-        std::memcpy(m_sample.get(), other.m_sample.get(), SIZE * sizeof(double));
-
-        m_volume = other.m_volume;
+        m_sample = copy(other.m_sample, SIZE);
+m_volume = other.m_volume;
 
         return *this;
     }
 
     double Cello::sound(double time, double, syn::NoteId note) const noexcept {
         return syn::util::sound(time, note, m_sample.get(), SIZE, FREQUENCY);
-    }
-
-    double Test::sound(double time, double, syn::NoteId note) const noexcept {
-        return syn::oscillator::sawtooth(time, syn::frequency(note), 0.0, { 4.0, 0.05 });
     }
 }

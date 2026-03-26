@@ -302,6 +302,40 @@ namespace syn {
         }
     }
 
+    VolumeA::VolumeA(Volume volume) noexcept {
+        m_volume.store(volume, std::memory_order::relaxed);
+    }
+
+    VolumeA::VolumeA(const VolumeA& other) noexcept {
+        m_volume.store(other.m_volume.load(std::memory_order::relaxed), std::memory_order::relaxed);
+    }
+
+    VolumeA& VolumeA::operator=(const VolumeA& other) noexcept {
+        m_volume.store(other.m_volume.load(std::memory_order::relaxed), std::memory_order::relaxed);
+
+        return *this;
+    }
+
+    VolumeA::VolumeA(VolumeA&& other) noexcept {
+        m_volume.store(other.m_volume.load(std::memory_order::relaxed), std::memory_order::relaxed);
+    }
+
+    VolumeA& VolumeA::operator=(VolumeA&& other) noexcept {
+        m_volume.store(other.m_volume.load(std::memory_order::relaxed), std::memory_order::relaxed);
+
+        return *this;
+    }
+
+    VolumeA::operator Volume() const {
+        return m_volume.load(std::memory_order::relaxed);
+    }
+
+    VolumeA& VolumeA::operator=(Volume volume) {
+        m_volume.store(volume, std::memory_order::relaxed);
+
+        return *this;
+    }
+
     namespace oscillator {
         double sine(double time, double frequency, double phase) {
             return std::sin(math::w(frequency) * time + phase);

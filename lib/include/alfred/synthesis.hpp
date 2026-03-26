@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <limits>
 #include <utility>
+#include <atomic>
 #include <cmath>
 #include <cstdint>
 
@@ -256,8 +257,25 @@ namespace syn {
         double time_off = -std::numeric_limits<double>::infinity();
     };
 
-    // In decibels
+    // Volume type in decibels
     using Volume = std::int32_t;
+
+    // Atomic variant
+    class VolumeA {
+    public:
+        VolumeA() = default;
+        VolumeA(Volume volume) noexcept;
+        VolumeA(const VolumeA& other) noexcept;
+        VolumeA& operator=(const VolumeA& other) noexcept;
+        VolumeA(VolumeA&& other) noexcept;
+        VolumeA& operator=(VolumeA&& other) noexcept;
+        ~VolumeA() = default;
+
+        operator Volume() const;
+        VolumeA& operator=(Volume volume);
+    private:
+        std::atomic<Volume> m_volume;
+    };
 
     inline constexpr Volume VOLUME_MIN = -40;
     inline constexpr Volume VOLUME_DEFAULT = 0;
@@ -301,8 +319,8 @@ namespace syn {
 
         // Metadata and identification
         virtual const char* name() const = 0;
-        virtual InstrumentId id() const = 0;
         virtual const char* description() const = 0;
+        virtual InstrumentId id() const = 0;
 
         // Raw sound produced at this particular time (without taking into account envelope and other values)
         virtual double sound(double time, double time_on, NoteId note) const noexcept = 0;

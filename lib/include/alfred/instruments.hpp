@@ -40,7 +40,7 @@ namespace instruments {
             .duration_release = 0.007
         };
 
-        syn::Volume m_volume {};
+        syn::VolumeA m_volume;
     };
 
     class Ghost : public syn::Instrument {
@@ -66,7 +66,7 @@ namespace instruments {
             .duration_release = 1.0
         };
 
-        syn::Volume m_volume {};
+        syn::VolumeA m_volume;
     };
 
     class Harmonica : public syn::Instrument {
@@ -93,7 +93,7 @@ namespace instruments {
             .value_sustain = 0.7
         };
 
-        syn::Volume m_volume {};
+        syn::VolumeA m_volume;
     };
 
     class DrumBass : public syn::Instrument {
@@ -118,7 +118,7 @@ namespace instruments {
             .duration_release = 0.02
         };
 
-        syn::Volume m_volume {};
+        syn::VolumeA m_volume;
     };
 
     class DrumSnare : public syn::Instrument {
@@ -143,7 +143,7 @@ namespace instruments {
             .duration_release = 0.03
         };
 
-        syn::Volume m_volume {};
+        syn::VolumeA m_volume;
     };
 
     class DrumHiHat : public syn::Instrument {
@@ -168,7 +168,7 @@ namespace instruments {
             .duration_release = 0.02
         };
 
-        syn::Volume m_volume {};
+        syn::VolumeA m_volume;
     };
 
     class SynthPiano : public syn::Instrument {
@@ -193,7 +193,7 @@ namespace instruments {
             .duration_release = 0.7
         };
 
-        syn::Volume m_volume {};
+        syn::VolumeA m_volume;
     };
 
     class Guitar : public syn::Instrument {
@@ -219,7 +219,7 @@ namespace instruments {
             .duration_release = 0.3
         };
 
-        syn::Volume m_volume {};
+        syn::VolumeA m_volume;
     };
 
     class Strings : public syn::Instrument {
@@ -227,8 +227,8 @@ namespace instruments {
         Strings();
         Strings(const Strings& other);
         Strings& operator=(const Strings& other);
-        Strings(Strings&& other) = default;
-        Strings& operator=(Strings&& other) = default;
+        Strings(Strings&&) noexcept = default;
+        Strings& operator=(Strings&&) noexcept = default;
 
         ALFRED_INSTRUMENT_STATIC_NAME_ID("Strings?")
         ALFRED_INSTRUMENT_DESCRIPTION_UNFINISHED()
@@ -255,7 +255,7 @@ namespace instruments {
         static constexpr double FREQUENCY = 261.63;
 
         syn::padsynth::Sample m_sample;
-        syn::Volume m_volume {};
+        syn::VolumeA m_volume;
     };
 
     class Cello : public syn::Instrument {
@@ -263,8 +263,8 @@ namespace instruments {
         Cello();
         Cello(const Cello& other);
         Cello& operator=(const Cello& other);
-        Cello(Cello&& other) = default;
-        Cello& operator=(Cello&& other) = default;
+        Cello(Cello&&) noexcept = default;
+        Cello& operator=(Cello&&) noexcept = default;
 
         ALFRED_INSTRUMENT_STATIC_NAME_ID("Cello")
         ALFRED_INSTRUMENT_DESCRIPTION("It's close, but not quite; sounds nice though")
@@ -294,32 +294,6 @@ namespace instruments {
         static constexpr double LFO_DEVIATION = 0.07;
 
         syn::padsynth::Sample m_sample;
-        syn::Volume m_volume {};
-    };
-
-    class Test : public syn::Instrument {
-    public:
-        ALFRED_INSTRUMENT_STATIC_NAME_ID("Test")
-        ALFRED_INSTRUMENT_DESCRIPTION_UNFINISHED()
-
-        double sound(double time, double time_on, syn::NoteId note) const noexcept override;
-
-        syn::Volume volume() const override { return m_volume; }
-        void volume(syn::Volume volume) override { m_volume = volume; }
-
-        syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::AdsrLinear>(ENVELOPE); }
-        double attack_duration() const override { return ENVELOPE.duration_attack; }
-        double release_duration() const override { return ENVELOPE.duration_release; }
-
-        std::unique_ptr<Instrument> clone() const override { return std::make_unique<Test>(*this); }
-    private:
-        static constexpr syn::envelope::DescriptionAdsr ENVELOPE {
-            .duration_attack = 0.1,
-            .duration_decay = 0.0,
-            .duration_release = 0.1,
-            .value_sustain = 1.0
-        };
-
-        syn::Volume m_volume {};
+        syn::VolumeA m_volume;
     };
 }

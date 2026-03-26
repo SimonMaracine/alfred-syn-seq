@@ -33,15 +33,15 @@ namespace preset {
         const Preset& preset() const { return m_preset; }
 
         const char* name() const override { return m_preset.name.c_str(); }
-        syn::InstrumentId id() const override { return m_id; }
         const char* description() const override { return m_preset.description.c_str(); }
+        syn::InstrumentId id() const override { return m_id; }
         syn::InstrumentRange range() const override { return m_preset.range; }
         syn::Volume volume() const override { return m_volume; }
         void volume(syn::Volume volume) override { m_volume = volume; }
     protected:
         Preset m_preset;
         syn::InstrumentId m_id {};
-        syn::Volume m_volume {};
+        syn::VolumeA m_volume;
     };
 
     namespace add {
