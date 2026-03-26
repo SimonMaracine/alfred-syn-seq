@@ -42,60 +42,62 @@ namespace syn {
 }
 
 namespace preset {
-    template<typename Archive>
-    void save(Archive& archive, const Partial& self, const std::uint32_t) {
-        archive(
-            cereal::make_nvp("oscillator_type", self.oscillator_type),
-            cereal::make_nvp("frequency_multiplier", self.frequency_multiplier),
-            cereal::make_nvp("amplitude_divisor", self.amplitude_divisor),
-            cereal::make_nvp("phase", self.phase),
-            cereal::make_nvp("lfo", self.lfo)
-        );
-    }
+    namespace add {
+        template<typename Archive>
+        void save(Archive& archive, const Partial& self, const std::uint32_t) {
+            archive(
+                cereal::make_nvp("oscillator_type", self.oscillator_type),
+                cereal::make_nvp("frequency_multiplier", self.frequency_multiplier),
+                cereal::make_nvp("amplitude_divisor", self.amplitude_divisor),
+                cereal::make_nvp("phase", self.phase),
+                cereal::make_nvp("lfo", self.lfo)
+            );
+        }
 
-    template<typename Archive>
-    void load(Archive& archive, Partial& self, const std::uint32_t) {
-        archive(
-            cereal::make_nvp("oscillator_type", self.oscillator_type),
-            cereal::make_nvp("frequency_multiplier", self.frequency_multiplier),
-            cereal::make_nvp("amplitude_divisor", self.amplitude_divisor),
-            cereal::make_nvp("phase", self.phase),
-            cereal::make_nvp("lfo", self.lfo)
-        );
-    }
+        template<typename Archive>
+        void load(Archive& archive, Partial& self, const std::uint32_t) {
+            archive(
+                cereal::make_nvp("oscillator_type", self.oscillator_type),
+                cereal::make_nvp("frequency_multiplier", self.frequency_multiplier),
+                cereal::make_nvp("amplitude_divisor", self.amplitude_divisor),
+                cereal::make_nvp("phase", self.phase),
+                cereal::make_nvp("lfo", self.lfo)
+            );
+        }
 
-    template<typename Archive>
-        void save(Archive& archive, const Preset& self, const std::uint32_t) {
-        archive(
-            cereal::make_nvp("name", self.name),
-            cereal::make_nvp("description", self.description),
-            cereal::make_nvp("range", self.range),
-            cereal::make_nvp("envelope_description", self.envelope_description),
-            cereal::make_nvp("envelope_type", self.envelope_type),
-            cereal::make_nvp("partials", self.partials)
-        );
-    }
+        template<typename Archive>
+            void save(Archive& archive, const Preset& self, const std::uint32_t) {
+            archive(
+                cereal::make_nvp("name", self.name),
+                cereal::make_nvp("description", self.description),
+                cereal::make_nvp("range", self.range),
+                cereal::make_nvp("envelope_description", self.envelope_description),
+                cereal::make_nvp("envelope_type", self.envelope_type),
+                cereal::make_nvp("partials", self.partials)
+            );
+        }
 
-    template<typename Archive>
-    void load(Archive& archive, Preset& self, const std::uint32_t) {
-        archive(
-            cereal::make_nvp("name", self.name),
-            cereal::make_nvp("description", self.description),
-            cereal::make_nvp("range", self.range),
-            cereal::make_nvp("envelope_description", self.envelope_description),
-            cereal::make_nvp("envelope_type", self.envelope_type),
-            cereal::make_nvp("partials", self.partials)
-        );
+        template<typename Archive>
+        void load(Archive& archive, Preset& self, const std::uint32_t) {
+            archive(
+                cereal::make_nvp("name", self.name),
+                cereal::make_nvp("description", self.description),
+                cereal::make_nvp("range", self.range),
+                cereal::make_nvp("envelope_description", self.envelope_description),
+                cereal::make_nvp("envelope_type", self.envelope_type),
+                cereal::make_nvp("partials", self.partials)
+            );
+        }
     }
 }
 
 namespace preset {
-    void export_preset(const Preset& preset, utility::Buffer& buffer);
-    void import_preset(Preset& preset, const utility::Buffer& buffer);
+    void export_preset(const add::Preset& preset, utility::Buffer& buffer);
+    void import_preset(add::Preset& preset, const utility::Buffer& buffer);
 
     struct PresetError : std::runtime_error {
         using std::runtime_error::runtime_error;
     };
 }
 
-CEREAL_CLASS_VERSION(preset::Preset, 1)
+CEREAL_CLASS_VERSION(preset::add::Preset, 1)

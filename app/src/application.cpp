@@ -348,7 +348,7 @@ namespace application {
 
         if (ImGui::BeginMenu("Edit")) {
             m_synthesizer.for_each_instrument([this](const syn::Instrument& instrument) {
-                const auto* runtime_instrument = dynamic_cast<const preset::RuntimeInstrument*>(&instrument);
+                const auto* runtime_instrument = dynamic_cast<const preset::add::RuntimeInstrument*>(&instrument);
 
                 if (runtime_instrument) {
                     if (ImGui::MenuItem(runtime_instrument->name())) {
@@ -1785,7 +1785,7 @@ namespace application {
             ImGui::BeginDisabled(*m_ui.preset.name == 0);
 
             if (ImGui::Button("Store into Synthesizer")) {
-                m_synthesizer.store_instrument(std::make_unique<preset::RuntimeInstrument>(get_preset(m_ui.preset)));
+                m_synthesizer.store_instrument(std::make_unique<preset::add::RuntimeInstrument>(get_preset(m_ui.preset)));
                 set_composition_instrument_colors();
                 LOG_DEBUG("Created and stored a new runtime instrument");
                 notify_message("Created and stored a new runtime instrument");
@@ -3083,8 +3083,8 @@ namespace application {
         std::unreachable();
     }
 
-    preset::Preset Application::get_preset(const ui::Preset& preset) {
-        preset::Preset result_preset;
+    preset::add::Preset Application::get_preset(const ui::Preset& preset) {
+        preset::add::Preset result_preset;
 
         result_preset.name = preset.name;
         result_preset.description = preset.description;
@@ -3138,7 +3138,7 @@ namespace application {
         return result_preset;
     }
 
-    ui::Preset Application::get_preset(const preset::Preset& preset) {
+    ui::Preset Application::get_preset(const preset::add::Preset& preset) {
         ui::Preset result_preset;
 
         std::strncpy(result_preset.name, preset.name.c_str(), sizeof(result_preset.name) - 1);
@@ -3180,7 +3180,7 @@ namespace application {
                 break;
         }
 
-        for (const preset::Partial& partial : preset.partials) {
+        for (const preset::add::Partial& partial : preset.partials) {
             ui::Preset::Partial& result_partial = result_preset.partials.emplace_back();
 
             result_partial.oscillator_type = ui::Preset::Partial::OscillatorType(partial.oscillator_type);
@@ -3451,13 +3451,13 @@ namespace application {
         }
     }
 
-    void Application::preset_write(const std::filesystem::path& path, const preset::Preset& preset) {
+    void Application::preset_write(const std::filesystem::path& path, const preset::add::Preset& preset) {
         utility::Buffer buffer;
         preset::export_preset(preset, buffer);
         utility::write_file(path, buffer);
     }
 
-    void Application::preset_read(const std::filesystem::path& path, preset::Preset& preset) {
+    void Application::preset_read(const std::filesystem::path& path, preset::add::Preset& preset) {
         utility::Buffer buffer;
         utility::read_file(path, buffer);
         preset::import_preset(preset, buffer);
@@ -3489,7 +3489,7 @@ namespace application {
             LOG_WARNING("Preset file has the wrong extension");
         }
 
-        preset::Preset preset;
+        preset::add::Preset preset;
 
         try {
             preset_read(path, preset);

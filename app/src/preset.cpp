@@ -11,7 +11,7 @@
 #include <cereal/types/utility.hpp>
 
 namespace preset {
-    void export_preset(const Preset& preset, utility::Buffer& buffer) {
+    void export_preset(const add::Preset& preset, utility::Buffer& buffer) {
         std::ostringstream stream;
         stream.exceptions(std::ios_base::failbit);
 
@@ -27,7 +27,7 @@ namespace preset {
         buffer = stream.str();
     }
 
-    void import_preset(Preset& preset, const utility::Buffer& buffer) {
+    void import_preset(add::Preset& preset, const utility::Buffer& buffer) {
         std::istringstream stream {buffer};
         stream.exceptions(std::ios_base::failbit);
 

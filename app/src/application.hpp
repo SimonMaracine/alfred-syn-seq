@@ -191,8 +191,8 @@ namespace application {
         std::optional<ProvenanceNote> check_note_has_previous(const ProvenanceNote& provenance_note) const;
         static Time elapsed_seconds_to_time(double elapsed_seconds);
         static seq::Value get_value(ui::Value value);
-        static preset::Preset get_preset(const ui::Preset& preset);
-        static ui::Preset get_preset(const preset::Preset& preset);
+        static preset::add::Preset get_preset(const ui::Preset& preset);
+        static ui::Preset get_preset(const preset::add::Preset& preset);
         static const ImVec4& color(ImGuiCol color);
         static ImColor color_opacity(ImGuiCol color, float opacity);
 
@@ -210,8 +210,8 @@ namespace application {
 
         static void preset_save_file_dialog(void* userdata, const char* const* filelist, int filter);
         static void preset_open_file_dialog(void* userdata, const char* const* filelist, int filter);
-        static void preset_write(const std::filesystem::path& path, const preset::Preset& preset);
-        static void preset_read(const std::filesystem::path& path, preset::Preset& preset);
+        static void preset_write(const std::filesystem::path& path, const preset::add::Preset& preset);
+        static void preset_read(const std::filesystem::path& path, preset::add::Preset& preset);
         bool preset_save(std::filesystem::path path) const;
         bool preset_open(const std::filesystem::path& path);
         void preset_file_save();
