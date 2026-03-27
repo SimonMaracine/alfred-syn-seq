@@ -296,4 +296,31 @@ namespace instruments {
         syn::padsynth::Sample m_sample;
         syn::VolumeA m_volume;
     };
+
+    class EasterEgg : public syn::Instrument {
+    public:
+        ALFRED_INSTRUMENT_STATIC_NAME_ID("Fart")
+        ALFRED_INSTRUMENT_DESCRIPTION("It sounds like it")
+
+        double sound(double time, double, syn::NoteId note) const noexcept override;
+        syn::InstrumentRange range() const override { return { 0, 4 }; }
+
+        syn::Volume volume() const override { return m_volume; }
+        void volume(syn::Volume volume) override { m_volume = volume; }
+
+        syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::AdsrLinear>(ENVELOPE); }
+        double attack_duration() const override { return ENVELOPE.duration_attack; }
+        double release_duration() const override { return ENVELOPE.duration_release; }
+
+        std::unique_ptr<Instrument> clone() const override { return std::make_unique<EasterEgg>(*this); }
+    private:
+        static constexpr syn::envelope::DescriptionAdsr ENVELOPE {
+            .duration_attack = 0.1,
+            .duration_decay = 0.0,
+            .duration_release = 0.1,
+            .value_sustain = 1.0
+        };
+
+        syn::VolumeA m_volume;
+    };
 }

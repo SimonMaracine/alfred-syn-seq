@@ -191,6 +191,7 @@ namespace application {
 
         ImGui::DockSpaceOverViewport(dockspace_id, viewport, ImGuiDockNodeFlags_NoResize | ImGuiDockNodeFlags_NoUndocking);
 
+        // Override default Ctrl+Tab shortcut
         ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_Tab, ImGuiInputFlags_RouteGlobal);
 
         main_menu_bar();
@@ -1435,6 +1436,12 @@ namespace application {
                 }
 
                 break;
+        }
+
+        if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiMod_Alt | ImGuiKey_F, ImGuiInputFlags_RouteAlways)) {
+            m_synthesizer.store_instrument(std::make_unique<instruments::EasterEgg>());
+            set_composition_instrument_colors();
+            notify_message("Wow, wow! Hold on there. Are you really sure you want to do that?");
         }
     }
 
