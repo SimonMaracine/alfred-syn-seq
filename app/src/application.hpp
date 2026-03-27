@@ -112,6 +112,11 @@ namespace application {
         void composition_metadata();
         void composition_mixer();
         void create_instrument();
+        static void create_instrument_base(ui::BasePreset& preset);
+        void create_instrument_add();
+        void create_instrument_pad();
+        void create_instrument_buttons_add();
+        void create_instrument_buttons_pad();
         void render_composition();
         void messages();
         void debug() const;
@@ -191,8 +196,8 @@ namespace application {
         std::optional<ProvenanceNote> check_note_has_previous(const ProvenanceNote& provenance_note) const;
         static Time elapsed_seconds_to_time(double elapsed_seconds);
         static seq::Value get_value(ui::Value value);
-        static preset::add::Preset get_preset(const ui::Preset& preset);
-        static ui::Preset get_preset(const preset::add::Preset& preset);
+        static preset::add::Preset get_preset(const ui::PresetAdd& preset);
+        static ui::PresetAdd get_preset(const preset::add::Preset& preset);
         static const ImVec4& color(ImGuiCol color);
         static ImColor color_opacity(ImGuiCol color, float opacity);
 
@@ -289,7 +294,8 @@ namespace application {
             ui::Agogic agogic;
             ui::TimeSignature time_signature;
             ui::Composition composition;
-            ui::Preset preset;
+            ui::PresetAdd preset_add;
+            ui::PresetPad preset_pad;
             int octave = ui::OctaveFourth;
             int loudness = ui::LoudnessMezzoForte;
             int polyphony {};

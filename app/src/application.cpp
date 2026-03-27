@@ -353,7 +353,7 @@ namespace application {
 
                 if (runtime_instrument) {
                     if (ImGui::MenuItem(runtime_instrument->name())) {
-                        m_ui.preset = get_preset(runtime_instrument->preset());
+                        m_ui.preset_add = get_preset(runtime_instrument->preset());
                         open_create_instrument();
                     }
                 }
@@ -1637,175 +1637,239 @@ namespace application {
 
     void Application::create_instrument() {
         window_menu("Create Instrument", m_create_instrument_menu, [this] {
-            ImGui::InputText("Name", m_ui.preset.name, sizeof(m_ui.preset.name));
+            enum class Type {
+                Add,
+                Pad
+            } type {};
 
-            ImGui::SetItemTooltip("Has to be unique across all instruments in a synthesizer's storage");
+            if (ImGui::BeginTabBar("Create Instrument")) {
+                if (ImGui::BeginTabItem("Add")) {
+                    create_instrument_base(m_ui.preset_add);
+                    create_instrument_add();
 
-            ImGui::InputText("Description", m_ui.preset.description, sizeof(m_ui.preset.description));
-
-            if (ImGui::InputScalarN("Range", ImGuiDataType_U32, m_ui.preset.range, 2)) {
-                m_ui.preset.range[0] = std::clamp(m_ui.preset.range[0], syn::keyboard::ID_BEGIN, syn::keyboard::ID_END);
-                m_ui.preset.range[1] = std::clamp(m_ui.preset.range[1], syn::keyboard::ID_BEGIN, syn::keyboard::ID_END);
-                m_ui.preset.range[0] = std::min(m_ui.preset.range[0], m_ui.preset.range[1]);
-            }
-
-            if (ImGui::InputDouble("Attack", &m_ui.preset.envelope_description.duration_attack, 0.0, 0.0, "%.3f")) {
-                m_ui.preset.envelope_description.duration_attack = std::clamp(m_ui.preset.envelope_description.duration_attack, 0.0, 10.0);
-            }
-
-            if (ImGui::InputDouble("Decay", &m_ui.preset.envelope_description.duration_decay, 0.0, 0.0, "%.3f")) {
-                m_ui.preset.envelope_description.duration_decay = std::clamp(m_ui.preset.envelope_description.duration_decay, 0.0, 10.0);
-            }
-
-            if (ImGui::InputDouble("Release", &m_ui.preset.envelope_description.duration_release, 0.0, 0.0, "%.3f")) {
-                m_ui.preset.envelope_description.duration_release = std::clamp(m_ui.preset.envelope_description.duration_release, 0.0, 10.0);
-            }
-
-            switch (m_ui.preset.envelope_type) {
-                case ui::Preset::AdsrLinear:
-                case ui::Preset::AdsrExponential:
-                    if (ImGui::InputDouble("Sustain", &m_ui.preset.envelope_description.value_sustain, 0.0, 0.0, "%.3f")) {
-                        m_ui.preset.envelope_description.value_sustain = std::clamp(m_ui.preset.envelope_description.value_sustain, 0.0, 1.0);
-                    }
-                    break;
-                case ui::Preset::AdrLinear:
-                case ui::Preset::AdrExponential:
-                    break;
-            }
-
-            constexpr const char* ENVELOPE_TYPE[] { "ADSR Linear", "ADSR Exponential", "ADR Linear", "ADR Exponential" };
-
-            if (ImGui::BeginCombo("Envelope Type", ENVELOPE_TYPE[m_ui.preset.envelope_type])) {
-                for (std::size_t i {}; i < std::size(ENVELOPE_TYPE); i++) {
-                    if (ImGui::Selectable(ENVELOPE_TYPE[i], m_ui.preset.envelope_type == int(i))) {
-                        m_ui.preset.envelope_type = ui::Preset::EnvelopeType(i);
-                    }
+                    ImGui::EndTabItem();
+                    type = Type::Add;
                 }
 
-                ImGui::EndCombo();
-            }
+                if (ImGui::BeginTabItem("Pad")) {
+                    create_instrument_base(m_ui.preset_pad);
+                    create_instrument_pad();
 
-            ImGui::Dummy(ui::rem(ImVec2(0.0f, 0.5f)));
-
-            if (ImGui::Button("Add Partial")) {
-                m_ui.preset.partials.emplace_back();
-            }
-
-            if (ImGui::BeginChild("Partials", ImVec2(0.0f, ui::rem(20.0f)), ImGuiChildFlags_AutoResizeX)) {
-                for (auto [id, partial] : m_ui.preset.partials | std::views::enumerate) {
-                    ImGui::PushID(int(id));
-
-                    if (ImGui::Button("X")) {
-                        m_task_manager.add_immediate_task([this, index = id] {
-                            m_ui.preset.partials.erase(std::next(m_ui.preset.partials.begin(), index));
-                        });
-                    }
-
-                    ImGui::SameLine();
-
-                    ImGui::Text("%ld.", id + 1);
-
-                    ImGui::SameLine();
-
-                    ImGui::PushItemWidth(ui::rem(7.0f));
-
-                    constexpr const char* OSCILLATOR_TYPE[] { "Sine", "Square", "Triangle", "Sawtooth", "Noise" };
-
-                    if (ImGui::BeginCombo("##Oscillator", OSCILLATOR_TYPE[partial.oscillator_type])) {
-                        for (std::size_t i {}; i < std::size(OSCILLATOR_TYPE); i++) {
-                            if (ImGui::Selectable(OSCILLATOR_TYPE[i], partial.oscillator_type == int(i))) {
-                                partial.oscillator_type = ui::Preset::Partial::OscillatorType(i);
-                            }
-                        }
-
-                        ImGui::EndCombo();
-                    }
-
-                    ImGui::SetItemTooltip("Oscillator");
-
-                    ImGui::PopItemWidth();
-
-                    ImGui::SameLine();
-
-                    ImGui::PushItemWidth(ui::rem(5.0f));
-
-                    const bool noise_type = partial.oscillator_type == ui::Preset::Partial::Noise;
-
-                    if (!noise_type) {
-                        if (ImGui::InputDouble("##Frequency Multiplier", &partial.frequency_multiplier, 0.0, 0.0, "%.3f")) {
-                            partial.frequency_multiplier = std::clamp(partial.frequency_multiplier, 0.0, 15.0);
-                        }
-
-                        ImGui::SetItemTooltip("Frequency Multiplier");
-
-                        ImGui::SameLine();
-                    }
-
-                    if (ImGui::InputDouble("##Amplitude Divisor", &partial.amplitude_divisor, 0.0, 0.0, "%.3f")) {
-                        partial.amplitude_divisor = std::clamp(partial.amplitude_divisor, 1.0, 100.0);
-                    }
-
-                    ImGui::SetItemTooltip("Amplitude Divisor");
-
-                    if (!noise_type) {
-                        ImGui::SameLine();
-
-                        if (ImGui::InputDouble("##Phase", &partial.phase, 0.0, 0.0, "%.3f")) {
-                            partial.phase = std::clamp(partial.phase, 0.0, math::TWO_PI);
-                        }
-
-                        ImGui::SetItemTooltip("Phase");
-
-                        ImGui::SameLine();
-
-                        ImGui::Checkbox("##LFO", &partial.lfo.enabled);
-
-                        ImGui::SetItemTooltip("LFO");
-
-                        if (partial.lfo.enabled) {
-                            ImGui::SameLine();
-
-                            if (ImGui::InputDouble("##LFO Frequency", &partial.lfo.frequency, 0.0, 0.0, "%.3f")) {
-                                partial.lfo.frequency = std::clamp(partial.lfo.frequency, 1.0, 20.0);
-                            }
-
-                            ImGui::SetItemTooltip("LFO Frequency");
-
-                            ImGui::SameLine();
-
-                            if (ImGui::InputDouble("##LFO Deviation", &partial.lfo.deviation, 0.0, 0.0, "%.3f")) {
-                                partial.lfo.deviation = std::clamp(partial.lfo.deviation, 0.0, 1.0);
-                            }
-
-                            ImGui::SetItemTooltip("LFO Deviation");
-                        }
-                    }
-
-                    ImGui::PopItemWidth();
-
-                    ImGui::PopID();
+                    ImGui::EndTabItem();
+                    type = Type::Pad;
                 }
+
+                ImGui::EndTabBar();
             }
 
-            ImGui::EndChild();
-
-            ImGui::BeginDisabled(*m_ui.preset.name == 0);
-
-            if (ImGui::Button("Store into Synthesizer")) {
-                m_synthesizer.store_instrument(std::make_unique<preset::add::RuntimeInstrument>(get_preset(m_ui.preset)));
-                set_composition_instrument_colors();
-                LOG_DEBUG("Created and stored a new runtime instrument");
-                notify_message("Created and stored a new runtime instrument");
+            switch (type) {
+                case Type::Add:
+                    create_instrument_buttons_add();
+                    break;
+                case Type::Pad:
+                    create_instrument_buttons_pad();
+                    break;
             }
-
-            ImGui::SameLine();
-
-            if (ImGui::Button("Save to File")) {
-                preset_file_save();
-            }
-
-            ImGui::EndDisabled();
         });
+    }
+
+    void Application::create_instrument_base(ui::BasePreset& preset) {
+        ImGui::InputText("Name", preset.name, sizeof(preset.name));
+
+        ImGui::SetItemTooltip("Has to be unique across all instruments in a synthesizer's storage");
+
+        ImGui::InputText("Description", preset.description, sizeof(preset.description));
+
+        if (ImGui::InputScalarN("Range", ImGuiDataType_U32, preset.range, 2)) {
+            preset.range[0] = std::clamp(preset.range[0], syn::keyboard::ID_BEGIN, syn::keyboard::ID_END);
+            preset.range[1] = std::clamp(preset.range[1], syn::keyboard::ID_BEGIN, syn::keyboard::ID_END);
+            preset.range[0] = std::min(preset.range[0], preset.range[1]);
+        }
+
+        if (ImGui::InputDouble("Attack", &preset.envelope_description.duration_attack, 0.0, 0.0, "%.3f")) {
+            preset.envelope_description.duration_attack = std::clamp(preset.envelope_description.duration_attack, 0.0, 10.0);
+        }
+
+        if (ImGui::InputDouble("Decay", &preset.envelope_description.duration_decay, 0.0, 0.0, "%.3f")) {
+            preset.envelope_description.duration_decay = std::clamp(preset.envelope_description.duration_decay, 0.0, 10.0);
+        }
+
+        if (ImGui::InputDouble("Release", &preset.envelope_description.duration_release, 0.0, 0.0, "%.3f")) {
+            preset.envelope_description.duration_release = std::clamp(preset.envelope_description.duration_release, 0.0, 10.0);
+        }
+
+        switch (preset.envelope_type) {
+            case ui::PresetAdd::AdsrLinear:
+            case ui::PresetAdd::AdsrExponential:
+                if (ImGui::InputDouble("Sustain", &preset.envelope_description.value_sustain, 0.0, 0.0, "%.3f")) {
+                    preset.envelope_description.value_sustain = std::clamp(preset.envelope_description.value_sustain, 0.0, 1.0);
+                }
+                break;
+            case ui::PresetAdd::AdrLinear:
+            case ui::PresetAdd::AdrExponential:
+                break;
+        }
+
+        constexpr const char* ENVELOPE_TYPE[] { "ADSR Linear", "ADSR Exponential", "ADR Linear", "ADR Exponential" };
+
+        if (ImGui::BeginCombo("Envelope Type", ENVELOPE_TYPE[preset.envelope_type])) {
+            for (std::size_t i {}; i < std::size(ENVELOPE_TYPE); i++) {
+                if (ImGui::Selectable(ENVELOPE_TYPE[i], preset.envelope_type == int(i))) {
+                    preset.envelope_type = ui::PresetAdd::EnvelopeType(i);
+                }
+            }
+
+            ImGui::EndCombo();
+        }
+    }
+
+    void Application::create_instrument_add() {
+        ImGui::Dummy(ui::rem(ImVec2(0.0f, 0.5f)));
+
+        if (ImGui::Button("Add Partial")) {
+            m_ui.preset_add.partials.emplace_back();
+        }
+
+        if (ImGui::BeginChild("Partials", ImVec2(0.0f, ui::rem(20.0f)), ImGuiChildFlags_AutoResizeX)) {
+            for (auto [id, partial] : m_ui.preset_add.partials | std::views::enumerate) {
+                ImGui::PushID(int(id));
+
+                if (ImGui::Button("X")) {
+                    m_task_manager.add_immediate_task([this, index = id] {
+                        m_ui.preset_add.partials.erase(std::next(m_ui.preset_add.partials.begin(), index));
+                    });
+                }
+
+                ImGui::SameLine();
+
+                ImGui::Text("%ld.", id + 1);
+
+                ImGui::SameLine();
+
+                ImGui::PushItemWidth(ui::rem(7.0f));
+
+                constexpr const char* OSCILLATOR_TYPE[] { "Sine", "Square", "Triangle", "Sawtooth", "Noise" };
+
+                if (ImGui::BeginCombo("##Oscillator", OSCILLATOR_TYPE[partial.oscillator_type])) {
+                    for (std::size_t i {}; i < std::size(OSCILLATOR_TYPE); i++) {
+                        if (ImGui::Selectable(OSCILLATOR_TYPE[i], partial.oscillator_type == int(i))) {
+                            partial.oscillator_type = ui::PresetAdd::Partial::OscillatorType(i);
+                        }
+                    }
+
+                    ImGui::EndCombo();
+                }
+
+                ImGui::SetItemTooltip("Oscillator");
+
+                ImGui::PopItemWidth();
+
+                ImGui::SameLine();
+
+                ImGui::PushItemWidth(ui::rem(5.0f));
+
+                const bool noise_type = partial.oscillator_type == ui::PresetAdd::Partial::Noise;
+
+                if (!noise_type) {
+                    if (ImGui::InputDouble("##Frequency Multiplier", &partial.frequency_multiplier, 0.0, 0.0, "%.3f")) {
+                        partial.frequency_multiplier = std::clamp(partial.frequency_multiplier, 0.0, 15.0);
+                    }
+
+                    ImGui::SetItemTooltip("Frequency Multiplier");
+
+                    ImGui::SameLine();
+                }
+
+                if (ImGui::InputDouble("##Amplitude Divisor", &partial.amplitude_divisor, 0.0, 0.0, "%.3f")) {
+                    partial.amplitude_divisor = std::clamp(partial.amplitude_divisor, 1.0, 100.0);
+                }
+
+                ImGui::SetItemTooltip("Amplitude Divisor");
+
+                if (!noise_type) {
+                    ImGui::SameLine();
+
+                    if (ImGui::InputDouble("##Phase", &partial.phase, 0.0, 0.0, "%.3f")) {
+                        partial.phase = std::clamp(partial.phase, 0.0, math::TWO_PI);
+                    }
+
+                    ImGui::SetItemTooltip("Phase");
+
+                    ImGui::SameLine();
+
+                    ImGui::Checkbox("##LFO", &partial.lfo.enabled);
+
+                    ImGui::SetItemTooltip("LFO");
+
+                    if (partial.lfo.enabled) {
+                        ImGui::SameLine();
+
+                        if (ImGui::InputDouble("##LFO Frequency", &partial.lfo.frequency, 0.0, 0.0, "%.3f")) {
+                            partial.lfo.frequency = std::clamp(partial.lfo.frequency, 1.0, 20.0);
+                        }
+
+                        ImGui::SetItemTooltip("LFO Frequency");
+
+                        ImGui::SameLine();
+
+                        if (ImGui::InputDouble("##LFO Deviation", &partial.lfo.deviation, 0.0, 0.0, "%.3f")) {
+                            partial.lfo.deviation = std::clamp(partial.lfo.deviation, 0.0, 1.0);
+                        }
+
+                        ImGui::SetItemTooltip("LFO Deviation");
+                    }
+                }
+
+                ImGui::PopItemWidth();
+
+                ImGui::PopID();
+            }
+        }
+
+        ImGui::EndChild();
+    }
+
+    void Application::create_instrument_pad() {
+
+    }
+
+    void Application::create_instrument_buttons_add() {
+        ImGui::Dummy(ui::rem(ImVec2(0.0f, 0.5f)));
+
+        ImGui::BeginDisabled(*m_ui.preset_add.name == 0);
+
+        if (ImGui::Button("Store into Synthesizer")) {
+            m_synthesizer.store_instrument(std::make_unique<preset::add::RuntimeInstrument>(get_preset(m_ui.preset_add)));
+            set_composition_instrument_colors();
+            LOG_DEBUG("Created and stored a new runtime instrument");
+            notify_message("Created and stored a new runtime instrument");
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Save to File")) {
+            preset_file_save();
+        }
+
+        ImGui::EndDisabled();
+    }
+
+    void Application::create_instrument_buttons_pad() {
+        ImGui::Dummy(ui::rem(ImVec2(0.0f, 0.5f)));
+
+        ImGui::BeginDisabled(*m_ui.preset_pad.name == 0);
+
+        if (ImGui::Button("Store into Synthesizer")) {
+
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Save to File")) {
+
+        }
+
+        ImGui::EndDisabled();
     }
 
     void Application::render_composition() {
@@ -3090,7 +3154,7 @@ namespace application {
         std::unreachable();
     }
 
-    preset::add::Preset Application::get_preset(const ui::Preset& preset) {
+    preset::add::Preset Application::get_preset(const ui::PresetAdd& preset) {
         preset::add::Preset result_preset;
 
         result_preset.name = preset.name;
@@ -3098,8 +3162,8 @@ namespace application {
         result_preset.range = std::make_pair(preset.range[0], preset.range[1]);
 
         switch (preset.envelope_type) {
-            case ui::Preset::AdsrLinear:
-            case ui::Preset::AdsrExponential:
+            case ui::PresetAdd::AdsrLinear:
+            case ui::PresetAdd::AdsrExponential:
                 result_preset.envelope_description = syn::envelope::DescriptionAdsr {
                     .duration_attack = preset.envelope_description.duration_attack,
                     .duration_decay = preset.envelope_description.duration_decay,
@@ -3107,8 +3171,8 @@ namespace application {
                     .value_sustain = preset.envelope_description.value_sustain,
                 };
                 break;
-            case ui::Preset::AdrLinear:
-            case ui::Preset::AdrExponential:
+            case ui::PresetAdd::AdrLinear:
+            case ui::PresetAdd::AdrExponential:
                 result_preset.envelope_description = syn::envelope::DescriptionAdr {
                     .duration_attack = preset.envelope_description.duration_attack,
                     .duration_decay = preset.envelope_description.duration_decay,
@@ -3118,17 +3182,17 @@ namespace application {
         }
 
         switch (preset.envelope_type) {
-            case ui::Preset::AdsrLinear:
-            case ui::Preset::AdrLinear:
+            case ui::PresetAdd::AdsrLinear:
+            case ui::PresetAdd::AdrLinear:
                 result_preset.envelope_type = syn::envelope::Type::Linear;
                 break;
-            case ui::Preset::AdsrExponential:
-            case ui::Preset::AdrExponential:
+            case ui::PresetAdd::AdsrExponential:
+            case ui::PresetAdd::AdrExponential:
                 result_preset.envelope_type = syn::envelope::Type::Exponential;
                 break;
         }
 
-        for (const ui::Preset::Partial& partial : preset.partials) {
+        for (const ui::PresetAdd::Partial& partial : preset.partials) {
             result_preset.partials.emplace_back(
                 syn::oscillator::Type(partial.oscillator_type),
                 partial.frequency_multiplier,
@@ -3145,8 +3209,8 @@ namespace application {
         return result_preset;
     }
 
-    ui::Preset Application::get_preset(const preset::add::Preset& preset) {
-        ui::Preset result_preset;
+    ui::PresetAdd Application::get_preset(const preset::add::Preset& preset) {
+        ui::PresetAdd result_preset;
 
         std::strncpy(result_preset.name, preset.name.c_str(), sizeof(result_preset.name) - 1);
         std::strncpy(result_preset.description, preset.description.c_str(), sizeof(result_preset.description) - 1);
@@ -3162,10 +3226,10 @@ namespace application {
 
                 switch (preset.envelope_type) {
                     case syn::envelope::Type::Linear:
-                        result_preset.envelope_type = ui::Preset::AdsrLinear;
+                        result_preset.envelope_type = ui::PresetAdd::AdsrLinear;
                         break;
                     case syn::envelope::Type::Exponential:
-                        result_preset.envelope_type = ui::Preset::AdsrExponential;
+                        result_preset.envelope_type = ui::PresetAdd::AdsrExponential;
                         break;
                 }
 
@@ -3177,10 +3241,10 @@ namespace application {
 
                 switch (preset.envelope_type) {
                     case syn::envelope::Type::Linear:
-                        result_preset.envelope_type = ui::Preset::AdrLinear;
+                        result_preset.envelope_type = ui::PresetAdd::AdrLinear;
                         break;
                     case syn::envelope::Type::Exponential:
-                        result_preset.envelope_type = ui::Preset::AdrExponential;
+                        result_preset.envelope_type = ui::PresetAdd::AdrExponential;
                         break;
                 }
 
@@ -3188,9 +3252,9 @@ namespace application {
         }
 
         for (const preset::add::Partial& partial : preset.partials) {
-            ui::Preset::Partial& result_partial = result_preset.partials.emplace_back();
+            ui::PresetAdd::Partial& result_partial = result_preset.partials.emplace_back();
 
-            result_partial.oscillator_type = ui::Preset::Partial::OscillatorType(partial.oscillator_type);
+            result_partial.oscillator_type = ui::PresetAdd::Partial::OscillatorType(partial.oscillator_type);
             result_partial.frequency_multiplier = partial.frequency_multiplier;
             result_partial.amplitude_divisor = partial.amplitude_divisor;
             result_partial.phase = partial.phase;
@@ -3268,7 +3332,7 @@ namespace application {
     }
 
     bool Application::composition_save(std::filesystem::path path) {
-        path.replace_extension("alfred");
+        path.replace_extension(".alfred");
 
         strip_composition_empty_instruments(m_composition);
 
@@ -3471,10 +3535,10 @@ namespace application {
     }
 
     bool Application::preset_save(std::filesystem::path path) const {
-        path.replace_extension("preset");
+        path.replace_extension(".addpreset");
 
         try {
-            preset_write(path, get_preset(m_ui.preset));
+            preset_write(path, get_preset(m_ui.preset_add));
 
             logging::information("Written preset to `{}`", path.string().c_str());
             notify_message("Written preset");
@@ -3491,8 +3555,8 @@ namespace application {
         return true;
     }
 
-    bool Application::preset_open(const std::filesystem::path &path) {
-        if (path.extension() != ".preset") {
+    bool Application::preset_open(const std::filesystem::path& path) {
+        if (path.extension() != ".addpreset") {
             LOG_WARNING("Preset file has the wrong extension");
         }
 
@@ -3513,7 +3577,7 @@ namespace application {
             return false;
         }
 
-        m_ui.preset = get_preset(preset);
+        m_ui.preset_add = get_preset(preset);
         open_create_instrument();
 
         return true;
@@ -3521,7 +3585,7 @@ namespace application {
 
     void Application::preset_file_save() {
         constexpr SDL_DialogFileFilter filters[] {
-            { "Preset files", "preset" },
+            { "Preset files", "addpreset" },
             { "All files", "*" }
         };
 
@@ -3537,7 +3601,7 @@ namespace application {
 
     void Application::preset_file_open() {
         constexpr SDL_DialogFileFilter filters[] {
-            { "Preset files", "preset" },
+            { "Preset files", "addpreset" },
             { "All files", "*" }
         };
 
@@ -3601,7 +3665,7 @@ namespace application {
             normalize = m_ui.render_normalize,
             render_progress = &m_ui.render_progress
         ](task::AsyncTask& task) mutable {
-            path.replace_extension("wav");
+            path.replace_extension(".wav");
 
             try {
                 RenderCompositionParameters parameters;

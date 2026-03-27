@@ -144,7 +144,7 @@ namespace ui {
         short year {};
     };
 
-    struct Preset {
+    struct BasePreset {
         char name[64] {};
         char description[64] {};
 
@@ -163,7 +163,9 @@ namespace ui {
             AdrLinear,
             AdrExponential
         } envelope_type {};
+    };
 
+    struct PresetAdd : BasePreset {
         struct Partial {
             enum OscillatorType {
                 Sine,
@@ -185,6 +187,10 @@ namespace ui {
         };
 
         std::vector<Partial> partials;
+    };
+
+    struct PresetPad : BasePreset {
+
     };
 
     float rem(float size);

@@ -8,7 +8,7 @@ namespace preset {
     namespace add {
         RuntimeInstrument::RuntimeInstrument(Preset preset)
             : BaseRuntimeInstrument(std::move(preset), hash::HashedStr32(preset.name)) {
-            for (const Partial& partial: m_preset.partials) {
+            for (const Partial& partial : m_preset.partials) {
                 m_amplitudes.push_back(partial.amplitude_divisor);
             }
 

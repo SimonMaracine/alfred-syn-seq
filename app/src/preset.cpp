@@ -11,33 +11,53 @@
 #include <cereal/types/utility.hpp>
 
 namespace preset {
-    void export_preset(const add::Preset& preset, utility::Buffer& buffer) {
-        std::ostringstream stream;
-        stream.exceptions(std::ios_base::failbit);
+    namespace generic {
+        template<typename Preset>
+        static void export_preset(const Preset& preset, utility::Buffer& buffer) {
+            std::ostringstream stream;
+            stream.exceptions(std::ios_base::failbit);
 
-        try {
-            cereal::XMLOutputArchive archive {stream};
-            archive(cereal::make_nvp("preset", preset));
-        } catch (const cereal::Exception& e) {
-            throw PresetError(std::format("Could not write to stream: {}", e.what()));
-        } catch (...) {
-            throw PresetError("Unexpected error writing to stream");
+            try {
+                cereal::XMLOutputArchive archive {stream};
+                archive(cereal::make_nvp("preset", preset));
+            } catch (const cereal::Exception& e) {
+                throw PresetError(std::format("Could not write to stream: {}", e.what()));
+            } catch (...) {
+                throw PresetError("Unexpected error writing to stream");
+            }
+
+            buffer = stream.str();
         }
 
-        buffer = stream.str();
+        template<typename Preset>
+        static void import_preset(Preset& preset, const utility::Buffer& buffer) {
+            std::istringstream stream {buffer};
+            stream.exceptions(std::ios_base::failbit);
+
+            try {
+                cereal::XMLInputArchive archive {stream};
+                archive(cereal::make_nvp("preset", preset));
+            } catch (const cereal::Exception& e) {
+                throw PresetError(std::format("Could not read from stream: {}", e.what()));
+            } catch (...) {
+                throw PresetError("Unexpected error reading from stream");
+            }
+        }
+    }
+
+    void export_preset(const add::Preset& preset, utility::Buffer& buffer) {
+        generic::export_preset(preset, buffer);
     }
 
     void import_preset(add::Preset& preset, const utility::Buffer& buffer) {
-        std::istringstream stream {buffer};
-        stream.exceptions(std::ios_base::failbit);
+        generic::import_preset(preset, buffer);
+    }
 
-        try {
-            cereal::XMLInputArchive archive {stream};
-            archive(cereal::make_nvp("preset", preset));
-        } catch (const cereal::Exception& e) {
-            throw PresetError(std::format("Could not read from stream: {}", e.what()));
-        } catch (...) {
-            throw PresetError("Unexpected error reading from stream");
-        }
+    void export_preset(const pad::Preset& preset, utility::Buffer& buffer) {
+        generic::export_preset(preset, buffer);
+    }
+
+    void import_preset(pad::Preset& preset, const utility::Buffer& buffer) {
+        generic::import_preset(preset, buffer);
     }
 }
