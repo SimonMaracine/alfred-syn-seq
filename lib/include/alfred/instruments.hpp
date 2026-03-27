@@ -18,10 +18,10 @@
     const char* description() const override { return "This instrument/preset is unfinished"; }
 
 namespace instruments {
-    class Metronome : public syn::Instrument {
+    class ShortSynthPiano : public syn::Instrument {
     public:
-        ALFRED_INSTRUMENT_STATIC_NAME_ID("Metronome")
-        ALFRED_INSTRUMENT_DESCRIPTION("Simply a metronome")
+        ALFRED_INSTRUMENT_STATIC_NAME_ID("Short Synth Piano")
+        ALFRED_INSTRUMENT_DESCRIPTION("Very short attack, decay and release durations")
 
         double sound(double time, double time_on, syn::NoteId note) const noexcept override;
 
@@ -32,7 +32,7 @@ namespace instruments {
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
 
-        std::unique_ptr<Instrument> clone() const override { return std::make_unique<Metronome>(*this); }
+        std::unique_ptr<Instrument> clone() const override { return std::make_unique<ShortSynthPiano>(*this); }
     private:
         static constexpr syn::envelope::DescriptionAdr ENVELOPE {
             .duration_attack = 0.007,
@@ -43,13 +43,15 @@ namespace instruments {
         syn::VolumeA m_volume;
     };
 
+    using Metronome = ShortSynthPiano;
+
     class Ghost : public syn::Instrument {
     public:
         ALFRED_INSTRUMENT_STATIC_NAME_ID("Ghost")
         ALFRED_INSTRUMENT_DESCRIPTION("Here to haunt you")
 
         double sound(double time, double time_on, syn::NoteId note) const noexcept override;
-        syn::InstrumentRange range() const override { return { syn::note(syn::C, syn::Octave2), syn::note(syn::C, syn::Octave6) }; }
+        syn::InstrumentRange range() const override { return { syn::note(syn::A, syn::Octave2), syn::note(syn::C, syn::Octave6) }; }
 
         syn::Volume volume() const override { return m_volume; }
         void volume(syn::Volume volume) override { m_volume = volume; }

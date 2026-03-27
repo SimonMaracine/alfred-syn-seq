@@ -12,7 +12,7 @@ namespace instruments {
         return array;
     }
 
-    double Metronome::sound(double time, double, syn::NoteId note) const noexcept {
+    double ShortSynthPiano::sound(double time, double, syn::NoteId note) const noexcept {
         static constexpr auto amp = syn::util::amplitudes(std::array { 1.0, 2.0, 4.0, 25.0 });
 
         return

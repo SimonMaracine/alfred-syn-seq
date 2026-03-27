@@ -1082,7 +1082,7 @@ namespace application {
     void Application::composition_measures(const Draw& draw) const {
         const ImColor& COLOR_FOREGROUND = color(ImGuiCol_Text);
         const ImColor COLOR_FOREGROUND2 = color_opacity(ImGuiCol_TextDisabled, 0.7f);
-        const ImColor COLOR_SELECTION = color_opacity(ImGuiCol_TableHeaderBg, 0.3f);
+        const ImColor& COLOR_SELECTION = color(ImGuiCol_FrameBg);
 
         float position_x = ui::rem(COMPOSITION_LEFT);
 
@@ -1231,8 +1231,8 @@ namespace application {
     }
 
     void Application::composition_hover(const Draw& draw, const HoveredNote& hovered_note) const {
-        const ImColor COLOR = color_opacity(ImGuiCol_PopupBg, 0.5f);
-        const ImColor COLOR2 = color_opacity(ImGuiCol_PopupBg, 0.7f);
+        const ImColor COLOR = color_opacity(ImGuiCol_FrameBg, 0.3f);
+        const ImColor& COLOR2 = color(ImGuiCol_FrameBg);
 
         switch (m_ui.tool) {
             case ui::ToolMeasure: {
