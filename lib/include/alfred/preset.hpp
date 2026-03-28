@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "alfred/synthesis.hpp"
+#include "alfred/hash.hpp"
 
 // Runtime dynamic instruments/presets
 
@@ -26,8 +27,8 @@ namespace preset {
     template<typename Preset>
     class BaseRuntimeInstrument : public syn::Instrument {
     public:
-        BaseRuntimeInstrument(Preset preset, syn::InstrumentId id)
-            : m_preset(std::move(preset)), m_id(id) {}
+        explicit BaseRuntimeInstrument(Preset preset)
+            : m_preset(std::move(preset)), m_id(hash::HashedStr32(m_preset.name)) {}
 
         // Retrieve a read only reference to the parameters that make up this instrument
         const Preset& preset() const { return m_preset; }
@@ -73,13 +74,25 @@ namespace preset {
     }
 
     namespace pad {
-        struct Preset : BasePreset {
+        enum class Profile {
+            Default
+        };
 
+        struct Preset : BasePreset {
+            Profile profile {};
+            double frequency = 261.63;
+            double bandwidth = 20.0;
+            std::vector<double> amplitude_harmonics;
         };
 
         class RuntimeInstrument : public BaseRuntimeInstrument<Preset> {
         public:
             explicit RuntimeInstrument(Preset preset);
+
+            RuntimeInstrument(const RuntimeInstrument& other);
+            RuntimeInstrument& operator=(const RuntimeInstrument& other);
+            RuntimeInstrument(RuntimeInstrument&&) noexcept = default;
+            RuntimeInstrument& operator=(RuntimeInstrument&&) noexcept = default;
 
             double sound(double time, double time_on, syn::NoteId note) const noexcept override;
             syn::envelope::Ptr new_envelope() const override;
@@ -87,7 +100,11 @@ namespace preset {
             double release_duration() const override;
             std::unique_ptr<Instrument> clone() const override { return std::make_unique<RuntimeInstrument>(*this); }
         private:
+            static syn::padsynth::Profile profile(const Preset& preset);
 
+            static constexpr std::size_t SIZE = 262144;
+
+            syn::padsynth::Sample m_sample;
         };
     }
 }

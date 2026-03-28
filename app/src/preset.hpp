@@ -89,24 +89,42 @@ namespace preset {
 
         template<typename Archive>
         void save(Archive& archive, const Preset& self, const std::uint32_t) {
-            archive(cereal::make_nvp("partials", self.partials));
+            archive(
+                cereal::make_nvp("base", cereal::base_class<BasePreset>(&self)),
+                cereal::make_nvp("partials", self.partials)
+            );
         }
 
         template<typename Archive>
         void load(Archive& archive, Preset& self, const std::uint32_t) {
-            archive(cereal::make_nvp("partials", self.partials));
+            archive(
+                cereal::make_nvp("base", cereal::base_class<BasePreset>(&self)),
+                cereal::make_nvp("partials", self.partials)
+            );
         }
     }
 
     namespace pad {
         template<typename Archive>
         void save(Archive& archive, const Preset& self, const std::uint32_t) {
-
+            archive(
+                cereal::make_nvp("base", cereal::base_class<BasePreset>(&self)),
+                cereal::make_nvp("profile", self.profile),
+                cereal::make_nvp("frequency", self.frequency),
+                cereal::make_nvp("bandwidth", self.bandwidth),
+                cereal::make_nvp("amplitude_harmonics", self.amplitude_harmonics)
+            );
         }
 
         template<typename Archive>
         void load(Archive& archive, Preset& self, const std::uint32_t) {
-
+            archive(
+                cereal::make_nvp("base", cereal::base_class<BasePreset>(&self)),
+                cereal::make_nvp("profile", self.profile),
+                cereal::make_nvp("frequency", self.frequency),
+                cereal::make_nvp("bandwidth", self.bandwidth),
+                cereal::make_nvp("amplitude_harmonics", self.amplitude_harmonics)
+            );
         }
     }
 }

@@ -195,36 +195,53 @@ namespace application {
         std::optional<ProvenanceNote> check_note_has_next(const ProvenanceNote& provenance_note) const;
         std::optional<ProvenanceNote> check_note_has_previous(const ProvenanceNote& provenance_note) const;
         static Time elapsed_seconds_to_time(double elapsed_seconds);
-        static seq::Value get_value(ui::Value value);
-        static preset::add::Preset get_preset(const ui::PresetAdd& preset);
-        static ui::PresetAdd get_preset(const preset::add::Preset& preset);
+        static seq::Value translate_value(ui::Value value);
+        static preset::BasePreset translate_preset(const ui::BasePreset& preset);
+        static ui::BasePreset translate_preset(const preset::BasePreset& preset);
+        static preset::add::Preset translate_preset(const ui::PresetAdd& preset);
+        static ui::PresetAdd translate_preset(const preset::add::Preset& preset);
+        static preset::pad::Preset translate_preset(const ui::PresetPad& preset);
+        static ui::PresetPad translate_preset(const preset::pad::Preset& preset);
         static const ImVec4& color(ImGuiCol color);
         static ImColor color_opacity(ImGuiCol color, float opacity);
+        static void check_path_extension(const std::filesystem::path& path, const char* extension);
 
-        static void composition_save_file_dialog(void* userdata, const char* const* filelist, int filter);
-        static void composition_open_file_dialog(void* userdata, const char* const* filelist, int filter);
+        struct FileDialogData {
+            using Function = bool(Application::*)(std::filesystem::path);
+
+            Application* self {};
+            Function function {};
+        };
+
+        static void save_file_dialog(void* userdata, const char* const* filelist, int filter);
+        static void open_file_dialog(void* userdata, const char* const* filelist, int filter);
+
         static void composition_write(const std::filesystem::path& path, const composition::Composition& composition);
         static void composition_read(const std::filesystem::path& path, composition::Composition& composition);
         bool composition_save(std::filesystem::path path);
         bool composition_save();
         bool composition_open(std::filesystem::path path);
         void composition_new();
-        void composition_file_new();
-        void composition_file_open();
         void composition_file_save();
+        void composition_file_open();
+        void composition_file_new();
 
-        static void preset_save_file_dialog(void* userdata, const char* const* filelist, int filter);
-        static void preset_open_file_dialog(void* userdata, const char* const* filelist, int filter);
         static void preset_write(const std::filesystem::path& path, const preset::add::Preset& preset);
+        static void preset_write(const std::filesystem::path& path, const preset::pad::Preset& preset);
         static void preset_read(const std::filesystem::path& path, preset::add::Preset& preset);
-        bool preset_save(std::filesystem::path path) const;
-        bool preset_open(const std::filesystem::path& path);
-        void preset_file_save();
-        void preset_file_open();
+        static void preset_read(const std::filesystem::path& path, preset::pad::Preset& preset);
+        bool preset_save_add(std::filesystem::path path);
+        bool preset_save_pad(std::filesystem::path path);
+        bool preset_open_add(std::filesystem::path path);
+        bool preset_open_pad(std::filesystem::path path);
+        void preset_file_save_add();
+        void preset_file_save_pad();
+        void preset_file_open_add();
+        void preset_file_open_pad();
 
         void open_composition_metadata();
         void open_composition_mixer();
-        void open_create_instrument();
+        void open_create_instrument(std::optional<ui::CreateInstrumentTab> create_instrument_tab = std::nullopt);
         void open_render_composition();
 
         struct RenderCompositionParameters {
@@ -287,6 +304,7 @@ namespace application {
 
         struct {
             bool metronome {};
+            bool create_instrument_tab_select {};
             int tool = ui::ToolMeasure;
             int value = ui::ValueQuarter;
             int tuplet = ui::TupletNone;
@@ -296,6 +314,7 @@ namespace application {
             ui::Composition composition;
             ui::PresetAdd preset_add;
             ui::PresetPad preset_pad;
+            ui::CreateInstrumentTab create_instrument_tab {};
             int octave = ui::OctaveFourth;
             int loudness = ui::LoudnessMezzoForte;
             int polyphony {};

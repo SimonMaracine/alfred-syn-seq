@@ -3,6 +3,7 @@
 #include <random>
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 #include <cassert>
 
 #include "alfred/audio.hpp"
@@ -393,7 +394,7 @@ namespace syn {
     }
 
     double frequency(NoteId note) {
-        static constexpr double BASE_FREQUENCY = 27.5;  // A0
+        static constexpr double BASE_FREQUENCY = FREQUENCY_MIN;  // A0
         static constexpr double STEP_FREQUENCY = 1.059463094;  // 2.0 ** (1.0 / 12.0)
 
         return BASE_FREQUENCY * std::pow(STEP_FREQUENCY, double(note));
@@ -424,6 +425,12 @@ namespace syn {
 
             return sample[index];
         }
+
+        std::unique_ptr<double[]> copy(const std::unique_ptr<double[]>& ptr, std::size_t size) {
+            auto array = std::make_unique<double[]>(size);
+            std::memcpy(array.get(), ptr.get(), size * sizeof(double));
+            return array;
+        }
     }
 
     // https://zynaddsubfx.sourceforge.io/doc/PADsynth/PADsynth.htm
@@ -452,7 +459,7 @@ namespace syn {
             double frequency,
             double bandwidth,
             const double* amplitude_harmonics,
-            int number_harmonics,
+            std::size_t number_harmonics,
             Profile profile
         ) {
             if (!profile) {
@@ -463,7 +470,7 @@ namespace syn {
             auto frequency_amplitudes = std::make_unique<double[]>(size / 2);
             auto frequency_phases = std::make_unique<double[]>(size / 2);
 
-            for (int harmonic = 1; harmonic < number_harmonics; harmonic++) {
+            for (std::size_t harmonic = 1; harmonic < number_harmonics; harmonic++) {
                 const double harmonic_bandwidth =
                     (std::exp2(bandwidth / 1200.0) - 1.0) * frequency * double(harmonic);
 

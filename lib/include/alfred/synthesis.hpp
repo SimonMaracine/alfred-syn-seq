@@ -323,9 +323,10 @@ namespace syn {
         virtual InstrumentId id() const = 0;
 
         // Raw sound produced at this particular time (without taking into account envelope and other values)
+        // This must be at full amplitude, between -1 and 1
         virtual double sound(double time, double time_on, NoteId note) const noexcept = 0;
 
-        // Note range
+        // Note range (inclusive)
         virtual InstrumentRange range() const { return keyboard::ID_FULL_RANGE; }
 
         // Get/set volume in decibels (for mixing)
@@ -339,6 +340,7 @@ namespace syn {
         virtual double attack_duration() const = 0;
         virtual double release_duration() const = 0;
 
+        // Deep copy this instrument as a dynamic allocation
         virtual std::unique_ptr<Instrument> clone() const = 0;
     };
 
@@ -371,6 +373,9 @@ namespace syn {
     double random();
     double frequency(NoteId note);
 
+    inline constexpr double FREQUENCY_MIN = 27.5;  // A0
+    inline constexpr double FREQUENCY_MAX = 4186.0;  // C8
+
     namespace util {
         template<std::size_t N>
         constexpr std::array<double, N> amplitudes(std::array<double, N> divisors) {
@@ -389,6 +394,7 @@ namespace syn {
 
         std::vector<double> amplitudes(std::vector<double> divisors);
         double sound(double time, NoteId note, const double* sample, std::size_t size, double frequency);
+        std::unique_ptr<double[]> copy(const std::unique_ptr<double[]>& ptr, std::size_t size);
     }
 
     namespace padsynth {
@@ -401,7 +407,7 @@ namespace syn {
             double frequency,
             double bandwidth,
             const double* amplitude_harmonics,
-            int number_harmonics,
+            std::size_t number_harmonics,
             Profile profile = nullptr
         );
     }

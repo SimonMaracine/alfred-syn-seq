@@ -111,12 +111,26 @@ namespace composition {
 
         template<typename Archive>
         void save(Archive& archive, const std::uint32_t) const {
-            archive(cereal::base_class<seq::Composition>(this), instrument_volumes, instrument_colors, title, author, year);
+            archive(
+                cereal::base_class<seq::Composition>(this),
+                instrument_volumes,
+                instrument_colors,
+                title,
+                author,
+                year
+            );
         }
 
         template<typename Archive>
         void load(Archive& archive, const std::uint32_t) {
-            archive(cereal::base_class<seq::Composition>(this), instrument_volumes, instrument_colors, title, author, year);
+            archive(
+                cereal::base_class<seq::Composition>(this),
+                instrument_volumes,
+                instrument_colors,
+                title,
+                author,
+                year
+            );
         }
     };
 

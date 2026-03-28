@@ -157,22 +157,22 @@ namespace ui {
             double value_sustain = 0.9;
         } envelope_description;
 
-        enum EnvelopeType {
-            AdsrLinear,
-            AdsrExponential,
-            AdrLinear,
-            AdrExponential
+        enum EnvelopeType : int {
+            EnvelopeTypeAdsrLinear,
+            EnvelopeTypeAdsrExponential,
+            EnvelopeTypeAdrLinear,
+            EnvelopeTypeAdrExponential
         } envelope_type {};
     };
 
     struct PresetAdd : BasePreset {
         struct Partial {
-            enum OscillatorType {
-                Sine,
-                Square,
-                Triangle,
-                Sawtooth,
-                Noise
+            enum OscillatorType : int {
+                OscillatorTypeSine,
+                OscillatorTypeSquare,
+                OscillatorTypeTriangle,
+                OscillatorTypeSawtooth,
+                OscillatorTypeNoise
             } oscillator_type {};
 
             double frequency_multiplier = 1.0;
@@ -190,7 +190,18 @@ namespace ui {
     };
 
     struct PresetPad : BasePreset {
+        enum Profile : int {
+            ProfileDefault
+        } profile {};
 
+        double frequency = 261.63;
+        double bandwidth = 20.0;
+        std::vector<double> amplitude_harmonics;
+    };
+
+    enum class CreateInstrumentTab {
+        Additive,
+        PadSynth
     };
 
     float rem(float size);

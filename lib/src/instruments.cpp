@@ -1,17 +1,9 @@
 #include "alfred/instruments.hpp"
 
-#include <cstring>
-
 #include "alfred/math.hpp"
 #include "alfred/audio.hpp"
 
 namespace instruments {
-    static std::unique_ptr<double[]> copy(const std::unique_ptr<double[]>& ptr, std::size_t size) {
-        auto array = std::make_unique<double[]>(size);
-        std::memcpy(array.get(), ptr.get(), size * sizeof(double));
-        return array;
-    }
-
     double ShortSynthPiano::sound(double time, double, syn::NoteId note) const noexcept {
         static constexpr auto amp = syn::util::amplitudes(std::array { 1.0, 2.0, 4.0, 25.0 });
 
@@ -113,17 +105,17 @@ namespace instruments {
             FREQUENCY,
             40.0,
             amplitude_harmonics,
-            int(std::size(amplitude_harmonics))
+            std::size(amplitude_harmonics)
         );
     }
 
     Strings::Strings(const Strings& other) {
-        m_sample = copy(other.m_sample, SIZE);
+        m_sample = syn::util::copy(other.m_sample, SIZE);
         m_volume = other.m_volume;
     }
 
     Strings& Strings::operator=(const Strings& other) {
-        m_sample = copy(other.m_sample, SIZE);
+        m_sample = syn::util::copy(other.m_sample, SIZE);
         m_volume = other.m_volume;
 
         return *this;
@@ -150,7 +142,7 @@ namespace instruments {
             FREQUENCY,
             2.0,
             amplitude_harmonics,
-            int(std::size(amplitude_harmonics))
+            std::size(amplitude_harmonics)
         );
 
         double t {};
@@ -161,12 +153,12 @@ namespace instruments {
     }
 
     Cello::Cello(const Cello& other) {
-        m_sample = copy(other.m_sample, SIZE);
+        m_sample = syn::util::copy(other.m_sample, SIZE);
         m_volume = other.m_volume;
     }
 
     Cello& Cello::operator=(const Cello& other) {
-        m_sample = copy(other.m_sample, SIZE);
+        m_sample = syn::util::copy(other.m_sample, SIZE);
         m_volume = other.m_volume;
 
         return *this;

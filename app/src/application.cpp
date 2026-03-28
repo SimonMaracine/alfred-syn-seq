@@ -349,12 +349,15 @@ namespace application {
 
         if (ImGui::BeginMenu("Edit")) {
             m_synthesizer.for_each_instrument([this](const syn::Instrument& instrument) {
-                const auto* runtime_instrument = dynamic_cast<const preset::add::RuntimeInstrument*>(&instrument);
-
-                if (runtime_instrument) {
+                if (const auto* runtime_instrument = dynamic_cast<const preset::add::RuntimeInstrument*>(&instrument)) {
                     if (ImGui::MenuItem(runtime_instrument->name())) {
-                        m_ui.preset_add = get_preset(runtime_instrument->preset());
-                        open_create_instrument();
+                        m_ui.preset_add = translate_preset(runtime_instrument->preset());
+                        open_create_instrument(ui::CreateInstrumentTab::Additive);
+                    }
+                } else if (const auto* runtime_instrument = dynamic_cast<const preset::pad::RuntimeInstrument*>(&instrument)) {
+                    if (ImGui::MenuItem(runtime_instrument->name())) {
+                        m_ui.preset_pad = translate_preset(runtime_instrument->preset());
+                        open_create_instrument(ui::CreateInstrumentTab::PadSynth);
                     }
                 }
             });
@@ -362,8 +365,16 @@ namespace application {
             ImGui::EndMenu();
         }
 
-        if (ImGui::MenuItem("Load")) {
-            preset_file_open();
+        if (ImGui::BeginMenu("Load")) {
+            if (ImGui::MenuItem("Additive")) {
+                preset_file_open_add();
+            }
+
+            if (ImGui::MenuItem("PadSynth")) {
+                preset_file_open_pad();
+            }
+
+            ImGui::EndMenu();
         }
     }
 
@@ -1011,7 +1022,7 @@ namespace application {
         static constexpr ImVec2 CELL {COMPOSITION_LEFT, STEP_SIZE.y};
         static constexpr ImVec2 TEXT_OFFSET {(CELL.x - 2.0f) / 2.0f, (CELL.y - 1.0f) / 2.0f};
 
-        const ImColor& COLOR_FOREGROUND = color(ImGuiCol_Text);
+        const ImColor& COLOR_FOREGROUND = color(ImGuiCol_Text);  // TODO reduce transparency + for other
         const ImColor COLOR_BACKGROUND = color_opacity(ImGuiCol_WindowBg, 1.0f);
 
         draw.list->AddRectFilled(
@@ -1637,36 +1648,39 @@ namespace application {
 
     void Application::create_instrument() {
         window_menu("Create Instrument", m_create_instrument_menu, [this] {
-            enum class Type {
-                Add,
-                Pad
-            } type {};
-
             if (ImGui::BeginTabBar("Create Instrument")) {
-                if (ImGui::BeginTabItem("Add")) {
+                auto flags = m_ui.create_instrument_tab_select && m_ui.create_instrument_tab == ui::CreateInstrumentTab::Additive  // FIXME this doesn't really work well
+                    ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
+
+                if (ImGui::BeginTabItem("Additive", nullptr, flags)) {  // FIXME this is active by default even if passed no flags to it
                     create_instrument_base(m_ui.preset_add);
                     create_instrument_add();
+                    m_ui.create_instrument_tab = ui::CreateInstrumentTab::Additive;
 
                     ImGui::EndTabItem();
-                    type = Type::Add;
                 }
 
-                if (ImGui::BeginTabItem("Pad")) {
+                flags = m_ui.create_instrument_tab_select && m_ui.create_instrument_tab == ui::CreateInstrumentTab::PadSynth
+                    ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
+
+                if (ImGui::BeginTabItem("PadSynth", nullptr, flags)) {
                     create_instrument_base(m_ui.preset_pad);
                     create_instrument_pad();
+                    m_ui.create_instrument_tab = ui::CreateInstrumentTab::PadSynth;
 
                     ImGui::EndTabItem();
-                    type = Type::Pad;
                 }
+
+                m_ui.create_instrument_tab_select = false;
 
                 ImGui::EndTabBar();
             }
 
-            switch (type) {
-                case Type::Add:
+            switch (m_ui.create_instrument_tab) {
+                case ui::CreateInstrumentTab::Additive:
                     create_instrument_buttons_add();
                     break;
-                case Type::Pad:
+                case ui::CreateInstrumentTab::PadSynth:
                     create_instrument_buttons_pad();
                     break;
             }
@@ -1699,14 +1713,14 @@ namespace application {
         }
 
         switch (preset.envelope_type) {
-            case ui::PresetAdd::AdsrLinear:
-            case ui::PresetAdd::AdsrExponential:
+            case ui::PresetAdd::EnvelopeTypeAdsrLinear:
+            case ui::PresetAdd::EnvelopeTypeAdsrExponential:
                 if (ImGui::InputDouble("Sustain", &preset.envelope_description.value_sustain, 0.0, 0.0, "%.3f")) {
                     preset.envelope_description.value_sustain = std::clamp(preset.envelope_description.value_sustain, 0.0, 1.0);
                 }
                 break;
-            case ui::PresetAdd::AdrLinear:
-            case ui::PresetAdd::AdrExponential:
+            case ui::PresetAdd::EnvelopeTypeAdrLinear:
+            case ui::PresetAdd::EnvelopeTypeAdrExponential:
                 break;
         }
 
@@ -1730,7 +1744,7 @@ namespace application {
             m_ui.preset_add.partials.emplace_back();
         }
 
-        if (ImGui::BeginChild("Partials", ImVec2(0.0f, ui::rem(20.0f)), ImGuiChildFlags_AutoResizeX)) {
+        if (ImGui::BeginChild("Partials", ImVec2(0.0f, ui::rem(18.0f)), ImGuiChildFlags_AutoResizeX)) {
             for (auto [id, partial] : m_ui.preset_add.partials | std::views::enumerate) {
                 ImGui::PushID(int(id));
 
@@ -1768,7 +1782,7 @@ namespace application {
 
                 ImGui::PushItemWidth(ui::rem(5.0f));
 
-                const bool noise_type = partial.oscillator_type == ui::PresetAdd::Partial::Noise;
+                const bool noise_type = partial.oscillator_type == ui::PresetAdd::Partial::OscillatorTypeNoise;
 
                 if (!noise_type) {
                     if (ImGui::InputDouble("##Frequency Multiplier", &partial.frequency_multiplier, 0.0, 0.0, "%.3f")) {
@@ -1830,7 +1844,59 @@ namespace application {
     }
 
     void Application::create_instrument_pad() {
+        ImGui::Dummy(ui::rem(ImVec2(0.0f, 0.5f)));
 
+        constexpr const char* PROFILE[] { "Default" };
+
+        if (ImGui::BeginCombo("Profile", PROFILE[m_ui.preset_pad.profile])) {
+            for (std::size_t i {}; i < std::size(PROFILE); i++) {
+                if (ImGui::Selectable(PROFILE[i], m_ui.preset_pad.profile == int(i))) {
+                    m_ui.preset_pad.profile = ui::PresetPad::Profile(i);
+                }
+            }
+
+            ImGui::EndCombo();
+        }
+
+        if (ImGui::InputDouble("Frequency", &m_ui.preset_pad.frequency, 0.0, 0.0, "%.3f")) {
+            m_ui.preset_pad.frequency = std::clamp(m_ui.preset_pad.frequency, syn::FREQUENCY_MIN, syn::FREQUENCY_MAX);
+        }
+
+        if (ImGui::InputDouble("Bandwidth", &m_ui.preset_pad.bandwidth, 0.0, 0.0, "%.3f")) {
+            m_ui.preset_pad.bandwidth = std::clamp(m_ui.preset_pad.bandwidth, 0.1, 100.0);  // TODO which values?
+        }
+
+        ImGui::Dummy(ui::rem(ImVec2(0.0f, 0.5f)));
+
+        if (ImGui::Button("Add Amplitude")) {
+            m_ui.preset_pad.amplitude_harmonics.emplace_back();
+        }
+
+        if (ImGui::BeginChild("Amplitude Harmonics", ImVec2(0.0f, ui::rem(18.0f)), ImGuiChildFlags_AutoResizeX)) {
+            for (auto [id, amplitude_harmonic] : m_ui.preset_pad.amplitude_harmonics | std::views::enumerate) {
+                ImGui::PushID(int(id));
+
+                if (ImGui::Button("X")) {
+                    m_task_manager.add_immediate_task([this, index = id] {
+                        m_ui.preset_pad.amplitude_harmonics.erase(std::next(m_ui.preset_pad.amplitude_harmonics.begin(), index));
+                    });
+                }
+
+                ImGui::SameLine();
+
+                ImGui::Text("%ld.", id + 1);
+
+                ImGui::SameLine();
+
+                if (ImGui::InputDouble("##Amplitude", &amplitude_harmonic, 0.0, 0.0, "%.3f")) {
+                    amplitude_harmonic = std::clamp(amplitude_harmonic, 0.0, 1.0);
+                }
+
+                ImGui::PopID();
+            }
+        }
+
+        ImGui::EndChild();
     }
 
     void Application::create_instrument_buttons_add() {
@@ -1839,7 +1905,7 @@ namespace application {
         ImGui::BeginDisabled(*m_ui.preset_add.name == 0);
 
         if (ImGui::Button("Store into Synthesizer")) {
-            m_synthesizer.store_instrument(std::make_unique<preset::add::RuntimeInstrument>(get_preset(m_ui.preset_add)));
+            m_synthesizer.store_instrument(std::make_unique<preset::add::RuntimeInstrument>(translate_preset(m_ui.preset_add)));
             set_composition_instrument_colors();
             LOG_DEBUG("Created and stored a new runtime instrument");
             notify_message("Created and stored a new runtime instrument");
@@ -1848,7 +1914,7 @@ namespace application {
         ImGui::SameLine();
 
         if (ImGui::Button("Save to File")) {
-            preset_file_save();
+            preset_file_save_add();
         }
 
         ImGui::EndDisabled();
@@ -1860,13 +1926,16 @@ namespace application {
         ImGui::BeginDisabled(*m_ui.preset_pad.name == 0);
 
         if (ImGui::Button("Store into Synthesizer")) {
-
+            m_synthesizer.store_instrument(std::make_unique<preset::pad::RuntimeInstrument>(translate_preset(m_ui.preset_pad)));
+            set_composition_instrument_colors();
+            LOG_DEBUG("Created and stored a new runtime instrument");
+            notify_message("Created and stored a new runtime instrument");
         }
 
         ImGui::SameLine();
 
         if (ImGui::Button("Save to File")) {
-
+            preset_file_save_pad();
         }
 
         ImGui::EndDisabled();
@@ -2325,7 +2394,7 @@ namespace application {
             return;
         }
 
-        const auto new_note_value = get_value(ui::Value(m_ui.value));
+        const auto new_note_value = translate_value(ui::Value(m_ui.value));
 
         const seq::Note new_note {
             hovered_note.id(),
@@ -3137,7 +3206,7 @@ namespace application {
         return time;
     }
 
-    seq::Value Application::get_value(ui::Value value) {
+    seq::Value Application::translate_value(ui::Value value) {
         switch (value) {
             case ui::ValueWhole:
                 return seq::Whole;
@@ -3154,16 +3223,16 @@ namespace application {
         std::unreachable();
     }
 
-    preset::add::Preset Application::get_preset(const ui::PresetAdd& preset) {
-        preset::add::Preset result_preset;
+    preset::BasePreset Application::translate_preset(const ui::BasePreset& preset) {
+        preset::BasePreset result_preset;
 
         result_preset.name = preset.name;
         result_preset.description = preset.description;
         result_preset.range = std::make_pair(preset.range[0], preset.range[1]);
 
         switch (preset.envelope_type) {
-            case ui::PresetAdd::AdsrLinear:
-            case ui::PresetAdd::AdsrExponential:
+            case ui::PresetAdd::EnvelopeTypeAdsrLinear:
+            case ui::PresetAdd::EnvelopeTypeAdsrExponential:
                 result_preset.envelope_description = syn::envelope::DescriptionAdsr {
                     .duration_attack = preset.envelope_description.duration_attack,
                     .duration_decay = preset.envelope_description.duration_decay,
@@ -3171,8 +3240,8 @@ namespace application {
                     .value_sustain = preset.envelope_description.value_sustain,
                 };
                 break;
-            case ui::PresetAdd::AdrLinear:
-            case ui::PresetAdd::AdrExponential:
+            case ui::PresetAdd::EnvelopeTypeAdrLinear:
+            case ui::PresetAdd::EnvelopeTypeAdrExponential:
                 result_preset.envelope_description = syn::envelope::DescriptionAdr {
                     .duration_attack = preset.envelope_description.duration_attack,
                     .duration_decay = preset.envelope_description.duration_decay,
@@ -3182,15 +3251,67 @@ namespace application {
         }
 
         switch (preset.envelope_type) {
-            case ui::PresetAdd::AdsrLinear:
-            case ui::PresetAdd::AdrLinear:
+            case ui::PresetAdd::EnvelopeTypeAdsrLinear:
+            case ui::PresetAdd::EnvelopeTypeAdrLinear:
                 result_preset.envelope_type = syn::envelope::Type::Linear;
                 break;
-            case ui::PresetAdd::AdsrExponential:
-            case ui::PresetAdd::AdrExponential:
+            case ui::PresetAdd::EnvelopeTypeAdsrExponential:
+            case ui::PresetAdd::EnvelopeTypeAdrExponential:
                 result_preset.envelope_type = syn::envelope::Type::Exponential;
                 break;
         }
+
+        return result_preset;
+    }
+
+    ui::BasePreset Application::translate_preset(const preset::BasePreset& preset) {
+        ui::BasePreset result_preset;
+
+        std::strncpy(result_preset.name, preset.name.c_str(), sizeof(result_preset.name) - 1);
+        std::strncpy(result_preset.description, preset.description.c_str(), sizeof(result_preset.description) - 1);
+        result_preset.range[0] = preset.range.first;
+        result_preset.range[1] = preset.range.second;
+
+        switch (preset.envelope_description.index()) {
+            case 0:
+                result_preset.envelope_description.duration_attack = std::get<0>(preset.envelope_description).duration_attack;
+                result_preset.envelope_description.duration_decay = std::get<0>(preset.envelope_description).duration_decay;
+                result_preset.envelope_description.duration_release = std::get<0>(preset.envelope_description).duration_release;
+                result_preset.envelope_description.value_sustain = std::get<0>(preset.envelope_description).value_sustain;
+
+                switch (preset.envelope_type) {
+                    case syn::envelope::Type::Linear:
+                        result_preset.envelope_type = ui::PresetAdd::EnvelopeTypeAdsrLinear;
+                        break;
+                    case syn::envelope::Type::Exponential:
+                        result_preset.envelope_type = ui::PresetAdd::EnvelopeTypeAdsrExponential;
+                        break;
+                }
+
+                break;
+            case 1:
+                result_preset.envelope_description.duration_attack = std::get<1>(preset.envelope_description).duration_attack;
+                result_preset.envelope_description.duration_decay = std::get<1>(preset.envelope_description).duration_decay;
+                result_preset.envelope_description.duration_release = std::get<1>(preset.envelope_description).duration_release;
+
+                switch (preset.envelope_type) {
+                    case syn::envelope::Type::Linear:
+                        result_preset.envelope_type = ui::PresetAdd::EnvelopeTypeAdrLinear;
+                        break;
+                    case syn::envelope::Type::Exponential:
+                        result_preset.envelope_type = ui::PresetAdd::EnvelopeTypeAdrExponential;
+                        break;
+                }
+
+                break;
+        }
+
+        return result_preset;
+    }
+
+    preset::add::Preset Application::translate_preset(const ui::PresetAdd& preset) {
+        preset::add::Preset result_preset;
+        static_cast<preset::BasePreset&>(result_preset) = translate_preset(static_cast<const ui::BasePreset&>(preset));
 
         for (const ui::PresetAdd::Partial& partial : preset.partials) {
             result_preset.partials.emplace_back(
@@ -3209,47 +3330,9 @@ namespace application {
         return result_preset;
     }
 
-    ui::PresetAdd Application::get_preset(const preset::add::Preset& preset) {
+    ui::PresetAdd Application::translate_preset(const preset::add::Preset& preset) {
         ui::PresetAdd result_preset;
-
-        std::strncpy(result_preset.name, preset.name.c_str(), sizeof(result_preset.name) - 1);
-        std::strncpy(result_preset.description, preset.description.c_str(), sizeof(result_preset.description) - 1);
-        result_preset.range[0] = preset.range.first;
-        result_preset.range[1] = preset.range.second;
-
-        switch (preset.envelope_description.index()) {
-            case 0:
-                result_preset.envelope_description.duration_attack = std::get<0>(preset.envelope_description).duration_attack;
-                result_preset.envelope_description.duration_decay = std::get<0>(preset.envelope_description).duration_decay;
-                result_preset.envelope_description.duration_release = std::get<0>(preset.envelope_description).duration_release;
-                result_preset.envelope_description.value_sustain = std::get<0>(preset.envelope_description).value_sustain;
-
-                switch (preset.envelope_type) {
-                    case syn::envelope::Type::Linear:
-                        result_preset.envelope_type = ui::PresetAdd::AdsrLinear;
-                        break;
-                    case syn::envelope::Type::Exponential:
-                        result_preset.envelope_type = ui::PresetAdd::AdsrExponential;
-                        break;
-                }
-
-                break;
-            case 1:
-                result_preset.envelope_description.duration_attack = std::get<1>(preset.envelope_description).duration_attack;
-                result_preset.envelope_description.duration_decay = std::get<1>(preset.envelope_description).duration_decay;
-                result_preset.envelope_description.duration_release = std::get<1>(preset.envelope_description).duration_release;
-
-                switch (preset.envelope_type) {
-                    case syn::envelope::Type::Linear:
-                        result_preset.envelope_type = ui::PresetAdd::AdrLinear;
-                        break;
-                    case syn::envelope::Type::Exponential:
-                        result_preset.envelope_type = ui::PresetAdd::AdrExponential;
-                        break;
-                }
-
-                break;
-        }
+        static_cast<ui::BasePreset&>(result_preset) = translate_preset(static_cast<const preset::BasePreset&>(preset));
 
         for (const preset::add::Partial& partial : preset.partials) {
             ui::PresetAdd::Partial& result_partial = result_preset.partials.emplace_back();
@@ -3271,6 +3354,40 @@ namespace application {
         return result_preset;
     }
 
+    preset::pad::Preset Application::translate_preset(const ui::PresetPad& preset) {
+        preset::pad::Preset result_preset;
+        static_cast<preset::BasePreset&>(result_preset) = translate_preset(static_cast<const ui::BasePreset&>(preset));
+
+        switch (preset.profile) {
+            case ui::PresetPad::ProfileDefault:
+                result_preset.profile = preset::pad::Profile::Default;
+                break;
+        }
+
+        result_preset.frequency = preset.frequency;
+        result_preset.bandwidth = preset.bandwidth;
+        result_preset.amplitude_harmonics = preset.amplitude_harmonics;
+
+        return result_preset;
+    }
+
+    ui::PresetPad Application::translate_preset(const preset::pad::Preset& preset) {
+        ui::PresetPad result_preset;
+        static_cast<ui::BasePreset&>(result_preset) = translate_preset(static_cast<const preset::BasePreset&>(preset));
+
+        switch (preset.profile) {
+            case preset::pad::Profile::Default:
+                result_preset.profile = ui::PresetPad::ProfileDefault;
+                break;
+        }
+
+        result_preset.frequency = preset.frequency;
+        result_preset.bandwidth = preset.bandwidth;
+        result_preset.amplitude_harmonics = preset.amplitude_harmonics;
+
+        return result_preset;
+    }
+
     const ImVec4& Application::color(ImGuiCol color) {
         return ImGui::GetStyle().Colors[color];
     }
@@ -3281,40 +3398,52 @@ namespace application {
         return color_;
     }
 
-    void Application::composition_save_file_dialog(void* userdata, const char* const* filelist, int) {
-        Application& self = *static_cast<Application*>(userdata);
+    void Application::check_path_extension(const std::filesystem::path& path, const char* extension) {
+        if (path.extension() != extension) {
+            LOG_WARNING("File has the wrong extension: {}", path.extension().c_str());
+        }
+    }
+
+    void Application::save_file_dialog(void* userdata, const char* const* filelist, int) {
+        Application& self = *static_cast<FileDialogData*>(userdata)->self;
+        FileDialogData::Function function = static_cast<FileDialogData*>(userdata)->function;
+
+        delete static_cast<FileDialogData*>(userdata);
 
         if (!filelist) {
             self.m_task_manager.add_immediate_thread_safe_task([&self, error = std::string(SDL_GetError())] {
-                logging::error("An error occurred while handling the file dialog: {}", error);
-                self.notify_message("An error occurred while handling the file dialog");
+                logging::error("An error occurred while handling the save file dialog: {}", error);
+                self.notify_message("An error occurred while handling the save file dialog");
             });
 
             return;
         }
 
         if (const char* file = filelist[0]; file) {
-            self.m_task_manager.add_immediate_thread_safe_task([&self, file = std::string(file)] mutable {
-                (void) self.composition_save(std::move(file));
+            self.m_task_manager.add_immediate_thread_safe_task([&self, function, file = std::string(file)] mutable {
+                (void) (self.*function)(std::move(file));
             });
         }
     }
 
-    void Application::composition_open_file_dialog(void* userdata, const char* const* filelist, int) {
-        Application& self = *static_cast<Application*>(userdata);
+    void Application::open_file_dialog(void* userdata, const char* const* filelist, int) {
+        Application& self = *static_cast<FileDialogData*>(userdata)->self;
+        FileDialogData::Function function = static_cast<FileDialogData*>(userdata)->function;
+
+        delete static_cast<FileDialogData*>(userdata);
 
         if (!filelist) {
             self.m_task_manager.add_immediate_thread_safe_task([&self, error = std::string(SDL_GetError())] {
-                logging::error("An error occurred while handling the file dialog: {}", error);
-                self.notify_message("An error occurred while handling the file dialog");
+                logging::error("An error occurred while handling the open file dialog: {}", error);
+                self.notify_message("An error occurred while handling the open file dialog");
             });
 
             return;
         }
 
         if (const char* file = filelist[0]; file) {
-            self.m_task_manager.add_immediate_thread_safe_task([&self, file = std::string(file)] mutable {
-                (void) self.composition_open(std::move(file));
+            self.m_task_manager.add_immediate_thread_safe_task([&self, function, file = std::string(file)] mutable {
+                (void) (self.*function)(std::move(file));
             });
         }
     }
@@ -3363,10 +3492,7 @@ namespace application {
     bool Application::composition_save() {
         assert(!m_composition_path.empty());
 
-        if (m_composition_path.extension() != ".alfred") {
-            LOG_WARNING("Composition file has the wrong extension");
-        }
-
+        check_path_extension(m_composition_path, ".alfred");
         strip_composition_empty_instruments(m_composition);
 
         try {
@@ -3393,9 +3519,7 @@ namespace application {
     }
 
     bool Application::composition_open(std::filesystem::path path) {
-        if (path.extension() != ".alfred") {
-            LOG_WARNING("Composition file has the wrong extension");
-        }
+        check_path_extension(path, ".alfred");
 
         try {
             composition_read(path, m_composition);
@@ -3443,27 +3567,6 @@ namespace application {
         reset_composition_instrument_colors();
     }
 
-    void Application::composition_file_new() {
-        composition_new();
-    }
-
-    void Application::composition_file_open() {
-        constexpr SDL_DialogFileFilter filters[] {
-            { "Alfred files", "alfred" },
-            { "All files", "*" }
-        };
-
-        SDL_ShowOpenFileDialog(
-            &Application::composition_open_file_dialog,
-            this,
-            m_window,
-            filters,
-            std::size(filters),
-            nullptr,
-            false
-        );
-    }
-
     void Application::composition_file_save() {
         constexpr SDL_DialogFileFilter filters[] {
             { "Alfred files", "alfred" },
@@ -3472,8 +3575,8 @@ namespace application {
 
         if (m_composition_path.empty()) {
             SDL_ShowSaveFileDialog(
-                &Application::composition_save_file_dialog,
-                this,
+                &Application::save_file_dialog,
+                new FileDialogData { .self = this, .function = &Application::composition_save },
                 m_window,
                 filters,
                 std::size(filters),
@@ -3484,45 +3587,34 @@ namespace application {
         }
     }
 
-    void Application::preset_save_file_dialog(void* userdata, const char* const* filelist, int) {
-        Application& self = *static_cast<Application*>(userdata);
+    void Application::composition_file_open() {
+        constexpr SDL_DialogFileFilter filters[] {
+            { "Alfred files", "alfred" },
+            { "All files", "*" }
+        };
 
-        if (!filelist) {
-            self.m_task_manager.add_immediate_thread_safe_task([&self, error = std::string(SDL_GetError())] {
-                logging::error("An error occurred while handling the file dialog: {}", error);
-                self.notify_message("An error occurred while handling the file dialog");
-            });
-
-            return;
-        }
-
-        if (const char* file = filelist[0]; file) {
-            self.m_task_manager.add_immediate_thread_safe_task([&self, file = std::string(file)] mutable {
-                (void) self.preset_save(std::move(file));
-            });
-        }
+        SDL_ShowOpenFileDialog(
+            &Application::open_file_dialog,
+            new FileDialogData { .self = this, .function = &Application::composition_open },
+            m_window,
+            filters,
+            std::size(filters),
+            nullptr,
+            false
+        );
     }
 
-    void Application::preset_open_file_dialog(void* userdata, const char* const* filelist, int) {
-        Application& self = *static_cast<Application*>(userdata);
-
-        if (!filelist) {
-            self.m_task_manager.add_immediate_thread_safe_task([&self, error = std::string(SDL_GetError())] {
-                logging::error("An error occurred while handling the file dialog: {}", error);
-                self.notify_message("An error occurred while handling the file dialog");
-            });
-
-            return;
-        }
-
-        if (const char* file = filelist[0]; file) {
-            self.m_task_manager.add_immediate_thread_safe_task([&self, file = std::string(file)] mutable {
-                (void) self.preset_open(std::move(file));
-            });
-        }
+    void Application::composition_file_new() {
+        composition_new();
     }
 
     void Application::preset_write(const std::filesystem::path& path, const preset::add::Preset& preset) {
+        utility::Buffer buffer;
+        preset::export_preset(preset, buffer);
+        utility::write_file(path, buffer);
+    }
+
+    void Application::preset_write(const std::filesystem::path& path, const preset::pad::Preset& preset) {
         utility::Buffer buffer;
         preset::export_preset(preset, buffer);
         utility::write_file(path, buffer);
@@ -3534,11 +3626,17 @@ namespace application {
         preset::import_preset(preset, buffer);
     }
 
-    bool Application::preset_save(std::filesystem::path path) const {
+    void Application::preset_read(const std::filesystem::path& path, preset::pad::Preset& preset) {
+        utility::Buffer buffer;
+        utility::read_file(path, buffer);
+        preset::import_preset(preset, buffer);
+    }
+
+    bool Application::preset_save_add(std::filesystem::path path) {
         path.replace_extension(".addpreset");
 
         try {
-            preset_write(path, get_preset(m_ui.preset_add));
+            preset_write(path, translate_preset(m_ui.preset_add));
 
             logging::information("Written preset to `{}`", path.string().c_str());
             notify_message("Written preset");
@@ -3555,10 +3653,29 @@ namespace application {
         return true;
     }
 
-    bool Application::preset_open(const std::filesystem::path& path) {
-        if (path.extension() != ".addpreset") {
-            LOG_WARNING("Preset file has the wrong extension");
+    bool Application::preset_save_pad(std::filesystem::path path) {
+        path.replace_extension(".padpreset");
+
+        try {
+            preset_write(path, translate_preset(m_ui.preset_pad));
+
+            logging::information("Written preset to `{}`", path.string().c_str());
+            notify_message("Written preset");
+        } catch (const preset::PresetError& e) {
+            logging::error("Could not save preset: {}", e.what());
+            notify_message("Could not save preset");
+            return false;
+        } catch (const utility::FilerError& e) {
+            logging::error("Could not save preset: {}", e.what());
+            notify_message("Could not save preset");
+            return false;
         }
+
+        return true;
+    }
+
+    bool Application::preset_open_add(std::filesystem::path path) {
+        check_path_extension(path, ".addpreset");
 
         preset::add::Preset preset;
 
@@ -3577,21 +3694,47 @@ namespace application {
             return false;
         }
 
-        m_ui.preset_add = get_preset(preset);
-        open_create_instrument();
+        m_ui.preset_add = translate_preset(preset);
+        open_create_instrument(ui::CreateInstrumentTab::Additive);
 
         return true;
     }
 
-    void Application::preset_file_save() {
+    bool Application::preset_open_pad(std::filesystem::path path) {
+        check_path_extension(path, ".padpreset");
+
+        preset::pad::Preset preset;
+
+        try {
+            preset_read(path, preset);
+
+            logging::information("Read preset from `{}`", path.string().c_str());
+            notify_message("Read preset");
+        } catch (const preset::PresetError& e) {
+            logging::error("Could not open preset: {}", e.what());
+            notify_message("Could not open preset");
+            return false;
+        } catch (const utility::FilerError& e) {
+            logging::error("Could not open preset: {}", e.what());
+            notify_message("Could not open preset");
+            return false;
+        }
+
+        m_ui.preset_pad = translate_preset(preset);
+        open_create_instrument(ui::CreateInstrumentTab::PadSynth);
+
+        return true;
+    }
+
+    void Application::preset_file_save_add() {
         constexpr SDL_DialogFileFilter filters[] {
-            { "Preset files", "addpreset" },
+            { "Additive preset files", "addpreset" },
             { "All files", "*" }
         };
 
         SDL_ShowSaveFileDialog(
-            &Application::preset_save_file_dialog,
-            this,
+            &Application::save_file_dialog,
+            new FileDialogData { .self = this, .function = &Application::preset_save_add },
             m_window,
             filters,
             std::size(filters),
@@ -3599,15 +3742,48 @@ namespace application {
         );
     }
 
-    void Application::preset_file_open() {
+    void Application::preset_file_save_pad() {
         constexpr SDL_DialogFileFilter filters[] {
-            { "Preset files", "addpreset" },
+            { "PadSynth preset files", "padpreset" },
+            { "All files", "*" }
+        };
+
+        SDL_ShowSaveFileDialog(
+            &Application::save_file_dialog,
+            new FileDialogData { .self = this, .function = &Application::preset_save_pad },
+            m_window,
+            filters,
+            std::size(filters),
+            nullptr
+        );
+    }
+
+    void Application::preset_file_open_add() {
+        constexpr SDL_DialogFileFilter filters[] {
+            { "Additive preset files", "addpreset" },
             { "All files", "*" }
         };
 
         SDL_ShowOpenFileDialog(
-            &Application::preset_open_file_dialog,
-            this,
+            &Application::open_file_dialog,
+            new FileDialogData { .self = this, .function = &Application::preset_open_add },
+            m_window,
+            filters,
+            std::size(filters),
+            nullptr,
+            false
+        );
+    }
+
+    void Application::preset_file_open_pad() {
+        constexpr SDL_DialogFileFilter filters[] {
+            { "PadSynth preset files", "padpreset" },
+            { "All files", "*" }
+        };
+
+        SDL_ShowOpenFileDialog(
+            &Application::open_file_dialog,
+            new FileDialogData { .self = this, .function = &Application::preset_open_pad },
             m_window,
             filters,
             std::size(filters),
@@ -3624,8 +3800,13 @@ namespace application {
         m_composition_mixer_menu = true;
     }
 
-    void Application::open_create_instrument() {
+    void Application::open_create_instrument(std::optional<ui::CreateInstrumentTab> create_instrument_tab) {
         m_create_instrument_menu = true;
+
+        if (create_instrument_tab) {
+            m_ui.create_instrument_tab = *create_instrument_tab;
+            m_ui.create_instrument_tab_select = true;
+        }
     }
 
     void Application::open_render_composition() {
