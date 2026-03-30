@@ -349,14 +349,14 @@ namespace application {
 
         if (ImGui::BeginMenu("Edit")) {
             m_synthesizer.for_each_instrument([this](const syn::Instrument& instrument) {
-                if (const auto* runtime_instrument = dynamic_cast<const preset::add::RuntimeInstrument*>(&instrument)) {
-                    if (ImGui::MenuItem(runtime_instrument->name())) {
-                        m_ui.preset_add = translate_preset(runtime_instrument->preset());
+                if (const auto* runtime_instrument_add = dynamic_cast<const preset::add::RuntimeInstrument*>(&instrument)) {
+                    if (ImGui::MenuItem(runtime_instrument_add->name())) {
+                        m_ui.preset_add = translate_preset(runtime_instrument_add->preset());
                         open_create_instrument(ui::CreateInstrumentTab::Additive);
                     }
-                } else if (const auto* runtime_instrument = dynamic_cast<const preset::pad::RuntimeInstrument*>(&instrument)) {
-                    if (ImGui::MenuItem(runtime_instrument->name())) {
-                        m_ui.preset_pad = translate_preset(runtime_instrument->preset());
+                } else if (const auto* runtime_instrument_pad = dynamic_cast<const preset::pad::RuntimeInstrument*>(&instrument)) {
+                    if (ImGui::MenuItem(runtime_instrument_pad->name())) {
+                        m_ui.preset_pad = translate_preset(runtime_instrument_pad->preset());
                         open_create_instrument(ui::CreateInstrumentTab::PadSynth);
                     }
                 }
@@ -3400,7 +3400,7 @@ namespace application {
 
     void Application::check_path_extension(const std::filesystem::path& path, const char* extension) {
         if (path.extension() != extension) {
-            LOG_WARNING("File has the wrong extension: {}", path.extension().c_str());
+            LOG_WARNING("File has the wrong extension: {}", path.extension().string());
         }
     }
 
