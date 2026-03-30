@@ -304,7 +304,6 @@ namespace application {
 
         struct {
             bool metronome {};
-            bool create_instrument_tab_select {};
             int tool = ui::ToolMeasure;
             int value = ui::ValueQuarter;
             int tuplet = ui::TupletNone;
@@ -315,6 +314,7 @@ namespace application {
             ui::PresetAdd preset_add;
             ui::PresetPad preset_pad;
             ui::CreateInstrumentTab create_instrument_tab {};
+            std::optional<ui::CreateInstrumentTab> create_instrument_tab_select;
             int octave = ui::OctaveFourth;
             int loudness = ui::LoudnessMezzoForte;
             int polyphony {};

@@ -1649,10 +1649,10 @@ namespace application {
     void Application::create_instrument() {
         window_menu("Create Instrument", m_create_instrument_menu, [this] {
             if (ImGui::BeginTabBar("Create Instrument")) {
-                auto flags = m_ui.create_instrument_tab_select && m_ui.create_instrument_tab == ui::CreateInstrumentTab::Additive  // FIXME this doesn't really work well
+                auto flags = m_ui.create_instrument_tab_select && *m_ui.create_instrument_tab_select == ui::CreateInstrumentTab::Additive
                     ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
 
-                if (ImGui::BeginTabItem("Additive", nullptr, flags)) {  // FIXME this is active by default even if passed no flags to it
+                if (ImGui::BeginTabItem("Additive", nullptr, flags)) {
                     create_instrument_base(m_ui.preset_add);
                     create_instrument_add();
                     m_ui.create_instrument_tab = ui::CreateInstrumentTab::Additive;
@@ -1660,7 +1660,7 @@ namespace application {
                     ImGui::EndTabItem();
                 }
 
-                flags = m_ui.create_instrument_tab_select && m_ui.create_instrument_tab == ui::CreateInstrumentTab::PadSynth
+                flags = m_ui.create_instrument_tab_select && *m_ui.create_instrument_tab_select == ui::CreateInstrumentTab::PadSynth
                     ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
 
                 if (ImGui::BeginTabItem("PadSynth", nullptr, flags)) {
@@ -1671,7 +1671,7 @@ namespace application {
                     ImGui::EndTabItem();
                 }
 
-                m_ui.create_instrument_tab_select = false;
+                m_ui.create_instrument_tab_select = std::nullopt;
 
                 ImGui::EndTabBar();
             }
@@ -3802,11 +3802,7 @@ namespace application {
 
     void Application::open_create_instrument(std::optional<ui::CreateInstrumentTab> create_instrument_tab) {
         m_create_instrument_menu = true;
-
-        if (create_instrument_tab) {
-            m_ui.create_instrument_tab = *create_instrument_tab;
-            m_ui.create_instrument_tab_select = true;
-        }
+        m_ui.create_instrument_tab_select = create_instrument_tab;
     }
 
     void Application::open_render_composition() {
