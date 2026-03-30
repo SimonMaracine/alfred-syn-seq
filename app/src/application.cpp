@@ -507,7 +507,7 @@ namespace application {
         static constexpr float WIDTH = 2.0f * 10.0f * CELL;
         static constexpr float HEIGHT = 2.0f * 2.0f * CELL;
 
-        const ImColor& COLOR_TEXT = color(ImGuiCol_Text);
+        const ImColor COLOR_TEXT = color_opacity(ImGuiCol_Text, 0.8f);
         const ImColor& COLOR_INACTIVE = color(ImGuiCol_TableBorderLight);
         const ImColor& COLOR_ACTIVE = color(ImGuiCol_PlotHistogramHovered);
 
@@ -637,7 +637,7 @@ namespace application {
     }
 
     void Application::output_indicator() const {
-        const ImColor& COLOR = color(ImGuiCol_Text);
+        const ImColor COLOR = color_opacity(ImGuiCol_Text, 0.8f);
 
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
         const ImVec2 position = ImGui::GetCursorScreenPos();
@@ -682,7 +682,7 @@ namespace application {
         static constexpr ImVec2 UV0 {0.0f, 0.0f};
         static constexpr ImVec2 UV1 {1.0f, 1.0f};
         static constexpr ImVec4 COLOR_BACKGROUND {0.0f, 0.0f, 0.0f, 0.0f};
-        const ImVec4& COLOR_FOREGROUND = color(ImGuiCol_Text);
+        const ImVec4 COLOR_FOREGROUND = color_opacity(ImGuiCol_Text, 0.8f);
 
         if (ImGui::Begin("Playback", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize)) {
             if (ImGui::ImageButton("Rewind", reinterpret_cast<ImTextureID>(m_ui.texture_rewind.get()), SIZE, UV0, UV1, COLOR_BACKGROUND, COLOR_FOREGROUND)) {
@@ -1022,7 +1022,7 @@ namespace application {
         static constexpr ImVec2 CELL {COMPOSITION_LEFT, STEP_SIZE.y};
         static constexpr ImVec2 TEXT_OFFSET {(CELL.x - 2.0f) / 2.0f, (CELL.y - 1.0f) / 2.0f};
 
-        const ImColor& COLOR_FOREGROUND = color(ImGuiCol_Text);  // TODO reduce transparency + for other
+        const ImColor COLOR_FOREGROUND = color_opacity(ImGuiCol_Text, 0.8f);
         const ImColor COLOR_BACKGROUND = color_opacity(ImGuiCol_WindowBg, 1.0f);
 
         draw.list->AddRectFilled(
@@ -1091,8 +1091,8 @@ namespace application {
     }
 
     void Application::composition_measures(const Draw& draw) const {
-        const ImColor& COLOR_FOREGROUND = color(ImGuiCol_Text);
-        const ImColor COLOR_FOREGROUND2 = color_opacity(ImGuiCol_TextDisabled, 0.7f);
+        const ImColor COLOR_FOREGROUND = color_opacity(ImGuiCol_Text, 0.8f);
+        const ImColor COLOR_FOREGROUND2 = color_opacity(ImGuiCol_Text, 0.2f);
         const ImColor& COLOR_SELECTION = color(ImGuiCol_FrameBg);
 
         float position_x = ui::rem(COMPOSITION_LEFT);
@@ -1140,7 +1140,7 @@ namespace application {
     void Application::composition_measures_labels(const Draw& draw) const {
         static constexpr ImVec2 TEXT_OFFSET {5.0f / ui::FONT_SIZE, 5.0f / ui::FONT_SIZE};
 
-        const ImColor& COLOR = color(ImGuiCol_Text);
+        const ImColor COLOR = color_opacity(ImGuiCol_Text, 0.8f);
 
         float position_x = ui::rem(COMPOSITION_LEFT);
 
