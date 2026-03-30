@@ -321,6 +321,7 @@ namespace application {
             double volume {};
             double current_output_sample {};
             double past_output_sample_abs {};
+            double smoothed_output_sample {};
             bool render_normalize = true;
             float render_progress {};
             char render_file_path[256] {};

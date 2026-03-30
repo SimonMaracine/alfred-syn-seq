@@ -108,7 +108,6 @@ namespace application {
         // Synthesizer update routine
         m_task_manager.add_repeatable_task([this] {
             m_ui.current_output_sample = m_synthesizer.update();
-            m_ui.past_output_sample_abs = std::max(m_ui.past_output_sample_abs, std::abs(m_ui.current_output_sample));
             return false;
         }, video::MAX_DELTA);
 
@@ -131,9 +130,13 @@ namespace application {
         m_player.update(frame_time());
         update_messages();
 
-        static constexpr double SPEED = 0.2;
+        static constexpr double SMOOTHED_SPEED = 0.6;
+        static constexpr double PAST_SPEED = 0.2;
 
-        m_ui.past_output_sample_abs -= frame_time() * SPEED;
+        m_ui.smoothed_output_sample = std::lerp(m_ui.smoothed_output_sample, m_ui.current_output_sample, SMOOTHED_SPEED);  // FIXME use delta time
+        m_ui.past_output_sample_abs = std::max(m_ui.past_output_sample_abs, std::abs(m_ui.smoothed_output_sample));
+
+        m_ui.past_output_sample_abs -= frame_time() * PAST_SPEED;
         m_ui.past_output_sample_abs = std::max(m_ui.past_output_sample_abs, 0.0);
     }
 
@@ -642,11 +645,11 @@ namespace application {
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
         const ImVec2 position = ImGui::GetCursorScreenPos();
 
-        const auto current_sample = float(math::map(std::min(std::abs(m_ui.current_output_sample), 1.0), 0.0, 1.0, 0.0, 15.0));
+        const auto current_sample = float(math::map(std::min(std::abs(m_ui.smoothed_output_sample), 1.0), 0.0, 1.0, 0.0, 15.0));
         const auto past_sample = float(math::map(std::min(m_ui.past_output_sample_abs, 1.0), 0.0, 1.0, 0.0, 15.0));
 
         const ImU32 color =
-            [current_sample_abs = std::abs(m_ui.current_output_sample)] {
+            [current_sample_abs = std::abs(m_ui.smoothed_output_sample)] {
                 if (current_sample_abs > 0.9) {
                     return IM_COL32(230, 30, 30, 255);
                 }
