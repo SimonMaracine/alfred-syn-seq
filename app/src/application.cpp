@@ -4075,14 +4075,12 @@ namespace application {
         reset_synthesizer_instrument_volumes(synthesizer);
 
         for (const auto& [instrument, volume] : composition.instrument_volumes) {
-            synthesizer.get_instrument(instrument).volume(volume);
+            synthesizer.mixer_volume(instrument, volume);
         }
     }
 
     void Application::reset_synthesizer_instrument_volumes(synthesizer::Synthesizer& synthesizer) {
-        synthesizer.for_each_instrument([](syn::Instrument& instrument) {
-            instrument.volume(syn::VOLUME_DEFAULT);
-        });
+        synthesizer.mixer_reset();
     }
 
     void Application::set_composition_instrument_colors() {

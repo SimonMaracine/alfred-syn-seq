@@ -25,10 +25,7 @@ namespace instruments {
 
         double sound(double time, double time_on, syn::NoteId note) const noexcept override;
 
-        syn::Volume volume() const override { return m_volume; }
-        void volume(syn::Volume volume) override { m_volume = volume; }
-
-        syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::AdrLinear>(ENVELOPE); }
+        syn::envelope::Ptr new_overall_envelope() const override { return std::make_unique<syn::envelope::AdrLinear>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
 
@@ -39,8 +36,6 @@ namespace instruments {
             .duration_decay = 0.15,
             .duration_release = 0.007
         };
-
-        syn::VolumeA m_volume;
     };
 
     using Metronome = ShortSynthPiano;
@@ -53,10 +48,7 @@ namespace instruments {
         double sound(double time, double time_on, syn::NoteId note) const noexcept override;
         syn::InstrumentRange range() const override { return { syn::note(syn::A, syn::Octave2), syn::note(syn::C, syn::Octave6) }; }
 
-        syn::Volume volume() const override { return m_volume; }
-        void volume(syn::Volume volume) override { m_volume = volume; }
-
-        syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); }
+        syn::envelope::Ptr new_overall_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
 
@@ -67,8 +59,6 @@ namespace instruments {
             .duration_decay = 1.5,
             .duration_release = 1.0
         };
-
-        syn::VolumeA m_volume;
     };
 
     class Harmonica : public syn::Instrument {
@@ -79,10 +69,7 @@ namespace instruments {
         double sound(double time, double time_on, syn::NoteId note) const noexcept override;
         syn::InstrumentRange range() const override { return { syn::note(syn::A, syn::Octave3), syn::note(syn::C, syn::Octave6) }; }
 
-        syn::Volume volume() const override { return m_volume; }
-        void volume(syn::Volume volume) override { m_volume = volume; }
-
-        syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::Adsr>(ENVELOPE); }
+        syn::envelope::Ptr new_overall_envelope() const override { return std::make_unique<syn::envelope::Adsr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
 
@@ -94,8 +81,6 @@ namespace instruments {
             .duration_release = 0.3,
             .value_sustain = 0.7
         };
-
-        syn::VolumeA m_volume;
     };
 
     class DrumBass : public syn::Instrument {
@@ -105,10 +90,7 @@ namespace instruments {
 
         double sound(double time, double time_on, syn::NoteId note) const noexcept override;
 
-        syn::Volume volume() const override { return m_volume; }
-        void volume(syn::Volume volume) override { m_volume = volume; }
-
-        syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); }
+        syn::envelope::Ptr new_overall_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
 
@@ -119,8 +101,6 @@ namespace instruments {
             .duration_decay = 0.15,
             .duration_release = 0.02
         };
-
-        syn::VolumeA m_volume;
     };
 
     class DrumSnare : public syn::Instrument {
@@ -130,10 +110,7 @@ namespace instruments {
 
         double sound(double time, double time_on, syn::NoteId note) const noexcept override;
 
-        syn::Volume volume() const override { return m_volume; }
-        void volume(syn::Volume volume) override { m_volume = volume; }
-
-        syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); }
+        syn::envelope::Ptr new_overall_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
 
@@ -144,8 +121,6 @@ namespace instruments {
             .duration_decay = 0.2,
             .duration_release = 0.03
         };
-
-        syn::VolumeA m_volume;
     };
 
     class DrumHiHat : public syn::Instrument {
@@ -155,10 +130,7 @@ namespace instruments {
 
         double sound(double time, double time_on, syn::NoteId note) const noexcept override;
 
-        syn::Volume volume() const override { return m_volume; }
-        void volume(syn::Volume volume) override { m_volume = volume; }
-
-        syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); }
+        syn::envelope::Ptr new_overall_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
 
@@ -169,8 +141,6 @@ namespace instruments {
             .duration_decay = 0.15,
             .duration_release = 0.02
         };
-
-        syn::VolumeA m_volume;
     };
 
     class SynthPiano : public syn::Instrument {
@@ -180,10 +150,7 @@ namespace instruments {
 
         double sound(double time, double time_on, syn::NoteId note) const noexcept override;
 
-        syn::Volume volume() const override { return m_volume; }
-        void volume(syn::Volume volume) override { m_volume = volume; }
-
-        syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); }
+        syn::envelope::Ptr new_overall_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
 
@@ -194,8 +161,6 @@ namespace instruments {
             .duration_decay = 4.0,
             .duration_release = 0.7
         };
-
-        syn::VolumeA m_volume;
     };
 
     class Guitar : public syn::Instrument {
@@ -206,10 +171,7 @@ namespace instruments {
         double sound(double time, double time_on, syn::NoteId note) const noexcept override;
         syn::InstrumentRange range() const override { return { syn::note(syn::E, syn::Octave2), syn::note(syn::C, syn::Octave6) }; }
 
-        syn::Volume volume() const override { return m_volume; }
-        void volume(syn::Volume volume) override { m_volume = volume; }
-
-        syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); }
+        syn::envelope::Ptr new_overall_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
 
@@ -220,8 +182,6 @@ namespace instruments {
             .duration_decay = 5.0,
             .duration_release = 0.3
         };
-
-        syn::VolumeA m_volume;
     };
 
     class Strings : public syn::Instrument {
@@ -233,10 +193,7 @@ namespace instruments {
 
         double sound(double time, double time_on, syn::NoteId note) const noexcept override;
 
-        syn::Volume volume() const override { return m_volume; }
-        void volume(syn::Volume volume) override { m_volume = volume; }
-
-        syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::Adsr>(ENVELOPE); }
+        syn::envelope::Ptr new_overall_envelope() const override { return std::make_unique<syn::envelope::Adsr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
 
@@ -253,7 +210,6 @@ namespace instruments {
         static constexpr double FREQUENCY = 261.63;
 
         syn::padsynth::SampleCopyable m_sample;
-        syn::VolumeA m_volume;
     };
 
     class Cello : public syn::Instrument {
@@ -266,10 +222,7 @@ namespace instruments {
         double sound(double time, double time_on, syn::NoteId note) const noexcept override;
         syn::InstrumentRange range() const override { return { syn::note(syn::C, syn::Octave2), syn::note(syn::A, syn::Octave5) }; }
 
-        syn::Volume volume() const override { return m_volume; }
-        void volume(syn::Volume volume) override { m_volume = volume; }
-
-        syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::AdsrLinear>(ENVELOPE); }
+        syn::envelope::Ptr new_overall_envelope() const override { return std::make_unique<syn::envelope::AdsrLinear>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
 
@@ -288,7 +241,6 @@ namespace instruments {
         static constexpr double LFO_DEVIATION = 0.07;
 
         syn::padsynth::SampleCopyable m_sample;
-        syn::VolumeA m_volume;
     };
 
     class EasterEgg : public syn::Instrument {
@@ -297,12 +249,9 @@ namespace instruments {
         ALFRED_INSTRUMENT_DESCRIPTION("It sounds like it")
 
         double sound(double time, double, syn::NoteId note) const noexcept override;
-        syn::InstrumentRange range() const override { return { 0, 4 }; }
+        syn::InstrumentRange range() const override { return { 0, 3 }; }
 
-        syn::Volume volume() const override { return m_volume; }
-        void volume(syn::Volume volume) override { m_volume = volume; }
-
-        syn::envelope::Ptr new_envelope() const override { return std::make_unique<syn::envelope::AdsrLinear>(ENVELOPE); }
+        syn::envelope::Ptr new_overall_envelope() const override { return std::make_unique<syn::envelope::AdsrLinear>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
 
@@ -314,7 +263,5 @@ namespace instruments {
             .duration_release = 0.1,
             .value_sustain = 1.0
         };
-
-        syn::VolumeA m_volume;
     };
 }

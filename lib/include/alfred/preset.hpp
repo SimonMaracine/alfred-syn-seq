@@ -37,12 +37,9 @@ namespace preset {
         const char* description() const override { return m_preset.description.c_str(); }
         syn::InstrumentId id() const override { return m_id; }
         syn::InstrumentRange range() const override { return m_preset.range; }
-        syn::Volume volume() const override { return m_volume; }
-        void volume(syn::Volume volume) override { m_volume = volume; }
     protected:
         Preset m_preset;
         syn::InstrumentId m_id {};
-        syn::VolumeA m_volume;
     };
 
     namespace add {
@@ -64,7 +61,7 @@ namespace preset {
             explicit RuntimeInstrument(Preset preset);
 
             double sound(double time, double time_on, syn::NoteId note) const noexcept override;
-            syn::envelope::Ptr new_envelope() const override;
+            syn::envelope::Ptr new_overall_envelope() const override;
             double attack_duration() const override;
             double release_duration() const override;
             std::unique_ptr<Instrument> clone() const override { return std::make_unique<RuntimeInstrument>(*this); }
@@ -90,7 +87,7 @@ namespace preset {
             explicit RuntimeInstrument(Preset preset);
 
             double sound(double time, double time_on, syn::NoteId note) const noexcept override;
-            syn::envelope::Ptr new_envelope() const override;
+            syn::envelope::Ptr new_overall_envelope() const override;
             double attack_duration() const override;
             double release_duration() const override;
             std::unique_ptr<Instrument> clone() const override { return std::make_unique<RuntimeInstrument>(*this); }

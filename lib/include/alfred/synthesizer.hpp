@@ -43,13 +43,18 @@ namespace synthesizer {
         // Add external instruments to the storage
         virtual void store_instrument(std::unique_ptr<syn::Instrument> instrument) = 0;
 
-        // Instruments/presets interrogation/mutation
-        // Writing to the instruments' data can lead to race conditions
-        // Otherwise just retrieving the instrument objects themselves is fine
+        // Instruments/presets interrogation
+        // Just retrieving the instrument objects themselves is fine
         void for_each_instrument(const std::function<void(const syn::Instrument&)>& function) const;
-        void for_each_instrument(const std::function<void(syn::Instrument&)>& function);
         const syn::Instrument& get_instrument(syn::InstrumentId instrument) const;
-        syn::Instrument& get_instrument(syn::InstrumentId instrument);
+
+        // Get/set instruments' volumes in decibels
+        // These values are thread safe
+        syn::Volume mixer_volume(syn::InstrumentId instrument) const;
+        void mixer_volume(syn::InstrumentId instrument, syn::Volume volume);
+
+        // Reset all volumes to the default value
+        void mixer_reset();
 
         // Merge other synthesizer's instruments into this synthesizer
         // If both this and other have the same instrument ID, then other's instrument will not replace this
@@ -72,9 +77,13 @@ namespace synthesizer {
         // Instruments storage
         std::unordered_map<syn::InstrumentId, std::unique_ptr<syn::Instrument>> m_instruments;  // TODO use custom hash function since IDs should already be hashes
 
+        // Instruments mixer
+        std::unordered_map<syn::InstrumentId, syn::VolumeA> m_volumes;  // TODO use custom hash function since IDs should already be hashes
+
         // Current "active" voices that produce sounds
         std::vector<syn::Voice> m_voices;
 
+        // Current polyphony setting
         std::size_t m_max_voices = 4;
     };
 

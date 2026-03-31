@@ -251,7 +251,7 @@ namespace syn {
     struct Voice {
         NoteId note {};
         InstrumentId instrument {};
-        envelope::Ptr envelope;  // Overall envelope
+        envelope::Ptr overall_envelope;
         double amplitude {};
         double time_on {};
         double time_off = -std::numeric_limits<double>::infinity();
@@ -312,6 +312,7 @@ namespace syn {
     // An instrument (or also called preset) describes how some voice should sound
     // It comprises all the parameters that make up a particular sound
     // Instruments must have working copy and move constructors
+    // Instruments are completely immutable and they contain only read-only data
     struct Instrument {
         Instrument() = default;
         virtual ~Instrument() = default;
@@ -333,12 +334,8 @@ namespace syn {
         // Note range (inclusive)
         virtual InstrumentRange range() const { return keyboard::ID_FULL_RANGE; }
 
-        // Get/set volume in decibels (for mixing)
-        virtual Volume volume() const = 0;
-        virtual void volume(Volume volume) = 0;
-
-        // Create a new envelope specific for this instrument
-        virtual envelope::Ptr new_envelope() const = 0;
+        // Create a new overall envelope specifically for this instrument
+        virtual envelope::Ptr new_overall_envelope() const = 0;
 
         // Get the attack and release durations
         virtual double attack_duration() const = 0;

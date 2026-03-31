@@ -12,16 +12,16 @@ namespace synthesizer {
 
     Synthesizer::Synthesizer() {
         // Built-in instruments
-        m_instruments[instruments::ShortSynthPiano::static_id()] = std::make_unique<instruments::ShortSynthPiano>();
-        m_instruments[instruments::Ghost::static_id()] = std::make_unique<instruments::Ghost>();
-        m_instruments[instruments::Harmonica::static_id()] = std::make_unique<instruments::Harmonica>();
-        m_instruments[instruments::DrumBass::static_id()] = std::make_unique<instruments::DrumBass>();
-        m_instruments[instruments::DrumSnare::static_id()] = std::make_unique<instruments::DrumSnare>();
-        m_instruments[instruments::DrumHiHat::static_id()] = std::make_unique<instruments::DrumHiHat>();
-        m_instruments[instruments::SynthPiano::static_id()] = std::make_unique<instruments::SynthPiano>();
-        m_instruments[instruments::Guitar::static_id()] = std::make_unique<instruments::Guitar>();
-        m_instruments[instruments::Strings::static_id()] = std::make_unique<instruments::Strings>();
-        m_instruments[instruments::Cello::static_id()] = std::make_unique<instruments::Cello>();
+        insert_instrument(std::make_unique<instruments::ShortSynthPiano>());
+        insert_instrument(std::make_unique<instruments::Ghost>());
+        insert_instrument(std::make_unique<instruments::Harmonica>());
+        insert_instrument(std::make_unique<instruments::DrumBass>());
+        insert_instrument(std::make_unique<instruments::DrumSnare>());
+        insert_instrument(std::make_unique<instruments::DrumHiHat>());
+        insert_instrument(std::make_unique<instruments::SynthPiano>());
+        insert_instrument(std::make_unique<instruments::Guitar>());
+        insert_instrument(std::make_unique<instruments::Strings>());
+        insert_instrument(std::make_unique<instruments::Cello>());
 
         // Small optimization
         m_voices.reserve(50);
@@ -33,18 +33,22 @@ namespace synthesizer {
         }
     }
 
-    void Synthesizer::for_each_instrument(const std::function<void(syn::Instrument&)>& function) {
-        for (const auto& instrument : m_instruments | std::views::values) {
-            function(*instrument);
-        }
-    }
-
     const syn::Instrument& Synthesizer::get_instrument(syn::InstrumentId instrument) const {
         return *m_instruments.at(instrument);
     }
 
-    syn::Instrument& Synthesizer::get_instrument(syn::InstrumentId instrument) {
-        return *m_instruments.at(instrument);
+    syn::Volume Synthesizer::mixer_volume(syn::InstrumentId instrument) const {
+        return m_volumes.at(instrument);
+    }
+
+    void Synthesizer::mixer_volume(syn::InstrumentId instrument, syn::Volume volume) {
+        m_volumes.at(instrument) = volume;
+    }
+
+    void Synthesizer::mixer_reset() {
+        for (auto& volume : m_volumes | std::views::values) {
+            volume = syn::VOLUME_DEFAULT;
+        }
     }
 
     void Synthesizer::merge_instruments(const Synthesizer& other) {
@@ -55,13 +59,15 @@ namespace synthesizer {
             instruments[id] = instrument->clone();
         }
 
-        // auto instruments = other.m_instruments;
         m_instruments.merge(std::move(instruments));
     }
 
     void Synthesizer::insert_instrument(std::unique_ptr<syn::Instrument> instrument) {
         // Add new or override if already existing
-        m_instruments[instrument->id()] = std::move(instrument);
+        const syn::InstrumentId id = instrument->id();
+
+        m_instruments[id] = std::move(instrument);
+        m_volumes[id] = syn::VOLUME_DEFAULT;
     }
 
     void Synthesizer::note_on(double time, syn::NoteId note, syn::InstrumentId instrument, syn::Velocity velocity) {
@@ -75,15 +81,15 @@ namespace synthesizer {
             syn::Voice& new_voice = m_voices.emplace_back();
             new_voice.note = note;
             new_voice.instrument = instrument;
-            new_voice.envelope = m_instruments.at(instrument)->new_envelope();
+            new_voice.overall_envelope = m_instruments.at(instrument)->new_overall_envelope();
             new_voice.amplitude = velocity;
             new_voice.time_on = time;
-            new_voice.envelope->note_on(time);
+            new_voice.overall_envelope->note_on(time);
         } else {
             if (voice->time_off > voice->time_on) {
                 voice->amplitude = velocity;
                 voice->time_on = time;
-                voice->envelope->note_on(time);
+                voice->overall_envelope->note_on(time);
             }
         }
     }
@@ -101,7 +107,7 @@ namespace synthesizer {
     void Synthesizer::note_off(double time, syn::Voice& voice) {
         if (voice.time_on > voice.time_off) {
             voice.time_off = time;
-            voice.envelope->note_off(time);
+            voice.overall_envelope->note_off(time);
         }
     }
 
@@ -111,7 +117,7 @@ namespace synthesizer {
 
     void Synthesizer::update_voices(double time) {
         std::erase_if(m_voices, [](const syn::Voice& voice) {
-            return voice.envelope->done();
+            return voice.overall_envelope->done();
         });
 
         auto size = m_voices.size();
@@ -137,7 +143,7 @@ namespace synthesizer {
 
     void Synthesizer::sample_update(double time) const noexcept {
         for (const syn::Voice& voice : m_voices) {
-            voice.envelope->update(time);
+            voice.overall_envelope->update(time);
         }
     }
 
@@ -147,14 +153,15 @@ namespace synthesizer {
         for (const syn::Voice& voice : m_voices) {
             // The update function should take care of nicely stopping voices, if there are too many
 
-            // This throws, if the voice's instrument somehow isn't found
+            // These throw, if the voice's instrument somehow isn't found
             // It is important that this function only reads data from the synthesizer
             const auto& instrument = m_instruments.at(voice.instrument);
+            const auto volume = m_volumes.at(voice.instrument);
 
             output +=
                 voice.amplitude *
-                voice.envelope->value() *
-                syn::amplitude(instrument->volume()) *
+                voice.overall_envelope->value() *
+                syn::amplitude(volume) *
                 instrument->sound(time, voice.time_on, voice.note);
         }
 

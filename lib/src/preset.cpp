@@ -8,7 +8,7 @@
 namespace preset {
     namespace generic {
         template<typename Preset>
-        static syn::envelope::Ptr new_envelope(const Preset& preset) {
+        static syn::envelope::Ptr new_overall_envelope(const Preset& preset) {
             switch (preset.envelope_description.index()) {
                 case 0:
                     switch (preset.envelope_type) {
@@ -109,8 +109,8 @@ namespace preset {
             return output;
         }
 
-        syn::envelope::Ptr RuntimeInstrument::new_envelope() const {
-            return generic::new_envelope(m_preset);
+        syn::envelope::Ptr RuntimeInstrument::new_overall_envelope() const {
+            return generic::new_overall_envelope(m_preset);
         }
 
         double RuntimeInstrument::attack_duration() const {
@@ -143,8 +143,8 @@ namespace preset {
             return syn::util::sound(time, note, m_sample.get().get(), SIZE, m_preset.frequency);
         }
 
-        syn::envelope::Ptr RuntimeInstrument::new_envelope() const {
-            return generic::new_envelope(m_preset);
+        syn::envelope::Ptr RuntimeInstrument::new_overall_envelope() const {
+            return generic::new_overall_envelope(m_preset);
         }
 
         double RuntimeInstrument::attack_duration() const {
