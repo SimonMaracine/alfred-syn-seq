@@ -425,12 +425,6 @@ namespace syn {
 
             return sample[index];
         }
-
-        std::unique_ptr<double[]> copy(const std::unique_ptr<double[]>& ptr, std::size_t size) {
-            auto array = std::make_unique<double[]>(size);
-            std::memcpy(array.get(), ptr.get(), size * sizeof(double));
-            return array;
-        }
     }
 
     // https://zynaddsubfx.sourceforge.io/doc/PADsynth/PADsynth.htm
@@ -491,6 +485,22 @@ namespace syn {
             math::normalize(sample.get(), size);
 
             return sample;
+        }
+
+        SampleCopyable::SampleCopyable(const SampleCopyable& other) {
+            m_sample = copy(other.m_sample, m_size);
+        }
+
+        SampleCopyable& SampleCopyable::operator=(const SampleCopyable& other) {
+            m_sample = copy(other.m_sample, m_size);
+
+            return *this;
+        }
+
+        Sample SampleCopyable::copy(const Sample& ptr, std::size_t size) {
+            auto array = std::make_unique<double[]>(size);
+            std::memcpy(array.get(), ptr.get(), size * sizeof(double));
+            return array;
         }
     }
 }

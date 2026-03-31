@@ -260,7 +260,7 @@ namespace syn {
     // Volume type in decibels
     using Volume = std::int32_t;
 
-    // Atomic variant
+    // Atomic variant of volume (copyable)
     class VolumeA {
     public:
         VolumeA() = default;
@@ -281,6 +281,7 @@ namespace syn {
     inline constexpr Volume VOLUME_DEFAULT = 0;
     inline constexpr Volume VOLUME_MAX = 12;
 
+    // Decibels (power) to amplitude
     inline double amplitude(Volume volume) {
         return std::pow(10.0, double(volume) / 20.0);
     }
@@ -397,13 +398,13 @@ namespace syn {
 
         std::vector<double> amplitudes(std::vector<double> divisors);
         double sound(double time, NoteId note, const double* sample, std::size_t size, double frequency);
-        std::unique_ptr<double[]> copy(const std::unique_ptr<double[]>& ptr, std::size_t size);
     }
 
     namespace padsynth {
         using Sample = std::unique_ptr<double[]>;
         using Profile = double(*)(double, double);
 
+        // Paul's PadSynth synthesis algorithm
         Sample padsynth(
             std::size_t size,
             int sample_rate,
@@ -413,5 +414,27 @@ namespace syn {
             std::size_t number_harmonics,
             Profile profile = nullptr
         );
+
+        // Utility wrapper for sample
+        class SampleCopyable {
+        public:
+            SampleCopyable() = default;
+            SampleCopyable(Sample sample, std::size_t size)
+                : m_sample(std::move(sample)), m_size(size) {}
+
+            ~SampleCopyable() = default;
+            SampleCopyable(const SampleCopyable& other);
+            SampleCopyable& operator=(const SampleCopyable& other);
+            SampleCopyable(SampleCopyable&&) noexcept = default;
+            SampleCopyable& operator=(SampleCopyable&&) noexcept = default;
+
+            const Sample& get() const { return m_sample; }
+            Sample& get() { return m_sample; }
+        private:
+            static Sample copy(const Sample& ptr, std::size_t size);
+
+            Sample m_sample;
+            std::size_t m_size {};
+        };
     }
 }

@@ -99,30 +99,21 @@ namespace instruments {
             }
         }
 
-        m_sample = syn::padsynth::padsynth(
-            SIZE,
-            audio::SAMPLE_FREQUENCY,
-            FREQUENCY,
-            40.0,
-            amplitude_harmonics,
-            std::size(amplitude_harmonics)
+        m_sample = syn::padsynth::SampleCopyable(
+            syn::padsynth::padsynth(
+                SIZE,
+                audio::SAMPLE_FREQUENCY,
+                FREQUENCY,
+                40.0,
+                amplitude_harmonics,
+                std::size(amplitude_harmonics)
+            ),
+            SIZE
         );
     }
 
-    Strings::Strings(const Strings& other) {
-        m_sample = syn::util::copy(other.m_sample, SIZE);
-        m_volume = other.m_volume;
-    }
-
-    Strings& Strings::operator=(const Strings& other) {
-        m_sample = syn::util::copy(other.m_sample, SIZE);
-        m_volume = other.m_volume;
-
-        return *this;
-    }
-
     double Strings::sound(double time, double, syn::NoteId note) const noexcept {
-        return syn::util::sound(time, note, m_sample.get(), SIZE, FREQUENCY);
+        return syn::util::sound(time, note, m_sample.get().get(), SIZE, FREQUENCY);
     }
 
     Cello::Cello() {
@@ -136,36 +127,28 @@ namespace instruments {
             }
         }
 
-        m_sample = syn::padsynth::padsynth(
-            SIZE,
-            audio::SAMPLE_FREQUENCY,
-            FREQUENCY,
-            2.0,
-            amplitude_harmonics,
-            std::size(amplitude_harmonics)
+        m_sample = syn::padsynth::SampleCopyable(
+            syn::padsynth::padsynth(
+                SIZE,
+                audio::SAMPLE_FREQUENCY,
+                FREQUENCY,
+                2.0,
+                amplitude_harmonics,
+                std::size(amplitude_harmonics)
+            ),
+            SIZE
         );
 
         double t {};
+
         for (std::size_t i {}; i < SIZE; i++) {
-            m_sample[i] *= 1.0 + LFO_DEVIATION * (syn::oscillator::sine(t, LFO_FREQUENCY, 0.0) - 1.0);
+            m_sample.get()[i] *= 1.0 + LFO_DEVIATION * (syn::oscillator::sine(t, LFO_FREQUENCY, 0.0) - 1.0);
             t += 1.0 / double(audio::SAMPLE_FREQUENCY);
         }
     }
 
-    Cello::Cello(const Cello& other) {
-        m_sample = syn::util::copy(other.m_sample, SIZE);
-        m_volume = other.m_volume;
-    }
-
-    Cello& Cello::operator=(const Cello& other) {
-        m_sample = syn::util::copy(other.m_sample, SIZE);
-        m_volume = other.m_volume;
-
-        return *this;
-    }
-
     double Cello::sound(double time, double, syn::NoteId note) const noexcept {
-        return syn::util::sound(time, note, m_sample.get(), SIZE, FREQUENCY);
+        return syn::util::sound(time, note, m_sample.get().get(), SIZE, FREQUENCY);
     }
 
     double EasterEgg::sound(double time, double, syn::NoteId note) const noexcept {

@@ -125,30 +125,22 @@ namespace preset {
     namespace pad {
         RuntimeInstrument::RuntimeInstrument(Preset preset)
             : BaseRuntimeInstrument(std::move(preset)) {
-            m_sample = syn::padsynth::padsynth(
-                SIZE,
-                audio::SAMPLE_FREQUENCY,
-                m_preset.frequency,
-                m_preset.bandwidth,
-                m_preset.amplitude_harmonics.data(),
-                m_preset.amplitude_harmonics.size(),
-                profile(m_preset)
+            m_sample = syn::padsynth::SampleCopyable(
+                syn::padsynth::padsynth(
+                    SIZE,
+                    audio::SAMPLE_FREQUENCY,
+                    m_preset.frequency,
+                    m_preset.bandwidth,
+                    m_preset.amplitude_harmonics.data(),
+                    m_preset.amplitude_harmonics.size(),
+                    profile(m_preset)
+                ),
+                SIZE
             );
         }
 
-        RuntimeInstrument::RuntimeInstrument(const RuntimeInstrument& other)
-            : BaseRuntimeInstrument(other) {
-            m_sample = syn::util::copy(other.m_sample, SIZE);
-        }
-
-        RuntimeInstrument& RuntimeInstrument::operator=(const RuntimeInstrument& other) {
-            m_sample = syn::util::copy(other.m_sample, SIZE);
-
-            return *this;
-        }
-
         double RuntimeInstrument::sound(double time, double, syn::NoteId note) const noexcept {
-            return syn::util::sound(time, note, m_sample.get(), SIZE, m_preset.frequency);
+            return syn::util::sound(time, note, m_sample.get().get(), SIZE, m_preset.frequency);
         }
 
         syn::envelope::Ptr RuntimeInstrument::new_envelope() const {

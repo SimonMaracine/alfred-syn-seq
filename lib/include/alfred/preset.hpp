@@ -89,11 +89,6 @@ namespace preset {
         public:
             explicit RuntimeInstrument(Preset preset);
 
-            RuntimeInstrument(const RuntimeInstrument& other);
-            RuntimeInstrument& operator=(const RuntimeInstrument& other);
-            RuntimeInstrument(RuntimeInstrument&&) noexcept = default;
-            RuntimeInstrument& operator=(RuntimeInstrument&&) noexcept = default;
-
             double sound(double time, double time_on, syn::NoteId note) const noexcept override;
             syn::envelope::Ptr new_envelope() const override;
             double attack_duration() const override;
@@ -104,7 +99,7 @@ namespace preset {
 
             static constexpr std::size_t SIZE = 262144;
 
-            syn::padsynth::Sample m_sample;
+            syn::padsynth::SampleCopyable m_sample;
         };
     }
 }

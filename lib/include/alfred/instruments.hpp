@@ -227,10 +227,6 @@ namespace instruments {
     class Strings : public syn::Instrument {
     public:
         Strings();
-        Strings(const Strings& other);
-        Strings& operator=(const Strings& other);
-        Strings(Strings&&) noexcept = default;
-        Strings& operator=(Strings&&) noexcept = default;
 
         ALFRED_INSTRUMENT_STATIC_NAME_ID("Strings?")
         ALFRED_INSTRUMENT_DESCRIPTION_UNFINISHED()
@@ -256,17 +252,13 @@ namespace instruments {
         static constexpr std::size_t SIZE = 262144;
         static constexpr double FREQUENCY = 261.63;
 
-        syn::padsynth::Sample m_sample;
+        syn::padsynth::SampleCopyable m_sample;
         syn::VolumeA m_volume;
     };
 
     class Cello : public syn::Instrument {
     public:
         Cello();
-        Cello(const Cello& other);
-        Cello& operator=(const Cello& other);
-        Cello(Cello&&) noexcept = default;
-        Cello& operator=(Cello&&) noexcept = default;
 
         ALFRED_INSTRUMENT_STATIC_NAME_ID("Cello")
         ALFRED_INSTRUMENT_DESCRIPTION("It's close, but not quite; sounds nice though")
@@ -295,7 +287,7 @@ namespace instruments {
         static constexpr double LFO_FREQUENCY = 8.0;
         static constexpr double LFO_DEVIATION = 0.07;
 
-        syn::padsynth::Sample m_sample;
+        syn::padsynth::SampleCopyable m_sample;
         syn::VolumeA m_volume;
     };
 
