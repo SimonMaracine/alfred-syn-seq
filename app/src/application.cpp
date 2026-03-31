@@ -134,7 +134,7 @@ namespace application {
         static constexpr double PAST_SPEED = 0.2;
 
         const double blend = 1.0 - std::pow(0.5, frame_time() * SMOOTHED_SPEED);
-        m_ui.smoothed_output_sample = std::lerp(m_ui.smoothed_output_sample, m_ui.current_output_sample, blend);  // FIXME use delta time
+        m_ui.smoothed_output_sample = std::lerp(m_ui.smoothed_output_sample, m_ui.current_output_sample, blend);
         m_ui.past_output_sample_abs = std::max(m_ui.past_output_sample_abs, std::abs(m_ui.smoothed_output_sample));
 
         m_ui.past_output_sample_abs -= frame_time() * PAST_SPEED;
@@ -347,7 +347,7 @@ namespace application {
     }
 
     void Application::main_menu_bar_instrument() {
-        if (ImGui::MenuItem("Create")) {
+        if (ImGui::MenuItem("Create", "Ctrl+P")) {
             open_create_instrument();
         }
 
@@ -603,6 +603,8 @@ namespace application {
                 m_octave = syn::keyboard::Octave(m_ui.octave);
                 m_synthesizer.silence();
             }
+
+            ImGui::SetItemTooltip("Use Q and W to change the octave");
 
             ImGui::Dummy(ui::rem(ImVec2(0.0f, 1.0f)));
 
@@ -1339,6 +1341,10 @@ namespace application {
 
         if (ImGui::Shortcut(ImGuiKey_Backspace, ImGuiInputFlags_RouteGlobal)) {
             seek_player(0);
+        }
+
+        if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_P, ImGuiInputFlags_RouteAlways)) {
+            open_create_instrument();
         }
 
         if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_K, ImGuiInputFlags_RouteAlways)) {
