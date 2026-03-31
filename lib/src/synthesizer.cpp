@@ -38,16 +38,16 @@ namespace synthesizer {
     }
 
     syn::Volume Synthesizer::mixer_volume(syn::InstrumentId instrument) const {
-        return m_volumes.at(instrument);
+        return m_volumes.at(instrument).load(std::memory_order::relaxed);
     }
 
     void Synthesizer::mixer_volume(syn::InstrumentId instrument, syn::Volume volume) {
-        m_volumes.at(instrument) = volume;
+        m_volumes.at(instrument).store(volume, std::memory_order::relaxed);
     }
 
     void Synthesizer::mixer_reset() {
         for (auto& volume : m_volumes | std::views::values) {
-            volume = syn::VOLUME_DEFAULT;
+            volume.store(syn::VOLUME_DEFAULT, std::memory_order::relaxed);
         }
     }
 
@@ -150,18 +150,17 @@ namespace synthesizer {
     double Synthesizer::sample_sound(double time) const noexcept {
         double output {};
 
+        // The update function should take care of nicely stopping voices, if there are too many
         for (const syn::Voice& voice : m_voices) {
-            // The update function should take care of nicely stopping voices, if there are too many
-
             // These throw, if the voice's instrument somehow isn't found
             // It is important that this function only reads data from the synthesizer
             const auto& instrument = m_instruments.at(voice.instrument);
-            const auto volume = m_volumes.at(voice.instrument);
+            const auto& volume = m_volumes.at(voice.instrument);
 
             output +=
                 voice.amplitude *
                 voice.overall_envelope->value() *
-                syn::amplitude(volume) *
+                syn::amplitude(volume.load(std::memory_order::relaxed)) *
                 instrument->sound(time, voice.time_on, voice.note);
         }
 

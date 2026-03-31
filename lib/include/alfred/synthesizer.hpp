@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include <functional>
+#include <atomic>
 
 #include "alfred/audio.hpp"
 #include "alfred/synthesis.hpp"
@@ -78,7 +79,7 @@ namespace synthesizer {
         std::unordered_map<syn::InstrumentId, std::unique_ptr<syn::Instrument>> m_instruments;  // TODO use custom hash function since IDs should already be hashes
 
         // Instruments mixer
-        std::unordered_map<syn::InstrumentId, syn::VolumeA> m_volumes;  // TODO use custom hash function since IDs should already be hashes
+        std::unordered_map<syn::InstrumentId, std::atomic<syn::Volume>> m_volumes;  // TODO use custom hash function since IDs should already be hashes
 
         // Current "active" voices that produce sounds
         std::vector<syn::Voice> m_voices;
