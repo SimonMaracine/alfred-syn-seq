@@ -130,10 +130,11 @@ namespace application {
         m_player.update(frame_time());
         update_messages();
 
-        static constexpr double SMOOTHED_SPEED = 0.6;
+        static constexpr double SMOOTHED_SPEED = 85.0;
         static constexpr double PAST_SPEED = 0.2;
 
-        m_ui.smoothed_output_sample = std::lerp(m_ui.smoothed_output_sample, m_ui.current_output_sample, SMOOTHED_SPEED);  // FIXME use delta time
+        const double blend = 1.0 - std::pow(0.5, frame_time() * SMOOTHED_SPEED);
+        m_ui.smoothed_output_sample = std::lerp(m_ui.smoothed_output_sample, m_ui.current_output_sample, blend);  // FIXME use delta time
         m_ui.past_output_sample_abs = std::max(m_ui.past_output_sample_abs, std::abs(m_ui.smoothed_output_sample));
 
         m_ui.past_output_sample_abs -= frame_time() * PAST_SPEED;
@@ -654,7 +655,7 @@ namespace application {
                     return IM_COL32(230, 30, 30, 255);
                 }
 
-                if (current_sample_abs > 0.7) {
+                if (current_sample_abs > 0.6) {
                     return IM_COL32(230, 230, 30, 255);
                 }
 
@@ -1344,6 +1345,24 @@ namespace application {
             m_data.show_keyboard = !m_data.show_keyboard;
         }
 
+        if (ImGui::Shortcut(ImGuiKey_Q, ImGuiInputFlags_RouteGlobal)) {
+            m_ui.octave = std::max(int(syn::keyboard::OCTAVE_BEGIN), m_ui.octave - 1);
+
+            if (m_octave > syn::keyboard::OCTAVE_BEGIN) {
+                m_octave = syn::keyboard::Octave(std::uint32_t(m_octave) - 1);
+                m_synthesizer.silence();
+            }
+        }
+
+        if (ImGui::Shortcut(ImGuiKey_W, ImGuiInputFlags_RouteGlobal)) {
+            m_ui.octave = std::min(int(syn::keyboard::OCTAVE_END), m_ui.octave + 1);
+
+            if (m_octave < syn::keyboard::OCTAVE_END) {
+                m_octave = syn::keyboard::Octave(std::uint32_t(m_octave) + 1);
+                m_synthesizer.silence();
+            }
+        }
+
         if (ImGui::Shortcut(ImGuiKey_Tab, ImGuiInputFlags_RouteGlobal)) {
             switch (m_ui.tool) {
                 case ui::ToolMeasure:
@@ -1463,9 +1482,9 @@ namespace application {
         constexpr const char* BEATS[] { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16" };
         constexpr const char* VALUE[] { "1", "2", "4", "8", "16" };
 
-        static constexpr auto flags{ ImGuiComboFlags_HeightSmall | ImGuiComboFlags_WidthFitPreview | ImGuiComboFlags_NoArrowButton };
+        static constexpr auto flags = ImGuiComboFlags_HeightSmall | ImGuiComboFlags_WidthFitPreview | ImGuiComboFlags_NoArrowButton;
 
-        bool result{};
+        bool result {};
 
         ImGui::BeginGroup();
 

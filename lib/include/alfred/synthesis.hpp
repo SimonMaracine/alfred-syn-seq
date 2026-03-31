@@ -296,6 +296,9 @@ namespace syn {
             OctaveSeventh
         };
 
+        inline constexpr Octave OCTAVE_BEGIN = OctaveFirst;
+        inline constexpr Octave OCTAVE_END = OctaveSeventh;
+
         inline constexpr int OCTAVES = 7;
         inline constexpr int EXTRA = 4;
         inline constexpr int NOTES = OCTAVES * 12 + EXTRA;
