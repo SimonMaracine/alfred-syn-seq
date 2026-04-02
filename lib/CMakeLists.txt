@@ -45,3 +45,5 @@ if(ALFRED_DISTRIBUTION)
 endif()
 
 set_target_properties(alfred_lib PROPERTIES OUTPUT_NAME "alfred")
+
+add_subdirectory(test)
