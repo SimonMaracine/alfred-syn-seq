@@ -76,10 +76,10 @@ namespace synthesizer {
         double sample_sound(double time) const noexcept;
 
         // Instruments storage
-        std::unordered_map<syn::InstrumentId, std::unique_ptr<syn::Instrument>> m_instruments;  // TODO use custom hash function since IDs should already be hashes
+        std::unordered_map<syn::InstrumentId, std::unique_ptr<syn::Instrument>> m_instruments;
 
         // Instruments mixer
-        std::unordered_map<syn::InstrumentId, std::atomic<syn::Volume>> m_volumes;  // TODO use custom hash function since IDs should already be hashes
+        std::unordered_map<syn::InstrumentId, std::atomic<syn::Volume>> m_volumes;
 
         // Current "active" voices that produce sounds
         std::vector<syn::Voice> m_voices;
