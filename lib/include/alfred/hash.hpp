@@ -1,8 +1,8 @@
 #pragma once
 
+#include <string>
 #include <cstdint>
 #include <cstddef>
-#include <string>
 
 // Fowler-Noll-Vo algorithm, FNV-1a more exactly
 
@@ -65,16 +65,11 @@ namespace hash {
         }
     }
 
-    static_assert(sizeof(std::size_t) == 4 || sizeof(std::size_t) == 8);
-
     template<typename T>
     struct StrHash {
         constexpr std::size_t operator()(const T hashed_string) const noexcept {
-            if constexpr (sizeof(T) == sizeof(std::size_t)) {
-                return std::size_t(hashed_string);  // Using either 64-bit hashes in a 64-bit environment, or 32-bit hashes in a 32-bit environment
-            } else {
-                return std::hash<typename T::Type>()(hashed_string);  // Using incompatible types, so pay the price of a hash function
-            }
+            // Standard library's hash function is already perfect
+            return std::hash<typename T::Type>()(hashed_string);
         }
     };
 }
