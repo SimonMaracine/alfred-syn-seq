@@ -3,7 +3,6 @@
 #include <unordered_map>
 #include <string>
 #include <chrono>
-#include <stdexcept>
 #include <cstdint>
 
 #include <cereal/cereal.hpp>
@@ -12,6 +11,7 @@
 #include "sequencer.hpp"
 #include "utility.hpp"
 #include "ui.hpp"
+#include "error.hpp"
 
 // Composition data + serialization
 
@@ -137,8 +137,10 @@ namespace composition {
     void export_composition(const Composition& composition, utility::Buffer& buffer);
     void import_composition(Composition& composition, const utility::Buffer& buffer);
 
-    struct CompositionError : std::runtime_error {
-        using std::runtime_error::runtime_error;
+    struct CompositionError : error::Error {
+        using error::Error::Error;
+
+        ALFRED_ERROR_NAME(CompositionError)
     };
 }
 

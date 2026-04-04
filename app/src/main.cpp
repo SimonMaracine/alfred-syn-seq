@@ -7,6 +7,7 @@
 #include "application.hpp"
 #include "utility.hpp"
 #include "logging.hpp"
+#include "error.hpp"
 #include "version.hpp"
 
 static const char* sample_frames(int argc, char** argv) {
@@ -63,11 +64,15 @@ int main(int argc, char** argv) {
         logging::critical("Fatal audio error: {}", e.what());
         utility::show_error_message_box("Alfred Audio Error", "A critical audio error occurred. Check the logs.");
         return 1;
+    } catch (const error::Error& e) {
+        logging::critical("Fatal error: {}", e.what());
+        utility::show_error_message_box("Alfred Error", "A critical error occurred. Check the logs.");
+        return 1;
     }
 #ifdef ALFRED_DISTRIBUTION
     catch (...) {
-        logging::critical("Unknown fatal error");
-        utility::show_error_message_box("Alfred Unknown Error", "An unknown critical error occurred.");
+        logging::critical("Unknown exception");
+        utility::show_error_message_box("Alfred Unknown Exception", "An unknown exception occurred.");
         return 1;
     }
 #endif

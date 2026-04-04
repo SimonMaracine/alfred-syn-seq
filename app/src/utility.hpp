@@ -2,7 +2,8 @@
 
 #include <string>
 #include <filesystem>
-#include <stdexcept>
+
+#include "error.hpp"
 
 namespace utility {
     using Buffer = std::string;
@@ -16,7 +17,9 @@ namespace utility {
     const char* get_property(const char* property);
     void show_error_message_box(const char* title, const char* message);
 
-    struct FilerError : std::runtime_error {
-        using std::runtime_error::runtime_error;
+    struct FileError : error::Error {
+        using error::Error::Error;
+
+        ALFRED_ERROR_NAME(FileError)
     };
 }

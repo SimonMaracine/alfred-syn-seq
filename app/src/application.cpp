@@ -60,11 +60,11 @@ namespace application {
         } catch (const data::DataError& e) {
             m_data = {};
             logging::warning("Could not import data: {}", e.what());
-            notify_message("Could not import data");
-        } catch (const utility::FilerError& e) {
+            notify_message(std::format("Could not import data: {}", e.name()));
+        } catch (const utility::FileError& e) {
             m_data = {};
             logging::warning("Could not import data: {}", e.what());
-            notify_message("Could not import data");
+            notify_message(std::format("Could not import data: {}", e.name()));
         }
 
         m_synthesizer.open();
@@ -125,7 +125,7 @@ namespace application {
             utility::write_file(utility::data_file_path("simonmara", "alfred") / "alfred.dat", buffer);
         } catch (const data::DataError& e) {
             logging::error("Could not export data: {}", e.what());
-        } catch (const utility::FilerError& e) {
+        } catch (const utility::FileError& e) {
             logging::error("Could not export data: {}", e.what());
         }
     }
@@ -2043,7 +2043,7 @@ namespace application {
     void Application::debug() const {
 #ifndef ALFRED_DISTRIBUTION
         if (ImGui::Begin("Debug", nullptr, ImGuiWindowFlags_NoDocking)) {
-            ImGui::Text("Frame time: %f", frame_time());
+            ImGui::Text("frame_time() %f", frame_time());
             ImGui::Text("m_synthesizer.current_voices() %zu", m_synthesizer.current_voices());
             ImGui::Text("m_synthesizer.time() %.03f", m_synthesizer.time());
             ImGui::Text("m_player.get_position() %u", m_player.position());
@@ -3513,14 +3513,14 @@ namespace application {
             composition_write(path, m_composition);
 
             logging::information("Written composition to `{}`", path.string().c_str());
-            notify_message("Written composition");
+            notify_message("Written composition to the specified path");
         } catch (const composition::CompositionError& e) {
             logging::error("Could not save composition: {}", e.what());
-            notify_message("Could not save composition");
+            notify_message(std::format("Could not save composition: {}", e.name()));
             return false;
-        } catch (const utility::FilerError& e) {
+        } catch (const utility::FileError& e) {
             logging::error("Could not save composition: {}", e.what());
-            notify_message("Could not save composition");
+            notify_message(std::format("Could not save composition: {}", e.name()));
             return false;
         }
 
@@ -3543,14 +3543,14 @@ namespace application {
             composition_write(m_composition_path, m_composition);
 
             logging::information("Written composition to `{}`", m_composition_path.string().c_str());
-            notify_message("Written composition");
+            notify_message("Written composition to the specified path");
         } catch (const composition::CompositionError& e) {
             logging::error("Could not save composition: {}", e.what());
-            notify_message("Could not save composition");
+            notify_message(std::format("Could not save composition: {}", e.name()));
             return false;
-        } catch (const utility::FilerError& e) {
+        } catch (const utility::FileError& e) {
             logging::error("Could not save composition: {}", e.what());
-            notify_message("Could not save composition");
+            notify_message(std::format("Could not save composition: {}", e.name()));
             return false;
         }
 
@@ -3569,16 +3569,16 @@ namespace application {
             composition_read(path, m_composition);
 
             logging::information("Read composition from `{}`", path.string().c_str());
-            notify_message("Read composition");
+            notify_message("Read composition from the specified path");
         } catch (const composition::CompositionError& e) {
             m_composition = {};
             logging::error("Could not open composition: {}", e.what());
-            notify_message("Could not open composition");
+            notify_message(std::format("Could not open composition: {}", e.name()));
             return false;
-        } catch (const utility::FilerError& e) {
+        } catch (const utility::FileError& e) {
             m_composition = {};
             logging::error("Could not open composition: {}", e.what());
-            notify_message("Could not open composition");
+            notify_message(std::format("Could not open composition: {}", e.name()));
             return false;
         }
 
@@ -3683,14 +3683,14 @@ namespace application {
             preset_write(path, translate_preset(m_ui.preset_add));
 
             logging::information("Written preset to `{}`", path.string().c_str());
-            notify_message("Written preset");
+            notify_message("Written preset to the specified path");
         } catch (const preset::PresetError& e) {
             logging::error("Could not save preset: {}", e.what());
-            notify_message("Could not save preset");
+            notify_message(std::format("Could not save preset: {}", e.name()));
             return false;
-        } catch (const utility::FilerError& e) {
+        } catch (const utility::FileError& e) {
             logging::error("Could not save preset: {}", e.what());
-            notify_message("Could not save preset");
+            notify_message(std::format("Could not save preset: {}", e.name()));
             return false;
         }
 
@@ -3704,14 +3704,14 @@ namespace application {
             preset_write(path, translate_preset(m_ui.preset_pad));
 
             logging::information("Written preset to `{}`", path.string().c_str());
-            notify_message("Written preset");
+            notify_message("Written preset to the specified path");
         } catch (const preset::PresetError& e) {
             logging::error("Could not save preset: {}", e.what());
-            notify_message("Could not save preset");
+            notify_message(std::format("Could not save preset: {}", e.name()));
             return false;
-        } catch (const utility::FilerError& e) {
+        } catch (const utility::FileError& e) {
             logging::error("Could not save preset: {}", e.what());
-            notify_message("Could not save preset");
+            notify_message(std::format("Could not save preset: {}", e.name()));
             return false;
         }
 
@@ -3727,14 +3727,14 @@ namespace application {
             preset_read(path, preset);
 
             logging::information("Read preset from `{}`", path.string().c_str());
-            notify_message("Read preset");
+            notify_message("Read preset from the specified path");
         } catch (const preset::PresetError& e) {
             logging::error("Could not open preset: {}", e.what());
-            notify_message("Could not open preset");
+            notify_message(std::format("Could not open preset: {}", e.name()));
             return false;
-        } catch (const utility::FilerError& e) {
+        } catch (const utility::FileError& e) {
             logging::error("Could not open preset: {}", e.what());
-            notify_message("Could not open preset");
+            notify_message(std::format("Could not open preset: {}", e.name()));
             return false;
         }
 
@@ -3753,14 +3753,14 @@ namespace application {
             preset_read(path, preset);
 
             logging::information("Read preset from `{}`", path.string().c_str());
-            notify_message("Read preset");
+            notify_message("Read preset from the specified path");
         } catch (const preset::PresetError& e) {
             logging::error("Could not open preset: {}", e.what());
-            notify_message("Could not open preset");
+            notify_message(std::format("Could not open preset: {}", e.name()));
             return false;
-        } catch (const utility::FilerError& e) {
+        } catch (const utility::FileError& e) {
             logging::error("Could not open preset: {}", e.what());
-            notify_message("Could not open preset");
+            notify_message(std::format("Could not open preset: {}", e.name()));
             return false;
         }
 
@@ -3899,13 +3899,13 @@ namespace application {
                 do_render_composition(task, m_task_manager, [this](std::string message) { notify_message(std::move(message)); }, std::move(parameters));
             } catch (const seq::SequencerError& e) {
                 logging::error("Error rendering composition: {}", e.what());
-                notify_message("Error rendering composition");
+                notify_message(std::format("Error rendering composition: {}", e.name()));
             } catch (const encoder::EncoderError& e) {
                 logging::error("Error rendering composition: {}", e.what());
-                notify_message("Error rendering composition");
-            } catch (const utility::FilerError& e) {
+                notify_message(std::format("Error rendering composition: {}", e.name()));
+            } catch (const utility::FileError& e) {
                 logging::error("Error rendering composition: {}", e.what());
-                notify_message("Error rendering composition");
+                notify_message(std::format("Error rendering composition: {}", e.name()));
             } catch (...) {
                 m_task_manager.add_immediate_thread_safe_task([this] {
                     m_render_in_progress = false;
@@ -3986,8 +3986,10 @@ namespace application {
             *render_progress = 1.0f;
         });
 
-        logging::information("Done rendering composition in {}", std::chrono::duration_cast<std::chrono::seconds>(time_stop - time_start));
-        notify_message("Done rendering composition");
+        const auto duration = std::chrono::duration_cast<std::chrono::seconds>(time_stop - time_start);
+
+        logging::information("Done rendering composition in {}", duration);
+        notify_message(std::format("Done rendering composition in {}", duration));
     }
 
     std::size_t Application::max_composition_voices(const seq::Composition& composition) {

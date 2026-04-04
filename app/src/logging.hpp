@@ -3,9 +3,10 @@
 #include <source_location>
 #include <utility>
 #include <chrono>
-#include <stdexcept>
 
 // Global console and file logging
+
+#include "error.hpp"
 
 namespace logging {
     enum class Severity {
@@ -102,8 +103,10 @@ namespace logging {
     template<typename... Args>
     critical(std::format_string<Args...> fmt, Args&&... args) -> critical<Args...>;
 
-    struct LoggingError : std::runtime_error {
-        using std::runtime_error::runtime_error;
+    struct LoggingError : ::error::Error {
+        using ::error::Error::Error;
+
+        ALFRED_ERROR_NAME(LoggingError)
     };
 }
 

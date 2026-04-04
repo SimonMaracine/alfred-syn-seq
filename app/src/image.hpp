@@ -1,9 +1,10 @@
 #pragma once
 
 #include <span>
-#include <stdexcept>
 
 #include <SDL3/SDL.h>
+
+#include "error.hpp"
 
 namespace image {
     class SurfaceRef {
@@ -52,7 +53,9 @@ namespace image {
         Texture& operator=(Texture&& other) noexcept;
     };
 
-    struct ImageError : std::runtime_error {
-        using std::runtime_error::runtime_error;
+    struct ImageError : error::Error {
+        using error::Error::Error;
+
+        ALFRED_ERROR_NAME(ImageError)
     };
 }

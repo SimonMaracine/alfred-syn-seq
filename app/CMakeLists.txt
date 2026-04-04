@@ -53,6 +53,7 @@ add_executable(
     "src/data.hpp"
     "src/encoder.cpp"
     "src/encoder.hpp"
+    "src/error.hpp"
     "src/flat_set.hpp"
     "src/imgui.cpp"
     "src/imgui.hpp"

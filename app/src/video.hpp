@@ -1,10 +1,11 @@
 #pragma once
 
-#include <stdexcept>
 #include <span>
 #include <initializer_list>
 #include <string_view>
 #include <utility>
+
+#include "error.hpp"
 
 union SDL_Event;
 struct SDL_Window;
@@ -80,7 +81,9 @@ namespace video {
         unsigned long long m_imgui_accumulator_time {};
     };
 
-    struct VideoError : std::runtime_error {
-        using std::runtime_error::runtime_error;
+    struct VideoError : error::Error {
+        using error::Error::Error;
+
+        ALFRED_ERROR_NAME(VideoError)
     };
 }

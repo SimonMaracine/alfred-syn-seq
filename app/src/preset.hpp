@@ -3,12 +3,12 @@
 #include <string>
 #include <variant>
 #include <vector>
-#include <stdexcept>
 
 #include <cereal/cereal.hpp>
 #include <alfred/preset.hpp>
 
 #include "utility.hpp"
+#include "error.hpp"
 
 namespace syn {
     template<typename Archive>
@@ -135,8 +135,10 @@ namespace preset {
     void export_preset(const pad::Preset& preset, utility::Buffer& buffer);
     void import_preset(pad::Preset& preset, const utility::Buffer& buffer);
 
-    struct PresetError : std::runtime_error {
-        using std::runtime_error::runtime_error;
+    struct PresetError : error::Error {
+        using error::Error::Error;
+
+        ALFRED_ERROR_NAME(PresetError)
     };
 }
 

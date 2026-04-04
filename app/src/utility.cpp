@@ -10,7 +10,7 @@ namespace utility {
         std::ifstream stream {path, std::ios_base::binary};
 
         if (!stream.is_open()) {
-            throw FilerError("Could not open file");
+            throw FileError("Could not open file");
         }
 
         stream.seekg(0, stream.end);
@@ -21,7 +21,7 @@ namespace utility {
         stream.read(buffer.data(), size);
 
         if (stream.fail()) {
-            throw FilerError("Could not read from file");
+            throw FileError("Could not read from file");
         }
     }
 
@@ -29,13 +29,13 @@ namespace utility {
         std::ofstream stream {path, std::ios_base::binary};
 
         if (!stream.is_open()) {
-            throw FilerError("Could not open file");
+            throw FileError("Could not open file");
         }
 
         stream.write(buffer.data(), std::streamsize(buffer.size()));
 
         if (stream.fail()) {
-            throw FilerError("Could not write to file");
+            throw FileError("Could not write to file");
         }
     }
 

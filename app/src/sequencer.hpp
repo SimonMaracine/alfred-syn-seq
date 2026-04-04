@@ -5,7 +5,6 @@
 #include <set>
 #include <optional>
 #include <variant>
-#include <stdexcept>
 #include <functional>
 #include <algorithm>
 #include <iterator>
@@ -15,6 +14,7 @@
 #include <alfred/math.hpp>
 
 #include "flat_set.hpp"
+#include "error.hpp"
 
 // Everything about sequencing and modeling musical concepts
 
@@ -404,7 +404,9 @@ namespace seq {
         bool m_in_time = true;  // If the player is able to keep up with the piece
     };
 
-    struct SequencerError : std::runtime_error {
-        using std::runtime_error::runtime_error;
+    struct SequencerError : error::Error {
+        using error::Error::Error;
+
+        ALFRED_ERROR_NAME(SequencerError)
     };
 }

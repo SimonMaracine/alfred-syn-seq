@@ -1,13 +1,13 @@
 #pragma once
 
 #include <utility>
-#include <stdexcept>
 #include <vector>
 #include <cstdint>
 
 #include <imgui.h>
-
 #include <alfred/synthesis.hpp>
+
+#include "error.hpp"
 
 // Functions and definitions used by the UI of the application
 
@@ -227,7 +227,9 @@ namespace ui {
         std::unreachable();
     }
 
-    struct UiError : std::runtime_error {
-        using std::runtime_error::runtime_error;
+    struct UiError : error::Error {
+        using error::Error::Error;
+
+        ALFRED_ERROR_NAME(UiError)
     };
 }
