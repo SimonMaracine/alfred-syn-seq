@@ -1991,7 +1991,7 @@ namespace application {
 
             ImGui::SetNextItemWidth(ui::rem(32.0f));
 
-            ImGui::InputText("File Path", m_ui.render_file_path, sizeof(m_ui.render_file_path));
+            ImGui::InputText("File Path", m_ui.render_file_path, sizeof(m_ui.render_file_path), ImGuiInputTextFlags_ElideLeft);
 
             ImGui::Dummy(ui::rem(ImVec2(0.0f, 0.5f)));
 
