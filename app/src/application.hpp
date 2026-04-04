@@ -101,7 +101,7 @@ namespace application {
         void composition_measures(const Draw& draw) const;
         void composition_measures_labels(const Draw& draw) const;
         void composition_notes(const Draw& draw) const;
-        void composition_notes(const Draw& draw, syn::InstrumentId instrument, const seq::Notes& notes, float global_position_x, float rounding) const;
+        void composition_notes(const Draw& draw, syn::InstrumentId instrument, const seq::Notes& notes, float global_position_x) const;
         void composition_cursor(const Draw& draw) const;
         void composition_hover(const Draw& draw, const HoveredNote& hovered_note) const;
         void composition_pitch(const Draw& draw, const HoveredNote& hovered_note) const;

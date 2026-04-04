@@ -35,6 +35,9 @@ namespace application {
     static constexpr float COMPOSITION_LEFT = 40.0f / ui::FONT_SIZE;
     static constexpr float COMPOSITION_HEIGHT = STEP_SIZE.y * 12.0f * float(syn::keyboard::OCTAVES) + STEP_SIZE.y * float(syn::keyboard::EXTRA);
     static constexpr float COMPOSITION_SCROLL_SPEED = 40.0f / ui::FONT_SIZE;
+    static constexpr float KEYBOARD_KEY_ROUNDING = 12.0f / ui::FONT_SIZE;
+    static constexpr float NOTES_ROUNDING = 6.0f / ui::FONT_SIZE;
+    static constexpr float LEGATO_THICKNESS = 1.0f / ui::FONT_SIZE;
     static constexpr int ADD_MEASURES = 4;
     static constexpr unsigned long long FRAME_TIME_DEFAULT = 16;
     static constexpr unsigned long long FRAME_TIME_PLAYBACK = 4;
@@ -531,7 +534,7 @@ namespace application {
             base + draw.origin + position + ui::rem(ImVec2(PADDING, PADDING)),
             base + draw.origin + position + ImVec2(2.0f * ui::rem(CELL), 2.0f * ui::rem(CELL)) - ui::rem(ImVec2(PADDING, PADDING)),
             color,
-            12.0f
+            ui::rem(KEYBOARD_KEY_ROUNDING)
         );
 
         draw.list->AddText(base + draw.origin + position + ui::rem(ImVec2(TEXT_OFFSET, TEXT_OFFSET)), COLOR_TEXT, label);
@@ -1168,8 +1171,6 @@ namespace application {
     }
 
     void Application::composition_notes(const Draw& draw) const {
-        static constexpr float ROUNDING = 6.0f;
-
         const ImColor& COLOR = color(ImGuiCol_Text);
 
         float global_position_x = ui::rem(COMPOSITION_LEFT);
@@ -1183,12 +1184,12 @@ namespace application {
                         continue;
                     }
 
-                    composition_notes(draw, instrument, notes, global_position_x, ROUNDING);
+                    composition_notes(draw, instrument, notes, global_position_x);
                 }
 
                 // Always draw the selected instrument last
                 if (auto instrument = measure->instruments.find(m_instrument); instrument != measure->instruments.end()) {
-                    composition_notes(draw, instrument->first, instrument->second, global_position_x, ROUNDING);
+                    composition_notes(draw, instrument->first, instrument->second, global_position_x);
                 }
 
                 for (const ProvenanceNote& provenance_note : m_composition_selected_notes) {
@@ -1199,7 +1200,7 @@ namespace application {
                             draw.origin + ImVec2(global_position_x + rect.x, rect.y) - m_composition_camera,
                             draw.origin + ImVec2(global_position_x + rect.x + rect.z, rect.y + rect.w) - m_composition_camera,
                             COLOR,
-                            ROUNDING
+                            ui::rem(NOTES_ROUNDING)
                         );
                     }
                 }
@@ -1209,7 +1210,7 @@ namespace application {
         }
     }
 
-    void Application::composition_notes(const Draw& draw, syn::InstrumentId instrument, const seq::Notes& notes, float global_position_x, float rounding) const {
+    void Application::composition_notes(const Draw& draw, syn::InstrumentId instrument, const seq::Notes& notes, float global_position_x) const {
         for (auto note = notes.begin(); note != notes.end(); note++) {
             const ImVec4 rect = note_rectangle(*note);
 
@@ -1217,7 +1218,7 @@ namespace application {
                 draw.origin + ImVec2(global_position_x + rect.x, rect.y) - m_composition_camera,
                 draw.origin + ImVec2(global_position_x + rect.x + rect.z, rect.y + rect.w) - m_composition_camera,
                 ui::COLORS[m_ui.colors.at(instrument)].second,
-                rounding
+                ui::rem(NOTES_ROUNDING)
             );
 
             if (note->legato) {
@@ -1229,7 +1230,7 @@ namespace application {
                     draw.origin + ImVec2(x + ui::rem(STEP_SIZE.x) * 3.0f, rect.y + ui::rem(STEP_SIZE.y) * 1.5f - 4.0f) - m_composition_camera,
                     draw.origin + ImVec2(x + ui::rem(STEP_SIZE.x) * 6.0f, rect.y + ui::rem(STEP_SIZE.y) - 4.0f) - m_composition_camera,
                     ui::COLORS[m_ui.colors.at(instrument)].second,
-                    1.0f
+                    ui::rem(LEGATO_THICKNESS)
                 );
             }
         }
