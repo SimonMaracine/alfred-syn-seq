@@ -140,8 +140,6 @@ namespace seq {
         }
     };
 
-    using Notes = std::set<Note>;
-
     struct ConstantLoudness {
         Loudness loudness = Loudness::MezzoForte;
     };
@@ -164,6 +162,8 @@ namespace seq {
 
     using Agogic = std::variant<ConstantTempo, VaryingTempo>;
 
+    using Notes = std::set<Note>;
+
     struct Measure {
         TimeSignature time_signature;
         Dynamics dynamics;
@@ -182,6 +182,8 @@ namespace seq {
     using ConstMeasureIter = std::vector<Measure>::const_iterator;
     using NoteIter = Notes::iterator;
 
+    // A note iterator paired with its measure iterator
+    // Iterators from different instances of containers cannot coexist otherwise
     template<std::contiguous_iterator MeasureIter_ = MeasureIter>
     class ProvenanceNote {
     public:
@@ -364,6 +366,7 @@ namespace seq {
         // Reset the cursor position, in steps
         void seek(std::uint32_t position);
 
+        // Get/set stuff
         double elapsed_time() const { return m_elapsed_time; }
         std::uint32_t position() const { return m_position; }
         bool playing() const { return m_playing; }

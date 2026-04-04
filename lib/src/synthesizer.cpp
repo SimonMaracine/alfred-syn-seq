@@ -13,6 +13,7 @@ namespace synthesizer {
     Synthesizer::Synthesizer() {
         // Built-in instruments
         insert_instrument(std::make_unique<instruments::ShortSynthPiano>());
+        insert_instrument(std::make_unique<instruments::Metronome>());
         insert_instrument(std::make_unique<instruments::Ghost>());
         insert_instrument(std::make_unique<instruments::Harmonica>());
         insert_instrument(std::make_unique<instruments::DrumBass>());

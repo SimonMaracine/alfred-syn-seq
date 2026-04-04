@@ -154,7 +154,7 @@ namespace seq {
         // By default, simply reference the composition pointer
         const Composition* composition = m_composition;
 
-        // Make a full copy of the composition, add metronome and use a reference to the copied
+        // Otherwise make a deep copy of the composition, add metronome and use a reference to the copied
         if (m_metronome) {
             cloned_composition = *m_composition;
 
@@ -182,8 +182,8 @@ namespace seq {
                     if (
                         std::ranges::find_if(processed_notes[instrument], [measure, note](const auto& provenance_note) {
                             return provenance_note.measure() == measure && provenance_note.note() == note;
-                        }
-                    ) != processed_notes[instrument].end()) {
+                        }) != processed_notes[instrument].end()
+                    ) {
                         continue;
                     }
 
@@ -191,9 +191,8 @@ namespace seq {
                     std::uint32_t duration = seq::steps(current_note->value, current_note->tuplet) - current_note->delay;
 
                     while (current_note->legato) {
-                        const auto next_note {
-                            composition->check_note_has_next<ConstMeasureIter>(ProvenanceNote(measure, current_note, instrument))
-                        };
+                        const auto next_note =
+                            composition->check_note_has_next<ConstMeasureIter>(ProvenanceNote(measure, current_note, instrument));
 
                         assert(next_note);
 
@@ -244,7 +243,6 @@ namespace seq {
 
                     if (steps > position) {
                         const std::uint32_t last_steps = measure.time_signature.measure_steps() - (steps - position);
-
                         time += double(last_steps) * measure.time_signature.step_time(std::get<0>(measure.agogic).tempo);
 
                         return time;
@@ -301,6 +299,7 @@ namespace seq {
     }
 
     double Player::calculate_note_loudness(ConstMeasureIter measure, syn::InstrumentId instrument, std::uint32_t position, std::uint32_t duration) {
+        // Metronome is an exception
         if (instrument == instruments::Metronome::static_id()) {
             return amplitude(Loudness::Fortississimo);
         }

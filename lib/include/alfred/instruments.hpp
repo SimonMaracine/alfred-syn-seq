@@ -38,7 +38,10 @@ namespace instruments {
         };
     };
 
-    using Metronome = ShortSynthPiano;
+    struct Metronome : ShortSynthPiano {
+        ALFRED_INSTRUMENT_STATIC_NAME_ID("Metronome")
+        ALFRED_INSTRUMENT_DESCRIPTION("It's just a metronome")
+    };
 
     class Ghost : public syn::Instrument {
     public:
