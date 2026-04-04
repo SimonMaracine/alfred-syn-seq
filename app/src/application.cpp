@@ -40,7 +40,7 @@ namespace application {
     static constexpr float LEGATO_THICKNESS = 1.0f / ui::FONT_SIZE;
     static constexpr int ADD_MEASURES = 4;
     static constexpr unsigned long long FRAME_TIME_DEFAULT = 16;
-    static constexpr unsigned long long FRAME_TIME_PLAYBACK = 4;
+    static constexpr unsigned long long FRAME_TIME_PLAYBACK = 3;
     static constexpr std::size_t MAX_MESSAGE_COUNT = 4;
     static constexpr std::chrono::system_clock::duration MAX_MESSAGE_DURATION = 7s;
 
@@ -111,6 +111,7 @@ namespace application {
         // Synthesizer update routine
         m_task_manager.add_repeatable_task([this] {
             m_ui.current_output_sample = m_synthesizer.update();
+            m_ui.current_output_sample = std::clamp(m_ui.current_output_sample, -1.0, 1.0);
             return false;
         }, video::MAX_DELTA);
 
@@ -290,7 +291,7 @@ namespace application {
 
                 if (ImGui::MenuItem(file_path.c_str(), nullptr, false, !m_player.playing())) {
                     if (!composition_open(file_path)) {
-                        m_task_manager.add_immediate_task([this, &file_path] {
+                        m_task_manager.add_immediate_task([this, file_path] {
                             m_data.recent_compositions.erase(file_path);
                             logging::information("Erased invalid composition from the list");
                             notify_message("Erased invalid composition from the list");
