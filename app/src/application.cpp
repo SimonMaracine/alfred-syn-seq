@@ -1935,10 +1935,16 @@ namespace application {
         ImGui::BeginDisabled(*m_ui.preset_add.name == 0);
 
         if (ImGui::Button("Store into Synthesizer")) {
-            m_synthesizer.store_instrument(std::make_unique<preset::add::RuntimeInstrument>(translate_preset(m_ui.preset_add)));
+            const bool inserted = m_synthesizer.store_instrument(std::make_unique<preset::add::RuntimeInstrument>(translate_preset(m_ui.preset_add)));
             set_composition_instrument_colors();
-            LOG_DEBUG("Created and stored a new runtime instrument");
-            notify_message("Created and stored a new runtime instrument");
+
+            if (inserted) {
+                LOG_DEBUG("Created a new runtime instrument");
+                notify_message("Created a new runtime instrument");
+            } else {
+                LOG_DEBUG("Updated the runtime instrument");
+                notify_message("Updated the runtime instrument");
+            }
         }
 
         ImGui::SameLine();
@@ -1956,10 +1962,16 @@ namespace application {
         ImGui::BeginDisabled(*m_ui.preset_pad.name == 0);
 
         if (ImGui::Button("Store into Synthesizer")) {
-            m_synthesizer.store_instrument(std::make_unique<preset::pad::RuntimeInstrument>(translate_preset(m_ui.preset_pad)));
+            const bool inserted = m_synthesizer.store_instrument(std::make_unique<preset::pad::RuntimeInstrument>(translate_preset(m_ui.preset_pad)));
             set_composition_instrument_colors();
-            LOG_DEBUG("Created and stored a new runtime instrument");
-            notify_message("Created and stored a new runtime instrument");
+
+            if (inserted) {
+                LOG_DEBUG("Created a new runtime instrument");
+                notify_message("Created a new runtime instrument");
+            } else {
+                LOG_DEBUG("Updated the runtime instrument");
+                notify_message("Updated the runtime instrument");
+            }
         }
 
         ImGui::SameLine();

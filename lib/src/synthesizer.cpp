@@ -54,6 +54,7 @@ namespace synthesizer {
 
     void Synthesizer::merge_instruments(const Synthesizer& other) {
         // Need to make a deep copy of the instruments in this fashion
+
         std::unordered_map<syn::InstrumentId, std::unique_ptr<syn::Instrument>> instruments;
 
         for (const auto& [id, instrument] : other.m_instruments) {
@@ -63,12 +64,22 @@ namespace synthesizer {
         m_instruments.merge(std::move(instruments));
     }
 
-    void Synthesizer::insert_instrument(std::unique_ptr<syn::Instrument> instrument) {
+    bool Synthesizer::insert_instrument(std::unique_ptr<syn::Instrument> instrument) {
         // Add new or override if already existing
-        const syn::InstrumentId id = instrument->id();
+        // Return true if inserted new
 
-        m_instruments[id] = std::move(instrument);
-        m_volumes[id] = syn::VOLUME_DEFAULT;
+        const syn::InstrumentId id = instrument->id();
+        auto iter = m_instruments.find(id);
+        const bool present = iter != m_instruments.end();
+
+        if (present) {
+            iter->second = std::move(instrument);
+        } else {
+            m_instruments[id] = std::move(instrument);
+            m_volumes[id] = syn::VOLUME_DEFAULT;
+        }
+
+        return !present;
     }
 
     void Synthesizer::note_on(double time, syn::NoteId note, syn::InstrumentId instrument, syn::Velocity velocity) {
@@ -229,10 +240,10 @@ namespace synthesizer {
         set_polyphony(max_voices);
     }
 
-    void RealSynthesizer::store_instrument(std::unique_ptr<syn::Instrument> instrument) {
+    bool RealSynthesizer::store_instrument(std::unique_ptr<syn::Instrument> instrument) {
         audio::AudioLockGuard guard {this};
 
-        insert_instrument(std::move(instrument));
+        return insert_instrument(std::move(instrument));
     }
 
     void RealSynthesizer::callback_update() noexcept {
@@ -279,8 +290,8 @@ namespace synthesizer {
         set_polyphony(max_voices);
     }
 
-    void VirtualSynthesizer::store_instrument(std::unique_ptr<syn::Instrument> instrument) {
-        insert_instrument(std::move(instrument));
+    bool VirtualSynthesizer::store_instrument(std::unique_ptr<syn::Instrument> instrument) {
+        return insert_instrument(std::move(instrument));
     }
 
     void VirtualSynthesizer::reset() {

@@ -42,7 +42,8 @@ namespace synthesizer {
         virtual void polyphony(std::size_t max_voices) = 0;
 
         // Add external instruments to the storage
-        virtual void store_instrument(std::unique_ptr<syn::Instrument> instrument) = 0;
+        // Return true if inserted new
+        virtual bool store_instrument(std::unique_ptr<syn::Instrument> instrument) = 0;
 
         // Instruments/presets interrogation
         // Just retrieving the instrument objects themselves is fine
@@ -65,7 +66,7 @@ namespace synthesizer {
         std::size_t current_voices() const { return m_voices.size(); }
         std::size_t polyphony() const { return m_max_voices; }
     protected:
-        void insert_instrument(std::unique_ptr<syn::Instrument> instrument);
+        bool insert_instrument(std::unique_ptr<syn::Instrument> instrument);
         void note_on(double time, syn::NoteId note, syn::InstrumentId instrument, syn::Velocity velocity);
         void note_off(double time, syn::NoteId note, syn::InstrumentId instrument);
         static void note_off(double time, syn::Voice& voice);
@@ -103,7 +104,7 @@ namespace synthesizer {
         void silence() override;
         void silence_immediately() override;
         void polyphony(std::size_t max_voices) override;
-        void store_instrument(std::unique_ptr<syn::Instrument> instrument) override;
+        bool store_instrument(std::unique_ptr<syn::Instrument> instrument) override;
 
         // Get the time (not wall clock time)
         double time() const { return m_time; }
@@ -128,7 +129,7 @@ namespace synthesizer {
         void silence() override;
         void silence_immediately() override;
         void polyphony(std::size_t max_voices) override;
-        void store_instrument(std::unique_ptr<syn::Instrument> instrument) override;
+        bool store_instrument(std::unique_ptr<syn::Instrument> instrument) override;
 
         // Invalidate this synthesizer
         void reset();
