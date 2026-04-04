@@ -2245,7 +2245,9 @@ namespace application {
         modify_composition();
 
         // The selected measure has changed
-        select_measure(m_composition_selected_measure);
+        if (m_composition_selected_measure != m_composition.measures.end()) {
+            select_measure(m_composition_selected_measure);
+        }
 
         keep_player_cursor_valid();
     }
