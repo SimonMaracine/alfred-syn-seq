@@ -3,6 +3,8 @@
 #include <format>
 #include <utility>
 
+#include <SDL3/SDL.h>
+
 namespace image {
     SurfaceRef::SurfaceRef(SDL_Surface* surface)
         : m_surface(surface) {}

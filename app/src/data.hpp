@@ -28,7 +28,7 @@ namespace data {
     void import_data(Data& data, const utility::Buffer& buffer);
 
     struct DataError : error::Error {
-        using error::Error::Error;
+        using Error::Error;
 
         ALFRED_ERROR_NAME(DataError)
     };

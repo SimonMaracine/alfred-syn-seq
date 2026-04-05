@@ -2,9 +2,11 @@
 
 #include <span>
 
-#include <SDL3/SDL.h>
-
 #include "error.hpp"
+
+struct SDL_Surface;
+struct SDL_Texture;
+struct SDL_Renderer;
 
 namespace image {
     class SurfaceRef {
@@ -54,7 +56,7 @@ namespace image {
     };
 
     struct ImageError : error::Error {
-        using error::Error::Error;
+        using Error::Error;
 
         ALFRED_ERROR_NAME(ImageError)
     };

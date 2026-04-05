@@ -12,9 +12,9 @@
 #include <cassert>
 
 #include <SDL3/SDL.h>
+#include <imgui_internal.h>
 #include <alfred/instruments.hpp>
 #include <alfred/math.hpp>
-#include <imgui_internal.h>
 
 #include "imgui.hpp"
 #include "logging.hpp"
@@ -4142,8 +4142,8 @@ namespace application {
 
     void Application::erase_message(const Message& message) {
         m_task_manager.add_immediate_task([this, sequence = message.sequence] {
-            std::erase_if(m_messages.messages, [sequence](const auto& message) {
-                return message.sequence == sequence;
+            std::erase_if(m_messages.messages, [sequence](const auto& msg) {
+                return msg.sequence == sequence;
             });
         });
     }

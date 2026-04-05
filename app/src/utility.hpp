@@ -18,7 +18,7 @@ namespace utility {
     void show_error_message_box(const char* title, const char* message);
 
     struct FileError : error::Error {
-        using error::Error::Error;
+        using Error::Error;
 
         ALFRED_ERROR_NAME(FileError)
     };

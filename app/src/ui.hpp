@@ -228,7 +228,7 @@ namespace ui {
     }
 
     struct UiError : error::Error {
-        using error::Error::Error;
+        using Error::Error;
 
         ALFRED_ERROR_NAME(UiError)
     };

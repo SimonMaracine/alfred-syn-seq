@@ -69,7 +69,7 @@ namespace synthesizer {
         // Return true if inserted new
 
         const syn::InstrumentId id = instrument->id();
-        auto iter = m_instruments.find(id);
+        const auto iter = m_instruments.find(id);
         const bool present = iter != m_instruments.end();
 
         if (present) {
