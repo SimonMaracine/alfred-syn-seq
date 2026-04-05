@@ -251,12 +251,12 @@ namespace syn {
         // There can be multiple voices with the same instrument provided that their note (pitch) is different
         // A synthesizer then stores and processes multiple voices in order to produce a sample of sound output
 		// A voice is abstract and it is subclassed in order to provide synthesis method specific data
-        struct Voice {
+        struct Voice {  // TODO virtual update method
             Voice() = default;
             virtual ~Voice() = default;
 
-            Voice(const Voice&) = default;
-            Voice& operator=(const Voice&) = default;
+            Voice(const Voice&) = delete;
+            Voice& operator=(const Voice&) = delete;
             Voice(Voice&&) = default;
             Voice& operator=(Voice&&) = default;
 
@@ -317,7 +317,7 @@ namespace syn {
     // An instrument (or also called preset) describes how some voice should sound
     // It comprises all the parameters that make up a particular sound
     // Instruments must have working copy and move constructors
-    // Instruments are completely immutable and they contain only read-only data
+    // Instruments are completely immutable, and they contain only read-only data
     struct Instrument {
         Instrument() = default;
         virtual ~Instrument() = default;

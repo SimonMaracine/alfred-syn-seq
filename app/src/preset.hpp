@@ -43,13 +43,20 @@ namespace syn {
 
 namespace preset {
     template<typename Archive>
+    void serialize(Archive& archive, Envelope& self, const std::uint32_t) {
+        archive(
+            cereal::make_nvp("description", self.description),
+            cereal::make_nvp("type", self.type)
+        );
+    }
+
+    template<typename Archive>
     void save(Archive& archive, const BasePreset& self, const std::uint32_t) {
         archive(
             cereal::make_nvp("name", self.name),
             cereal::make_nvp("description", self.description),
             cereal::make_nvp("range", self.range),
-            cereal::make_nvp("envelope_description", self.envelope_description),
-            cereal::make_nvp("envelope_type", self.envelope_type)
+            cereal::make_nvp("envelope", self.envelope)
         );
     }
 
@@ -59,8 +66,7 @@ namespace preset {
             cereal::make_nvp("name", self.name),
             cereal::make_nvp("description", self.description),
             cereal::make_nvp("range", self.range),
-            cereal::make_nvp("envelope_description", self.envelope_description),
-            cereal::make_nvp("envelope_type", self.envelope_type)
+            cereal::make_nvp("envelope", self.envelope)
         );
     }
 
@@ -72,7 +78,8 @@ namespace preset {
                 cereal::make_nvp("frequency_multiplier", self.frequency_multiplier),
                 cereal::make_nvp("amplitude_divisor", self.amplitude_divisor),
                 cereal::make_nvp("phase", self.phase),
-                cereal::make_nvp("lfo", self.lfo)
+                cereal::make_nvp("lfo", self.lfo),
+                cereal::make_nvp("envelope", self.envelope)
             );
         }
 
@@ -83,7 +90,8 @@ namespace preset {
                 cereal::make_nvp("frequency_multiplier", self.frequency_multiplier),
                 cereal::make_nvp("amplitude_divisor", self.amplitude_divisor),
                 cereal::make_nvp("phase", self.phase),
-                cereal::make_nvp("lfo", self.lfo)
+                cereal::make_nvp("lfo", self.lfo),
+                cereal::make_nvp("envelope", self.envelope)
             );
         }
 

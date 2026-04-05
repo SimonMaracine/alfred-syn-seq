@@ -3278,7 +3278,7 @@ namespace application {
         switch (preset.envelope_type) {
             case ui::PresetAdd::EnvelopeTypeAdsrLinear:
             case ui::PresetAdd::EnvelopeTypeAdsrExponential:
-                result_preset.envelope_description = syn::envelope::DescriptionAdsr {
+                result_preset.envelope.description = syn::envelope::DescriptionAdsr {
                     .duration_attack = preset.envelope_description.duration_attack,
                     .duration_decay = preset.envelope_description.duration_decay,
                     .duration_release = preset.envelope_description.duration_release,
@@ -3287,7 +3287,7 @@ namespace application {
                 break;
             case ui::PresetAdd::EnvelopeTypeAdrLinear:
             case ui::PresetAdd::EnvelopeTypeAdrExponential:
-                result_preset.envelope_description = syn::envelope::DescriptionAdr {
+                result_preset.envelope.description = syn::envelope::DescriptionAdr {
                     .duration_attack = preset.envelope_description.duration_attack,
                     .duration_decay = preset.envelope_description.duration_decay,
                     .duration_release = preset.envelope_description.duration_release,
@@ -3298,11 +3298,11 @@ namespace application {
         switch (preset.envelope_type) {
             case ui::PresetAdd::EnvelopeTypeAdsrLinear:
             case ui::PresetAdd::EnvelopeTypeAdrLinear:
-                result_preset.envelope_type = syn::envelope::Type::Linear;
+                result_preset.envelope.type = syn::envelope::Type::Linear;
                 break;
             case ui::PresetAdd::EnvelopeTypeAdsrExponential:
             case ui::PresetAdd::EnvelopeTypeAdrExponential:
-                result_preset.envelope_type = syn::envelope::Type::Exponential;
+                result_preset.envelope.type = syn::envelope::Type::Exponential;
                 break;
         }
 
@@ -3317,14 +3317,14 @@ namespace application {
         result_preset.range[0] = preset.range.first;
         result_preset.range[1] = preset.range.second;
 
-        switch (preset.envelope_description.index()) {
+        switch (preset.envelope.description.index()) {
             case 0:
-                result_preset.envelope_description.duration_attack = std::get<0>(preset.envelope_description).duration_attack;
-                result_preset.envelope_description.duration_decay = std::get<0>(preset.envelope_description).duration_decay;
-                result_preset.envelope_description.duration_release = std::get<0>(preset.envelope_description).duration_release;
-                result_preset.envelope_description.value_sustain = std::get<0>(preset.envelope_description).value_sustain;
+                result_preset.envelope_description.duration_attack = std::get<0>(preset.envelope.description).duration_attack;
+                result_preset.envelope_description.duration_decay = std::get<0>(preset.envelope.description).duration_decay;
+                result_preset.envelope_description.duration_release = std::get<0>(preset.envelope.description).duration_release;
+                result_preset.envelope_description.value_sustain = std::get<0>(preset.envelope.description).value_sustain;
 
-                switch (preset.envelope_type) {
+                switch (preset.envelope.type) {
                     case syn::envelope::Type::Linear:
                         result_preset.envelope_type = ui::PresetAdd::EnvelopeTypeAdsrLinear;
                         break;
@@ -3335,11 +3335,11 @@ namespace application {
 
                 break;
             case 1:
-                result_preset.envelope_description.duration_attack = std::get<1>(preset.envelope_description).duration_attack;
-                result_preset.envelope_description.duration_decay = std::get<1>(preset.envelope_description).duration_decay;
-                result_preset.envelope_description.duration_release = std::get<1>(preset.envelope_description).duration_release;
+                result_preset.envelope_description.duration_attack = std::get<1>(preset.envelope.description).duration_attack;
+                result_preset.envelope_description.duration_decay = std::get<1>(preset.envelope.description).duration_decay;
+                result_preset.envelope_description.duration_release = std::get<1>(preset.envelope.description).duration_release;
 
-                switch (preset.envelope_type) {
+                switch (preset.envelope.type) {
                     case syn::envelope::Type::Linear:
                         result_preset.envelope_type = ui::PresetAdd::EnvelopeTypeAdrLinear;
                         break;

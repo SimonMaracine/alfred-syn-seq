@@ -9,21 +9,21 @@ namespace preset {
     namespace generic {
         template<typename Preset>
         static syn::envelope::Ptr new_overall_envelope(const Preset& preset) {
-            switch (preset.envelope_description.index()) {
+            switch (preset.envelope.description.index()) {
                 case 0:
-                    switch (preset.envelope_type) {
+                    switch (preset.envelope.type) {
                         case syn::envelope::Type::Linear:
-                            return std::make_unique<syn::envelope::AdsrLinear>(std::get<0>(preset.envelope_description));
+                            return std::make_unique<syn::envelope::AdsrLinear>(std::get<0>(preset.envelope.description));
                         case syn::envelope::Type::Exponential:
-                            return std::make_unique<syn::envelope::Adsr>(std::get<0>(preset.envelope_description));
+                            return std::make_unique<syn::envelope::Adsr>(std::get<0>(preset.envelope.description));
                     }
                     std::unreachable();
                 case 1:
-                    switch (preset.envelope_type) {
+                    switch (preset.envelope.type) {
                         case syn::envelope::Type::Linear:
-                            return std::make_unique<syn::envelope::AdrLinear>(std::get<1>(preset.envelope_description));
+                            return std::make_unique<syn::envelope::AdrLinear>(std::get<1>(preset.envelope.description));
                         case syn::envelope::Type::Exponential:
-                            return std::make_unique<syn::envelope::Adr>(std::get<1>(preset.envelope_description));
+                            return std::make_unique<syn::envelope::Adr>(std::get<1>(preset.envelope.description));
                     }
                     std::unreachable();
             }
@@ -33,11 +33,11 @@ namespace preset {
 
         template<typename Preset>
         static double attack_duration(const Preset& preset) {
-            switch (preset.envelope_description.index()) {
+            switch (preset.envelope.description.index()) {
                 case 0:
-                    return std::get<0>(preset.envelope_description).duration_attack;
+                    return std::get<0>(preset.envelope.description).duration_attack;
                 case 1:
-                    return std::get<1>(preset.envelope_description).duration_attack;
+                    return std::get<1>(preset.envelope.description).duration_attack;
             }
 
             std::unreachable();
@@ -45,11 +45,11 @@ namespace preset {
 
         template<typename Preset>
         static double release_duration(const Preset& preset) {
-            switch (preset.envelope_description.index()) {
+            switch (preset.envelope.description.index()) {
                 case 0:
-                    return std::get<0>(preset.envelope_description).duration_release;
+                    return std::get<0>(preset.envelope.description).duration_release;
                 case 1:
-                    return std::get<1>(preset.envelope_description).duration_release;
+                    return std::get<1>(preset.envelope.description).duration_release;
             }
 
             std::unreachable();
