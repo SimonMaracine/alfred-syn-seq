@@ -60,11 +60,12 @@ namespace preset {
         public:
             explicit RuntimeInstrument(Preset preset);
 
-            double sound(double time, double time_on, syn::NoteId note) const noexcept override;
-            syn::envelope::Ptr new_overall_envelope() const override;
+            double sound(double time, const syn::voice::Voice& voice) const noexcept override;
+			syn::voice::Ptr new_voice() const override;
+			syn::envelope::Ptr new_overall_envelope() const override;
             double attack_duration() const override;
             double release_duration() const override;
-            std::unique_ptr<Instrument> clone() const override { return std::make_unique<RuntimeInstrument>(*this); }
+            syn::InstrumentPtr clone() const override { return std::make_unique<RuntimeInstrument>(*this); }
         private:
             std::vector<double> m_amplitudes;
         };
@@ -86,11 +87,12 @@ namespace preset {
         public:
             explicit RuntimeInstrument(Preset preset);
 
-            double sound(double time, double time_on, syn::NoteId note) const noexcept override;
+            double sound(double time, const syn::voice::Voice& voice) const noexcept override;
+			syn::voice::Ptr new_voice() const override;
             syn::envelope::Ptr new_overall_envelope() const override;
             double attack_duration() const override;
             double release_duration() const override;
-            std::unique_ptr<Instrument> clone() const override { return std::make_unique<RuntimeInstrument>(*this); }
+            syn::InstrumentPtr clone() const override { return std::make_unique<RuntimeInstrument>(*this); }
         private:
             static syn::padsynth::Profile profile(const Preset& preset);
 

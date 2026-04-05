@@ -1662,9 +1662,9 @@ namespace application {
 
                 ImGui::SameLine();
 
-                int volume = std::clamp(m_composition.instrument_volumes[instrument], syn::VOLUME_MIN, syn::VOLUME_MAX);
+                int volume = std::clamp(m_composition.instrument_volumes[instrument], syn::volume::MIN, syn::volume::MAX);
 
-                if (ImGui::SliderInt("##volume", &volume, syn::VOLUME_MIN, syn::VOLUME_MAX, "%d dB")) {
+                if (ImGui::SliderInt("##volume", &volume, syn::volume::MIN, syn::volume::MAX, "%d dB")) {
                     m_composition.instrument_volumes[instrument] = volume;
                     modify_composition_metadata();
                 }

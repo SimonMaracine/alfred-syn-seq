@@ -52,8 +52,8 @@ namespace synthesizer {
 
         // Get/set instruments' volumes in decibels
         // These values are thread safe
-        syn::Volume mixer_volume(syn::InstrumentId instrument) const;
-        void mixer_volume(syn::InstrumentId instrument, syn::Volume volume);
+        syn::volume::Volume mixer_volume(syn::InstrumentId instrument) const;
+        void mixer_volume(syn::InstrumentId instrument, syn::volume::Volume volume);
 
         // Reset all volumes to the default value
         void mixer_reset();
@@ -67,23 +67,24 @@ namespace synthesizer {
         std::size_t polyphony() const { return m_max_voices; }
     protected:
         bool insert_instrument(std::unique_ptr<syn::Instrument> instrument);
+        bool in_range(syn::NoteId note, syn::InstrumentId instrument) const;
         void note_on(double time, syn::NoteId note, syn::InstrumentId instrument, syn::Velocity velocity);
         void note_off(double time, syn::NoteId note, syn::InstrumentId instrument);
-        static void note_off(double time, syn::Voice& voice);
+        static void note_off(double time, syn::voice::Voice& voice);
         void set_polyphony(std::size_t max_voices);
         void update_voices(double time);
-        std::vector<syn::Voice>::iterator find_voice(syn::NoteId note, syn::InstrumentId instrument);
+        std::vector<syn::voice::Ptr>::iterator find_voice(syn::NoteId note, syn::InstrumentId instrument);
         void sample_update(double time) const noexcept;
         double sample_sound(double time) const noexcept;
 
         // Instruments storage
-        std::unordered_map<syn::InstrumentId, std::unique_ptr<syn::Instrument>> m_instruments;
+        std::unordered_map<syn::InstrumentId, syn::InstrumentPtr> m_instruments;
 
         // Instruments mixer
-        std::unordered_map<syn::InstrumentId, std::atomic<syn::Volume>> m_volumes;
+        std::unordered_map<syn::InstrumentId, std::atomic<syn::volume::Volume>> m_volumes;
 
         // Current "active" voices that produce sounds
-        std::vector<syn::Voice> m_voices;
+        std::vector<syn::voice::Ptr> m_voices;
 
         // Current polyphony setting
         std::size_t m_max_voices = 4;

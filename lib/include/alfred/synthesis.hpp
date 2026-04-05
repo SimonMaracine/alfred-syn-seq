@@ -244,29 +244,52 @@ namespace syn {
     static_assert(note(16) == std::pair(Cs, Octave2));
     static_assert(note(85) == std::pair(As, Octave7));
 
-    // A voice represents a particular sound made by some instrument at some point in time in the synthesizer
-    // There can be multiple voices with the same instrument provided that their note (pitch) is different
-    // A synthesizer then stores and processes multiple voices in order to produce a sample of sound output
-    struct Voice {
-        NoteId note {};
-        InstrumentId instrument {};
-        envelope::Ptr overall_envelope;
-        double amplitude {};
-        double time_on {};
-        double time_off = -std::numeric_limits<double>::infinity();
-    };
+    namespace voice {
+        using Storage = allocator::StaticAllocatorStorage<88, 88, 8>;
 
-    // Volume type in decibels
-    using Volume = std::int32_t;
+        // A voice represents a particular sound made by some instrument at some point in time in the synthesizer
+        // There can be multiple voices with the same instrument provided that their note (pitch) is different
+        // A synthesizer then stores and processes multiple voices in order to produce a sample of sound output
+		// A voice is abstract and it is subclassed in order to provide synthesis method specific data
+        struct Voice {
+            Voice() = default;
+            virtual ~Voice() = default;
 
-    inline constexpr Volume VOLUME_MIN = -40;
-    inline constexpr Volume VOLUME_DEFAULT = 0;
-    inline constexpr Volume VOLUME_MAX = 12;
+            Voice(const Voice&) = default;
+            Voice& operator=(const Voice&) = default;
+            Voice(Voice&&) = default;
+            Voice& operator=(Voice&&) = default;
 
-    // Decibels (power) to amplitude
-    inline double amplitude(Volume volume) {
-        return std::pow(10.0, double(volume) / 20.0);
+            NoteId note {};
+            InstrumentId instrument {};
+            envelope::Ptr overall_envelope;
+            double amplitude {};
+            double time_on {};
+            double time_off = -std::numeric_limits<double>::infinity();
+        };
+
+        struct VoiceAdd : Voice, allocator::StaticAllocated<VoiceAdd, Storage> {
+            std::vector<envelope::Ptr> partial_envelopes;
+        };
+
+        struct VoicePad : Voice, allocator::StaticAllocated<VoicePad, Storage> {};
+
+        using Ptr = std::unique_ptr<Voice>;
     }
+
+	namespace volume {
+		// Volume type in decibels
+		using Volume = std::int32_t;
+
+		inline constexpr Volume MIN = -40;
+		inline constexpr Volume DEFAULT = 0;
+		inline constexpr Volume MAX = 12;
+
+		// Decibels (power) to amplitude
+		inline double amplitude(Volume volume) {
+			return std::pow(10.0, double(volume) / 20.0);
+		}
+	}
 
     namespace keyboard {
         enum Octave : std::uint32_t {
@@ -311,10 +334,14 @@ namespace syn {
 
         // Raw sound produced at this particular time (without taking into account envelope and other values)
         // This must be at full amplitude, between -1 and 1
-        virtual double sound(double time, double time_on, NoteId note) const noexcept = 0;
+		// Down cast the voice to the known subclass type, if needed
+        virtual double sound(double time, const voice::Voice& voice) const noexcept = 0;
 
         // Note range (inclusive)
         virtual InstrumentRange range() const { return keyboard::ID_FULL_RANGE; }
+
+		// Create a new voice specifically for this instrument
+		virtual voice::Ptr new_voice() const = 0;
 
         // Create a new overall envelope specifically for this instrument
         virtual envelope::Ptr new_overall_envelope() const = 0;
@@ -324,8 +351,10 @@ namespace syn {
         virtual double release_duration() const = 0;
 
         // Deep copy this instrument as a dynamic allocation
-        virtual std::unique_ptr<Instrument> clone() const = 0;
+        virtual std::unique_ptr<const Instrument> clone() const = 0;
     };
+
+	using InstrumentPtr = std::unique_ptr<const Instrument>;
 
     struct LowFrequencyOscillator {
         double frequency {};
@@ -338,7 +367,7 @@ namespace syn {
             Square,
             Triangle,
             Sawtooth,
-            Noise
+            Noise  // Not really an oscillator, but it's okay
         };
 
         double sine(double time, double frequency, double phase);

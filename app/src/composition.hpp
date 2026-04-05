@@ -99,7 +99,7 @@ namespace std::chrono {
 namespace composition {
     struct Composition : seq::Composition {
         // Mixer
-        std::unordered_map<syn::InstrumentId, syn::Volume> instrument_volumes;
+        std::unordered_map<syn::InstrumentId, syn::volume::Volume> instrument_volumes;
 
         // UI
         std::unordered_map<syn::InstrumentId, ui::ColorIndex> instrument_colors;

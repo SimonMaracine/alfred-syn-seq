@@ -66,37 +66,37 @@ namespace preset {
             m_amplitudes = syn::util::amplitudes(std::move(m_amplitudes));
         }
 
-        double RuntimeInstrument::sound(double time, double, syn::NoteId note) const noexcept {
+        double RuntimeInstrument::sound(double time, const syn::voice::Voice& voice) const noexcept {
             double output {};
 
             for (const auto& [i, partial] : m_preset.partials | std::views::enumerate) {
                 switch (partial.oscillator_type) {
                     case syn::oscillator::Type::Sine:
                         if (partial.lfo) {
-                            output += m_amplitudes[i] * syn::oscillator::sine(time, partial.frequency_multiplier * syn::frequency(note), partial.phase, *partial.lfo);
+                            output += m_amplitudes[i] * syn::oscillator::sine(time, partial.frequency_multiplier * syn::frequency(voice.note), partial.phase, *partial.lfo);
                         } else {
-                            output += m_amplitudes[i] * syn::oscillator::sine(time, partial.frequency_multiplier * syn::frequency(note), partial.phase);
+                            output += m_amplitudes[i] * syn::oscillator::sine(time, partial.frequency_multiplier * syn::frequency(voice.note), partial.phase);
                         }
                         break;
                     case syn::oscillator::Type::Square:
                         if (partial.lfo) {
-                            output += m_amplitudes[i] * syn::oscillator::square(time, partial.frequency_multiplier * syn::frequency(note), partial.phase, *partial.lfo);
+                            output += m_amplitudes[i] * syn::oscillator::square(time, partial.frequency_multiplier * syn::frequency(voice.note), partial.phase, *partial.lfo);
                         } else {
-                            output += m_amplitudes[i] * syn::oscillator::square(time, partial.frequency_multiplier * syn::frequency(note), partial.phase);
+                            output += m_amplitudes[i] * syn::oscillator::square(time, partial.frequency_multiplier * syn::frequency(voice.note), partial.phase);
                         }
                         break;
                     case syn::oscillator::Type::Triangle:
                         if (partial.lfo) {
-                            output += m_amplitudes[i] * syn::oscillator::triangle(time, partial.frequency_multiplier * syn::frequency(note), partial.phase, *partial.lfo);
+                            output += m_amplitudes[i] * syn::oscillator::triangle(time, partial.frequency_multiplier * syn::frequency(voice.note), partial.phase, *partial.lfo);
                         } else {
-                            output += m_amplitudes[i] * syn::oscillator::triangle(time, partial.frequency_multiplier * syn::frequency(note), partial.phase);
+                            output += m_amplitudes[i] * syn::oscillator::triangle(time, partial.frequency_multiplier * syn::frequency(voice.note), partial.phase);
                         }
                         break;
                     case syn::oscillator::Type::Sawtooth:
                         if (partial.lfo) {
-                            output += m_amplitudes[i] * syn::oscillator::sawtooth(time, partial.frequency_multiplier * syn::frequency(note), partial.phase, *partial.lfo);
+                            output += m_amplitudes[i] * syn::oscillator::sawtooth(time, partial.frequency_multiplier * syn::frequency(voice.note), partial.phase, *partial.lfo);
                         } else {
-                            output += m_amplitudes[i] * syn::oscillator::sawtooth(time, partial.frequency_multiplier * syn::frequency(note), partial.phase);
+                            output += m_amplitudes[i] * syn::oscillator::sawtooth(time, partial.frequency_multiplier * syn::frequency(voice.note), partial.phase);
                         }
                         break;
                     case syn::oscillator::Type::Noise:
@@ -108,6 +108,10 @@ namespace preset {
 
             return output;
         }
+
+		syn::voice::Ptr RuntimeInstrument::new_voice() const {
+			return std::make_unique<syn::voice::VoiceAdd>();
+		}
 
         syn::envelope::Ptr RuntimeInstrument::new_overall_envelope() const {
             return generic::new_overall_envelope(m_preset);
@@ -139,9 +143,13 @@ namespace preset {
             );
         }
 
-        double RuntimeInstrument::sound(double time, double, syn::NoteId note) const noexcept {
-            return syn::util::sound(time, note, m_sample.get().get(), SIZE, m_preset.frequency);
+        double RuntimeInstrument::sound(double time, const syn::voice::Voice& voice) const noexcept {
+            return syn::util::sound(time, voice.note, m_sample.get().get(), SIZE, m_preset.frequency);
         }
+
+		syn::voice::Ptr RuntimeInstrument::new_voice() const {
+			return std::make_unique<syn::voice::VoicePad>();
+		}
 
         syn::envelope::Ptr RuntimeInstrument::new_overall_envelope() const {
             return generic::new_overall_envelope(m_preset);
