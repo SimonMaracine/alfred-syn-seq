@@ -109,10 +109,10 @@ namespace synthesizer {
 
         // Get the time (not wall clock time)
         double time() const { return m_time; }
-    private:
+    protected:
         void callback_update() noexcept override;
         double callback_sound() const noexcept override;
-
+    private:
         // Time when there is at least one voice
         double m_time_sound {};
     };

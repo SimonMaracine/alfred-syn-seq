@@ -6,6 +6,7 @@
 
 #include "alfred/instruments.hpp"
 #include "alfred/math.hpp"
+#include "alfred/definitions.hpp"
 
 namespace synthesizer {
     static constexpr double TIME_FOR_RESET = 10.0;
@@ -279,7 +280,7 @@ namespace synthesizer {
 
         m_buffer.push_back(math::clamp_sample(sample));
 
-        m_time += 1.0 / double(audio::SAMPLE_FREQUENCY);
+        m_time += 1.0 / double(def::SAMPLE_FREQUENCY);
 
         return sample;
     }

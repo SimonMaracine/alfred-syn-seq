@@ -3,7 +3,7 @@
 #include <sstream>
 #include <cstdint>
 
-#include <alfred/audio.hpp>
+#include <alfred/definitions.hpp>
 #include <alfred/math.hpp>
 
 // https://en.wikipedia.org/wiki/WAV
@@ -37,15 +37,15 @@ namespace encoder {
 
     utility::Buffer encode_wav(std::size_t count, const double* samples) {
         static constexpr std::uint16_t number_channels = 1;
-        static constexpr std::uint32_t frequency = audio::SAMPLE_FREQUENCY;
-        static constexpr std::uint16_t bits_per_sample = audio::BITS_PER_SAMPLE;
+        static constexpr std::uint32_t frequency = def::SAMPLE_FREQUENCY;
+        static constexpr std::uint16_t bits_per_sample = def::BITS_PER_SAMPLE;
         static constexpr std::uint16_t bytes_per_block = number_channels * (bits_per_sample / 8);
         static constexpr std::uint32_t bytes_per_sec = frequency * bytes_per_block;
 
-        const std::size_t DataSize = count * bytes_per_block;
+        const std::size_t data_size = count * bytes_per_block;
 
         RiffChunk riff_chunk;
-        riff_chunk.file_size = std::uint32_t(sizeof(RiffChunk) + sizeof(FormatChunk) + sizeof(DataChunk) + DataSize);
+        riff_chunk.file_size = std::uint32_t(sizeof(RiffChunk) + sizeof(FormatChunk) + sizeof(DataChunk) + data_size);
 
         FormatChunk format_chunk;
         format_chunk.block_size = sizeof(FormatChunk) - 8;
@@ -57,7 +57,7 @@ namespace encoder {
         format_chunk.bits_per_sample = bits_per_sample;
 
         DataChunk data_chunk;
-        data_chunk.data_size = std::uint32_t(DataSize);
+        data_chunk.data_size = std::uint32_t(data_size);
 
         std::ostringstream stream {std::ios_base::binary};
 
@@ -66,11 +66,10 @@ namespace encoder {
         stream.write(reinterpret_cast<char*>(&data_chunk), sizeof(DataChunk));
 
         for (std::size_t i {}; i < count; i++) {
-            const audio::Resolution sample {
-                math::encode_sample<audio::Resolution>(math::clamp_sample(samples[i]))
-            };
+            const def::Resolution sample =
+                math::encode_sample<def::Resolution>(math::clamp_sample(samples[i]));
 
-            stream.write(reinterpret_cast<const char*>(&sample), sizeof(audio::Resolution));
+            stream.write(reinterpret_cast<const char*>(&sample), sizeof(def::Resolution));
         }
 
         if (stream.fail()) {

@@ -15,6 +15,7 @@
 #include <imgui_internal.h>
 #include <alfred/instruments.hpp>
 #include <alfred/math.hpp>
+#include <alfred/definitions.hpp>
 
 #include "imgui.hpp"
 #include "logging.hpp"
@@ -3942,12 +3943,12 @@ namespace application {
         const TimePoint time_start = std::chrono::system_clock::now();
         TimePoint time_last_update = time_start;
 
-        for (int i {}; i < audio::SAMPLE_FREQUENCY / 10; i++) {
+        for (int i {}; i < def::SAMPLE_FREQUENCY / 10; i++) {
             parameters.synthesizer.update();
         }
 
         while (rendering) {
-            player.update(1.0 / double(audio::SAMPLE_FREQUENCY));
+            player.update(1.0 / double(def::SAMPLE_FREQUENCY));
             parameters.synthesizer.update();
 
             assert(player.in_time());
@@ -3969,7 +3970,7 @@ namespace application {
             }
         }
 
-        for (int i {}; i < audio::SAMPLE_FREQUENCY / 2; i++) {
+        for (int i {}; i < def::SAMPLE_FREQUENCY / 2; i++) {
             parameters.synthesizer.update();
         }
 

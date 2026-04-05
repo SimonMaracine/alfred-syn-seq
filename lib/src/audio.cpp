@@ -7,6 +7,7 @@
 #include <SDL3/SDL.h>
 
 #include "alfred/math.hpp"
+#include "alfred/definitions.hpp"
 
 namespace audio {
     Audio::Audio() {
@@ -82,7 +83,7 @@ namespace audio {
         constexpr SDL_AudioSpec audio_specification {
             SDL_AUDIO_S16,
             1,
-            SAMPLE_FREQUENCY
+            def::SAMPLE_FREQUENCY
         };
 
         m_stream = SDL_OpenAudioDeviceStream(
@@ -151,7 +152,7 @@ namespace audio {
 
     thread_local struct {
         std::size_t size {};
-        std::unique_ptr<Resolution[]> buffer;
+        std::unique_ptr<def::Resolution[]> buffer;
     } g_buffer;
 
     void Audio::stream_callback(void* userdata, SDL_AudioStream* stream, int additional_amount, int) noexcept {
@@ -159,24 +160,24 @@ namespace audio {
 
         Audio& self = *static_cast<Audio*>(userdata);
 
-        const std::size_t samples = std::size_t(additional_amount) / sizeof(Resolution);
+        const std::size_t samples = std::size_t(additional_amount) / sizeof(def::Resolution);
 
         if (g_buffer.size < samples) {
             g_buffer.size = samples;
-            g_buffer.buffer = std::make_unique<Resolution[]>(samples);
+            g_buffer.buffer = std::make_unique<def::Resolution[]>(samples);
         }
 
         for (std::size_t i {}; i < samples; i++) {
             self.callback_update();
             self.m_sample = self.callback_sound();
 
-            g_buffer.buffer[i] = math::encode_sample<Resolution>(math::clamp_sample(self.m_sample));
+            g_buffer.buffer[i] = math::encode_sample<def::Resolution>(math::clamp_sample(self.m_sample));
 
-            self.m_time += 1.0 / double(SAMPLE_FREQUENCY);
+            self.m_time += 1.0 / double(def::SAMPLE_FREQUENCY);
         }
 
         // Buffer size could be larger than the samples written!
-        (void) SDL_PutAudioStreamData(stream, g_buffer.buffer.get(), int(samples * sizeof(Resolution)));
+        (void) SDL_PutAudioStreamData(stream, g_buffer.buffer.get(), int(samples * sizeof(def::Resolution)));
     }
 
     AudioLockGuard::AudioLockGuard(const Audio* audio)

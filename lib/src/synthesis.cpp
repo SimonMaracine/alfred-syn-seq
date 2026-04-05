@@ -6,7 +6,7 @@
 #include <cstring>
 #include <cassert>
 
-#include "alfred/audio.hpp"
+#include "alfred/definitions.hpp"
 #include "alfred/math.hpp"
 
 namespace syn {
@@ -21,7 +21,7 @@ namespace syn {
         assert(height >= 0.0 && height <= 1.0);
         assert(duration > 0.0);
 
-        return height / (duration * double(audio::SAMPLE_FREQUENCY));
+        return height / (duration * double(def::SAMPLE_FREQUENCY));
     }
 
     static double exponential(double t, double duration, double top, double bottom) {
@@ -44,7 +44,7 @@ namespace syn {
         assert(top >= 0.0 && top <= 1.0);
         assert(bottom >= 0.0 && bottom <= 1.0);
 
-        static constexpr double eps = 1.0 / double(audio::SAMPLE_FREQUENCY);
+        static constexpr double eps = 1.0 / double(def::SAMPLE_FREQUENCY);
         return std::abs(exponential(t + eps, duration, top, bottom) - exponential(t, duration, top, bottom));
     }
 
@@ -52,7 +52,7 @@ namespace syn {
         assert(duration > 0.0);
         assert(bottom >= 0.0 && bottom <= 1.0);
 
-        static constexpr double eps = 1.0 / double(audio::SAMPLE_FREQUENCY);
+        static constexpr double eps = 1.0 / double(def::SAMPLE_FREQUENCY);
         return std::abs(inverse_exponential(t + eps, duration, bottom) - inverse_exponential(t, duration, bottom));
     }
 
@@ -382,7 +382,7 @@ namespace syn {
         }
 
         double sound(double time, NoteId note, const double* sample, std::size_t size, double frequency) {
-            const double sample_duration = double(size) / double(audio::SAMPLE_FREQUENCY);
+            const double sample_duration = double(size) / double(def::SAMPLE_FREQUENCY);
 
             const double pitch = syn::frequency(note) / frequency;
             double _;

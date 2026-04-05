@@ -20,6 +20,7 @@ target_sources(
         FILES
             "include/alfred/allocator.hpp"
             "include/alfred/audio.hpp"
+            "include/alfred/definitions.hpp"
             "include/alfred/hash.hpp"
             "include/alfred/instruments.hpp"
             "include/alfred/math.hpp"

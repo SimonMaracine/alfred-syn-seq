@@ -1,7 +1,7 @@
 #include "alfred/instruments.hpp"
 
 #include "alfred/math.hpp"
-#include "alfred/audio.hpp"
+#include "alfred/definitions.hpp"
 
 namespace instruments {
     double ShortSynthPiano::sound(double time, const syn::voice::Voice& voice) const noexcept {
@@ -102,7 +102,7 @@ namespace instruments {
         m_sample = syn::padsynth::SampleCopyable(
             syn::padsynth::padsynth(
                 SIZE,
-                audio::SAMPLE_FREQUENCY,
+                def::SAMPLE_FREQUENCY,
                 FREQUENCY,
                 40.0,
                 amplitude_harmonics,
@@ -130,7 +130,7 @@ namespace instruments {
         m_sample = syn::padsynth::SampleCopyable(
             syn::padsynth::padsynth(
                 SIZE,
-                audio::SAMPLE_FREQUENCY,
+                def::SAMPLE_FREQUENCY,
                 FREQUENCY,
                 2.0,
                 amplitude_harmonics,
@@ -143,7 +143,7 @@ namespace instruments {
 
         for (std::size_t i {}; i < SIZE; i++) {
             m_sample.get()[i] *= 1.0 + LFO_DEVIATION * (syn::oscillator::sine(t, LFO_FREQUENCY, 0.0) - 1.0);
-            t += 1.0 / double(audio::SAMPLE_FREQUENCY);
+            t += 1.0 / double(def::SAMPLE_FREQUENCY);
         }
     }
 

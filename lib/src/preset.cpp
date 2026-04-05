@@ -3,7 +3,7 @@
 #include <ranges>
 #include <utility>
 
-#include <alfred/audio.hpp>
+#include <alfred/definitions.hpp>
 
 namespace preset {
     namespace generic {
@@ -132,7 +132,7 @@ namespace preset {
             m_sample = syn::padsynth::SampleCopyable(
                 syn::padsynth::padsynth(
                     SIZE,
-                    audio::SAMPLE_FREQUENCY,
+                    def::SAMPLE_FREQUENCY,
                     m_preset.frequency,
                     m_preset.bandwidth,
                     m_preset.amplitude_harmonics.data(),
