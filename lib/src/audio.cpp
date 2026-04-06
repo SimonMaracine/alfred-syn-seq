@@ -14,14 +14,37 @@ namespace audio {
         if (!SDL_InitSubSystem(SDL_INIT_AUDIO)) {
             throw AudioError(std::format("SDL_InitSubSystem: {}", SDL_GetError()));
         }
+
+        m_initialized = true;
     }
 
     Audio::~Audio() {
+        if (!m_initialized) {
+            return;
+        }
+
         if (m_stream) {
             SDL_DestroyAudioStream(m_stream);
         }
 
         SDL_QuitSubSystem(SDL_INIT_AUDIO);
+    }
+
+    Audio::Audio(Audio&& other) noexcept
+        : m_time(other.m_time),
+        m_stream(std::exchange(other.m_stream, nullptr)),
+        m_devices(std::move(other.m_devices)),
+        m_sample(other.m_sample),
+        m_initialized(std::exchange(other.m_initialized, false)) {}
+
+    Audio& Audio::operator=(Audio&& other) noexcept {
+        m_time = other.m_time;
+        m_stream = std::exchange(other.m_stream, nullptr);
+        m_devices = std::move(other.m_devices);
+        m_sample = other.m_sample;
+        m_initialized = std::exchange(other.m_initialized, false);
+
+        return *this;
     }
 
     const char* Audio::driver() {

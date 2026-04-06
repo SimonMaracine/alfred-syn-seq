@@ -19,8 +19,8 @@ namespace audio {
 
         Audio(const Audio&) = delete;
         Audio& operator=(const Audio&) = delete;
-        Audio(Audio&&) = delete;
-        Audio& operator=(Audio&&) = delete;
+        Audio(Audio&& other) noexcept;
+        Audio& operator=(Audio&& other) noexcept;
 
         using Device = std::pair<unsigned int, const char*>;
         using Devices = std::span<const Device>;
@@ -78,6 +78,7 @@ namespace audio {
         SDL_AudioStream* m_stream {};
         std::vector<Device> m_devices;
         double m_sample {};
+        bool m_initialized {};  // To support moving these audio objects
     };
 
     // Helper class for simpler and exception-safe locking/unlocking
@@ -86,10 +87,10 @@ namespace audio {
         explicit AudioLockGuard(const Audio* audio);
         ~AudioLockGuard() noexcept;
 
-        AudioLockGuard(const AudioLockGuard&) = default;
-        AudioLockGuard& operator=(const AudioLockGuard&) = default;
-        AudioLockGuard(AudioLockGuard&&) = default;
-        AudioLockGuard& operator=(AudioLockGuard&&) = default;
+        AudioLockGuard(const AudioLockGuard&) = delete;
+        AudioLockGuard& operator=(const AudioLockGuard&) = delete;
+        AudioLockGuard(AudioLockGuard&&) = delete;
+        AudioLockGuard& operator=(AudioLockGuard&&) = delete;
     private:
         const Audio* m_audio {};
     };
