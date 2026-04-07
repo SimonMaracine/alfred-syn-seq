@@ -24,7 +24,7 @@ namespace preset {
         std::string name;
         std::string description;
         syn::InstrumentRange range;
-        Envelope envelope;
+        Envelope envelope;  // Overall envelope
     };
 
     // Template for any kind of runtime-defined instrument

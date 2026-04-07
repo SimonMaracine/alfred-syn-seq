@@ -34,13 +34,13 @@ namespace audio {
         // Retrieve the current available audio devices
         Devices devices() const;
 
-        // Interrogate the system for the currently available audio devices
+        // Interrogate the system for the currently available audio devices (update the list)
         void query_devices();
 
         // Open the default audio device
         void open();
 
-        // Open a specific audio
+        // Open a specific audio device
         void open(unsigned int device);
 
         // Close the audio device

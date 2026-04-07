@@ -250,7 +250,7 @@ namespace syn {
         // A voice represents a particular sound made by some instrument at some point in time in the synthesizer
         // There can be multiple voices with the same instrument provided that their note (pitch) is different
         // A synthesizer then stores and processes multiple voices in order to produce a sample of sound output
-		// A voice is abstract and it is subclassed in order to provide synthesis method specific data
+        // A voice is abstract and it is subclassed in order to provide synthesis method specific data
         struct Voice {  // TODO virtual update method
             Voice() = default;
             virtual ~Voice() = default;
@@ -277,19 +277,19 @@ namespace syn {
         using Ptr = std::unique_ptr<Voice>;
     }
 
-	namespace volume {
-		// Volume type in decibels
-		using Volume = std::int32_t;
+    namespace volume {
+        // Volume type in decibels
+        using Volume = std::int32_t;
 
-		inline constexpr Volume MIN = -40;
-		inline constexpr Volume DEFAULT = 0;
-		inline constexpr Volume MAX = 12;
+        inline constexpr Volume MIN = -40;
+        inline constexpr Volume DEFAULT = 0;
+        inline constexpr Volume MAX = 12;
 
-		// Decibels (power) to amplitude
-		inline double amplitude(Volume volume) {
-			return std::pow(10.0, double(volume) / 20.0);
-		}
-	}
+        // Decibels (power) to amplitude
+        inline double amplitude(Volume volume) {
+            return std::pow(10.0, double(volume) / 20.0);
+        }
+    }
 
     namespace keyboard {
         enum Octave : std::uint32_t {
@@ -334,14 +334,14 @@ namespace syn {
 
         // Raw sound produced at this particular time (without taking into account envelope and other values)
         // This must be at full amplitude, between -1 and 1
-		// Down cast the voice to the known subclass type, if needed
+        // Down cast the voice to the known subclass type, if needed
         virtual double sound(double time, const voice::Voice& voice) const noexcept = 0;
 
         // Note range (inclusive)
         virtual InstrumentRange range() const { return keyboard::ID_FULL_RANGE; }
 
-		// Create a new voice specifically for this instrument
-		virtual voice::Ptr new_voice() const = 0;
+        // Create a new voice specifically for this instrument
+        virtual voice::Ptr new_voice() const = 0;
 
         // Create a new overall envelope specifically for this instrument
         virtual envelope::Ptr new_overall_envelope() const = 0;
@@ -354,7 +354,7 @@ namespace syn {
         virtual std::unique_ptr<const Instrument> clone() const = 0;
     };
 
-	using InstrumentPtr = std::unique_ptr<const Instrument>;
+    using InstrumentPtr = std::unique_ptr<const Instrument>;
 
     struct LowFrequencyOscillator {
         double frequency {};
@@ -433,8 +433,8 @@ namespace syn {
             ~SampleCopyable() = default;
             SampleCopyable(const SampleCopyable& other);
             SampleCopyable& operator=(const SampleCopyable& other);
-            SampleCopyable(SampleCopyable&&) noexcept = default;
-            SampleCopyable& operator=(SampleCopyable&&) noexcept = default;
+            SampleCopyable(SampleCopyable&&) = default;
+            SampleCopyable& operator=(SampleCopyable&&) = default;
 
             const Sample& get() const { return m_sample; }
             Sample& get() { return m_sample; }

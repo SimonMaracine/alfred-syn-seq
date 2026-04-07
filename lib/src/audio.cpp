@@ -183,7 +183,7 @@ namespace audio {
 
         Audio& self = *static_cast<Audio*>(userdata);
 
-        const std::size_t samples = std::size_t(additional_amount) / sizeof(def::Resolution);
+        const auto samples = std::size_t(additional_amount) / sizeof(def::Resolution);
 
         if (g_buffer.size < samples) {
             g_buffer.size = samples;
