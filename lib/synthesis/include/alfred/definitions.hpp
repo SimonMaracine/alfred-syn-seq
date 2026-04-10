@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace def {
+namespace alfred::def {
     inline constexpr int SAMPLE_FREQUENCY = 44100;
     inline constexpr int BITS_PER_SAMPLE = 16;
 

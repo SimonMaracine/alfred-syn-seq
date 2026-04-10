@@ -6,7 +6,7 @@
 
 // Fowler-Noll-Vo algorithm, FNV-1a more exactly
 
-namespace hash {
+namespace alfred::hash {
     namespace internal {
         struct Variant32 {
             using Type = std::uint32_t;

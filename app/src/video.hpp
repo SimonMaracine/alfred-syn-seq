@@ -11,7 +11,7 @@ union SDL_Event;
 struct SDL_Window;
 struct SDL_Renderer;
 
-namespace video {
+namespace alfred::video {
     inline constexpr int DEFAULT_WIDTH = 1280;
     inline constexpr int DEFAULT_HEIGHT = 720;
     inline constexpr auto MAX_DELTA = 40ull;  // Milliseconds (20 FPS)

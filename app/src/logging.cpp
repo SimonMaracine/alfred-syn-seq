@@ -13,7 +13,7 @@
 
 #include "utility.hpp"
 
-namespace logging {
+namespace alfred::logging {
     static struct {
         std::ofstream stream;
         std::mutex mutex;

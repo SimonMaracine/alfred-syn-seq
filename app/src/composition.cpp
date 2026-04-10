@@ -10,7 +10,7 @@
 #include <cereal/types/string.hpp>
 #include <cereal/types/variant.hpp>
 
-namespace composition {
+namespace alfred::composition {
     void export_composition(const Composition& composition, utility::Buffer& buffer) {
         std::ostringstream stream {std::ios_base::binary};
         stream.exceptions(std::ios_base::failbit);

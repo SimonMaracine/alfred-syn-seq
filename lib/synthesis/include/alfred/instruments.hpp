@@ -17,7 +17,7 @@
 #define ALFRED_INSTRUMENT_DESCRIPTION_UNFINISHED() \
     const char* description() const override { return "This instrument/preset is unfinished"; }
 
-namespace instruments {
+namespace alfred::instruments {
     class ShortSynthPiano : public syn::Instrument {
     public:
         ALFRED_INSTRUMENT_STATIC_NAME_ID("Short Synth Piano")

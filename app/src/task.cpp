@@ -2,7 +2,7 @@
 
 #include <SDL3/SDL.h>
 
-namespace task {
+namespace alfred::task {
     void AsyncTask::finish() {
         m_thread.request_stop();
     }

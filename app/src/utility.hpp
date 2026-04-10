@@ -5,7 +5,7 @@
 
 #include "error.hpp"
 
-namespace utility {
+namespace alfred::utility {
     using Buffer = std::string;
 
     void read_file(const std::filesystem::path& path, Buffer& buffer);

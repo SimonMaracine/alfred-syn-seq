@@ -7,7 +7,7 @@
 #include <cereal/types/set.hpp>
 #include <cereal/types/string.hpp>
 
-namespace data {
+namespace alfred::data {
     void export_data(const Data& data, utility::Buffer& buffer) {
         std::ostringstream stream {std::ios_base::binary};
         stream.exceptions(std::ios_base::failbit);

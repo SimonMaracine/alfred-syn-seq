@@ -3,7 +3,7 @@
 #include <cmath>
 #include <cstring>
 
-namespace ui {
+namespace alfred::ui {
     static void set_font(float scale) {
         const float font_size = std::floor(FONT_SIZE * scale);
 

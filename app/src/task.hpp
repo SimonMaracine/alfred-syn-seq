@@ -8,7 +8,7 @@
 #include <forward_list>
 #include <mutex>
 
-namespace task {
+namespace alfred::task {
     class AsyncTask;
     class TaskManager;
 

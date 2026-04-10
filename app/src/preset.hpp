@@ -10,7 +10,7 @@
 #include "utility.hpp"
 #include "error.hpp"
 
-namespace syn {
+namespace alfred::syn {
     template<typename Archive>
     void serialize(Archive& archive, LowFrequencyOscillator& self, const std::uint32_t) {
         archive(
@@ -44,7 +44,7 @@ namespace syn {
     }
 }
 
-namespace preset {
+namespace alfred::preset {
     template<typename Archive>
     void serialize(Archive& archive, Envelope& self, const std::uint32_t) {
         archive(
@@ -140,7 +140,7 @@ namespace preset {
     }
 }
 
-namespace preset {
+namespace alfred::preset {
     void export_preset(const add::Preset& preset, utility::Buffer& buffer);
     void import_preset(add::Preset& preset, const utility::Buffer& buffer);
     void export_preset(const pad::Preset& preset, utility::Buffer& buffer);
@@ -153,4 +153,4 @@ namespace preset {
     };
 }
 
-CEREAL_CLASS_VERSION(preset::add::Preset, 1)
+CEREAL_CLASS_VERSION(alfred::preset::add::Preset, 1)

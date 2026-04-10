@@ -11,7 +11,7 @@
 
 // Functions and definitions used by the UI of the application
 
-namespace ui {
+namespace alfred::ui {
     inline constexpr float FONT_SIZE = 13.0f;
 
     enum ColorScheme : unsigned int {

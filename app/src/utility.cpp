@@ -5,7 +5,7 @@
 
 #include <SDL3/SDL.h>
 
-namespace utility {
+namespace alfred::utility {
     void read_file(const std::filesystem::path& path, Buffer& buffer) {
         std::ifstream stream {path, std::ios_base::binary};
 

@@ -8,7 +8,7 @@
 
 // https://en.wikipedia.org/wiki/WAV
 
-namespace encoder {
+namespace alfred::encoder {
     struct RiffChunk {
         [[maybe_unused]] std::uint8_t file_type_bloc_id[4] { 'R', 'I', 'F', 'F' };
         std::uint32_t file_size {};

@@ -11,7 +11,7 @@
 
 // Application settings/options + serialization
 
-namespace data {
+namespace alfred::data {
     struct Data {
         bool show_keyboard = true;
         ui::ColorScheme color_scheme = ui::ColorSchemeDark;
@@ -34,4 +34,4 @@ namespace data {
     };
 }
 
-CEREAL_CLASS_VERSION(data::Data, 1)
+CEREAL_CLASS_VERSION(alfred::data::Data, 1)

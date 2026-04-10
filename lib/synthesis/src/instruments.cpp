@@ -3,7 +3,7 @@
 #include "alfred/math.hpp"
 #include "alfred/definitions.hpp"
 
-namespace instruments {
+namespace alfred::instruments {
     double ShortSynthPiano::sound(double time, const syn::voice::Voice& voice) const noexcept {
         static constexpr auto amp = syn::util::amplitudes(std::array { 1.0, 2.0, 4.0, 25.0 });
 

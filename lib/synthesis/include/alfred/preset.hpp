@@ -11,7 +11,7 @@
 
 // Runtime dynamic instruments/presets
 
-namespace preset {
+namespace alfred::preset {
     using EnvelopeDescription = std::variant<syn::envelope::DescriptionAdsr, syn::envelope::DescriptionAdr, syn::envelope::DescriptionNull>;
 
     struct Envelope {

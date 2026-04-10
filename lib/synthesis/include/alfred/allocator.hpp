@@ -7,7 +7,7 @@
 
 // Global static stateless allocator
 
-namespace allocator {
+namespace alfred::allocator {
     template<std::size_t StorageSize, std::size_t BlockSize, std::size_t BlockAlignment>
     struct StaticAllocatorStorage {
     private:

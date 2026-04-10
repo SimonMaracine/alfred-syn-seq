@@ -5,7 +5,7 @@
 
 #include <SDL3/SDL.h>
 
-namespace image {
+namespace alfred::image {
     SurfaceRef::SurfaceRef(SDL_Surface* surface)
         : m_surface(surface) {}
 

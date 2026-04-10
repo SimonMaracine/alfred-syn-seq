@@ -7,7 +7,7 @@
 
 struct fftw_plan_s;
 
-namespace math {
+namespace alfred::math {
     inline constexpr double PI = std::numbers::pi;
     inline constexpr double TWO_PI = 2.0 * std::numbers::pi;
     inline constexpr double SMALL = 1.0e-6;

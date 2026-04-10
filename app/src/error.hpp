@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-namespace error {
+namespace alfred::error {
     struct Error : std::runtime_error {
         using std::runtime_error::runtime_error;
 

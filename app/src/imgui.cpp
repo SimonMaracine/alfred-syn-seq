@@ -5,7 +5,7 @@
 #include <backends/imgui_impl_sdlrenderer3.h>
 #include <backends/imgui_impl_sdl3.h>
 
-namespace imgui {
+namespace alfred::imgui {
     void initialize(SDL_Window* window, SDL_Renderer* renderer) {
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();

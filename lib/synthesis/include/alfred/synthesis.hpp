@@ -12,7 +12,7 @@
 
 #include "alfred/allocator.hpp"
 
-namespace syn {
+namespace alfred::syn {
     namespace envelope {
         using Storage = allocator::StaticAllocatorStorage<128, 96, 8>;
 

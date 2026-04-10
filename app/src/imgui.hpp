@@ -4,7 +4,7 @@ struct SDL_Window;
 struct SDL_Renderer;
 union SDL_Event;
 
-namespace imgui {
+namespace alfred::imgui {
     void initialize(SDL_Window* window, SDL_Renderer* renderer);
     void uninitialize();
     void process_event(const SDL_Event* event);

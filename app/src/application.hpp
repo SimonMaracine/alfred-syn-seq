@@ -9,7 +9,7 @@
 #include <functional>
 
 #include <imgui.h>
-#include <alfred/synthesizer.hpp>
+#include <alfred/real_synthesizer.hpp>
 
 #include "video.hpp"
 #include "sequencer.hpp"
@@ -21,7 +21,7 @@
 #include "flat_set.hpp"
 #include "preset.hpp"
 
-namespace application {
+namespace alfred::application {
     using MeasureIter = seq::MeasureIter;
     using NoteIter = seq::NoteIter;
     using ProvenanceNote = seq::ProvenanceNote<>;

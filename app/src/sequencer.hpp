@@ -18,7 +18,7 @@
 
 // Everything about sequencing and modeling musical concepts
 
-namespace seq {
+namespace alfred::seq {
     using Beats = std::uint32_t;
 
     enum Value : std::uint32_t {

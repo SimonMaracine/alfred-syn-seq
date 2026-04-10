@@ -10,7 +10,7 @@
 #include <cereal/types/optional.hpp>
 #include <cereal/types/utility.hpp>
 
-namespace preset {
+namespace alfred::preset {
     namespace generic {
         template<typename Preset>
         static void export_preset(const Preset& preset, utility::Buffer& buffer) {

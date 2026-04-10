@@ -6,7 +6,7 @@
 
 #include <alfred/instruments.hpp>
 
-namespace seq {
+namespace alfred::seq {
     std::uint32_t Composition::size() const {
         std::uint32_t steps {};
 

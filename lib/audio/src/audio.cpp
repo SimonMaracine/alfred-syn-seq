@@ -9,7 +9,7 @@
 #include "alfred/math.hpp"
 #include "alfred/definitions.hpp"
 
-namespace audio {
+namespace alfred::audio {
     Audio::Audio() {
         if (!SDL_InitSubSystem(SDL_INIT_AUDIO)) {
             throw AudioError(std::format("SDL_InitSubSystem: {}", SDL_GetError()));

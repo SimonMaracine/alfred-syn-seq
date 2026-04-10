@@ -10,7 +10,7 @@
 
 struct SDL_AudioStream;
 
-namespace audio {
+namespace alfred::audio {
     // Represents an audio stream and device, i.e. speakers
     class Audio {
     public:

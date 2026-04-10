@@ -8,7 +8,7 @@
 
 #include "error.hpp"
 
-namespace logging {
+namespace alfred::logging {
     enum class Severity {
         Debug,
         Information,
@@ -103,8 +103,8 @@ namespace logging {
     template<typename... Args>
     critical(std::format_string<Args...> fmt, Args&&... args) -> critical<Args...>;
 
-    struct LoggingError : ::error::Error {
-        using ::error::Error::Error;
+    struct LoggingError : ::alfred::error::Error {
+        using Error::Error;
 
         ALFRED_ERROR_NAME(LoggingError)
     };

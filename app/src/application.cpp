@@ -31,7 +31,7 @@
 using namespace std::chrono_literals;
 using namespace std::string_literals;
 
-namespace application {
+namespace alfred::application {
     static constexpr ImVec2 STEP_SIZE {1.0f / ui::FONT_SIZE, 18.0f / ui::FONT_SIZE};
     static constexpr float COMPOSITION_LEFT = 40.0f / ui::FONT_SIZE;
     static constexpr float COMPOSITION_HEIGHT = STEP_SIZE.y * 12.0f * float(syn::keyboard::OCTAVES) + STEP_SIZE.y * float(syn::keyboard::EXTRA);

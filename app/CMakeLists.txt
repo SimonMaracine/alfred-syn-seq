@@ -78,7 +78,7 @@ add_executable(
 
 target_include_directories(alfred_app PRIVATE "src" "${CMAKE_CURRENT_BINARY_DIR}/include")
 
-target_link_libraries(alfred_app PRIVATE SDL3::SDL3 cereal imgui alfred_lib)
+target_link_libraries(alfred_app PRIVATE SDL3::SDL3 cereal imgui alfred_lib_synthesis alfred_lib_audio)
 
 set_target_cpp_mode(alfred_app)
 set_target_warnings(alfred_app)

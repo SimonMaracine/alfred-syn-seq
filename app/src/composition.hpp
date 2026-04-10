@@ -15,7 +15,7 @@
 
 // Composition data + serialization
 
-namespace seq {
+namespace alfred::seq {
     template<typename Archive>
     void save(Archive& archive, const Tempo& self, const std::uint32_t) {
         archive(Tempo::Type(self));
@@ -96,7 +96,7 @@ namespace std::chrono {
     }
 }
 
-namespace composition {
+namespace alfred::composition {
     struct Composition : seq::Composition {
         // Mixer
         std::unordered_map<syn::InstrumentId, syn::volume::Volume> instrument_volumes;
@@ -144,6 +144,6 @@ namespace composition {
     };
 }
 
-CEREAL_CLASS_VERSION(composition::Composition, 1)
-CEREAL_CLASS_VERSION(seq::Note, 1)
-CEREAL_SPECIALIZE_FOR_ALL_ARCHIVES(composition::Composition, cereal::specialization::member_load_save)
+CEREAL_CLASS_VERSION(alfred::composition::Composition, 1)
+CEREAL_CLASS_VERSION(alfred::seq::Note, 1)
+CEREAL_SPECIALIZE_FOR_ALL_ARCHIVES(alfred::composition::Composition, cereal::specialization::member_load_save)

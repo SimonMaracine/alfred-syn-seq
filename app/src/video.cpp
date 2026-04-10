@@ -9,7 +9,7 @@
 #include "image.hpp"
 #include "logging.hpp"
 
-namespace video {
+namespace alfred::video {
     static constexpr unsigned long long IMGUI_UPDATE_INTERVAL = 16 * SDL_NS_PER_MS;
 
     Video::Video() {

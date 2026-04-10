@@ -9,7 +9,7 @@
 #include "alfred/definitions.hpp"
 #include "alfred/math.hpp"
 
-namespace syn {
+namespace alfred::syn {
     static constexpr double eps(double duration) {
         assert(duration > 0.0);
 

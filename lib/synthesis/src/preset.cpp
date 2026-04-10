@@ -5,7 +5,7 @@
 
 #include "alfred/definitions.hpp"
 
-namespace preset {
+namespace alfred::preset {
     namespace generic {
         template<typename TypeLinear, typename Type, std::size_t TypeIndex>
         static syn::envelope::Ptr new_envelope(const Envelope& envelope) {

@@ -4,7 +4,7 @@
 
 // https://fftw.org/
 
-namespace math {
+namespace alfred::math {
     void normalize(double* samples, std::size_t size) {
         double max {};
 

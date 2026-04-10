@@ -10,6 +10,8 @@
 #include "error.hpp"
 #include "version.hpp"
 
+using namespace alfred;
+
 static const char* sample_frames(int argc, char** argv) {
     if (argc > 1) {
         if (std::strcmp(argv[1], "--low-latency") == 0) {
