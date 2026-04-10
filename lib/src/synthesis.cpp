@@ -303,6 +303,26 @@ namespace syn {
         }
     }
 
+    namespace voice {
+        void VoiceAdd::note_on(double time) {
+            for (const auto& envelope : partial_envelopes) {
+                envelope->note_on(time);
+            }
+        }
+
+        void VoiceAdd::note_off(double time) {
+            for (const auto& envelope : partial_envelopes) {
+                envelope->note_off(time);
+            }
+        }
+
+        void VoiceAdd::update(double time) {
+            for (const auto& envelope : partial_envelopes) {
+                envelope->update(time);
+            }
+        }
+    }
+
     namespace oscillator {
         double sine(double time, double frequency, double phase) {
             return std::sin(math::w(frequency) * time + phase);

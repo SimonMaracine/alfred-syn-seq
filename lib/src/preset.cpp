@@ -7,25 +7,41 @@
 
 namespace preset {
     namespace generic {
+        template<typename TypeLinear, typename Type, std::size_t TypeIndex>
+        static syn::envelope::Ptr new_envelope(const Envelope& envelope) {
+            switch (envelope.type) {
+                case syn::envelope::Type::Linear:
+                    return std::make_unique<TypeLinear>(std::get<TypeIndex>(envelope.description));
+                case syn::envelope::Type::Exponential:
+                    return std::make_unique<Type>(std::get<TypeIndex>(envelope.description));
+            }
+
+            std::unreachable();
+        }
+
         template<typename Preset>
         static syn::envelope::Ptr new_overall_envelope(const Preset& preset) {
             switch (preset.envelope.description.index()) {
                 case 0:
-                    switch (preset.envelope.type) {
-                        case syn::envelope::Type::Linear:
-                            return std::make_unique<syn::envelope::AdsrLinear>(std::get<0>(preset.envelope.description));
-                        case syn::envelope::Type::Exponential:
-                            return std::make_unique<syn::envelope::Adsr>(std::get<0>(preset.envelope.description));
-                    }
-                    std::unreachable();
+                    return new_envelope<syn::envelope::AdsrLinear, syn::envelope::Adsr, 0>(preset.envelope);
                 case 1:
-                    switch (preset.envelope.type) {
-                        case syn::envelope::Type::Linear:
-                            return std::make_unique<syn::envelope::AdrLinear>(std::get<1>(preset.envelope.description));
-                        case syn::envelope::Type::Exponential:
-                            return std::make_unique<syn::envelope::Adr>(std::get<1>(preset.envelope.description));
-                    }
-                    std::unreachable();
+                    return new_envelope<syn::envelope::AdrLinear, syn::envelope::Adr, 1>(preset.envelope);
+                case 2:
+                    return new_envelope<syn::envelope::Null, syn::envelope::Null, 2>(preset.envelope);
+            }
+
+            std::unreachable();
+        }
+
+        template<typename Preset>
+        static syn::envelope::Ptr new_partial_envelope(const Preset& preset, std::size_t index) {
+            switch (preset.partials.at(index).envelope.description.index()) {
+                case 0:
+                    return new_envelope<syn::envelope::AdsrLinear, syn::envelope::Adsr, 0>(preset.partials.at(index).envelope);
+                case 1:
+                    return new_envelope<syn::envelope::AdrLinear, syn::envelope::Adr, 1>(preset.partials.at(index).envelope);
+                case 2:
+                    return new_envelope<syn::envelope::Null, syn::envelope::Null, 2>(preset.partials.at(index).envelope);
             }
 
             std::unreachable();
@@ -38,6 +54,8 @@ namespace preset {
                     return std::get<0>(preset.envelope.description).duration_attack;
                 case 1:
                     return std::get<1>(preset.envelope.description).duration_attack;
+                case 2:
+                    return 0.0;
             }
 
             std::unreachable();
@@ -50,6 +68,8 @@ namespace preset {
                     return std::get<0>(preset.envelope.description).duration_release;
                 case 1:
                     return std::get<1>(preset.envelope.description).duration_release;
+                case 2:
+                    return 0.0;
             }
 
             std::unreachable();
@@ -69,30 +89,33 @@ namespace preset {
 #define ALFRED_PRESET_OSCILLATOR(OSCILLATOR_FUNCTION) \
     [this, time, &voice, i, &partial] { \
         if (partial.lfo) { \
-            return m_amplitudes[i] * OSCILLATOR_FUNCTION(time, partial.frequency_multiplier * syn::frequency(voice.note), partial.phase, *partial.lfo); \
+            return m_amplitudes[std::size_t(i)] * OSCILLATOR_FUNCTION(time, partial.frequency_multiplier * syn::frequency(voice.note), partial.phase, *partial.lfo); \
         } \
-        return m_amplitudes[i] * OSCILLATOR_FUNCTION(time, partial.frequency_multiplier * syn::frequency(voice.note), partial.phase); \
+        return m_amplitudes[std::size_t(i)] * OSCILLATOR_FUNCTION(time, partial.frequency_multiplier * syn::frequency(voice.note), partial.phase); \
     }()
 
         double RuntimeInstrument::sound(double time, const syn::voice::Voice& voice) const noexcept {
             double output {};
+            const auto& voice_add = static_cast<const syn::voice::VoiceAdd&>(voice);
 
             for (const auto& [i, partial] : m_preset.partials | std::views::enumerate) {
+                const double amplitude = voice_add.partial_envelopes.at(std::size_t(i))->value();
+
                 switch (partial.oscillator_type) {
                     case syn::oscillator::Type::Sine:
-                        output += ALFRED_PRESET_OSCILLATOR(syn::oscillator::sine);
+                        output += amplitude * ALFRED_PRESET_OSCILLATOR(syn::oscillator::sine);
                         break;
                     case syn::oscillator::Type::Square:
-                        output += ALFRED_PRESET_OSCILLATOR(syn::oscillator::square);
+                        output += amplitude * ALFRED_PRESET_OSCILLATOR(syn::oscillator::square);
                         break;
                     case syn::oscillator::Type::Triangle:
-                        output += ALFRED_PRESET_OSCILLATOR(syn::oscillator::triangle);
+                        output += amplitude * ALFRED_PRESET_OSCILLATOR(syn::oscillator::triangle);
                         break;
                     case syn::oscillator::Type::Sawtooth:
-                        output += ALFRED_PRESET_OSCILLATOR(syn::oscillator::sawtooth);
+                        output += amplitude * ALFRED_PRESET_OSCILLATOR(syn::oscillator::sawtooth);
                         break;
                     case syn::oscillator::Type::Noise:
-                        output += m_amplitudes[i] * syn::noise();
+                        output += amplitude * m_amplitudes[std::size_t(i)] * syn::noise();
                         break;
 
                 }
@@ -102,7 +125,16 @@ namespace preset {
         }
 
         syn::voice::Ptr RuntimeInstrument::new_voice() const {
-            return std::make_unique<syn::voice::VoiceAdd>();
+            std::vector<syn::envelope::Ptr> partial_envelopes;
+
+            for (std::size_t i {}; i < m_preset.partials.size(); i++) {
+                partial_envelopes.push_back(generic::new_partial_envelope(m_preset, i));
+            }
+
+            auto voice = std::make_unique<syn::voice::VoiceAdd>();
+            voice->partial_envelopes = std::move(partial_envelopes);
+
+            return voice;
         }
 
         syn::envelope::Ptr RuntimeInstrument::new_overall_envelope() const {

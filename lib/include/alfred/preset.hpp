@@ -12,7 +12,7 @@
 // Runtime dynamic instruments/presets
 
 namespace preset {
-    using EnvelopeDescription = std::variant<syn::envelope::DescriptionAdsr, syn::envelope::DescriptionAdr>;
+    using EnvelopeDescription = std::variant<syn::envelope::DescriptionAdsr, syn::envelope::DescriptionAdr, syn::envelope::DescriptionNull>;
 
     struct Envelope {
         EnvelopeDescription description;
@@ -54,7 +54,7 @@ namespace preset {
             double amplitude_divisor = 1.0;
             double phase {};
             std::optional<syn::LowFrequencyOscillator> lfo;
-            std::optional<Envelope> envelope;  // TODO use this
+            Envelope envelope;
         };
 
         struct Preset : BasePreset {
@@ -66,7 +66,7 @@ namespace preset {
             explicit RuntimeInstrument(Preset preset);
 
             double sound(double time, const syn::voice::Voice& voice) const noexcept override;
-			syn::voice::Ptr new_voice() const override;  // TODO implement this
+			syn::voice::Ptr new_voice() const override;
 			syn::envelope::Ptr new_overall_envelope() const override;
             double attack_duration() const override;
             double release_duration() const override;
@@ -93,7 +93,7 @@ namespace preset {
             explicit RuntimeInstrument(Preset preset);
 
             double sound(double time, const syn::voice::Voice& voice) const noexcept override;
-			syn::voice::Ptr new_voice() const override;  // TODO implement this
+			syn::voice::Ptr new_voice() const override;
             syn::envelope::Ptr new_overall_envelope() const override;
             double attack_duration() const override;
             double release_duration() const override;

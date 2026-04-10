@@ -38,6 +38,9 @@ namespace syn {
                 cereal::make_nvp("duration_release", self.duration_release)
             );
         }
+
+        template<typename Archive>
+        void serialize(Archive&, DescriptionNull&, const std::uint32_t) {}
     }
 }
 

@@ -59,6 +59,8 @@ namespace syn {
             double duration_release = 0.2;
         };
 
+        struct DescriptionNull {};
+
         class AdsrLinear : public Envelope, public allocator::StaticAllocated<AdsrLinear, Storage> {
         public:
             explicit AdsrLinear(const DescriptionAdsr& description = {})
@@ -173,6 +175,18 @@ namespace syn {
             double m_value_note_off {};
         };
 
+        // Used by allocated and created envelopes that should not actually change the value
+        class Null : public Envelope, public allocator::StaticAllocated<Null, Storage> {
+        public:
+            explicit Null(const DescriptionNull& = {}) {}
+
+            void note_on(double) override {}
+            void note_off(double) override {}
+            void update(double) override {  }
+            double value() const override { return 1.0; }
+            bool done() const override { return true; }
+        };
+
         using Ptr = std::unique_ptr<Envelope>;
     }
 
@@ -250,8 +264,8 @@ namespace syn {
         // A voice represents a particular sound made by some instrument at some point in time in the synthesizer
         // There can be multiple voices with the same instrument provided that their note (pitch) is different
         // A synthesizer then stores and processes multiple voices in order to produce a sample of sound output
-        // A voice is abstract and it is subclassed in order to provide synthesis method specific data
-        struct Voice {  // TODO virtual update method
+        // A voice is abstract; it is subclassed in order to provide synthesis method specific data
+        struct Voice {
             Voice() = default;
             virtual ~Voice() = default;
 
@@ -259,6 +273,11 @@ namespace syn {
             Voice& operator=(const Voice&) = delete;
             Voice(Voice&&) = default;
             Voice& operator=(Voice&&) = default;
+
+            // Generic methods used by subclasses to execute stuff with their own data
+            virtual void note_on(double time) = 0;
+            virtual void note_off(double time) = 0;
+            virtual void update(double time) = 0;
 
             NoteId note {};
             InstrumentId instrument {};
@@ -270,9 +289,17 @@ namespace syn {
 
         struct VoiceAdd : Voice, allocator::StaticAllocated<VoiceAdd, Storage> {
             std::vector<envelope::Ptr> partial_envelopes;
+
+            void note_on(double time) override;
+            void note_off(double time) override;
+            void update(double time) override;
         };
 
-        struct VoicePad : Voice, allocator::StaticAllocated<VoicePad, Storage> {};
+        struct VoicePad : Voice, allocator::StaticAllocated<VoicePad, Storage> {
+            void note_on(double) override {}
+            void note_off(double) override {}
+            void update(double) override {}
+        };
 
         using Ptr = std::unique_ptr<Voice>;
     }

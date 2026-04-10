@@ -1718,7 +1718,49 @@ namespace application {
         });
     }
 
-    void Application::create_instrument_base(ui::BasePreset& preset) {
+    void Application::create_instrument_envelope(ui::preset::Envelope& envelope) {
+        if (envelope.type != ui::preset::EnvelopeTypeNull) {
+            if (ImGui::InputDouble("Attack", &envelope.description.duration_attack, 0.0, 0.0, "%.3f")) {
+                envelope.description.duration_attack = std::clamp(envelope.description.duration_attack, 0.0, 10.0);
+            }
+
+            if (ImGui::InputDouble("Decay", &envelope.description.duration_decay, 0.0, 0.0, "%.3f")) {
+                envelope.description.duration_decay = std::clamp(envelope.description.duration_decay, 0.0, 10.0);
+            }
+
+            if (ImGui::InputDouble("Release", &envelope.description.duration_release, 0.0, 0.0, "%.3f")) {
+                envelope.description.duration_release = std::clamp(envelope.description.duration_release, 0.0, 10.0);
+            }
+        }
+
+        switch (envelope.type) {
+            case ui::preset::EnvelopeTypeAdsrLinear:
+            case ui::preset::EnvelopeTypeAdsrExponential:
+                if (ImGui::InputDouble("Sustain", &envelope.description.value_sustain, 0.0, 0.0, "%.3f")) {
+                    envelope.description.value_sustain = std::clamp(envelope.description.value_sustain, 0.0, 1.0);
+                }
+                break;
+            case ui::preset::EnvelopeTypeAdrLinear:
+            case ui::preset::EnvelopeTypeAdrExponential:
+                break;
+            case ui::preset::EnvelopeTypeNull:
+                break;
+        }
+
+        constexpr const char* ENVELOPE_TYPE[] { "ADSR Linear", "ADSR Exponential", "ADR Linear", "ADR Exponential", "Null" };
+
+        if (ImGui::BeginCombo("Envelope Type", ENVELOPE_TYPE[envelope.type])) {
+            for (std::size_t i {}; i < std::size(ENVELOPE_TYPE); i++) {
+                if (ImGui::Selectable(ENVELOPE_TYPE[i], envelope.type == int(i))) {
+                    envelope.type = ui::preset::EnvelopeType(i);
+                }
+            }
+
+            ImGui::EndCombo();
+        }
+    }
+
+    void Application::create_instrument_base(ui::preset::BasePreset& preset) {
         ImGui::InputText("Name", preset.name, sizeof(preset.name));
 
         ImGui::SetItemTooltip("Has to be unique across all instruments in a synthesizer's storage");
@@ -1731,51 +1773,18 @@ namespace application {
             preset.range[0] = std::min(preset.range[0], preset.range[1]);
         }
 
-        if (ImGui::InputDouble("Attack", &preset.envelope_description.duration_attack, 0.0, 0.0, "%.3f")) {
-            preset.envelope_description.duration_attack = std::clamp(preset.envelope_description.duration_attack, 0.0, 10.0);
-        }
-
-        if (ImGui::InputDouble("Decay", &preset.envelope_description.duration_decay, 0.0, 0.0, "%.3f")) {
-            preset.envelope_description.duration_decay = std::clamp(preset.envelope_description.duration_decay, 0.0, 10.0);
-        }
-
-        if (ImGui::InputDouble("Release", &preset.envelope_description.duration_release, 0.0, 0.0, "%.3f")) {
-            preset.envelope_description.duration_release = std::clamp(preset.envelope_description.duration_release, 0.0, 10.0);
-        }
-
-        switch (preset.envelope_type) {
-            case ui::PresetAdd::EnvelopeTypeAdsrLinear:
-            case ui::PresetAdd::EnvelopeTypeAdsrExponential:
-                if (ImGui::InputDouble("Sustain", &preset.envelope_description.value_sustain, 0.0, 0.0, "%.3f")) {
-                    preset.envelope_description.value_sustain = std::clamp(preset.envelope_description.value_sustain, 0.0, 1.0);
-                }
-                break;
-            case ui::PresetAdd::EnvelopeTypeAdrLinear:
-            case ui::PresetAdd::EnvelopeTypeAdrExponential:
-                break;
-        }
-
-        constexpr const char* ENVELOPE_TYPE[] { "ADSR Linear", "ADSR Exponential", "ADR Linear", "ADR Exponential" };
-
-        if (ImGui::BeginCombo("Envelope Type", ENVELOPE_TYPE[preset.envelope_type])) {
-            for (std::size_t i {}; i < std::size(ENVELOPE_TYPE); i++) {
-                if (ImGui::Selectable(ENVELOPE_TYPE[i], preset.envelope_type == int(i))) {
-                    preset.envelope_type = ui::PresetAdd::EnvelopeType(i);
-                }
-            }
-
-            ImGui::EndCombo();
-        }
+        create_instrument_envelope(preset.envelope);
     }
 
     void Application::create_instrument_add() {
         ImGui::Dummy(ui::rem(ImVec2(0.0f, 0.5f)));
 
         if (ImGui::Button("Add Partial")) {
-            m_ui.preset_add.partials.emplace_back();
+            auto& partial = m_ui.preset_add.partials.emplace_back();
+            partial.envelope.type = ui::preset::EnvelopeTypeNull;
         }
 
-        if (ImGui::BeginChild("Partials", ImVec2(0.0f, ui::rem(18.0f)), ImGuiChildFlags_AutoResizeX)) {
+        if (ImGui::BeginChild("Partials", ImVec2(0.0f, ui::rem(22.0f)), ImGuiChildFlags_AutoResizeX)) {
             for (auto [id, partial] : m_ui.preset_add.partials | std::views::enumerate) {
                 ImGui::PushID(int(id));
 
@@ -1798,7 +1807,7 @@ namespace application {
                 if (ImGui::BeginCombo("##Oscillator", OSCILLATOR_TYPE[partial.oscillator_type])) {
                     for (std::size_t i {}; i < std::size(OSCILLATOR_TYPE); i++) {
                         if (ImGui::Selectable(OSCILLATOR_TYPE[i], partial.oscillator_type == int(i))) {
-                            partial.oscillator_type = ui::PresetAdd::Partial::OscillatorType(i);
+                            partial.oscillator_type = ui::preset::OscillatorType(i);
                         }
                     }
 
@@ -1813,7 +1822,7 @@ namespace application {
 
                 ImGui::PushItemWidth(ui::rem(5.0f));
 
-                const bool noise_type = partial.oscillator_type == ui::PresetAdd::Partial::OscillatorTypeNoise;
+                const bool noise_type = partial.oscillator_type == ui::preset::OscillatorTypeNoise;
 
                 if (!noise_type) {
                     if (ImGui::InputDouble("##Frequency Multiplier", &partial.frequency_multiplier, 0.0, 0.0, "%.3f")) {
@@ -1867,6 +1876,17 @@ namespace application {
 
                 ImGui::PopItemWidth();
 
+                if (!noise_type) {
+                    ImGui::Indent();
+
+                    if (ImGui::TreeNode("Envelope")) {
+                        create_instrument_envelope(partial.envelope);
+                        ImGui::TreePop();
+                    }
+
+                    ImGui::Unindent();
+                }
+
                 ImGui::PopID();
             }
         }
@@ -1882,7 +1902,7 @@ namespace application {
         if (ImGui::BeginCombo("Profile", PROFILE[m_ui.preset_pad.profile])) {
             for (std::size_t i {}; i < std::size(PROFILE); i++) {
                 if (ImGui::Selectable(PROFILE[i], m_ui.preset_pad.profile == int(i))) {
-                    m_ui.preset_pad.profile = ui::PresetPad::Profile(i);
+                    m_ui.preset_pad.profile = ui::preset::Profile(i);
                 }
             }
 
@@ -3268,97 +3288,120 @@ namespace application {
         std::unreachable();
     }
 
-    preset::BasePreset Application::translate_preset(const ui::BasePreset& preset) {
-        preset::BasePreset result_preset;
+    preset::Envelope Application::translate_envelope(const ui::preset::Envelope& envelope) {
+        preset::Envelope result_envelope;
 
-        result_preset.name = preset.name;
-        result_preset.description = preset.description;
-        result_preset.range = std::make_pair(preset.range[0], preset.range[1]);
-
-        switch (preset.envelope_type) {
-            case ui::PresetAdd::EnvelopeTypeAdsrLinear:
-            case ui::PresetAdd::EnvelopeTypeAdsrExponential:
-                result_preset.envelope.description = syn::envelope::DescriptionAdsr {
-                    .duration_attack = preset.envelope_description.duration_attack,
-                    .duration_decay = preset.envelope_description.duration_decay,
-                    .duration_release = preset.envelope_description.duration_release,
-                    .value_sustain = preset.envelope_description.value_sustain,
+        switch (envelope.type) {
+            case ui::preset::EnvelopeTypeAdsrLinear:
+            case ui::preset::EnvelopeTypeAdsrExponential:
+                result_envelope.description = syn::envelope::DescriptionAdsr {
+                    .duration_attack = envelope.description.duration_attack,
+                    .duration_decay = envelope.description.duration_decay,
+                    .duration_release = envelope.description.duration_release,
+                    .value_sustain = envelope.description.value_sustain
                 };
                 break;
-            case ui::PresetAdd::EnvelopeTypeAdrLinear:
-            case ui::PresetAdd::EnvelopeTypeAdrExponential:
-                result_preset.envelope.description = syn::envelope::DescriptionAdr {
-                    .duration_attack = preset.envelope_description.duration_attack,
-                    .duration_decay = preset.envelope_description.duration_decay,
-                    .duration_release = preset.envelope_description.duration_release,
+            case ui::preset::EnvelopeTypeAdrLinear:
+            case ui::preset::EnvelopeTypeAdrExponential:
+                result_envelope.description = syn::envelope::DescriptionAdr {
+                    .duration_attack = envelope.description.duration_attack,
+                    .duration_decay = envelope.description.duration_decay,
+                    .duration_release = envelope.description.duration_release
                 };
+                break;
+            case ui::preset::EnvelopeTypeNull:
+                result_envelope.description = syn::envelope::DescriptionNull();
                 break;
         }
 
-        switch (preset.envelope_type) {
-            case ui::PresetAdd::EnvelopeTypeAdsrLinear:
-            case ui::PresetAdd::EnvelopeTypeAdrLinear:
-                result_preset.envelope.type = syn::envelope::Type::Linear;
+        switch (envelope.type) {
+            case ui::preset::EnvelopeTypeAdsrLinear:
+            case ui::preset::EnvelopeTypeAdrLinear:
+                result_envelope.type = syn::envelope::Type::Linear;
                 break;
-            case ui::PresetAdd::EnvelopeTypeAdsrExponential:
-            case ui::PresetAdd::EnvelopeTypeAdrExponential:
-                result_preset.envelope.type = syn::envelope::Type::Exponential;
+            case ui::preset::EnvelopeTypeAdsrExponential:
+            case ui::preset::EnvelopeTypeAdrExponential:
+                result_envelope.type = syn::envelope::Type::Exponential;
+                break;
+            case ui::preset::EnvelopeTypeNull:
                 break;
         }
 
-        return result_preset;
+        return result_envelope;
     }
 
-    ui::BasePreset Application::translate_preset(const preset::BasePreset& preset) {
-        ui::BasePreset result_preset;
+    ui::preset::Envelope Application::translate_envelope(const preset::Envelope& envelope) {
+        ui::preset::Envelope result_envelope;
 
-        std::strncpy(result_preset.name, preset.name.c_str(), sizeof(result_preset.name) - 1);
-        std::strncpy(result_preset.description, preset.description.c_str(), sizeof(result_preset.description) - 1);
-        result_preset.range[0] = preset.range.first;
-        result_preset.range[1] = preset.range.second;
-
-        switch (preset.envelope.description.index()) {
+        switch (envelope.description.index()) {
             case 0:
-                result_preset.envelope_description.duration_attack = std::get<0>(preset.envelope.description).duration_attack;
-                result_preset.envelope_description.duration_decay = std::get<0>(preset.envelope.description).duration_decay;
-                result_preset.envelope_description.duration_release = std::get<0>(preset.envelope.description).duration_release;
-                result_preset.envelope_description.value_sustain = std::get<0>(preset.envelope.description).value_sustain;
+                result_envelope.description.duration_attack = std::get<0>(envelope.description).duration_attack;
+                result_envelope.description.duration_decay = std::get<0>(envelope.description).duration_decay;
+                result_envelope.description.duration_release = std::get<0>(envelope.description).duration_release;
+                result_envelope.description.value_sustain = std::get<0>(envelope.description).value_sustain;
 
-                switch (preset.envelope.type) {
+                switch (envelope.type) {
                     case syn::envelope::Type::Linear:
-                        result_preset.envelope_type = ui::PresetAdd::EnvelopeTypeAdsrLinear;
+                        result_envelope.type = ui::preset::EnvelopeTypeAdsrLinear;
                         break;
                     case syn::envelope::Type::Exponential:
-                        result_preset.envelope_type = ui::PresetAdd::EnvelopeTypeAdsrExponential;
+                        result_envelope.type = ui::preset::EnvelopeTypeAdsrExponential;
                         break;
                 }
 
                 break;
             case 1:
-                result_preset.envelope_description.duration_attack = std::get<1>(preset.envelope.description).duration_attack;
-                result_preset.envelope_description.duration_decay = std::get<1>(preset.envelope.description).duration_decay;
-                result_preset.envelope_description.duration_release = std::get<1>(preset.envelope.description).duration_release;
+                result_envelope.description.duration_attack = std::get<1>(envelope.description).duration_attack;
+                result_envelope.description.duration_decay = std::get<1>(envelope.description).duration_decay;
+                result_envelope.description.duration_release = std::get<1>(envelope.description).duration_release;
 
-                switch (preset.envelope.type) {
+                switch (envelope.type) {
                     case syn::envelope::Type::Linear:
-                        result_preset.envelope_type = ui::PresetAdd::EnvelopeTypeAdrLinear;
+                        result_envelope.type = ui::preset::EnvelopeTypeAdrLinear;
                         break;
                     case syn::envelope::Type::Exponential:
-                        result_preset.envelope_type = ui::PresetAdd::EnvelopeTypeAdrExponential;
+                        result_envelope.type = ui::preset::EnvelopeTypeAdrExponential;
                         break;
                 }
 
                 break;
+            case 2:
+                result_envelope.type = ui::preset::EnvelopeTypeNull;
+
+                break;
         }
+
+        return result_envelope;
+    }
+
+    preset::BasePreset Application::translate_preset(const ui::preset::BasePreset& preset) {
+        preset::BasePreset result_preset;
+
+        result_preset.name = preset.name;
+        result_preset.description = preset.description;
+        result_preset.range = std::make_pair(preset.range[0], preset.range[1]);
+        result_preset.envelope = translate_envelope(preset.envelope);
 
         return result_preset;
     }
 
-    preset::add::Preset Application::translate_preset(const ui::PresetAdd& preset) {
-        preset::add::Preset result_preset;
-        static_cast<preset::BasePreset&>(result_preset) = translate_preset(static_cast<const ui::BasePreset&>(preset));
+    ui::preset::BasePreset Application::translate_preset(const preset::BasePreset& preset) {
+        ui::preset::BasePreset result_preset;
 
-        for (const ui::PresetAdd::Partial& partial : preset.partials) {
+        std::strncpy(result_preset.name, preset.name.c_str(), sizeof(result_preset.name) - 1);
+        std::strncpy(result_preset.description, preset.description.c_str(), sizeof(result_preset.description) - 1);
+        result_preset.range[0] = preset.range.first;
+        result_preset.range[1] = preset.range.second;
+        result_preset.envelope = translate_envelope(preset.envelope);
+
+        return result_preset;
+    }
+
+    preset::add::Preset Application::translate_preset(const ui::preset::PresetAdd& preset) {
+        preset::add::Preset result_preset;
+        static_cast<preset::BasePreset&>(result_preset) = translate_preset(static_cast<const ui::preset::BasePreset&>(preset));
+
+        for (const ui::preset::Partial& partial : preset.partials) {
             result_preset.partials.emplace_back(
                 syn::oscillator::Type(partial.oscillator_type),
                 partial.frequency_multiplier,
@@ -3368,21 +3411,22 @@ namespace application {
                     ?
                     std::make_optional(syn::LowFrequencyOscillator { .frequency = partial.lfo.frequency, .deviation = partial.lfo.deviation })
                     :
-                    std::nullopt
+                    std::nullopt,
+                translate_envelope(partial.envelope)
             );
         }
 
         return result_preset;
     }
 
-    ui::PresetAdd Application::translate_preset(const preset::add::Preset& preset) {
-        ui::PresetAdd result_preset;
-        static_cast<ui::BasePreset&>(result_preset) = translate_preset(static_cast<const preset::BasePreset&>(preset));
+    ui::preset::PresetAdd Application::translate_preset(const preset::add::Preset& preset) {
+        ui::preset::PresetAdd result_preset;
+        static_cast<ui::preset::BasePreset&>(result_preset) = translate_preset(static_cast<const preset::BasePreset&>(preset));
 
         for (const preset::add::Partial& partial : preset.partials) {
-            ui::PresetAdd::Partial& result_partial = result_preset.partials.emplace_back();
+            ui::preset::Partial& result_partial = result_preset.partials.emplace_back();
 
-            result_partial.oscillator_type = ui::PresetAdd::Partial::OscillatorType(partial.oscillator_type);
+            result_partial.oscillator_type = ui::preset::OscillatorType(partial.oscillator_type);
             result_partial.frequency_multiplier = partial.frequency_multiplier;
             result_partial.amplitude_divisor = partial.amplitude_divisor;
             result_partial.phase = partial.phase;
@@ -3394,17 +3438,19 @@ namespace application {
                 result_partial.lfo.frequency = partial.lfo->frequency;
                 result_partial.lfo.deviation = partial.lfo->deviation;
             }
+
+            result_partial.envelope = translate_envelope(partial.envelope);
         }
 
         return result_preset;
     }
 
-    preset::pad::Preset Application::translate_preset(const ui::PresetPad& preset) {
+    preset::pad::Preset Application::translate_preset(const ui::preset::PresetPad& preset) {
         preset::pad::Preset result_preset;
-        static_cast<preset::BasePreset&>(result_preset) = translate_preset(static_cast<const ui::BasePreset&>(preset));
+        static_cast<preset::BasePreset&>(result_preset) = translate_preset(static_cast<const ui::preset::BasePreset&>(preset));
 
         switch (preset.profile) {
-            case ui::PresetPad::ProfileDefault:
+            case ui::preset::ProfileDefault:
                 result_preset.profile = preset::pad::Profile::Default;
                 break;
         }
@@ -3416,13 +3462,13 @@ namespace application {
         return result_preset;
     }
 
-    ui::PresetPad Application::translate_preset(const preset::pad::Preset& preset) {
-        ui::PresetPad result_preset;
-        static_cast<ui::BasePreset&>(result_preset) = translate_preset(static_cast<const preset::BasePreset&>(preset));
+    ui::preset::PresetPad Application::translate_preset(const preset::pad::Preset& preset) {
+        ui::preset::PresetPad result_preset;
+        static_cast<ui::preset::BasePreset&>(result_preset) = translate_preset(static_cast<const preset::BasePreset&>(preset));
 
         switch (preset.profile) {
             case preset::pad::Profile::Default:
-                result_preset.profile = ui::PresetPad::ProfileDefault;
+                result_preset.profile = ui::preset::ProfileDefault;
                 break;
         }
 

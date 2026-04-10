@@ -144,60 +144,72 @@ namespace ui {
         short year {};
     };
 
-    struct BasePreset {
-        char name[64] {};
-        char description[64] {};
-
-        unsigned int range[2] { syn::keyboard::ID_BEGIN, syn::keyboard::ID_END };
-
-        struct {
+    namespace preset {
+        struct EnvelopeDescription {
             double duration_attack = 0.1;
             double duration_decay = 0.1;
             double duration_release = 0.1;
             double value_sustain = 0.9;
-        } envelope_description;
+        };
 
         enum EnvelopeType : int {
             EnvelopeTypeAdsrLinear,
             EnvelopeTypeAdsrExponential,
             EnvelopeTypeAdrLinear,
-            EnvelopeTypeAdrExponential
-        } envelope_type {};
-    };
+            EnvelopeTypeAdrExponential,
+            EnvelopeTypeNull
+        };
 
-    struct PresetAdd : BasePreset {
+        struct Envelope {
+            EnvelopeDescription description;
+            EnvelopeType type {};
+        };
+
+        struct BasePreset {
+            char name[64] {};
+            char description[64] {};
+            unsigned int range[2] { syn::keyboard::ID_BEGIN, syn::keyboard::ID_END };
+            Envelope envelope;
+        };
+
+        enum OscillatorType : int {
+            OscillatorTypeSine,
+            OscillatorTypeSquare,
+            OscillatorTypeTriangle,
+            OscillatorTypeSawtooth,
+            OscillatorTypeNoise
+        };
+
+        struct LowFrequencyOscillator {
+            bool enabled {};
+            double frequency = 1.0;
+            double deviation = 0.1;
+        };
+
         struct Partial {
-            enum OscillatorType : int {
-                OscillatorTypeSine,
-                OscillatorTypeSquare,
-                OscillatorTypeTriangle,
-                OscillatorTypeSawtooth,
-                OscillatorTypeNoise
-            } oscillator_type {};
-
+            OscillatorType oscillator_type {};
             double frequency_multiplier = 1.0;
             double amplitude_divisor = 1.0;
             double phase {};
-
-            struct {
-                bool enabled {};
-                double frequency = 1.0;
-                double deviation = 0.1;
-            } lfo;
+            LowFrequencyOscillator lfo;
+            Envelope envelope;
         };
 
-        std::vector<Partial> partials;
-    };
+        struct PresetAdd : BasePreset {
+            std::vector<Partial> partials;
+        };
 
-    struct PresetPad : BasePreset {
         enum Profile : int {
             ProfileDefault
-        } profile {};
+        };
 
-        double frequency = 261.63;
-        double bandwidth = 20.0;
-        std::vector<double> amplitude_harmonics;
-    };
+        struct PresetPad : BasePreset {
+            Profile profile {};
+            double frequency = 261.63;
+            double bandwidth = 20.0;
+            std::vector<double> amplitude_harmonics;
+        };
+    }
 
     enum class CreateInstrumentTab {
         Additive,

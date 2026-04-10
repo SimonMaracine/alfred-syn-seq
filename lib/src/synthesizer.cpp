@@ -105,13 +105,15 @@ namespace synthesizer {
             new_voice->amplitude = velocity;
             new_voice->time_on = time;
             new_voice->overall_envelope->note_on(time);
+            new_voice->note_on(time);
 
-			m_voices.push_back(std::move(new_voice));
+            m_voices.push_back(std::move(new_voice));
         } else {
             if ((*voice)->time_off > (*voice)->time_on) {
                 (*voice)->amplitude = velocity;
                 (*voice)->time_on = time;
                 (*voice)->overall_envelope->note_on(time);
+                (*voice)->note_on(time);
             }
         }
     }
@@ -130,6 +132,7 @@ namespace synthesizer {
         if (voice.time_on > voice.time_off) {
             voice.time_off = time;
             voice.overall_envelope->note_off(time);
+            voice.note_off(time);
         }
     }
 
@@ -166,6 +169,7 @@ namespace synthesizer {
     void Synthesizer::sample_update(double time) const noexcept {
         for (const auto& voice : m_voices) {
             voice->overall_envelope->update(time);
+            voice->update(time);
         }
     }
 
