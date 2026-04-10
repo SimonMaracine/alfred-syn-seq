@@ -1876,16 +1876,14 @@ namespace application {
 
                 ImGui::PopItemWidth();
 
-                if (!noise_type) {
-                    ImGui::Indent();
+                ImGui::Indent();
 
-                    if (ImGui::TreeNode("Envelope")) {
-                        create_instrument_envelope(partial.envelope);
-                        ImGui::TreePop();
-                    }
-
-                    ImGui::Unindent();
+                if (ImGui::TreeNode("Envelope")) {
+                    create_instrument_envelope(partial.envelope);
+                    ImGui::TreePop();
                 }
+
+                ImGui::Unindent();
 
                 ImGui::PopID();
             }

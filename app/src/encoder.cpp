@@ -10,13 +10,13 @@
 
 namespace encoder {
     struct RiffChunk {
-        std::uint8_t file_type_bloc_id[4] { 'R', 'I', 'F', 'F' };
+        [[maybe_unused]] std::uint8_t file_type_bloc_id[4] { 'R', 'I', 'F', 'F' };
         std::uint32_t file_size {};
-        std::uint8_t file_format_id[4] { 'W', 'A', 'V', 'E' };
+        [[maybe_unused]] std::uint8_t file_format_id[4] { 'W', 'A', 'V', 'E' };
     };
 
     struct FormatChunk {
-        std::uint8_t format_block_id[4] { 'f', 'm', 't', ' ' };
+        [[maybe_unused]] std::uint8_t format_block_id[4] { 'f', 'm', 't', ' ' };
         std::uint32_t block_size {};
         std::uint16_t audio_format {};
         std::uint16_t number_channels {};
@@ -27,12 +27,12 @@ namespace encoder {
     };
 
     struct DataChunk {
-        std::uint8_t data_block_id[4] { 'd', 'a', 't', 'a' };
+        [[maybe_unused]] std::uint8_t data_block_id[4] { 'd', 'a', 't', 'a' };
         std::uint32_t data_size {};
     };
 
     enum AudioFormat : std::uint16_t {
-        PCM = 1
+        Pcm = 1
     };
 
     utility::Buffer encode_wav(std::size_t count, const double* samples) {
@@ -49,7 +49,7 @@ namespace encoder {
 
         FormatChunk format_chunk;
         format_chunk.block_size = sizeof(FormatChunk) - 8;
-        format_chunk.audio_format = PCM;
+        format_chunk.audio_format = Pcm;
         format_chunk.number_channels = number_channels;
         format_chunk.frequency = frequency;
         format_chunk.bytes_per_sec = bytes_per_sec;
