@@ -7,7 +7,6 @@ add_library(alfred_lib_synthesis STATIC)
 target_sources(
     alfred_lib_synthesis
     PRIVATE
-        "src/instruments.cpp"
         "src/math.cpp"
         "src/preset.cpp"
         "src/synthesis.cpp"
@@ -20,7 +19,6 @@ target_sources(
             "include/alfred/allocator.hpp"
             "include/alfred/definitions.hpp"
             "include/alfred/hash.hpp"
-            "include/alfred/instruments.hpp"
             "include/alfred/math.hpp"
             "include/alfred/preset.hpp"
             "include/alfred/synthesis.hpp"

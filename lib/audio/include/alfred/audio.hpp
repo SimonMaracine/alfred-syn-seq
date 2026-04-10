@@ -5,9 +5,6 @@
 #include <utility>
 #include <vector>
 
-// Nyquist criterion
-// The sampling frequency must be at least twice the highest frequency in the signal
-
 struct SDL_AudioStream;
 
 namespace alfred::audio {

@@ -14,9 +14,12 @@ Read the manual [here](MANUAL.md).
 
 ![Alfred](gfx/mascot/alfred.png)
 
-Alfred is split into two:
+Alfred is split into two main parts:
 
-- A synthesizer library worrying about synthesis-related things almost exclusively
+- Three synthesizer libraries worrying about synthesis and audio-related things almost exclusively
+    - `synthesis` Core library handling the synthesis, math and generic synthesizer things
+    - `audio` Audio device handling library also implementing a real time synthesizer
+    - `instruments` Built in instruments/presets library
 - A sequencer and composition editor GUI application which enables playing notes and editing music, and which loosely models some sheet music concepts
 
 Currently, Alfred is in its infancy, so its current instruments are not well-made, and it is still missing some important features, which will probably be addressed with time:

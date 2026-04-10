@@ -1,9 +1,23 @@
 #include "alfred/instruments.hpp"
 
-#include "alfred/math.hpp"
-#include "alfred/definitions.hpp"
+#include <alfred/math.hpp>
+#include <alfred/definitions.hpp>
 
 namespace alfred::instruments {
+    void initialize_builtin_instruments(synthesizer::Synthesizer& synthesizer) {
+        (void) synthesizer.store_instrument(std::make_unique<instruments::ShortSynthPiano>());
+        (void) synthesizer.store_instrument(std::make_unique<instruments::Metronome>());
+        (void) synthesizer.store_instrument(std::make_unique<instruments::Ghost>());
+        (void) synthesizer.store_instrument(std::make_unique<instruments::Harmonica>());
+        (void) synthesizer.store_instrument(std::make_unique<instruments::DrumBass>());
+        (void) synthesizer.store_instrument(std::make_unique<instruments::DrumSnare>());
+        (void) synthesizer.store_instrument(std::make_unique<instruments::DrumHiHat>());
+        (void) synthesizer.store_instrument(std::make_unique<instruments::SynthPiano>());
+        (void) synthesizer.store_instrument(std::make_unique<instruments::Guitar>());
+        (void) synthesizer.store_instrument(std::make_unique<instruments::Strings>());
+        (void) synthesizer.store_instrument(std::make_unique<instruments::Cello>());
+    }
+
     double ShortSynthPiano::sound(double time, const syn::voice::Voice& voice) const noexcept {
         static constexpr auto amp = syn::util::amplitudes(std::array { 1.0, 2.0, 4.0, 25.0 });
 

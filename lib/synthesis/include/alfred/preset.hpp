@@ -66,8 +66,8 @@ namespace alfred::preset {
             explicit RuntimeInstrument(Preset preset);
 
             double sound(double time, const syn::voice::Voice& voice) const noexcept override;
-			syn::voice::Ptr new_voice() const override;
-			syn::envelope::Ptr new_overall_envelope() const override;
+            syn::voice::Ptr new_voice() const override;
+            syn::envelope::Ptr new_overall_envelope() const override;
             double attack_duration() const override;
             double release_duration() const override;
             syn::InstrumentPtr clone() const override { return std::make_unique<RuntimeInstrument>(*this); }
@@ -93,7 +93,7 @@ namespace alfred::preset {
             explicit RuntimeInstrument(Preset preset);
 
             double sound(double time, const syn::voice::Voice& voice) const noexcept override;
-			syn::voice::Ptr new_voice() const override;
+            syn::voice::Ptr new_voice() const override;
             syn::envelope::Ptr new_overall_envelope() const override;
             double attack_duration() const override;
             double release_duration() const override;

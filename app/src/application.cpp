@@ -67,10 +67,13 @@ namespace alfred::application {
             logging::warning("Could not import data: {}", e.what());
             notify_message(std::format("Could not import data: {}", e.name()));
         }
-
+        
         m_synthesizer.open();
         m_synthesizer.resume();
         m_synthesizer.volume(0.9);
+
+        // Must call this after opening the audio device
+        instruments::initialize_builtin_instruments(m_synthesizer);
 
         set_color_scheme(m_data.color_scheme);
         set_scale(m_data.scale);

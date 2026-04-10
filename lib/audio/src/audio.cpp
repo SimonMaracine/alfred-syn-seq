@@ -5,9 +5,11 @@
 #include <cmath>
 
 #include <SDL3/SDL.h>
+#include <alfred/math.hpp>
+#include <alfred/definitions.hpp>
 
-#include "alfred/math.hpp"
-#include "alfred/definitions.hpp"
+// Nyquist criterion
+// The sampling frequency must be at least twice the highest frequency in the signal
 
 namespace alfred::audio {
     Audio::Audio() {

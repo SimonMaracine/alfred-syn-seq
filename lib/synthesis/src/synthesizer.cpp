@@ -4,25 +4,11 @@
 #include <ranges>
 #include <cassert>
 
-#include "alfred/instruments.hpp"
 #include "alfred/math.hpp"
 #include "alfred/definitions.hpp"
 
 namespace alfred::synthesizer {
     Synthesizer::Synthesizer() {
-        // Built-in instruments
-        insert_instrument(std::make_unique<instruments::ShortSynthPiano>());
-        insert_instrument(std::make_unique<instruments::Metronome>());
-        insert_instrument(std::make_unique<instruments::Ghost>());
-        insert_instrument(std::make_unique<instruments::Harmonica>());
-        insert_instrument(std::make_unique<instruments::DrumBass>());
-        insert_instrument(std::make_unique<instruments::DrumSnare>());
-        insert_instrument(std::make_unique<instruments::DrumHiHat>());
-        insert_instrument(std::make_unique<instruments::SynthPiano>());
-        insert_instrument(std::make_unique<instruments::Guitar>());
-        insert_instrument(std::make_unique<instruments::Strings>());
-        insert_instrument(std::make_unique<instruments::Cello>());
-
         // Small optimization
         m_voices.reserve(50);
     }
@@ -54,13 +40,25 @@ namespace alfred::synthesizer {
     void Synthesizer::merge_instruments(const Synthesizer& other) {
         // Need to make a deep copy of the instruments in this fashion
 
-        std::unordered_map<syn::InstrumentId, syn::InstrumentPtr> instruments;
+        {
+            std::unordered_map<syn::InstrumentId, syn::InstrumentPtr> instruments;
 
-        for (const auto& [id, instrument] : other.m_instruments) {
-            instruments[id] = instrument->clone();
+            for (const auto& [id, instrument] : other.m_instruments) {
+                instruments[id] = instrument->clone();
+            }
+
+            m_instruments.merge(std::move(instruments));
         }
 
-        m_instruments.merge(std::move(instruments));
+        {
+            std::unordered_map<syn::InstrumentId, std::atomic<syn::volume::Volume>> volumes;
+
+            for (const auto& [id, volume] : other.m_volumes) {
+                volumes[id].store(volume.load(std::memory_order::relaxed), std::memory_order::relaxed);
+            }
+
+            m_volumes.merge(std::move(volumes));
+        }
     }
 
     bool Synthesizer::insert_instrument(std::unique_ptr<syn::Instrument> instrument) {
@@ -94,7 +92,7 @@ namespace alfred::synthesizer {
         }
 
         if (const auto voice = find_voice(note, instrument); voice == m_voices.end()) {
-			const auto& instrument_obj = m_instruments.at(instrument);
+            const auto& instrument_obj = m_instruments.at(instrument);
 
             auto new_voice = instrument_obj->new_voice();
             new_voice->note = note;

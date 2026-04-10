@@ -1,7 +1,8 @@
 #pragma once
 
-#include "alfred/synthesis.hpp"
-#include "alfred/hash.hpp"
+#include <alfred/synthesis.hpp>
+#include <alfred/hash.hpp>
+#include <alfred/synthesizer.hpp>
 
 // Built in compiled instruments/presets
 
@@ -18,6 +19,10 @@
     const char* description() const override { return "This instrument/preset is unfinished"; }
 
 namespace alfred::instruments {
+    // The synthesizers are initially empty
+    // Call this in order to add some default/builtin instruments/presets
+    void initialize_builtin_instruments(synthesizer::Synthesizer& synthesizer);
+
     class ShortSynthPiano : public syn::Instrument {
     public:
         ALFRED_INSTRUMENT_STATIC_NAME_ID("Short Synth Piano")
@@ -25,12 +30,12 @@ namespace alfred::instruments {
 
         double sound(double time, const syn::voice::Voice& voice) const noexcept override;
 
-		syn::voice::Ptr new_voice() const override { return std::make_unique<syn::voice::VoiceAdd>(); }
+        syn::voice::Ptr new_voice() const override { return std::make_unique<syn::voice::VoiceAdd>(); }
         syn::envelope::Ptr new_overall_envelope() const override { return std::make_unique<syn::envelope::AdrLinear>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
 
-		syn::InstrumentPtr clone() const override { return std::make_unique<ShortSynthPiano>(*this); }
+        syn::InstrumentPtr clone() const override { return std::make_unique<ShortSynthPiano>(*this); }
     private:
         static constexpr syn::envelope::DescriptionAdr ENVELOPE {
             .duration_attack = 0.007,
@@ -52,8 +57,8 @@ namespace alfred::instruments {
         double sound(double time, const syn::voice::Voice& voice) const noexcept override;
         syn::InstrumentRange range() const override { return { syn::note(syn::A, syn::Octave2), syn::note(syn::C, syn::Octave6) }; }
 
-		syn::voice::Ptr new_voice() const override { return std::make_unique<syn::voice::VoiceAdd>(); }
-		syn::envelope::Ptr new_overall_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); } 
+        syn::voice::Ptr new_voice() const override { return std::make_unique<syn::voice::VoiceAdd>(); }
+        syn::envelope::Ptr new_overall_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); } 
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
 
@@ -74,8 +79,8 @@ namespace alfred::instruments {
         double sound(double time, const syn::voice::Voice& voice) const noexcept override;
         syn::InstrumentRange range() const override { return { syn::note(syn::A, syn::Octave3), syn::note(syn::C, syn::Octave6) }; }
 
-		syn::voice::Ptr new_voice() const override { return std::make_unique<syn::voice::VoiceAdd>(); }
-		syn::envelope::Ptr new_overall_envelope() const override { return std::make_unique<syn::envelope::Adsr>(ENVELOPE); } 
+        syn::voice::Ptr new_voice() const override { return std::make_unique<syn::voice::VoiceAdd>(); }
+        syn::envelope::Ptr new_overall_envelope() const override { return std::make_unique<syn::envelope::Adsr>(ENVELOPE); } 
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
 
@@ -96,8 +101,8 @@ namespace alfred::instruments {
 
         double sound(double time, const syn::voice::Voice& voice) const noexcept override;
 
-		syn::voice::Ptr new_voice() const override { return std::make_unique<syn::voice::VoiceAdd>(); }
-		syn::envelope::Ptr new_overall_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); } 
+        syn::voice::Ptr new_voice() const override { return std::make_unique<syn::voice::VoiceAdd>(); }
+        syn::envelope::Ptr new_overall_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); } 
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
 
@@ -117,7 +122,7 @@ namespace alfred::instruments {
 
         double sound(double time, const syn::voice::Voice& voice) const noexcept override;
 
-		syn::voice::Ptr new_voice() const override { return std::make_unique<syn::voice::VoiceAdd>(); }
+        syn::voice::Ptr new_voice() const override { return std::make_unique<syn::voice::VoiceAdd>(); }
         syn::envelope::Ptr new_overall_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
@@ -138,7 +143,7 @@ namespace alfred::instruments {
 
         double sound(double time, const syn::voice::Voice& voice) const noexcept override;
 
-		syn::voice::Ptr new_voice() const override { return std::make_unique<syn::voice::VoiceAdd>(); }
+        syn::voice::Ptr new_voice() const override { return std::make_unique<syn::voice::VoiceAdd>(); }
         syn::envelope::Ptr new_overall_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
@@ -159,9 +164,9 @@ namespace alfred::instruments {
 
         double sound(double time, const syn::voice::Voice& voice) const noexcept override;
 
-		syn::voice::Ptr new_voice() const override { return std::make_unique<syn::voice::VoiceAdd>(); }
-		syn::envelope::Ptr new_overall_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); } 
-		double attack_duration() const override { return ENVELOPE.duration_attack; }
+        syn::voice::Ptr new_voice() const override { return std::make_unique<syn::voice::VoiceAdd>(); }
+        syn::envelope::Ptr new_overall_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); } 
+        double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
 
         syn::InstrumentPtr clone() const override { return std::make_unique<SynthPiano>(*this); }
@@ -181,8 +186,8 @@ namespace alfred::instruments {
         double sound(double time, const syn::voice::Voice& voice) const noexcept override;
         syn::InstrumentRange range() const override { return { syn::note(syn::E, syn::Octave2), syn::note(syn::C, syn::Octave6) }; }
 
-		syn::voice::Ptr new_voice() const override { return std::make_unique<syn::voice::VoiceAdd>(); }
-		syn::envelope::Ptr new_overall_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); }
+        syn::voice::Ptr new_voice() const override { return std::make_unique<syn::voice::VoiceAdd>(); }
+        syn::envelope::Ptr new_overall_envelope() const override { return std::make_unique<syn::envelope::Adr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
 
@@ -204,8 +209,8 @@ namespace alfred::instruments {
 
         double sound(double time, const syn::voice::Voice& voice) const noexcept override;
 
-		syn::voice::Ptr new_voice() const override { return std::make_unique<syn::voice::VoicePad>(); }
-		syn::envelope::Ptr new_overall_envelope() const override { return std::make_unique<syn::envelope::Adsr>(ENVELOPE); }
+        syn::voice::Ptr new_voice() const override { return std::make_unique<syn::voice::VoicePad>(); }
+        syn::envelope::Ptr new_overall_envelope() const override { return std::make_unique<syn::envelope::Adsr>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
 
@@ -234,8 +239,8 @@ namespace alfred::instruments {
         double sound(double time, const syn::voice::Voice& voice) const noexcept override;
         syn::InstrumentRange range() const override { return { syn::note(syn::C, syn::Octave2), syn::note(syn::A, syn::Octave5) }; }
 
-		syn::voice::Ptr new_voice() const override { return std::make_unique<syn::voice::VoicePad>(); }
-		syn::envelope::Ptr new_overall_envelope() const override { return std::make_unique<syn::envelope::AdsrLinear>(ENVELOPE); }
+        syn::voice::Ptr new_voice() const override { return std::make_unique<syn::voice::VoicePad>(); }
+        syn::envelope::Ptr new_overall_envelope() const override { return std::make_unique<syn::envelope::AdsrLinear>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
 
@@ -264,8 +269,8 @@ namespace alfred::instruments {
         double sound(double time, const syn::voice::Voice& voice) const noexcept override;
         syn::InstrumentRange range() const override { return { 0, 3 }; }
 
-		syn::voice::Ptr new_voice() const override { return std::make_unique<syn::voice::VoiceAdd>(); }
-		syn::envelope::Ptr new_overall_envelope() const override { return std::make_unique<syn::envelope::AdsrLinear>(ENVELOPE); }
+        syn::voice::Ptr new_voice() const override { return std::make_unique<syn::voice::VoiceAdd>(); }
+        syn::envelope::Ptr new_overall_envelope() const override { return std::make_unique<syn::envelope::AdsrLinear>(ENVELOPE); }
         double attack_duration() const override { return ENVELOPE.duration_attack; }
         double release_duration() const override { return ENVELOPE.duration_release; }
 
