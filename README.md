@@ -1,8 +1,8 @@
 # Alfred
 
-A free and open source cross-platform **synthesizer**, **sequencer** and **composition editor** program.
+A free and open source cross-platform **audio synthesizer**, **sequencer** and **composition editor** program.
 
-It comprises a digital multi-timbral synthesizer using additive and wavetable methods, and an interface to compose and play music.
+It comprises a software multi-timbral synthesizer using additive and wavetable methods, and an interface to compose and play music.
 
 It is same instrument + pitch monophonic, otherwise it supports up to twelve voices simultaneously.
 
@@ -24,7 +24,7 @@ Currently, Alfred is in its infancy, so its current instruments are not well-mad
 - Plugins which dynamically add compiled instruments/presets
 - A graphical way to create, store and load runtime instruments/presets
 - Support for MIDI keyboard controllers
-- Presenting errors nicely instead of just silently logging them
+- ~~Presenting errors nicely instead of just silently logging them~~
 
 Alfred works with 16-bit samples, one channel, and frequency of 44100 Hz.
 

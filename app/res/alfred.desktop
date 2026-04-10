@@ -4,4 +4,4 @@ Exec=alfred
 Type=Application
 Icon=alfred
 Categories=AudioVideo;Audio;
-Comment=A software synthesizer and sequencer program
+Comment=A software audio synthesizer, sequencer and composition editor program
