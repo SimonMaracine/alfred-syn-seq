@@ -32,6 +32,8 @@ int main(int argc, char** argv) {
     (void) std::atexit(logging::uninitialize);
     (void) std::atexit(SDL_Quit);
 
+    utility::initialize_file_paths("simonmara", "alfred");
+
     try {
         logging::initialize();
     } catch (const logging::LoggingError& e) {

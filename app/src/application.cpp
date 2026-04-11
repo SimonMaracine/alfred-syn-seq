@@ -44,6 +44,7 @@ namespace alfred::application {
     static constexpr unsigned long long FRAME_TIME_PLAYBACK = 3;
     static constexpr std::size_t MAX_MESSAGE_COUNT = 4;
     static constexpr std::chrono::system_clock::duration MAX_MESSAGE_DURATION = 7s;
+    static constexpr const char* PRESETS_DIRECTORY = "presets";
 
     void Application::on_start() {
         desired_frame_time(FRAME_TIME_DEFAULT);
@@ -56,7 +57,7 @@ namespace alfred::application {
 
         try {
             utility::Buffer buffer;
-            utility::read_file(utility::data_file_path("simonmara", "alfred") / "alfred.dat", buffer);
+            utility::read_file(utility::data_file_path() / "alfred.dat", buffer);
             data::import_data(m_data, buffer);
         } catch (const data::DataError& e) {
             m_data = {};
@@ -119,6 +120,17 @@ namespace alfred::application {
             return false;
         }, video::MAX_DELTA);
 
+        try {
+            utility::create_directory(utility::data_file_path() / PRESETS_DIRECTORY);
+        } catch (const utility::FileError& e) {
+            logging::error("Could not create directory: {}", e.what());
+            notify_message(std::format("Could not create directory: {}", e.what()));
+        }
+
+        m_task_manager.add_delayed_task([this] {
+            load_presets_from_disk();
+        }, 4000);
+
         notify_message("Welcome! Be sure to check out the manual from the source repository.");
     }
 
@@ -126,7 +138,7 @@ namespace alfred::application {
         try {
             utility::Buffer buffer;
             data::export_data(m_data, buffer);
-            utility::write_file(utility::data_file_path("simonmara", "alfred") / "alfred.dat", buffer);
+            utility::write_file(utility::data_file_path() / "alfred.dat", buffer);
         } catch (const data::DataError& e) {
             logging::error("Could not export data: {}", e.what());
         } catch (const utility::FileError& e) {
@@ -472,7 +484,7 @@ namespace alfred::application {
         }
 
         if (ImGui::BeginMenu("Log File")) {
-            ImGui::Text("%s", (utility::data_file_path("simonmara", "alfred") / "alfred.log").string().c_str());
+            ImGui::Text("%s", (utility::data_file_path() / "alfred.log").string().c_str());
 
             ImGui::EndMenu();
         }
@@ -2917,7 +2929,7 @@ namespace alfred::application {
         if (m_composition_path.empty()) {
             title("Alfred | Unsaved Composition");
         } else {
-            title(std::format("Alfred | {}*", m_composition_path.filename().string().c_str()));
+            title(std::format("Alfred | {}*", m_composition_path.filename().string()));
         }
 
         LOG_DEBUG("Changed title");
@@ -2927,7 +2939,7 @@ namespace alfred::application {
         if (m_composition_path.empty()) {
             title("Alfred");
         } else {
-            title(std::format("Alfred | {}", m_composition_path.filename().string().c_str()));
+            title(std::format("Alfred | {}", m_composition_path.filename().string()));
         }
 
         LOG_DEBUG("Changed title");
@@ -3560,7 +3572,7 @@ namespace alfred::application {
         try {
             composition_write(path, m_composition);
 
-            logging::information("Written composition to `{}`", path.string().c_str());
+            logging::information("Written composition to `{}`", path.string());
             notify_message("Written composition to the specified path");
         } catch (const composition::CompositionError& e) {
             logging::error("Could not save composition: {}", e.what());
@@ -3590,7 +3602,7 @@ namespace alfred::application {
         try {
             composition_write(m_composition_path, m_composition);
 
-            logging::information("Written composition to `{}`", m_composition_path.string().c_str());
+            logging::information("Written composition to `{}`", m_composition_path.string());
             notify_message("Written composition to the specified path");
         } catch (const composition::CompositionError& e) {
             logging::error("Could not save composition: {}", e.what());
@@ -3616,7 +3628,7 @@ namespace alfred::application {
         try {
             composition_read(path, m_composition);
 
-            logging::information("Read composition from `{}`", path.string().c_str());
+            logging::information("Read composition from `{}`", path.string());
             notify_message("Read composition from the specified path");
         } catch (const composition::CompositionError& e) {
             m_composition = {};
@@ -3730,7 +3742,7 @@ namespace alfred::application {
         try {
             preset_write(path, translate_preset(m_ui.preset_add));
 
-            logging::information("Written preset to `{}`", path.string().c_str());
+            logging::information("Written preset to `{}`", path.string());
             notify_message("Written preset to the specified path");
         } catch (const preset::PresetError& e) {
             logging::error("Could not save preset: {}", e.what());
@@ -3751,7 +3763,7 @@ namespace alfred::application {
         try {
             preset_write(path, translate_preset(m_ui.preset_pad));
 
-            logging::information("Written preset to `{}`", path.string().c_str());
+            logging::information("Written preset to `{}`", path.string());
             notify_message("Written preset to the specified path");
         } catch (const preset::PresetError& e) {
             logging::error("Could not save preset: {}", e.what());
@@ -3774,7 +3786,7 @@ namespace alfred::application {
         try {
             preset_read(path, preset);
 
-            logging::information("Read preset from `{}`", path.string().c_str());
+            logging::information("Read preset from `{}`", path.string());
             notify_message("Read preset from the specified path");
         } catch (const preset::PresetError& e) {
             logging::error("Could not open preset: {}", e.what());
@@ -3800,7 +3812,7 @@ namespace alfred::application {
         try {
             preset_read(path, preset);
 
-            logging::information("Read preset from `{}`", path.string().c_str());
+            logging::information("Read preset from `{}`", path.string());
             notify_message("Read preset from the specified path");
         } catch (const preset::PresetError& e) {
             logging::error("Could not open preset: {}", e.what());
@@ -3905,6 +3917,36 @@ namespace alfred::application {
         m_render_composition_menu = true;
     }
 
+    void Application::load_presets_from_disk() {
+        std::vector<std::filesystem::path> paths;
+
+        try {
+            paths = utility::glob_directory(utility::data_file_path() / PRESETS_DIRECTORY, "*.???preset");
+        } catch (const utility::FileError& e) {
+            logging::error("Could not glob presets directory: {}", e.what());
+            notify_message(std::format("Could not glob presets directory: {}", e.name()));
+            return;
+        }
+
+        if (paths.size() == 1) {
+            logging::information("Found 1 preset on disk");
+            notify_message("Found 1 preset on disk");
+        } else {
+            logging::information("Found {} presets on disk", paths.size());
+            notify_message(std::format("Found {} presets on disk", paths.size()));
+        }
+
+        for (const auto& path : paths) {
+            if (path.extension() == ".addpreset") {  // TODO
+
+            } else if (path.extension() == ".padpreset") {
+
+            } else {
+                LOG_WARNING("Unknown preset file: {}", path.string());
+            }
+        }
+    }
+
     void Application::reset_render_composition() {
         if (!m_composition_path.empty()) {
             std::strncpy(m_ui.render_file_path, std::filesystem::path(m_composition_path).replace_extension().string().c_str(), sizeof(m_ui.render_file_path) - 1);
@@ -3983,7 +4025,7 @@ namespace alfred::application {
         parameters.synthesizer.polyphony(optimal_composition_voices(parameters.composition));
         set_synthesizer_instrument_volumes(parameters.synthesizer, parameters.composition);
 
-        logging::debug("Starting rendering composition to `{}`", parameters.file_path.string().c_str());
+        logging::debug("Starting rendering composition to `{}`", parameters.file_path.string());
 
         player.start();
 

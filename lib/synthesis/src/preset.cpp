@@ -7,13 +7,13 @@
 
 namespace alfred::preset {
     namespace generic {
-        template<typename TypeLinear, typename Type, std::size_t TypeIndex>
+        template<typename TypeLinear, typename TypeExponential, std::size_t TypeIndex>
         static syn::envelope::Ptr new_envelope(const Envelope& envelope) {
             switch (envelope.type) {
                 case syn::envelope::Type::Linear:
                     return std::make_unique<TypeLinear>(std::get<TypeIndex>(envelope.description));
                 case syn::envelope::Type::Exponential:
-                    return std::make_unique<Type>(std::get<TypeIndex>(envelope.description));
+                    return std::make_unique<TypeExponential>(std::get<TypeIndex>(envelope.description));
             }
 
             std::unreachable();
@@ -86,7 +86,7 @@ namespace alfred::preset {
             m_amplitudes = syn::util::amplitudes(std::move(m_amplitudes));
         }
 
-#define ALFRED_PRESET_OSCILLATOR(OSCILLATOR_FUNCTION) \
+#define ALFRED_OSCILLATOR(OSCILLATOR_FUNCTION) \
     [this, time, &voice, i, &partial] { \
         if (partial.lfo) { \
             return m_amplitudes[std::size_t(i)] * OSCILLATOR_FUNCTION(time, partial.frequency_multiplier * syn::frequency(voice.note), partial.phase, *partial.lfo); \
@@ -95,29 +95,28 @@ namespace alfred::preset {
     }()
 
         double RuntimeInstrument::sound(double time, const syn::voice::Voice& voice) const noexcept {
-            double output {};
             const auto& voice_add = static_cast<const syn::voice::VoiceAdd&>(voice);
+            double output {};
 
             for (const auto& [i, partial] : m_preset.partials | std::views::enumerate) {
                 const double amplitude = voice_add.partial_envelopes.at(std::size_t(i))->value();
 
                 switch (partial.oscillator_type) {
                     case syn::oscillator::Type::Sine:
-                        output += amplitude * ALFRED_PRESET_OSCILLATOR(syn::oscillator::sine);
+                        output += amplitude * ALFRED_OSCILLATOR(syn::oscillator::sine);
                         break;
                     case syn::oscillator::Type::Square:
-                        output += amplitude * ALFRED_PRESET_OSCILLATOR(syn::oscillator::square);
+                        output += amplitude * ALFRED_OSCILLATOR(syn::oscillator::square);
                         break;
                     case syn::oscillator::Type::Triangle:
-                        output += amplitude * ALFRED_PRESET_OSCILLATOR(syn::oscillator::triangle);
+                        output += amplitude * ALFRED_OSCILLATOR(syn::oscillator::triangle);
                         break;
                     case syn::oscillator::Type::Sawtooth:
-                        output += amplitude * ALFRED_PRESET_OSCILLATOR(syn::oscillator::sawtooth);
+                        output += amplitude * ALFRED_OSCILLATOR(syn::oscillator::sawtooth);
                         break;
                     case syn::oscillator::Type::Noise:
                         output += amplitude * m_amplitudes[std::size_t(i)] * syn::noise();
                         break;
-
                 }
             }
 

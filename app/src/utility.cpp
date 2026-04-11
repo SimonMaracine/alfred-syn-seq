@@ -2,6 +2,8 @@
 
 #include <fstream>
 #include <memory>
+#include <format>
+#include <cassert>
 
 #include <SDL3/SDL.h>
 
@@ -39,22 +41,47 @@ namespace alfred::utility {
         }
     }
 
-    std::filesystem::path data_file_path([[maybe_unused]] const char* organization, [[maybe_unused]] const char* application) {
-#ifdef ALFRED_DISTRIBUTION
-        static const auto file_path =
-            std::unique_ptr<char, decltype(&SDL_free)>(
-                SDL_GetPrefPath(organization, application),
-                SDL_free
-            );
+    using DataFilePath = std::unique_ptr<char, decltype(&SDL_free)>;
+    static DataFilePath g_data_file_path {nullptr, SDL_free};
 
-        return file_path.get();
+    void initialize_file_paths(const char* organization, const char* application) {
+        g_data_file_path = DataFilePath(SDL_GetPrefPath(organization, application), SDL_free);
+    }
+
+    std::filesystem::path data_file_path() {
+#ifdef ALFRED_DISTRIBUTION
+        assert(g_data_file_path);
+        return g_data_file_path.get();
 #else
         return "./";  // Relative directory
 #endif
     }
 
-    void set_property(const char* property, const char* value) {
-        (void) SDL_SetAppMetadataProperty(property, value);
+    std::vector<std::filesystem::path> glob_directory(const std::filesystem::path& path, const char* pattern) {
+        int count {};
+
+        const auto paths = std::unique_ptr<char*[], decltype(&SDL_free)>(
+            SDL_GlobDirectory(path.string().c_str(), pattern, 0, &count),
+            SDL_free
+        );
+
+        if (!paths) {
+            throw FileError(std::format("SDL_GlobDirectory: {}", SDL_GetError()));
+        }
+
+        std::vector<std::filesystem::path> result;
+
+        for (int i {}; i < count; i++) {
+            result.emplace_back(paths[std::size_t(i)]);
+        }
+
+        return result;
+    }
+
+    void create_directory(const std::filesystem::path& path) {
+        if (!SDL_CreateDirectory(path.string().c_str())) {
+            throw FileError(std::format("SDL_CreateDirectory: {}", SDL_GetError()));
+        }
     }
 
     const char* get_property(const char* property) {
@@ -65,6 +92,10 @@ namespace alfred::utility {
         }
 
         return value;
+    }
+
+    void set_property(const char* property, const char* value) {
+        (void) SDL_SetAppMetadataProperty(property, value);
     }
 
     void show_error_message_box(const char* title, const char* message) {

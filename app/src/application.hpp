@@ -247,6 +247,8 @@ namespace alfred::application {
         void open_create_instrument(std::optional<ui::CreateInstrumentTab> create_instrument_tab = std::nullopt);
         void open_render_composition();
 
+        void load_presets_from_disk();
+
         struct RenderCompositionParameters {
             synthesizer::VirtualSynthesizer synthesizer;
             std::filesystem::path file_path;

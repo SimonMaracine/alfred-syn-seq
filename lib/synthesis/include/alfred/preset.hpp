@@ -10,6 +10,7 @@
 #include "alfred/hash.hpp"
 
 // Runtime dynamic instruments/presets
+// In this project, the term "instrument" represents an instrument in the generic sense, while "preset" specifically represents a runtime instrument (XML file)
 
 namespace alfred::preset {
     using EnvelopeDescription = std::variant<syn::envelope::DescriptionAdsr, syn::envelope::DescriptionAdr, syn::envelope::DescriptionNull>;
@@ -19,7 +20,7 @@ namespace alfred::preset {
         syn::envelope::Type type {};
     };
 
-    // Parameters that make up a runtime instrument
+    // Base parameters that make up a runtime instrument
     struct BasePreset {
         std::string name;
         std::string description;
@@ -27,7 +28,7 @@ namespace alfred::preset {
         Envelope envelope;  // Overall envelope
     };
 
-    // Template for any kind of runtime-defined instrument
+    // Base template for any kind of runtime-defined instrument
     template<typename Preset>
     class BaseRuntimeInstrument : public syn::Instrument {
     public:
