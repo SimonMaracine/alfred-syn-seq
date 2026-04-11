@@ -13,8 +13,113 @@
 #include "alfred/allocator.hpp"
 
 namespace alfred::syn {
+    enum NoteName : std::uint32_t {
+        A,
+        As,
+        B,
+        C,
+        Cs,
+        D,
+        Ds,
+        E,
+        F,
+        Fs,
+        G,
+        Gs
+    };
+
+    enum NoteOctave : std::uint32_t {
+        Octave0,
+        Octave1,
+        Octave2,
+        Octave3,
+        Octave4,
+        Octave5,
+        Octave6,
+        Octave7,
+        Octave8
+    };
+
+    // MIDI-like note ID
+    using NoteId = std::uint32_t;
+
+    // MIDI-like value from 0 to 1
+    using Velocity = double;
+
+    // Instruments/presets are identified by IDs
+    using InstrumentId = std::uint32_t;
+
+    // Min and max pitch of the instrument, inclusive range
+    using InstrumentRange = std::pair<NoteId, NoteId>;
+
+    constexpr NoteId note(NoteName name, NoteOctave octave) {
+        const std::uint32_t base = name;
+        const std::uint32_t multiplier = octave;
+
+        if (base < 3) {
+            return base + 12 * multiplier;
+        }
+
+        return base + 12 * (multiplier - 1);
+    }
+
+    constexpr std::pair<NoteName, NoteOctave> note(NoteId id) {
+        std::uint32_t octave = id / 12;
+        const std::uint32_t name = id % 12;
+
+        if (name >= 3) {
+            octave += 1;
+        }
+
+        return std::make_pair(NoteName(name), NoteOctave(octave));
+    }
+
+    static_assert(note(A, Octave5) == 60);
+    static_assert(note(B, Octave5) == 62);
+    static_assert(note(C, Octave2) == 15);
+    static_assert(note(2) == std::pair(B, Octave0));
+    static_assert(note(16) == std::pair(Cs, Octave2));
+    static_assert(note(85) == std::pair(As, Octave7));
+
+    namespace keyboard {
+        enum Octave : std::uint32_t {
+            OctaveFirst,
+            OctaveSecond,
+            OctaveThird,
+            OctaveFourth,
+            OctaveFifth,
+            OctaveSixth,
+            OctaveSeventh
+        };
+
+        inline constexpr Octave OCTAVE_BEGIN = OctaveFirst;
+        inline constexpr Octave OCTAVE_END = OctaveSeventh;
+
+        inline constexpr int OCTAVES = 7;
+        inline constexpr int EXTRA = 4;
+        inline constexpr int NOTES = OCTAVES * 12 + EXTRA;
+
+        inline constexpr NoteId ID_BEGIN = 0;
+        inline constexpr NoteId ID_END = NOTES - 1;
+        inline constexpr InstrumentRange ID_FULL_RANGE = std::make_pair(ID_BEGIN, ID_END);
+    }
+
+    namespace volume {
+        // Volume type in decibels
+        using Volume = std::int32_t;
+
+        inline constexpr Volume MIN = -40;
+        inline constexpr Volume DEFAULT = 0;
+        inline constexpr Volume MAX = 12;
+
+        // Decibels (power) to amplitude
+        inline double amplitude(Volume volume) {
+            return std::pow(10.0, double(volume) / 20.0);
+        }
+    }
+
     namespace envelope {
-        using Storage = allocator::StaticAllocatorStorage<128, 96, 8>;
+        using Storage = allocator::StaticAllocatorStorage<keyboard::NOTES * 10, 96, 8>;
 
         // Abstract class representing an envelope
         // Envelopes use a custom allocator; they are usually dynamically allocated
@@ -175,14 +280,14 @@ namespace alfred::syn {
             double m_value_note_off {};
         };
 
-        // Used by allocated and created envelopes that should not actually change the value
+        // Envelope that should not actually change the value
         class Null : public Envelope, public allocator::StaticAllocated<Null, Storage> {
         public:
             explicit Null(const DescriptionNull& = {}) {}
 
             void note_on(double) override {}
             void note_off(double) override {}
-            void update(double) override {  }
+            void update(double) override {}
             double value() const override { return 1.0; }
             bool done() const override { return true; }
         };
@@ -190,76 +295,8 @@ namespace alfred::syn {
         using Ptr = std::unique_ptr<Envelope>;
     }
 
-    enum NoteName : std::uint32_t {
-        A,
-        As,
-        B,
-        C,
-        Cs,
-        D,
-        Ds,
-        E,
-        F,
-        Fs,
-        G,
-        Gs
-    };
-
-    enum NoteOctave : std::uint32_t {
-        Octave0,
-        Octave1,
-        Octave2,
-        Octave3,
-        Octave4,
-        Octave5,
-        Octave6,
-        Octave7,
-        Octave8
-    };
-
-    // MIDI-like note ID
-    using NoteId = std::uint32_t;
-
-    // MIDI-like value from 0 to 1
-    using Velocity = double;
-
-    // Instruments/presets are identified by IDs
-    using InstrumentId = std::uint32_t;
-
-    // Min and max pitch of the instrument, inclusive range
-    using InstrumentRange = std::pair<NoteId, NoteId>;
-
-    constexpr NoteId note(NoteName name, NoteOctave octave) {
-        const std::uint32_t base = name;
-        const std::uint32_t multiplier = octave;
-
-        if (base < 3) {
-            return base + 12 * multiplier;
-        }
-
-        return base + 12 * (multiplier - 1);
-    }
-
-    constexpr std::pair<NoteName, NoteOctave> note(NoteId id) {
-        std::uint32_t octave = id / 12;
-        const std::uint32_t name = id % 12;
-
-        if (name >= 3) {
-            octave += 1;
-        }
-
-        return std::make_pair(NoteName(name), NoteOctave(octave));
-    }
-
-    static_assert(note(A, Octave5) == 60);
-    static_assert(note(B, Octave5) == 62);
-    static_assert(note(C, Octave2) == 15);
-    static_assert(note(2) == std::pair(B, Octave0));
-    static_assert(note(16) == std::pair(Cs, Octave2));
-    static_assert(note(85) == std::pair(As, Octave7));
-
     namespace voice {
-        using Storage = allocator::StaticAllocatorStorage<88, 88, 8>;
+        using Storage = allocator::StaticAllocatorStorage<keyboard::NOTES, 72, 8>;
 
         // A voice represents a particular sound made by some instrument at some point in time in the synthesizer
         // There can be multiple voices with the same instrument provided that their note (pitch) is different
@@ -302,43 +339,6 @@ namespace alfred::syn {
         };
 
         using Ptr = std::unique_ptr<Voice>;
-    }
-
-    namespace volume {
-        // Volume type in decibels
-        using Volume = std::int32_t;
-
-        inline constexpr Volume MIN = -40;
-        inline constexpr Volume DEFAULT = 0;
-        inline constexpr Volume MAX = 12;
-
-        // Decibels (power) to amplitude
-        inline double amplitude(Volume volume) {
-            return std::pow(10.0, double(volume) / 20.0);
-        }
-    }
-
-    namespace keyboard {
-        enum Octave : std::uint32_t {
-            OctaveFirst,
-            OctaveSecond,
-            OctaveThird,
-            OctaveFourth,
-            OctaveFifth,
-            OctaveSixth,
-            OctaveSeventh
-        };
-
-        inline constexpr Octave OCTAVE_BEGIN = OctaveFirst;
-        inline constexpr Octave OCTAVE_END = OctaveSeventh;
-
-        inline constexpr int OCTAVES = 7;
-        inline constexpr int EXTRA = 4;
-        inline constexpr int NOTES = OCTAVES * 12 + EXTRA;
-
-        inline constexpr NoteId ID_BEGIN = 0;
-        inline constexpr NoteId ID_END = NOTES - 1;
-        inline constexpr InstrumentRange ID_FULL_RANGE = std::make_pair(ID_BEGIN, ID_END);
     }
 
     // An instrument (or also called preset) describes how some voice should sound

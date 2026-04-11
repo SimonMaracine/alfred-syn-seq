@@ -5,17 +5,17 @@
 
 namespace alfred::instruments {
     void initialize_builtin_instruments(synthesizer::Synthesizer& synthesizer) {
-        (void) synthesizer.store_instrument(std::make_unique<instruments::ShortSynthPiano>());
-        (void) synthesizer.store_instrument(std::make_unique<instruments::Metronome>());
-        (void) synthesizer.store_instrument(std::make_unique<instruments::Ghost>());
-        (void) synthesizer.store_instrument(std::make_unique<instruments::Harmonica>());
-        (void) synthesizer.store_instrument(std::make_unique<instruments::DrumBass>());
-        (void) synthesizer.store_instrument(std::make_unique<instruments::DrumSnare>());
-        (void) synthesizer.store_instrument(std::make_unique<instruments::DrumHiHat>());
-        (void) synthesizer.store_instrument(std::make_unique<instruments::SynthPiano>());
-        (void) synthesizer.store_instrument(std::make_unique<instruments::Guitar>());
-        (void) synthesizer.store_instrument(std::make_unique<instruments::Strings>());
-        (void) synthesizer.store_instrument(std::make_unique<instruments::Cello>());
+        (void) synthesizer.store_instrument(std::make_unique<ShortSynthPiano>());
+        (void) synthesizer.store_instrument(std::make_unique<Metronome>());
+        (void) synthesizer.store_instrument(std::make_unique<Ghost>());
+        (void) synthesizer.store_instrument(std::make_unique<Harmonica>());
+        (void) synthesizer.store_instrument(std::make_unique<DrumBass>());
+        (void) synthesizer.store_instrument(std::make_unique<DrumSnare>());
+        (void) synthesizer.store_instrument(std::make_unique<DrumHiHat>());
+        (void) synthesizer.store_instrument(std::make_unique<SynthPiano>());
+        (void) synthesizer.store_instrument(std::make_unique<Guitar>());
+        (void) synthesizer.store_instrument(std::make_unique<Strings>());
+        (void) synthesizer.store_instrument(std::make_unique<Cello>());
     }
 
     double ShortSynthPiano::sound(double time, const syn::voice::Voice& voice) const noexcept {

@@ -4,7 +4,7 @@
 #include <alfred/hash.hpp>
 #include <alfred/synthesizer.hpp>
 
-// Built in compiled instruments/presets
+// Built-in compiled instruments/presets
 
 #define ALFRED_INSTRUMENT_STATIC_NAME_ID(NAME_STRING) \
     static consteval auto static_name() { return NAME_STRING; } \
@@ -20,7 +20,7 @@
 
 namespace alfred::instruments {
     // The synthesizers are initially empty
-    // Call this in order to add some default/builtin instruments/presets
+    // Call this in order to add some default/built-in instruments/presets
     void initialize_builtin_instruments(synthesizer::Synthesizer& synthesizer);
 
     class ShortSynthPiano : public syn::Instrument {

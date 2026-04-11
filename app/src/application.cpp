@@ -3996,7 +3996,7 @@ namespace alfred::application {
 
         while (rendering) {
             player.update(1.0 / double(def::SAMPLE_FREQUENCY));
-            parameters.synthesizer.update();
+            (void) parameters.synthesizer.update();
 
             assert(player.in_time());
 
