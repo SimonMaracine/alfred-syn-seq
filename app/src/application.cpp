@@ -45,6 +45,15 @@ namespace alfred::application {
     static constexpr std::size_t MAX_MESSAGE_COUNT = 4;
     static constexpr std::chrono::system_clock::duration MAX_MESSAGE_DURATION = 7s;
     static constexpr const char* PRESETS_DIRECTORY = "presets";
+    static constexpr double ZERO = 0.0;
+    static constexpr double POINT_ONE = 0.1;
+    static constexpr double ONE = 1.0;
+    static constexpr double TEN = 10.0;
+    static constexpr double FIFTEEN = 15.0;
+    static constexpr double TWENTY = 20.0;
+    static constexpr double ONE_HUNDRED = 100.0;
+    static constexpr float DRAG_SPEED_FAST = 0.01f;
+    static constexpr float DRAG_SPEED_SLOW = 0.001f;
 
     void Application::on_start() {
         desired_frame_time(FRAME_TIME_DEFAULT);
@@ -643,13 +652,10 @@ namespace alfred::application {
     }
 
     void Application::output() {
-        constexpr double zero = 0.0;
-        constexpr double one = 1.0;
-
         if (ImGui::Begin("Output", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::SeparatorText("Volume");
 
-            if (ImGui::SliderScalar("##volume", ImGuiDataType_Double, &m_ui.volume, &zero, &one, "%.2f")) {
+            if (ImGui::SliderScalar("##volume", ImGuiDataType_Double, &m_ui.volume, &ZERO, &ONE, "%.2f")) {
                 m_synthesizer.volume(m_ui.volume);
             }
 
@@ -1737,26 +1743,18 @@ namespace alfred::application {
     }
 
     void Application::create_instrument_envelope(ui::preset::Envelope& envelope) {
+
+
         if (envelope.type != ui::preset::EnvelopeTypeNull) {
-            if (ImGui::InputDouble("Attack", &envelope.description.duration_attack, 0.0, 0.0, "%.3f")) {
-                envelope.description.duration_attack = std::clamp(envelope.description.duration_attack, 0.0, 10.0);
-            }
-
-            if (ImGui::InputDouble("Decay", &envelope.description.duration_decay, 0.0, 0.0, "%.3f")) {
-                envelope.description.duration_decay = std::clamp(envelope.description.duration_decay, 0.0, 10.0);
-            }
-
-            if (ImGui::InputDouble("Release", &envelope.description.duration_release, 0.0, 0.0, "%.3f")) {
-                envelope.description.duration_release = std::clamp(envelope.description.duration_release, 0.0, 10.0);
-            }
+            ImGui::DragScalar("Attack", ImGuiDataType_Double, &envelope.description.duration_attack, DRAG_SPEED_FAST, &ZERO, &TEN, "%.3f", ImGuiSliderFlags_ClampOnInput);
+            ImGui::DragScalar("Decay", ImGuiDataType_Double, &envelope.description.duration_decay, DRAG_SPEED_FAST, &ZERO, &TEN, "%.3f", ImGuiSliderFlags_ClampOnInput);
+            ImGui::DragScalar("Release", ImGuiDataType_Double, &envelope.description.duration_release, DRAG_SPEED_FAST, &ZERO, &TEN, "%.3f", ImGuiSliderFlags_ClampOnInput);
         }
 
         switch (envelope.type) {
             case ui::preset::EnvelopeTypeAdsrLinear:
             case ui::preset::EnvelopeTypeAdsrExponential:
-                if (ImGui::InputDouble("Sustain", &envelope.description.value_sustain, 0.0, 0.0, "%.3f")) {
-                    envelope.description.value_sustain = std::clamp(envelope.description.value_sustain, 0.0, 1.0);
-                }
+                ImGui::DragScalar("Sustain", ImGuiDataType_Double, &envelope.description.value_sustain, DRAG_SPEED_SLOW, &ZERO, &ONE, "%.3f", ImGuiSliderFlags_ClampOnInput);
                 break;
             case ui::preset::EnvelopeTypeAdrLinear:
             case ui::preset::EnvelopeTypeAdrExponential:
@@ -1843,27 +1841,21 @@ namespace alfred::application {
                 const bool noise_type = partial.oscillator_type == ui::preset::OscillatorTypeNoise;
 
                 if (!noise_type) {
-                    if (ImGui::InputDouble("##Frequency Multiplier", &partial.frequency_multiplier, 0.0, 0.0, "%.3f")) {
-                        partial.frequency_multiplier = std::clamp(partial.frequency_multiplier, 0.0, 15.0);
-                    }
+                    ImGui::DragScalar("##Frequency Multiplier", ImGuiDataType_Double, &partial.frequency_multiplier, DRAG_SPEED_FAST, &POINT_ONE, &FIFTEEN, "%.3f", ImGuiSliderFlags_ClampOnInput);
 
                     ImGui::SetItemTooltip("Frequency Multiplier");
 
                     ImGui::SameLine();
                 }
 
-                if (ImGui::InputDouble("##Amplitude Divisor", &partial.amplitude_divisor, 0.0, 0.0, "%.3f")) {
-                    partial.amplitude_divisor = std::clamp(partial.amplitude_divisor, 1.0, 100.0);
-                }
+                ImGui::DragScalar("##Amplitude Divisor", ImGuiDataType_Double, &partial.amplitude_divisor, DRAG_SPEED_FAST, &ONE, &ONE_HUNDRED, "%.3f", ImGuiSliderFlags_ClampOnInput);
 
                 ImGui::SetItemTooltip("Amplitude Divisor");
 
                 if (!noise_type) {
                     ImGui::SameLine();
 
-                    if (ImGui::InputDouble("##Phase", &partial.phase, 0.0, 0.0, "%.3f")) {
-                        partial.phase = std::clamp(partial.phase, 0.0, math::TWO_PI);
-                    }
+                    ImGui::DragScalar("##Phase", ImGuiDataType_Double, &partial.phase, DRAG_SPEED_SLOW, &ZERO, &math::TWO_PI, "%.3f", ImGuiSliderFlags_ClampOnInput);
 
                     ImGui::SetItemTooltip("Phase");
 
@@ -1876,17 +1868,13 @@ namespace alfred::application {
                     if (partial.lfo.enabled) {
                         ImGui::SameLine();
 
-                        if (ImGui::InputDouble("##LFO Frequency", &partial.lfo.frequency, 0.0, 0.0, "%.3f")) {
-                            partial.lfo.frequency = std::clamp(partial.lfo.frequency, 1.0, 20.0);
-                        }
+                        ImGui::DragScalar("##LFO Frequency", ImGuiDataType_Double, &partial.lfo.frequency, DRAG_SPEED_FAST, &ONE, &TWENTY, "%.3f", ImGuiSliderFlags_ClampOnInput);
 
                         ImGui::SetItemTooltip("LFO Frequency");
 
                         ImGui::SameLine();
 
-                        if (ImGui::InputDouble("##LFO Deviation", &partial.lfo.deviation, 0.0, 0.0, "%.3f")) {
-                            partial.lfo.deviation = std::clamp(partial.lfo.deviation, 0.0, 1.0);
-                        }
+                        ImGui::DragScalar("##LFO Deviation", ImGuiDataType_Double, &partial.lfo.deviation, DRAG_SPEED_SLOW, &ZERO, &ONE, "%.3f", ImGuiSliderFlags_ClampOnInput);
 
                         ImGui::SetItemTooltip("LFO Deviation");
                     }
@@ -1925,13 +1913,9 @@ namespace alfred::application {
             ImGui::EndCombo();
         }
 
-        if (ImGui::InputDouble("Frequency", &m_ui.preset_pad.frequency, 0.0, 0.0, "%.3f")) {
-            m_ui.preset_pad.frequency = std::clamp(m_ui.preset_pad.frequency, syn::FREQUENCY_MIN, syn::FREQUENCY_MAX);
-        }
+        ImGui::DragScalar("Frequency", ImGuiDataType_Double, &m_ui.preset_pad.frequency, DRAG_SPEED_FAST, &syn::FREQUENCY_MIN, &syn::FREQUENCY_MAX, "%.3f", ImGuiSliderFlags_ClampOnInput);
 
-        if (ImGui::InputDouble("Bandwidth", &m_ui.preset_pad.bandwidth, 0.0, 0.0, "%.3f")) {
-            m_ui.preset_pad.bandwidth = std::clamp(m_ui.preset_pad.bandwidth, 0.1, 100.0);  // TODO which values?
-        }
+        ImGui::DragScalar("Bandwidth", ImGuiDataType_Double, &m_ui.preset_pad.bandwidth, DRAG_SPEED_FAST, &POINT_ONE, &ONE_HUNDRED, "%.3f", ImGuiSliderFlags_ClampOnInput);  // TODO which values?
 
         ImGui::Dummy(ui::rem(ImVec2(0.0f, 0.5f)));
 
@@ -1955,9 +1939,7 @@ namespace alfred::application {
 
                 ImGui::SameLine();
 
-                if (ImGui::InputDouble("##Amplitude", &amplitude_harmonic, 0.0, 0.0, "%.3f")) {
-                    amplitude_harmonic = std::clamp(amplitude_harmonic, 0.0, 1.0);
-                }
+                ImGui::DragScalar("##Amplitude", ImGuiDataType_Double, &amplitude_harmonic, DRAG_SPEED_SLOW, &ZERO, &ONE, "%.3f", ImGuiSliderFlags_ClampOnInput);
 
                 ImGui::PopID();
             }
