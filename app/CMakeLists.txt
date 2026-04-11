@@ -82,17 +82,12 @@ target_link_libraries(alfred_app PRIVATE SDL3::SDL3 cereal imgui alfred_lib_synt
 
 set_target_cpp_mode(alfred_app)
 set_target_warnings(alfred_app)
+set_target_platform_macros(alfred_app)
 enable_target_diagnostics(alfred_app)
 enable_target_ipo(alfred_app)
 
 if(ALFRED_DISTRIBUTION)
     target_compile_definitions(alfred_app PRIVATE "NDEBUG" "ALFRED_DISTRIBUTION")
-endif()
-
-if(UNIX)
-    target_compile_definitions(alfred_app PRIVATE "ALFRED_LINUX")
-elseif(WIN32)
-    target_compile_definitions(alfred_app PRIVATE "ALFRED_WINDOWS")
 endif()
 
 if(UNIX)

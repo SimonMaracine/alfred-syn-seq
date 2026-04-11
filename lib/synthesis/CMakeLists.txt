@@ -34,6 +34,7 @@ endif()
 
 set_target_cpp_mode(alfred_lib_synthesis)
 set_target_warnings(alfred_lib_synthesis)
+set_target_platform_macros(alfred_lib_synthesis)
 enable_target_diagnostics(alfred_lib_synthesis)
 enable_target_ipo(alfred_lib_synthesis)
 

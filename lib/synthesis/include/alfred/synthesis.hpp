@@ -296,7 +296,11 @@ namespace alfred::syn {
     }
 
     namespace voice {
+#ifdef ALFRED_WINDOWS  // Windows in debug mode is just stupid
+        using Storage = allocator::StaticAllocatorStorage<keyboard::NOTES, 88, 8>;
+#else
         using Storage = allocator::StaticAllocatorStorage<keyboard::NOTES, 72, 8>;
+#endif
 
         // A voice represents a particular sound made by some instrument at some point in time in the synthesizer
         // There can be multiple voices with the same instrument provided that their note (pitch) is different
