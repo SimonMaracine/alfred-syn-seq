@@ -237,6 +237,8 @@ namespace alfred::application {
         bool preset_save_pad(std::filesystem::path path);
         bool preset_open_add(std::filesystem::path path);
         bool preset_open_pad(std::filesystem::path path);
+        bool preset_open_add_silent(std::filesystem::path path, ui::preset::PresetAdd& preset_add) const;
+        bool preset_open_pad_silent(std::filesystem::path path, ui::preset::PresetPad& preset_pad) const;
         void preset_file_save_add();
         void preset_file_save_pad();
         void preset_file_open_add();

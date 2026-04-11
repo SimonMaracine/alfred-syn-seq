@@ -75,11 +75,10 @@ namespace alfred::application {
 
         // Must call this after opening the audio device
         instruments::initialize_builtin_instruments(m_synthesizer);
+        reset_composition_instrument_colors();
 
         set_color_scheme(m_data.color_scheme);
         set_scale(m_data.scale);
-
-        reset_composition_instrument_colors();
 
         switch (m_data.scale) {
             case ui::Scale100:
@@ -127,9 +126,7 @@ namespace alfred::application {
             notify_message(std::format("Could not create directory: {}", e.what()));
         }
 
-        m_task_manager.add_delayed_task([this] {
-            load_presets_from_disk();
-        }, 4000);
+        load_presets_from_disk();
 
         notify_message("Welcome! Be sure to check out the manual from the source repository.");
     }
@@ -484,7 +481,13 @@ namespace alfred::application {
         }
 
         if (ImGui::BeginMenu("Log File")) {
-            ImGui::Text("%s", (utility::data_file_path() / "alfred.log").string().c_str());
+            ImGui::Text("%s", (utility::data_file_path() / logging::FILE).string().c_str());
+
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Presets Directory")) {
+            ImGui::Text("%s", (utility::data_file_path() / PRESETS_DIRECTORY).string().c_str());
 
             ImGui::EndMenu();
         }
@@ -3571,9 +3574,6 @@ namespace alfred::application {
 
         try {
             composition_write(path, m_composition);
-
-            logging::information("Written composition to `{}`", path.string());
-            notify_message("Written composition to the specified path");
         } catch (const composition::CompositionError& e) {
             logging::error("Could not save composition: {}", e.what());
             notify_message(std::format("Could not save composition: {}", e.name()));
@@ -3583,6 +3583,9 @@ namespace alfred::application {
             notify_message(std::format("Could not save composition: {}", e.name()));
             return false;
         }
+
+        logging::information("Written composition to `{}`", path.string());
+        notify_message("Written composition to the specified path");
 
         m_composition_path = std::move(path);
         m_composition_not_saved = false;
@@ -3601,9 +3604,6 @@ namespace alfred::application {
 
         try {
             composition_write(m_composition_path, m_composition);
-
-            logging::information("Written composition to `{}`", m_composition_path.string());
-            notify_message("Written composition to the specified path");
         } catch (const composition::CompositionError& e) {
             logging::error("Could not save composition: {}", e.what());
             notify_message(std::format("Could not save composition: {}", e.name()));
@@ -3613,6 +3613,9 @@ namespace alfred::application {
             notify_message(std::format("Could not save composition: {}", e.name()));
             return false;
         }
+
+        logging::information("Written composition to `{}`", m_composition_path.string());
+        notify_message("Written composition to the specified path");
 
         m_composition_not_saved = false;
         m_data.recent_compositions.insert(m_composition_path.string());
@@ -3627,9 +3630,6 @@ namespace alfred::application {
 
         try {
             composition_read(path, m_composition);
-
-            logging::information("Read composition from `{}`", path.string());
-            notify_message("Read composition from the specified path");
         } catch (const composition::CompositionError& e) {
             m_composition = {};
             logging::error("Could not open composition: {}", e.what());
@@ -3641,6 +3641,9 @@ namespace alfred::application {
             notify_message(std::format("Could not open composition: {}", e.name()));
             return false;
         }
+
+        logging::information("Read composition from `{}`", path.string());
+        notify_message("Read composition from the specified path");
 
         m_composition_path = std::move(path);
         m_data.recent_compositions.insert(m_composition_path.string());
@@ -3741,9 +3744,6 @@ namespace alfred::application {
 
         try {
             preset_write(path, translate_preset(m_ui.preset_add));
-
-            logging::information("Written preset to `{}`", path.string());
-            notify_message("Written preset to the specified path");
         } catch (const preset::PresetError& e) {
             logging::error("Could not save preset: {}", e.what());
             notify_message(std::format("Could not save preset: {}", e.name()));
@@ -3753,6 +3753,9 @@ namespace alfred::application {
             notify_message(std::format("Could not save preset: {}", e.name()));
             return false;
         }
+
+        logging::information("Written preset to `{}`", path.string());
+        notify_message("Written preset to the specified path");
 
         return true;
     }
@@ -3762,9 +3765,6 @@ namespace alfred::application {
 
         try {
             preset_write(path, translate_preset(m_ui.preset_pad));
-
-            logging::information("Written preset to `{}`", path.string());
-            notify_message("Written preset to the specified path");
         } catch (const preset::PresetError& e) {
             logging::error("Could not save preset: {}", e.what());
             notify_message(std::format("Could not save preset: {}", e.name()));
@@ -3774,46 +3774,46 @@ namespace alfred::application {
             notify_message(std::format("Could not save preset: {}", e.name()));
             return false;
         }
+
+        logging::information("Written preset to `{}`", path.string());
+        notify_message("Written preset to the specified path");
 
         return true;
     }
 
     bool Application::preset_open_add(std::filesystem::path path) {
-        check_path_extension(path, ".addpreset");
-
-        preset::add::Preset preset;
-
-        try {
-            preset_read(path, preset);
-
-            logging::information("Read preset from `{}`", path.string());
-            notify_message("Read preset from the specified path");
-        } catch (const preset::PresetError& e) {
-            logging::error("Could not open preset: {}", e.what());
-            notify_message(std::format("Could not open preset: {}", e.name()));
-            return false;
-        } catch (const utility::FileError& e) {
-            logging::error("Could not open preset: {}", e.what());
-            notify_message(std::format("Could not open preset: {}", e.name()));
+        if (!preset_open_add_silent(std::move(path), m_ui.preset_add)) {
             return false;
         }
 
-        m_ui.preset_add = translate_preset(preset);
+        logging::information("Read preset from `{}`", path.string());
+        notify_message("Read preset from the specified path");
+
         open_create_instrument(ui::CreateInstrumentTab::Additive);
 
         return true;
     }
 
     bool Application::preset_open_pad(std::filesystem::path path) {
-        check_path_extension(path, ".padpreset");
+        if (!preset_open_pad_silent(std::move(path), m_ui.preset_pad)) {
+            return false;
+        }
 
-        preset::pad::Preset preset;
+        logging::information("Read preset from `{}`", path.string());
+        notify_message("Read preset from the specified path");
+
+        open_create_instrument(ui::CreateInstrumentTab::PadSynth);
+
+        return true;
+    }
+
+    bool Application::preset_open_add_silent(std::filesystem::path path, ui::preset::PresetAdd& preset_add) const {
+        check_path_extension(path, ".addpreset");
+
+        preset::add::Preset preset;
 
         try {
             preset_read(path, preset);
-
-            logging::information("Read preset from `{}`", path.string());
-            notify_message("Read preset from the specified path");
         } catch (const preset::PresetError& e) {
             logging::error("Could not open preset: {}", e.what());
             notify_message(std::format("Could not open preset: {}", e.name()));
@@ -3824,8 +3824,29 @@ namespace alfred::application {
             return false;
         }
 
-        m_ui.preset_pad = translate_preset(preset);
-        open_create_instrument(ui::CreateInstrumentTab::PadSynth);
+        preset_add = translate_preset(preset);
+
+        return true;
+    }
+
+    bool Application::preset_open_pad_silent(std::filesystem::path path, ui::preset::PresetPad& preset_pad) const {
+        check_path_extension(path, ".padpreset");
+
+        preset::pad::Preset preset;
+
+        try {
+            preset_read(path, preset);
+        } catch (const preset::PresetError& e) {
+            logging::error("Could not open preset: {}", e.what());
+            notify_message(std::format("Could not open preset: {}", e.name()));
+            return false;
+        } catch (const utility::FileError& e) {
+            logging::error("Could not open preset: {}", e.what());
+            notify_message(std::format("Could not open preset: {}", e.name()));
+            return false;
+        }
+
+        preset_pad = translate_preset(preset);
 
         return true;
     }
@@ -3937,10 +3958,18 @@ namespace alfred::application {
         }
 
         for (const auto& path : paths) {
-            if (path.extension() == ".addpreset") {  // TODO
+            if (path.extension() == ".addpreset") {
+                ui::preset::PresetAdd preset;
+                preset_open_add_silent(utility::data_file_path() / PRESETS_DIRECTORY / path, preset);
 
+                (void) m_synthesizer.store_instrument(std::make_unique<preset::add::RuntimeInstrument>(translate_preset(preset)));
+                set_composition_instrument_colors();
             } else if (path.extension() == ".padpreset") {
+                ui::preset::PresetPad preset;
+                preset_open_pad_silent(utility::data_file_path() / PRESETS_DIRECTORY / path, preset);
 
+                (void) m_synthesizer.store_instrument(std::make_unique<preset::pad::RuntimeInstrument>(translate_preset(preset)));
+                set_composition_instrument_colors();
             } else {
                 LOG_WARNING("Unknown preset file: {}", path.string());
             }

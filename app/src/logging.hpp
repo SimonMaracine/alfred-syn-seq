@@ -4,11 +4,13 @@
 #include <utility>
 #include <chrono>
 
-// Global console and file logging
-
 #include "error.hpp"
 
+// Global console and file logging
+
 namespace alfred::logging {
+    inline constexpr const char* FILE = "alfred.log";
+
     enum class Severity {
         Debug,
         Information,

@@ -25,6 +25,7 @@ namespace alfred::utility {
     // Recursively search and return all matching files paths from a directory
     std::vector<std::filesystem::path> glob_directory(const std::filesystem::path& path, const char* pattern = nullptr);
 
+    // Create a directory and any parent directories on disk
     void create_directory(const std::filesystem::path& path);
 
     // Get/set SDL application properties

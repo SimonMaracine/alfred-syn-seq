@@ -22,7 +22,7 @@ namespace alfred::logging {
     void initialize() {
         std::lock_guard guard {g_stream.mutex};
 
-        g_stream.stream.open(utility::data_file_path() / "alfred.log", std::ios_base::app);
+        g_stream.stream.open(utility::data_file_path() / FILE, std::ios_base::app);
 
         if (!g_stream.stream.is_open()) {
             throw LoggingError("Could not open log file");
