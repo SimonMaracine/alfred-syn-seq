@@ -200,10 +200,13 @@ namespace alfred::ui {
         };
 
         enum Profile : int {
-            ProfileDefault
+            ProfileGaussian,
+            ProfileSquare
         };
 
         struct PresetPad : BasePreset {
+            static constexpr double DEFAULT_AMPLITUDE = 1.0;
+
             Profile profile {};
             double frequency = 261.63;
             double bandwidth = 20.0;

@@ -416,7 +416,7 @@ namespace alfred::syn {
     // https://zynaddsubfx.sourceforge.io/doc/PADsynth/PADsynth.htm
 
     namespace padsynth {
-        static double default_profile(double frequency, double bandwidth) {
+        static double profile_default(double frequency, double bandwidth) {
             const double x = frequency / bandwidth;
             return std::exp(-x * x) / bandwidth;
         }
@@ -443,7 +443,7 @@ namespace alfred::syn {
             Profile profile
         ) {
             if (!profile) {
-                profile = default_profile;
+                profile = profile_default;
             }
 
             auto sample = std::make_unique<double[]>(size);
@@ -451,8 +451,7 @@ namespace alfred::syn {
             auto frequency_phases = std::make_unique<double[]>(size / 2);
 
             for (std::size_t harmonic = 1; harmonic < number_harmonics; harmonic++) {
-                const double harmonic_bandwidth =
-                    (std::exp2(bandwidth / 1200.0) - 1.0) * frequency * double(harmonic);
+                const double harmonic_bandwidth = (std::exp2(bandwidth / 1200.0) - 1.0) * frequency * double(harmonic);
 
                 const double bandwidth_i = harmonic_bandwidth / (2.0 * double(sample_rate));
                 const double frequency_i = frequency * double(harmonic) / double(sample_rate);

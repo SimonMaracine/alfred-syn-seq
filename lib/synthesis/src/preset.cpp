@@ -2,6 +2,8 @@
 
 #include <ranges>
 #include <utility>
+#include <algorithm>
+#include <cmath>
 
 #include "alfred/definitions.hpp"
 
@@ -150,6 +152,10 @@ namespace alfred::preset {
     }
 
     namespace pad {
+        static double profile_square(double frequency, double bandwidth) {
+            return std::max((-std::pow(frequency / bandwidth, 100.0) + 1.0) / bandwidth, 0.0);
+        }
+
         RuntimeInstrument::RuntimeInstrument(Preset preset)
             : BaseRuntimeInstrument(std::move(preset)) {
             m_sample = syn::padsynth::SampleCopyable(
@@ -188,8 +194,10 @@ namespace alfred::preset {
 
         syn::padsynth::Profile RuntimeInstrument::profile(const Preset& preset) {
             switch (preset.profile) {
-                case Profile::Default:
+                case Profile::Gaussian:
                     return nullptr;
+                case Profile::Square:
+                    return profile_square;
             }
 
             std::unreachable();

@@ -1743,8 +1743,6 @@ namespace alfred::application {
     }
 
     void Application::create_instrument_envelope(ui::preset::Envelope& envelope) {
-
-
         if (envelope.type != ui::preset::EnvelopeTypeNull) {
             ImGui::DragScalar("Attack", ImGuiDataType_Double, &envelope.description.duration_attack, DRAG_SPEED_FAST, &ZERO, &TEN, "%.3f", ImGuiSliderFlags_ClampOnInput);
             ImGui::DragScalar("Decay", ImGuiDataType_Double, &envelope.description.duration_decay, DRAG_SPEED_FAST, &ZERO, &TEN, "%.3f", ImGuiSliderFlags_ClampOnInput);
@@ -1901,7 +1899,7 @@ namespace alfred::application {
     void Application::create_instrument_pad() {
         ImGui::Dummy(ui::rem(ImVec2(0.0f, 0.5f)));
 
-        constexpr const char* PROFILE[] { "Default" };
+        constexpr const char* PROFILE[] { "Gaussian", "Square" };
 
         if (ImGui::BeginCombo("Profile", PROFILE[m_ui.preset_pad.profile])) {
             for (std::size_t i {}; i < std::size(PROFILE); i++) {
@@ -1920,7 +1918,7 @@ namespace alfred::application {
         ImGui::Dummy(ui::rem(ImVec2(0.0f, 0.5f)));
 
         if (ImGui::Button("Add Amplitude")) {
-            m_ui.preset_pad.amplitude_harmonics.emplace_back();
+            m_ui.preset_pad.amplitude_harmonics.push_back(ui::preset::PresetPad::DEFAULT_AMPLITUDE);
         }
 
         if (ImGui::BeginChild("Amplitude Harmonics", ImVec2(0.0f, ui::rem(18.0f)), ImGuiChildFlags_AutoResizeX)) {
@@ -3448,8 +3446,11 @@ namespace alfred::application {
         static_cast<preset::BasePreset&>(result_preset) = translate_preset(static_cast<const ui::preset::BasePreset&>(preset));
 
         switch (preset.profile) {
-            case ui::preset::ProfileDefault:
-                result_preset.profile = preset::pad::Profile::Default;
+            case ui::preset::ProfileGaussian:
+                result_preset.profile = preset::pad::Profile::Gaussian;
+                break;
+            case ui::preset::ProfileSquare:
+                result_preset.profile = preset::pad::Profile::Square;
                 break;
         }
 
@@ -3465,8 +3466,11 @@ namespace alfred::application {
         static_cast<ui::preset::BasePreset&>(result_preset) = translate_preset(static_cast<const preset::BasePreset&>(preset));
 
         switch (preset.profile) {
-            case preset::pad::Profile::Default:
-                result_preset.profile = ui::preset::ProfileDefault;
+            case preset::pad::Profile::Gaussian:
+                result_preset.profile = ui::preset::ProfileGaussian;
+                break;
+            case preset::pad::Profile::Square:
+                result_preset.profile = ui::preset::ProfileSquare;
                 break;
         }
 

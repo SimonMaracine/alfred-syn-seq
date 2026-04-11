@@ -79,7 +79,8 @@ namespace alfred::preset {
 
     namespace pad {
         enum class Profile {
-            Default
+            Gaussian,
+            Square
         };
 
         struct Preset : BasePreset {
