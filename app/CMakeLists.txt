@@ -3,12 +3,12 @@ cmake_minimum_required(VERSION 3.20)
 include(cmake/cereal.cmake)
 include(cmake/imgui.cmake)
 
-function(add_resource variable_name file_name file_type)
+function(add_resource variable_name file_path file_type)
     add_custom_command(
-        OUTPUT "include/${file_name}.hpp"
+        OUTPUT "include/${file_path}.hpp"
         COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/scripts/embed.py"
-        ARGS "${variable_name}" "${CMAKE_CURRENT_SOURCE_DIR}/res/${file_name}" "${file_type}"
-        DEPENDS "res/${file_name}"
+        ARGS "ALFRED_${variable_name}" "${file_path}" "${CMAKE_CURRENT_SOURCE_DIR}/res/${file_path}" "${file_type}"
+        DEPENDS "res/${file_path}"
         VERBATIM
     )
 endfunction()
@@ -21,8 +21,8 @@ add_resource("REWIND" "rewind.png" "binary")
 
 add_custom_command(
     OUTPUT "include/version.hpp"
-    COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/scripts/version.py"
-    ARGS "${CMAKE_PROJECT_VERSION}"
+    COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/scripts/string.py"
+    ARGS "ALFRED_VERSION" "version" "${CMAKE_PROJECT_VERSION}"
     VERBATIM
 )
 
