@@ -83,7 +83,5 @@ namespace alfred::video {
 
     struct VideoError : error::Error {
         using Error::Error;
-
-        ALFRED_ERROR_NAME(VideoError)
     };
 }

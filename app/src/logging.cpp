@@ -6,6 +6,7 @@
 #include <print>
 
 #include "utility.hpp"
+#include "error.hpp"
 
 namespace alfred::logging {
     static struct {
@@ -19,7 +20,7 @@ namespace alfred::logging {
         g_log.stream.open(utility::data_file_path() / FILE, std::ios_base::app);
 
         if (!g_log.stream.is_open()) {
-            throw LoggingError("Could not open log file");
+            throw alfred::error::Error("Could not open log file");
         }
     }
 

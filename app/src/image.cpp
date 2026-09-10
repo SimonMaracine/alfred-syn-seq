@@ -5,13 +5,15 @@
 
 #include <SDL3/SDL.h>
 
+#include "error.hpp"
+
 namespace alfred::image {
     SurfaceRef::SurfaceRef(SDL_Surface* surface)
         : m_surface(surface) {}
 
     void SurfaceRef::add_alternate(SurfaceRef surface) const {
         if (!SDL_AddSurfaceAlternateImage(m_surface, surface.get())) {
-            throw ImageError(std::format("SDL_AddSurfaceAlternateImage: {}", SDL_GetError()));
+            throw error::Error(std::format("SDL_AddSurfaceAlternateImage: {}", SDL_GetError()));
         }
     }
 
@@ -19,13 +21,13 @@ namespace alfred::image {
         SDL_IOStream* stream = SDL_IOFromConstMem(buffer.data(), buffer.size());
 
         if (!stream) {
-            throw ImageError(std::format("SDL_IOFromConstMem: {}", SDL_GetError()));
+            throw error::Error(std::format("SDL_IOFromConstMem: {}", SDL_GetError()));
         }
 
         m_surface = SDL_LoadPNG_IO(stream, true);
 
         if (!m_surface) {
-            throw ImageError(std::format("SDL_LoadPNG_IO: {}", SDL_GetError()));
+            throw error::Error(std::format("SDL_LoadPNG_IO: {}", SDL_GetError()));
         }
     }
 
@@ -50,7 +52,7 @@ namespace alfred::image {
         m_texture = SDL_CreateTextureFromSurface(renderer, surface.get());
 
         if (!m_texture) {
-            throw ImageError(std::format("SDL_CreateTextureFromSurface: {}", SDL_GetError()));
+            throw error::Error(std::format("SDL_CreateTextureFromSurface: {}", SDL_GetError()));
         }
     }
 

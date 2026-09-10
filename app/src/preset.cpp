@@ -4,11 +4,8 @@
 #include <format>
 
 #include <cereal/archives/xml.hpp>
-#include <cereal/types/string.hpp>
-#include <cereal/types/variant.hpp>
-#include <cereal/types/vector.hpp>
-#include <cereal/types/optional.hpp>
-#include <cereal/types/utility.hpp>
+
+#include "error.hpp"
 
 namespace alfred::preset {
     namespace generic {
@@ -21,9 +18,9 @@ namespace alfred::preset {
                 cereal::XMLOutputArchive archive {stream};
                 archive(cereal::make_nvp("preset", preset));
             } catch (const cereal::Exception& e) {
-                throw PresetError(std::format("Could not write to stream: {}", e.what()));
+                throw error::Error(std::format("Could not write to stream: {}", e.what()));
             } catch (...) {
-                throw PresetError("Unexpected error writing to stream");
+                throw error::Error("Unexpected error writing to stream");
             }
 
             buffer.data = stream.str();
@@ -38,9 +35,9 @@ namespace alfred::preset {
                 cereal::XMLInputArchive archive {stream};
                 archive(cereal::make_nvp("preset", preset));
             } catch (const cereal::Exception& e) {
-                throw PresetError(std::format("Could not read from stream: {}", e.what()));
+                throw error::Error(std::format("Could not read from stream: {}", e.what()));
             } catch (...) {
-                throw PresetError("Unexpected error reading from stream");
+                throw error::Error("Unexpected error reading from stream");
             }
         }
     }

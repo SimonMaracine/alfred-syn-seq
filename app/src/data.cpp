@@ -4,8 +4,8 @@
 #include <format>
 
 #include <cereal/archives/binary.hpp>
-#include <cereal/types/set.hpp>
-#include <cereal/types/string.hpp>
+
+#include "error.hpp"
 
 namespace alfred::data {
     void export_data(const Data& data, utility::Buffer& buffer) {
@@ -16,9 +16,9 @@ namespace alfred::data {
             cereal::BinaryOutputArchive archive {stream};
             archive(data);
         } catch (const cereal::Exception& e) {
-            throw DataError(std::format("Could not write to stream: {}", e.what()));
+            throw error::Error(std::format("Could not write to stream: {}", e.what()));
         } catch (...) {
-            throw DataError("Unexpected error writing to stream");
+            throw error::Error("Unexpected error writing to stream");
         }
 
         buffer.data = stream.str();
@@ -32,9 +32,9 @@ namespace alfred::data {
             cereal::BinaryInputArchive archive {stream};
             archive(data);
         } catch (const cereal::Exception& e) {
-            throw DataError(std::format("Could not read from stream: {}", e.what()));
+            throw error::Error(std::format("Could not read from stream: {}", e.what()));
         } catch (...) {
-            throw DataError("Unexpected error reading from stream");
+            throw error::Error("Unexpected error reading from stream");
         }
     }
 }

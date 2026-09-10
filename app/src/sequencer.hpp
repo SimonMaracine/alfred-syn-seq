@@ -3,6 +3,7 @@
 #include <vector>
 #include <unordered_map>
 #include <set>
+#include <flat_set>
 #include <optional>
 #include <variant>
 #include <functional>
@@ -12,9 +13,6 @@
 
 #include <alfred/synthesizer.hpp>
 #include <alfred/math.hpp>
-
-#include "flat_set.hpp"
-#include "error.hpp"
 
 // Everything about sequencing and modeling musical concepts
 
@@ -337,8 +335,8 @@ namespace alfred::seq {
         };
 
         // Notes must always be ordered
-        using UnplayedNotes = std_flat_multiset<UnplayedNote>;
-        using PlayedNotes = std_flat_multiset<PlayedNote>;
+        using UnplayedNotes = std::flat_multiset<UnplayedNote>;
+        using PlayedNotes = std::flat_multiset<PlayedNote>;
 
         struct Execution {
             UnplayedNotes notes_unplayed;
@@ -402,11 +400,5 @@ namespace alfred::seq {
         bool m_playing {};
         bool m_metronome {};
         bool m_in_time = true;  // If the player is able to keep up with the piece
-    };
-
-    struct SequencerError : error::Error {
-        using Error::Error;
-
-        ALFRED_ERROR_NAME(SequencerError)
     };
 }

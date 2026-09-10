@@ -7,6 +7,7 @@
 #include <string>
 #include <chrono>
 #include <functional>
+#include <flat_set>
 
 #include <imgui.h>
 #include <alfred/real_synthesizer.hpp>
@@ -18,7 +19,6 @@
 #include "data.hpp"
 #include "task.hpp"
 #include "image.hpp"
-#include "flat_set.hpp"
 #include "preset.hpp"
 
 namespace alfred::application {
@@ -166,7 +166,7 @@ namespace alfred::application {
         float composition_width() const;
         ImVec2 composition_space(ImVec2 space) const;
         ImVec2 composition_mouse_position(ImVec2 origin) const;
-        std_flat_set<syn::InstrumentId> active_instruments() const;
+        std::flat_set<syn::InstrumentId> active_instruments() const;
         bool point_x_in_camera_view(float point_x, float space_x) const;
         bool point_y_in_camera_view(float point_y, float space_y) const;
         static void readd_note(ProvenanceNote& provenance_note, const seq::Note& note);

@@ -4,11 +4,8 @@
 #include <format>
 
 #include <cereal/archives/binary.hpp>
-#include <cereal/types/vector.hpp>
-#include <cereal/types/unordered_map.hpp>
-#include <cereal/types/set.hpp>
-#include <cereal/types/string.hpp>
-#include <cereal/types/variant.hpp>
+
+#include "error.hpp"
 
 namespace alfred::composition {
     void export_composition(const Composition& composition, utility::Buffer& buffer) {
@@ -19,9 +16,9 @@ namespace alfred::composition {
             cereal::BinaryOutputArchive archive {stream};
             archive(composition);
         } catch (const cereal::Exception& e) {
-            throw CompositionError(std::format("Could not write to stream: {}", e.what()));
+            throw error::Error(std::format("Could not write to stream: {}", e.what()));
         } catch (...) {
-            throw CompositionError("Unexpected error writing to stream");
+            throw error::Error("Unexpected error writing to stream");
         }
 
         buffer.data = stream.str();
@@ -35,9 +32,9 @@ namespace alfred::composition {
             cereal::BinaryInputArchive archive {stream};
             archive(composition);
         } catch (const cereal::Exception& e) {
-            throw CompositionError(std::format("Could not read from stream: {}", e.what()));
+            throw error::Error(std::format("Could not read from stream: {}", e.what()));
         } catch (...) {
-            throw CompositionError("Unexpected error reading from stream");
+            throw error::Error("Unexpected error reading from stream");
         }
     }
 }

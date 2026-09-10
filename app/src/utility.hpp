@@ -4,8 +4,6 @@
 #include <filesystem>
 #include <vector>
 
-#include "error.hpp"
-
 namespace alfred::utility {
     // Managed generic buffer of memory
     // Note that it always has an extra zero byte at the end not included in the size
@@ -36,10 +34,4 @@ namespace alfred::utility {
 
     // Display a native error message box
     void show_error_message_box(const char* title, const char* message);
-
-    struct FileError : error::Error {
-        using Error::Error;
-
-        ALFRED_ERROR_NAME(FileError)
-    };
 }

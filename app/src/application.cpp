@@ -21,6 +21,7 @@
 #include "logging.hpp"
 #include "encoder.hpp"
 #include "utility.hpp"
+#include "error.hpp"
 
 #include "icon64.png.hpp"
 #include "icon128.png.hpp"
@@ -60,7 +61,7 @@ namespace alfred::application {
 
         try {
             icons({ ALFRED_ICON64, ALFRED_ICON128 });
-        } catch (const video::VideoError& e) {
+        } catch (const error::Error& e) {
             logging::error("Could not set icon: {}", e.what());
         }
 
@@ -68,16 +69,12 @@ namespace alfred::application {
             utility::Buffer buffer;
             utility::read_file(utility::data_file_path() / "alfred.dat", buffer);
             data::import_data(m_data, buffer);
-        } catch (const data::DataError& e) {
+        } catch (const error::Error& e) {
             m_data = {};
             logging::warning("Could not import data: {}", e.what());
-            notify_message(std::format("Could not import data: {}", e.name()));
-        } catch (const utility::FileError& e) {
-            m_data = {};
-            logging::warning("Could not import data: {}", e.what());
-            notify_message(std::format("Could not import data: {}", e.name()));
+            notify_message("Could not import data");
         }
-        
+
         m_synthesizer.open();
         m_synthesizer.resume();
         m_synthesizer.volume(0.9);
@@ -130,7 +127,7 @@ namespace alfred::application {
 
         try {
             utility::create_directory(utility::data_file_path() / PRESETS_DIRECTORY);
-        } catch (const utility::FileError& e) {
+        } catch (const error::Error& e) {
             logging::error("Could not create directory: {}", e.what());
             notify_message(std::format("Could not create directory: {}", e.what()));
         }
@@ -145,9 +142,7 @@ namespace alfred::application {
             utility::Buffer buffer;
             data::export_data(m_data, buffer);
             utility::write_file(utility::data_file_path() / "alfred.dat", buffer);
-        } catch (const data::DataError& e) {
-            logging::error("Could not export data: {}", e.what());
-        } catch (const utility::FileError& e) {
+        } catch (const error::Error& e) {
             logging::error("Could not export data: {}", e.what());
         }
     }
@@ -2969,8 +2964,8 @@ namespace alfred::application {
         return mouse_position - origin - ImVec2(ui::rem(COMPOSITION_LEFT), 0.0f) + m_composition_camera;
     }
 
-    std_flat_set<syn::InstrumentId> Application::active_instruments() const {
-        std_flat_set<syn::InstrumentId> instruments;
+    std::flat_set<syn::InstrumentId> Application::active_instruments() const {
+        std::flat_set<syn::InstrumentId> instruments;
 
         for (const seq::Measure& measure : m_composition.measures) {
             for (const auto& instrument : measure.instruments) {
@@ -3585,13 +3580,9 @@ namespace alfred::application {
 
         try {
             composition_write(path, m_composition);
-        } catch (const composition::CompositionError& e) {
+        } catch (const error::Error& e) {
             logging::error("Could not save composition: {}", e.what());
-            notify_message(std::format("Could not save composition: {}", e.name()));
-            return false;
-        } catch (const utility::FileError& e) {
-            logging::error("Could not save composition: {}", e.what());
-            notify_message(std::format("Could not save composition: {}", e.name()));
+            notify_message("Could not save composition");
             return false;
         }
 
@@ -3615,13 +3606,9 @@ namespace alfred::application {
 
         try {
             composition_write(m_composition_path, m_composition);
-        } catch (const composition::CompositionError& e) {
+        } catch (const error::Error& e) {
             logging::error("Could not save composition: {}", e.what());
-            notify_message(std::format("Could not save composition: {}", e.name()));
-            return false;
-        } catch (const utility::FileError& e) {
-            logging::error("Could not save composition: {}", e.what());
-            notify_message(std::format("Could not save composition: {}", e.name()));
+            notify_message("Could not save composition");
             return false;
         }
 
@@ -3641,15 +3628,10 @@ namespace alfred::application {
 
         try {
             composition_read(path, m_composition);
-        } catch (const composition::CompositionError& e) {
+        } catch (const error::Error& e) {
             m_composition = {};
             logging::error("Could not open composition: {}", e.what());
-            notify_message(std::format("Could not open composition: {}", e.name()));
-            return false;
-        } catch (const utility::FileError& e) {
-            m_composition = {};
-            logging::error("Could not open composition: {}", e.what());
-            notify_message(std::format("Could not open composition: {}", e.name()));
+            notify_message("Could not open composition");
             return false;
         }
 
@@ -3755,13 +3737,9 @@ namespace alfred::application {
 
         try {
             preset_write(path, translate_preset(m_ui.preset_add));
-        } catch (const preset::PresetError& e) {
+        } catch (const error::Error& e) {
             logging::error("Could not save preset: {}", e.what());
-            notify_message(std::format("Could not save preset: {}", e.name()));
-            return false;
-        } catch (const utility::FileError& e) {
-            logging::error("Could not save preset: {}", e.what());
-            notify_message(std::format("Could not save preset: {}", e.name()));
+            notify_message("Could not save preset");
             return false;
         }
 
@@ -3776,13 +3754,9 @@ namespace alfred::application {
 
         try {
             preset_write(path, translate_preset(m_ui.preset_pad));
-        } catch (const preset::PresetError& e) {
+        } catch (const error::Error& e) {
             logging::error("Could not save preset: {}", e.what());
-            notify_message(std::format("Could not save preset: {}", e.name()));
-            return false;
-        } catch (const utility::FileError& e) {
-            logging::error("Could not save preset: {}", e.what());
-            notify_message(std::format("Could not save preset: {}", e.name()));
+            notify_message("Could not save preset");
             return false;
         }
 
@@ -3825,13 +3799,9 @@ namespace alfred::application {
 
         try {
             preset_read(path, preset);
-        } catch (const preset::PresetError& e) {
+        } catch (const error::Error& e) {
             logging::error("Could not open preset: {}", e.what());
-            notify_message(std::format("Could not open preset: {}", e.name()));
-            return false;
-        } catch (const utility::FileError& e) {
-            logging::error("Could not open preset: {}", e.what());
-            notify_message(std::format("Could not open preset: {}", e.name()));
+            notify_message("Could not open preset");
             return false;
         }
 
@@ -3847,13 +3817,9 @@ namespace alfred::application {
 
         try {
             preset_read(path, preset);
-        } catch (const preset::PresetError& e) {
+        } catch (const error::Error& e) {
             logging::error("Could not open preset: {}", e.what());
-            notify_message(std::format("Could not open preset: {}", e.name()));
-            return false;
-        } catch (const utility::FileError& e) {
-            logging::error("Could not open preset: {}", e.what());
-            notify_message(std::format("Could not open preset: {}", e.name()));
+            notify_message("Could not open preset");
             return false;
         }
 
@@ -3954,9 +3920,9 @@ namespace alfred::application {
 
         try {
             paths = utility::glob_directory(utility::data_file_path() / PRESETS_DIRECTORY, "*.???preset");
-        } catch (const utility::FileError& e) {
+        } catch (const error::Error& e) {
             logging::error("Could not glob presets directory: {}", e.what());
-            notify_message(std::format("Could not glob presets directory: {}", e.name()));
+            notify_message(std::format("Could not glob presets directory"));
             return;
         }
 
@@ -4027,15 +3993,9 @@ namespace alfred::application {
                 parameters.render_progress = render_progress;
 
                 do_render_composition(task, m_task_manager, [this](std::string message) { notify_message(std::move(message)); }, std::move(parameters));
-            } catch (const seq::SequencerError& e) {
+            } catch (const error::Error& e) {
                 logging::error("Error rendering composition: {}", e.what());
-                notify_message(std::format("Error rendering composition: {}", e.name()));
-            } catch (const encoder::EncoderError& e) {
-                logging::error("Error rendering composition: {}", e.what());
-                notify_message(std::format("Error rendering composition: {}", e.name()));
-            } catch (const utility::FileError& e) {
-                logging::error("Error rendering composition: {}", e.what());
-                notify_message(std::format("Error rendering composition: {}", e.name()));
+                notify_message(std::format("Error rendering composition"));
             } catch (...) {
                 m_task_manager.add_immediate_thread_safe_task([this] {
                     m_render_in_progress = false;

@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
 
     try {
         logging::initialize();
-    } catch (const logging::LoggingError& e) {
+    } catch (const error::Error& e) {
         logging::error("Could not initialize logging: {}", e.what());
     }
 

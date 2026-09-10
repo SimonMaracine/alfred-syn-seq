@@ -4,10 +4,11 @@
 #include <string>
 
 #include <cereal/cereal.hpp>
+#include <cereal/types/set.hpp>
+#include <cereal/types/string.hpp>
 
 #include "ui.hpp"
 #include "utility.hpp"
-#include "error.hpp"
 
 // Application settings/options + serialization
 
@@ -26,12 +27,6 @@ namespace alfred::data {
 
     void export_data(const Data& data, utility::Buffer& buffer);
     void import_data(Data& data, const utility::Buffer& buffer);
-
-    struct DataError : error::Error {
-        using Error::Error;
-
-        ALFRED_ERROR_NAME(DataError)
-    };
 }
 
 CEREAL_CLASS_VERSION(alfred::data::Data, 1)

@@ -7,11 +7,15 @@
 
 #include <cereal/cereal.hpp>
 #include <cereal/types/base_class.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/types/unordered_map.hpp>
+#include <cereal/types/set.hpp>
+#include <cereal/types/string.hpp>
+#include <cereal/types/variant.hpp>
 
 #include "sequencer.hpp"
 #include "utility.hpp"
 #include "ui.hpp"
-#include "error.hpp"
 
 // Composition data + serialization
 
@@ -136,12 +140,6 @@ namespace alfred::composition {
 
     void export_composition(const Composition& composition, utility::Buffer& buffer);
     void import_composition(Composition& composition, const utility::Buffer& buffer);
-
-    struct CompositionError : error::Error {
-        using Error::Error;
-
-        ALFRED_ERROR_NAME(CompositionError)
-    };
 }
 
 CEREAL_CLASS_VERSION(alfred::composition::Composition, 1)

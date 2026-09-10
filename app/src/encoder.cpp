@@ -6,6 +6,8 @@
 #include <alfred/definitions.hpp>
 #include <alfred/math.hpp>
 
+#include "error.hpp"
+
 // https://en.wikipedia.org/wiki/WAV
 
 namespace alfred::encoder {
@@ -73,7 +75,7 @@ namespace alfred::encoder {
         }
 
         if (stream.fail()) {
-            throw EncoderError("Error writing to stream");
+            throw error::Error("Error writing to stream");
         }
 
         return utility::Buffer { stream.str() };

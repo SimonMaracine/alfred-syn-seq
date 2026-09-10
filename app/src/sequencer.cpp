@@ -6,6 +6,8 @@
 
 #include <alfred/instruments.hpp>
 
+#include "error.hpp"
+
 namespace alfred::seq {
     std::uint32_t Composition::size() const {
         std::uint32_t steps {};
@@ -64,7 +66,7 @@ namespace alfred::seq {
 
         if (finished()) {
             if (!no_notes()) {
-                throw SequencerError("Invalid remaining notes");
+                throw error::Error("Invalid remaining notes");
             }
 
             m_playing = false;

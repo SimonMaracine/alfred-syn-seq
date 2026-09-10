@@ -4,8 +4,6 @@
 #include <utility>
 #include <chrono>
 
-#include "error.hpp"
-
 // Global console and file logging
 
 namespace alfred::logging {
@@ -104,12 +102,6 @@ namespace alfred::logging {
 
     template<typename... Args>
     critical(std::format_string<Args...> fmt, Args&&... args) -> critical<Args...>;
-
-    struct LoggingError : alfred::error::Error {
-        using Error::Error;
-
-        ALFRED_ERROR_NAME(LoggingError)
-    };
 }
 
 #ifdef ALFRED_DISTRIBUTION

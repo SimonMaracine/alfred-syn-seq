@@ -3,6 +3,8 @@
 #include <cmath>
 #include <cstring>
 
+#include "error.hpp"
+
 namespace alfred::ui {
     static void set_font(float scale) {
         const float font_size = std::floor(FONT_SIZE * scale);
@@ -17,7 +19,7 @@ namespace alfred::ui {
         const auto font = io.Fonts->AddFontDefaultVector(&config);
 
         if (!font) {
-            throw UiError("Could not add font");
+            throw error::Error("Could not add font");
         }
 
         io.FontDefault = font;

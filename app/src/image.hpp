@@ -2,8 +2,6 @@
 
 #include <span>
 
-#include "error.hpp"
-
 struct SDL_Surface;
 struct SDL_Texture;
 struct SDL_Renderer;
@@ -53,11 +51,5 @@ namespace alfred::image {
         Texture& operator=(const Texture&) = delete;
         Texture(Texture&& other) noexcept;
         Texture& operator=(Texture&& other) noexcept;
-    };
-
-    struct ImageError : error::Error {
-        using Error::Error;
-
-        ALFRED_ERROR_NAME(ImageError)
     };
 }

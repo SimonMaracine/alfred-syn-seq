@@ -5,10 +5,14 @@
 #include <vector>
 
 #include <cereal/cereal.hpp>
+#include <cereal/types/string.hpp>
+#include <cereal/types/variant.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/types/optional.hpp>
+#include <cereal/types/utility.hpp>
 #include <alfred/preset.hpp>
 
 #include "utility.hpp"
-#include "error.hpp"
 
 namespace alfred::syn {
     template<typename Archive>
@@ -145,12 +149,6 @@ namespace alfred::preset {
     void import_preset(add::Preset& preset, const utility::Buffer& buffer);
     void export_preset(const pad::Preset& preset, utility::Buffer& buffer);
     void import_preset(pad::Preset& preset, const utility::Buffer& buffer);
-
-    struct PresetError : error::Error {
-        using Error::Error;
-
-        ALFRED_ERROR_NAME(PresetError)
-    };
 }
 
 CEREAL_CLASS_VERSION(alfred::preset::add::Preset, 1)

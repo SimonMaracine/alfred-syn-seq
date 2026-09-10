@@ -7,8 +7,6 @@
 #include <imgui.h>
 #include <alfred/synthesis.hpp>
 
-#include "error.hpp"
-
 // Functions and definitions used by the UI of the application
 
 namespace alfred::ui {
@@ -244,10 +242,4 @@ namespace alfred::ui {
 
         std::unreachable();
     }
-
-    struct UiError : error::Error {
-        using Error::Error;
-
-        ALFRED_ERROR_NAME(UiError)
-    };
 }

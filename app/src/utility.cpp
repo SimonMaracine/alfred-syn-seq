@@ -7,12 +7,14 @@
 
 #include <SDL3/SDL.h>
 
+#include "error.hpp"
+
 namespace alfred::utility {
     void read_file(const std::filesystem::path& path, Buffer& buffer) {
         std::ifstream stream {path, std::ios_base::binary};
 
         if (!stream.is_open()) {
-            throw FileError("Could not open file");
+            throw error::Error("Could not open file");
         }
 
         stream.seekg(0, stream.end);
@@ -23,7 +25,7 @@ namespace alfred::utility {
         stream.read(buffer.data.data(), size);
 
         if (stream.fail()) {
-            throw FileError("Could not read from file");
+            throw error::Error("Could not read from file");
         }
     }
 
@@ -31,13 +33,13 @@ namespace alfred::utility {
         std::ofstream stream {path, std::ios_base::binary};
 
         if (!stream.is_open()) {
-            throw FileError("Could not open file");
+            throw error::Error("Could not open file");
         }
 
         stream.write(buffer.data.data(), std::streamsize(buffer.data.size()));
 
         if (stream.fail()) {
-            throw FileError("Could not write to file");
+            throw error::Error("Could not write to file");
         }
     }
 
@@ -66,7 +68,7 @@ namespace alfred::utility {
         );
 
         if (!paths) {
-            throw FileError(std::format("SDL_GlobDirectory: {}", SDL_GetError()));
+            throw error::Error(std::format("SDL_GlobDirectory: {}", SDL_GetError()));
         }
 
         std::vector<std::filesystem::path> result;
@@ -80,7 +82,7 @@ namespace alfred::utility {
 
     void create_directory(const std::filesystem::path& path) {
         if (!SDL_CreateDirectory(path.string().c_str())) {
-            throw FileError(std::format("SDL_CreateDirectory: {}", SDL_GetError()));
+            throw error::Error(std::format("SDL_CreateDirectory: {}", SDL_GetError()));
         }
     }
 
