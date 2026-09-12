@@ -2,6 +2,7 @@
 # On Linux just use the system packages :P
 
 if(WIN32)
+    # Don't use the prefix here, because we want to have the same name as from the Linux packages
     add_library(fftw3 INTERFACE)
 
     target_sources(
@@ -19,7 +20,7 @@ if(WIN32)
     set(ALFRED_FFTW_DLL "${CMAKE_CURRENT_SOURCE_DIR}/extern/fftw/libfftw3-3.dll" PARENT_SCOPE)
 endif()
 
-macro(copy_fftw3_dll target)
+macro(alfred_copy_fftw3_dll target)
     if(WIN32)
         add_custom_command(
             TARGET ${target} POST_BUILD

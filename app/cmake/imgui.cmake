@@ -1,13 +1,13 @@
 if(NOT ALFRED_DISTRIBUTION)
-    set(IMGUI_DEMO "extern/imgui/imgui_demo.cpp")
+    set(ALFRED_IMGUI_DEMO "extern/imgui/imgui_demo.cpp")
 endif()
 
-add_library(imgui STATIC)
+add_library(alfred_imgui STATIC)
 
 target_sources(
-    imgui
+    alfred_imgui
     PRIVATE
-        ${IMGUI_DEMO}
+        ${ALFRED_IMGUI_DEMO}
         "extern/imgui/imgui_draw.cpp"
         "extern/imgui/imgui_tables.cpp"
         "extern/imgui/imgui_widgets.cpp"
@@ -29,13 +29,13 @@ target_sources(
             "extern/imgui/backends/imgui_impl_sdlrenderer3.h"
 )
 
-target_include_directories(imgui PRIVATE "${ALFRED_SDL_INCLUDE_DIRECTORY}")
+target_include_directories(alfred_imgui PRIVATE "${ALFRED_SDL_INCLUDE_DIRECTORY}")
 
-set_target_cpp_mode(imgui)
-enable_target_ipo(imgui)
+alfred_set_target_cpp_mode(alfred_imgui)
+alfred_enable_target_ipo(alfred_imgui)
 
-target_compile_definitions(imgui PUBLIC "IMGUI_DEFINE_MATH_OPERATORS" "IMGUI_DISABLE_OBSOLETE_FUNCTIONS")
+target_compile_definitions(alfred_imgui PUBLIC "IMGUI_DEFINE_MATH_OPERATORS" "IMGUI_DISABLE_OBSOLETE_FUNCTIONS")
 
 if(ALFRED_DISTRIBUTION)
-    target_compile_definitions(imgui PRIVATE "NDEBUG")
+    target_compile_definitions(alfred_imgui PRIVATE "NDEBUG")
 endif()

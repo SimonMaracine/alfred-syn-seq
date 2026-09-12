@@ -77,13 +77,13 @@ add_executable(
 
 target_include_directories(alfred_app PRIVATE "src" "${CMAKE_CURRENT_BINARY_DIR}/include")
 
-target_link_libraries(alfred_app PRIVATE SDL3::SDL3 cereal imgui alfred_lib_synthesis alfred_lib_instruments alfred_lib_audio)
+target_link_libraries(alfred_app PRIVATE SDL3::SDL3 alfred_cereal alfred_imgui alfred_lib_synthesis alfred_lib_instruments alfred_lib_audio)
 
-set_target_cpp_mode(alfred_app)
-set_target_warnings(alfred_app)
-set_target_platform_macros(alfred_app)
-enable_target_diagnostics(alfred_app)
-enable_target_ipo(alfred_app)
+alfred_set_target_cpp_mode(alfred_app)
+alfred_set_target_warnings(alfred_app)
+alfred_set_target_platform_macros(alfred_app)
+alfred_enable_target_diagnostics(alfred_app)
+alfred_enable_target_ipo(alfred_app)
 
 if(ALFRED_DISTRIBUTION)
     target_compile_definitions(alfred_app PRIVATE "NDEBUG" "ALFRED_DISTRIBUTION")
@@ -99,4 +99,4 @@ set(ALFRED_DESKTOP_FILE "${CMAKE_CURRENT_SOURCE_DIR}/res/alfred.desktop" PARENT_
 set(ALFRED_ICON_FILE "${CMAKE_CURRENT_SOURCE_DIR}/res/alfred.svg" PARENT_SCOPE)
 
 # Takes care of doing the right stuff on any platform
-copy_fftw3_dll(alfred_app)
+alfred_copy_fftw3_dll(alfred_app)

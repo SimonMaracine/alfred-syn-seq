@@ -18,11 +18,11 @@ target_sources(
 
 target_link_libraries(alfred_lib_audio PRIVATE SDL3::SDL3 alfred_lib_synthesis)
 
-set_target_cpp_mode(alfred_lib_audio)
-set_target_warnings(alfred_lib_audio)
-set_target_platform_macros(alfred_lib_audio)
-enable_target_diagnostics(alfred_lib_audio)
-enable_target_ipo(alfred_lib_audio)
+alfred_set_target_cpp_mode(alfred_lib_audio)
+alfred_set_target_warnings(alfred_lib_audio)
+alfred_set_target_platform_macros(alfred_lib_audio)
+alfred_enable_target_diagnostics(alfred_lib_audio)
+alfred_enable_target_ipo(alfred_lib_audio)
 
 if(ALFRED_DISTRIBUTION)
     target_compile_definitions(alfred_lib_audio PRIVATE "NDEBUG")

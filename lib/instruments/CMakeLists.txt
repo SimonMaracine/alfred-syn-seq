@@ -16,11 +16,11 @@ target_sources(
 
 target_link_libraries(alfred_lib_instruments PRIVATE alfred_lib_synthesis)
 
-set_target_cpp_mode(alfred_lib_instruments)
-set_target_warnings(alfred_lib_instruments)
-set_target_platform_macros(alfred_lib_instruments)
-enable_target_diagnostics(alfred_lib_instruments)
-enable_target_ipo(alfred_lib_instruments)
+alfred_set_target_cpp_mode(alfred_lib_instruments)
+alfred_set_target_warnings(alfred_lib_instruments)
+alfred_set_target_platform_macros(alfred_lib_instruments)
+alfred_enable_target_diagnostics(alfred_lib_instruments)
+alfred_enable_target_ipo(alfred_lib_instruments)
 
 if(ALFRED_DISTRIBUTION)
     target_compile_definitions(alfred_lib_instruments PRIVATE "NDEBUG")
