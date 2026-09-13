@@ -88,12 +88,7 @@ namespace alfred::utility {
 
     const char* get_property(const char* property) {
         const char* value = SDL_GetAppMetadataProperty(property);
-
-        if (!value) {
-            return "";
-        }
-
-        return value;
+        return value ? value : "";
     }
 
     void set_property(const char* property, const char* value) {

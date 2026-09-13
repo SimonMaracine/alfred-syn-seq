@@ -6,7 +6,7 @@
 
 #include "application.hpp"
 #include "utility.hpp"
-#include "logging.hpp"
+#include "log.hpp"
 #include "error.hpp"
 #include "version.hpp"
 
@@ -15,12 +15,12 @@ using namespace alfred;
 static const char* sample_frames(int argc, char** argv) {
     if (argc > 1) {
         if (std::strcmp(argv[1], "--low-latency") == 0) {
-            logging::information("Low latency");
+            log::information("Low latency");
             return "256";
         }
 
         if (std::strcmp(argv[1], "--high-latency") == 0) {
-            logging::information("High latency");
+            log::information("High latency");
             return "1024";
         }
     }
@@ -29,23 +29,21 @@ static const char* sample_frames(int argc, char** argv) {
 }
 
 int main(int argc, char** argv) {
-    (void) std::atexit(logging::uninitialize);
+    (void) std::atexit(log::uninitialize);
     (void) std::atexit(SDL_Quit);
 
     utility::initialize_file_paths("simonmara", "alfred");
 
-    try {
-        logging::initialize();
-    } catch (const error::Error& e) {
-        logging::error("Could not initialize logging: {}", e.what());
+    if (!log::initialize()) {
+        log::error("Could not initialize logging");
     }
 
     if (!SDL_SetHint(SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES, sample_frames(argc, argv))) {
-        logging::error("SDL_SetHint(SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES)");
+        log::error("SDL_SetHint(SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES)");
     }
 
     if (!SDL_SetHint(SDL_HINT_AUDIO_DEVICE_RAW_STREAM, "1")) {
-        logging::error("SDL_SetHint(SDL_HINT_AUDIO_DEVICE_RAW_STREAM)");
+        log::error("SDL_SetHint(SDL_HINT_AUDIO_DEVICE_RAW_STREAM)");
     }
 
     utility::set_property(SDL_PROP_APP_METADATA_NAME_STRING, "Alfred");
@@ -55,27 +53,27 @@ int main(int argc, char** argv) {
     utility::set_property(SDL_PROP_APP_METADATA_URL_STRING, "https://github.com/SimonMaracine/alfred-syn-seq");
     utility::set_property(SDL_PROP_APP_METADATA_TYPE_STRING, "application");
 
-    logging::information("Version: {}", utility::get_property(SDL_PROP_APP_METADATA_VERSION_STRING));
+    log::information("Version: {}", utility::get_property(SDL_PROP_APP_METADATA_VERSION_STRING));
 
     try {
         application::Application application;
         application.run();
     } catch (const video::VideoError& e) {
-        logging::critical("Fatal video error: {}", e.what());
+        log::critical("Fatal video error: {}", e.what());
         utility::show_error_message_box("Alfred Video Error", "A critical video error occurred. Check the logs.");
         return 1;
     } catch (const audio::AudioError& e) {
-        logging::critical("Fatal audio error: {}", e.what());
+        log::critical("Fatal audio error: {}", e.what());
         utility::show_error_message_box("Alfred Audio Error", "A critical audio error occurred. Check the logs.");
         return 1;
     } catch (const error::Error& e) {
-        logging::critical("Fatal error: {}", e.what());
+        log::critical("Fatal error: {}", e.what());
         utility::show_error_message_box("Alfred Error", "A critical error occurred. Check the logs.");
         return 1;
     }
 #ifdef ALFRED_DISTRIBUTION
     catch (...) {
-        logging::critical("Unknown exception");
+        log::critical("Unknown exception");
         utility::show_error_message_box("Alfred Unknown Exception", "An unknown exception occurred.");
         return 1;
     }

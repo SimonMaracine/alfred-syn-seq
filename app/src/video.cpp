@@ -7,7 +7,7 @@
 
 #include "imgui.hpp"
 #include "image.hpp"
-#include "logging.hpp"
+#include "log.hpp"
 
 namespace alfred::video {
     static constexpr unsigned long long IMGUI_UPDATE_INTERVAL = 16 * SDL_NS_PER_MS;
@@ -23,8 +23,8 @@ namespace alfred::video {
             throw VideoError(std::format("SDL_CreateWindowAndRenderer: {}", SDL_GetError()));
         }
 
-        logging::information("Video driver: {}", SDL_GetCurrentVideoDriver());
-        logging::information("Render driver: {}", SDL_GetRendererName(m_renderer));
+        log::information("Video driver: {}", SDL_GetCurrentVideoDriver());
+        log::information("Render driver: {}", SDL_GetRendererName(m_renderer));
 
         // We really don't want VSync
         if (!SDL_SetRenderVSync(m_renderer, 0)) {
