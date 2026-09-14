@@ -10,7 +10,7 @@
 #include <cmath>
 #include <cstdint>
 
-#include "alfred/allocator.hpp"
+#include <static_allocator.hpp>
 
 namespace alfred::syn {
     enum NoteName : std::uint32_t {
@@ -119,7 +119,7 @@ namespace alfred::syn {
     }
 
     namespace envelope {
-        using Storage = allocator::StaticAllocatorStorage<keyboard::NOTES * 10, 96, 8, true>;
+        using Storage = static_allocator::StaticAllocatorStorage<keyboard::NOTES * 10, 96, 8>;
 
         // Abstract class representing an envelope
         // Envelopes use a custom allocator; they are usually dynamically allocated
@@ -166,7 +166,7 @@ namespace alfred::syn {
 
         struct DescriptionNull {};
 
-        class AdsrLinear : public Envelope, public allocator::StaticAllocated<AdsrLinear, Storage> {
+        class AdsrLinear : public Envelope, public static_allocator::StaticAllocated<AdsrLinear, Storage> {
         public:
             explicit AdsrLinear(const DescriptionAdsr& description = {})
                 : m_description(description) {}
@@ -194,7 +194,7 @@ namespace alfred::syn {
             double m_release_increment {};
         };
 
-        class Adsr : public Envelope, public allocator::StaticAllocated<Adsr, Storage> {
+        class Adsr : public Envelope, public static_allocator::StaticAllocated<Adsr, Storage> {
         public:
             explicit Adsr(const DescriptionAdsr& description = {})
                 : m_description(description) {}
@@ -224,7 +224,7 @@ namespace alfred::syn {
             double m_value_note_off {};
         };
 
-        class AdrLinear : public Envelope, public allocator::StaticAllocated<AdrLinear, Storage> {
+        class AdrLinear : public Envelope, public static_allocator::StaticAllocated<AdrLinear, Storage> {
         public:
             explicit AdrLinear(const DescriptionAdr& description = {})
                 : m_description(description) {}
@@ -251,7 +251,7 @@ namespace alfred::syn {
             double m_release_increment {};
         };
 
-        class Adr : public Envelope, public allocator::StaticAllocated<Adr, Storage> {
+        class Adr : public Envelope, public static_allocator::StaticAllocated<Adr, Storage> {
         public:
             explicit Adr(const DescriptionAdr& description = {})
                 : m_description(description) {}
@@ -281,7 +281,7 @@ namespace alfred::syn {
         };
 
         // Envelope that should not actually change the value
-        class Null : public Envelope, public allocator::StaticAllocated<Null, Storage> {
+        class Null : public Envelope, public static_allocator::StaticAllocated<Null, Storage> {
         public:
             explicit Null(const DescriptionNull& = {}) {}
 
@@ -297,9 +297,9 @@ namespace alfred::syn {
 
     namespace voice {
 #ifdef ALFRED_WINDOWS  // Windows in debug mode is just stupid
-        using Storage = allocator::StaticAllocatorStorage<keyboard::NOTES, 88, 8, true>;
+        using Storage = static_allocator::StaticAllocatorStorage<keyboard::NOTES, 88, 8>;
 #else
-        using Storage = allocator::StaticAllocatorStorage<keyboard::NOTES, 72, 8, true>;
+        using Storage = static_allocator::StaticAllocatorStorage<keyboard::NOTES, 72, 8>;
 #endif
 
         // A voice represents a particular sound made by some instrument at some point in time in the synthesizer
@@ -328,11 +328,11 @@ namespace alfred::syn {
             double time_off = -std::numeric_limits<double>::infinity();
         };
 
-        struct VoiceAdd : Voice, allocator::StaticAllocated<VoiceAdd, Storage> {
+        struct VoiceAdd : Voice, static_allocator::StaticAllocated<VoiceAdd, Storage> {
             // The following vector itself allocates dynamically pointers of envelopes
             // Ensure we avoid those dynamic allocations; an upper bound is probably fine :D
-            using EnvelopesStorage = allocator::StaticAllocatorStorage<1024, 8, 8, true>;
-            using PartialEnvelopes = std::vector<envelope::Ptr, allocator::StaticAllocator<envelope::Ptr, EnvelopesStorage>>;
+            using EnvelopesStorage = static_allocator::StaticAllocatorStorage<1024, 8, 8>;
+            using PartialEnvelopes = std::vector<envelope::Ptr, static_allocator::StaticAllocator<envelope::Ptr, EnvelopesStorage>>;
 
             // Vector of envelopes corresponding to the vector of partials
             PartialEnvelopes partial_envelopes;
@@ -342,7 +342,7 @@ namespace alfred::syn {
             void update(double time) override;
         };
 
-        struct VoicePad : Voice, allocator::StaticAllocated<VoicePad, Storage> {
+        struct VoicePad : Voice, static_allocator::StaticAllocated<VoicePad, Storage> {
             void note_on(double) override {}
             void note_off(double) override {}
             void update(double) override {}

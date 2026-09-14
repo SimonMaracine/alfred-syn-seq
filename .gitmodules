@@ -5,3 +5,6 @@
 	path = app/extern/imgui
 	url = https://github.com/ocornut/imgui
 	branch = docking
+[submodule "lib/synthesis/extern/static-allocator"]
+	path = lib/synthesis/extern/static-allocator
+	url = https://github.com/SimonMaracine/static-allocator
