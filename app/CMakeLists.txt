@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 
 include(cmake/cereal.cmake)
 include(cmake/imgui.cmake)
+include(cmake/task_manager.cmake)
 
 function(add_resource variable_name file_path file_type)
     add_custom_command(
@@ -77,7 +78,7 @@ add_executable(
 
 target_include_directories(alfred_app PRIVATE "src" "${CMAKE_CURRENT_BINARY_DIR}/include")
 
-target_link_libraries(alfred_app PRIVATE SDL3::SDL3 alfred_cereal alfred_imgui alfred_lib_synthesis alfred_lib_instruments alfred_lib_audio)
+target_link_libraries(alfred_app PRIVATE SDL3::SDL3 alfred_cereal alfred_imgui alfred_task_manager alfred_lib_synthesis alfred_lib_instruments alfred_lib_audio)
 
 alfred_set_target_cpp_mode(alfred_app)
 alfred_set_target_warnings(alfred_app)

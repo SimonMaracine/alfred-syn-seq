@@ -8,3 +8,6 @@
 [submodule "lib/synthesis/extern/static-allocator"]
 	path = lib/synthesis/extern/static-allocator
 	url = https://github.com/SimonMaracine/static-allocator
+[submodule "app/extern/task-manager"]
+	path = app/extern/task-manager
+	url = https://github.com/SimonMaracine/task-manager

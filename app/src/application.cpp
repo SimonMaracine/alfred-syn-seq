@@ -58,6 +58,7 @@ namespace alfred::application {
 
     void Application::on_start() {
         desired_frame_time(FRAME_TIME_DEFAULT);
+        m_task_manager.update();
 
         try {
             icons({ ALFRED_ICON64, ALFRED_ICON128 });
@@ -123,7 +124,7 @@ namespace alfred::application {
             m_ui.current_output_sample = m_synthesizer.update();
             m_ui.current_output_sample = std::clamp(m_ui.current_output_sample, -1.0, 1.0);
             return false;
-        }, video::MAX_DELTA);
+        }, video::MAX_DELTA * SDL_NS_PER_MS);
 
         try {
             utility::create_directory(utility::data_file_path() / PRESETS_DIRECTORY);
@@ -3024,7 +3025,7 @@ namespace alfred::application {
 
         m_task_manager.add_delayed_task([this, instrument = instrument, id = note.id] {
             m_synthesizer.note_off(id, instrument);
-        }, math::seconds_to_milliseconds(m_synthesizer.get_instrument(instrument).attack_duration()) + 100);
+        }, (math::seconds_to_milliseconds(m_synthesizer.get_instrument(instrument).attack_duration()) + 100) * SDL_NS_PER_MS);
     }
 
     void Application::note_to_string(syn::NoteId note, char* buffer) {
