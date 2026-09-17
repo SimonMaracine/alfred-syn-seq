@@ -1,14 +1,14 @@
 #pragma once
 
+#include <hashed_string.hpp>
 #include <alfred/synthesis.hpp>
-#include <alfred/hash.hpp>
 #include <alfred/synthesizer.hpp>
 
 // Built-in compiled instruments/presets
 
 #define ALFRED_INSTRUMENT_STATIC_NAME_ID(NAME_STRING) \
     static consteval auto static_name() { return NAME_STRING; } \
-    static consteval auto static_id() { return hash::HashedStr32(static_name()); } \
+    static consteval auto static_id() { return hashed_string::HashedStr32(static_name()); } \
     const char* name() const override { return static_name(); } \
     syn::InstrumentId id() const override { return static_id(); }
 

@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 include(cmake/fftw.cmake)
+include(cmake/hashed_string.cmake)
 include(cmake/static_allocator.cmake)
 
 add_library(alfred_lib_synthesis STATIC)
@@ -18,7 +19,6 @@ target_sources(
             "include"
         FILES
             "include/alfred/definitions.hpp"
-            "include/alfred/hash.hpp"
             "include/alfred/math.hpp"
             "include/alfred/preset.hpp"
             "include/alfred/synthesis.hpp"
@@ -26,7 +26,7 @@ target_sources(
 )
 
 target_link_libraries(alfred_lib_synthesis PRIVATE fftw3)
-target_link_libraries(alfred_lib_synthesis PUBLIC alfred_static_allocator)
+target_link_libraries(alfred_lib_synthesis PUBLIC alfred_static_allocator alfred_hashed_string)
 
 # On Windows need to explicitly link to the lib file containing the function references for the dll
 if(WIN32)

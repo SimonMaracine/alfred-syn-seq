@@ -11,3 +11,6 @@
 [submodule "app/extern/task-manager"]
 	path = app/extern/task-manager
 	url = https://github.com/SimonMaracine/task-manager
+[submodule "lib/synthesis/extern/hashed-string"]
+	path = lib/synthesis/extern/hashed-string
+	url = https://github.com/SimonMaracine/hashed-string

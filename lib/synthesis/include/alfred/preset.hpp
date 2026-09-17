@@ -6,8 +6,9 @@
 #include <optional>
 #include <vector>
 
+#include <hashed_string.hpp>
+
 #include "alfred/synthesis.hpp"
-#include "alfred/hash.hpp"
 
 // Runtime dynamic instruments/presets
 // In this project, the term "instrument" represents an instrument in the generic sense, while "preset" specifically represents a runtime instrument (XML file)
@@ -33,7 +34,7 @@ namespace alfred::preset {
     class BaseRuntimeInstrument : public syn::Instrument {
     public:
         explicit BaseRuntimeInstrument(Preset preset)
-            : m_preset(std::move(preset)), m_id(hash::HashedStr32(m_preset.name)) {}
+            : m_preset(std::move(preset)), m_id(hashed_string::HashedStr32(m_preset.name)) {}
 
         // Retrieve a read only reference to the parameters that make up this instrument
         const Preset& preset() const { return m_preset; }
