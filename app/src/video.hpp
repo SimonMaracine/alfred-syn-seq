@@ -4,6 +4,7 @@
 #include <initializer_list>
 #include <string_view>
 #include <utility>
+#include <cstdint>
 
 #include "error.hpp"
 
@@ -14,7 +15,7 @@ struct SDL_Renderer;
 namespace alfred::video {
     inline constexpr int DEFAULT_WIDTH = 1280;
     inline constexpr int DEFAULT_HEIGHT = 720;
-    inline constexpr auto MAX_DELTA = 40ull;  // Milliseconds (20 FPS)
+    inline constexpr std::uint64_t MAX_DELTA = 40;  // Milliseconds (20 FPS)
 
     // Represents an application window and a main loop
     class Video {
@@ -50,7 +51,7 @@ namespace alfred::video {
     protected:
         // Set the desired frame rate of the application
         // VSync is turned off explicitly
-        void desired_frame_time(unsigned long long milliseconds);
+        void desired_frame_time(std::uint64_t milliseconds);
 
         // Set the window icons
         void icons(std::initializer_list<std::span<const unsigned char>> icons) const;
@@ -62,6 +63,7 @@ namespace alfred::video {
         void window_size(int width, int height) const;
         std::pair<int, int> window_size() const;
 
+        // Get keyboard and time
         const bool* keyboard_state() const { return m_keyboard_state; }
         double frame_time() const { return m_frame_timef; }
 
@@ -75,10 +77,10 @@ namespace alfred::video {
         const bool* m_keyboard_state {};
         double m_frame_timef {};
 
-        unsigned long long m_previous_time {};
-        unsigned long long m_frame_time {};
-        unsigned long long m_desired_frame_time {};
-        unsigned long long m_imgui_accumulator_time {};
+        std::uint64_t m_previous_time {};
+        std::uint64_t m_frame_time {};
+        std::uint64_t m_desired_frame_time {};
+        std::uint64_t m_imgui_accumulator_time {};
     };
 
     struct VideoError : error::Error {

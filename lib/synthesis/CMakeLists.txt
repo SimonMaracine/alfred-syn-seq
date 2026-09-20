@@ -28,7 +28,7 @@ target_sources(
 target_link_libraries(alfred_lib_synthesis PRIVATE fftw3)
 target_link_libraries(alfred_lib_synthesis PUBLIC alfred_static_allocator alfred_hashed_string)
 
-# On Windows need to explicitly link to the lib file containing the function references for the dll
+# On Windows need to explicitly link to the lib file containing the function references for the DLL
 if(WIN32)
     target_link_libraries(alfred_lib_synthesis PRIVATE libfftw3-3.lib)
 endif()

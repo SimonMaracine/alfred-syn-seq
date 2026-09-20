@@ -45,7 +45,7 @@ namespace alfred::log {
     template<typename... Args>
     struct debug {
         explicit debug(std::format_string<Args...> fmt, Args&&... args, const std::source_location& location = std::source_location::current()) {
-            log(Level::Debug, location, std::format(std::move(fmt), std::forward<Args>(args)...));
+            log(Level::Debug, location, std::format(fmt, std::forward<Args>(args)...));
         }
     };
 
@@ -55,7 +55,7 @@ namespace alfred::log {
     template<typename... Args>
     struct information {
         explicit information(std::format_string<Args...> fmt, Args&&... args, const std::source_location& location = std::source_location::current()) {
-            log(Level::Information, location, std::format(std::move(fmt), std::forward<Args>(args)...));
+            log(Level::Information, location, std::format(fmt, std::forward<Args>(args)...));
         }
     };
 
@@ -65,7 +65,7 @@ namespace alfred::log {
     template<typename... Args>
     struct warning {
         explicit warning(std::format_string<Args...> fmt, Args&&... args, const std::source_location& location = std::source_location::current()) {
-            log(Level::Warning, location, std::format(std::move(fmt), std::forward<Args>(args)...));
+            log(Level::Warning, location, std::format(fmt, std::forward<Args>(args)...));
         }
     };
 
@@ -75,7 +75,7 @@ namespace alfred::log {
     template<typename... Args>
     struct error {
         explicit error(std::format_string<Args...> fmt, Args&&... args, const std::source_location& location = std::source_location::current()) {
-            log(Level::Error, location, std::format(std::move(fmt), std::forward<Args>(args)...));
+            log(Level::Error, location, std::format(fmt, std::forward<Args>(args)...));
         }
     };
 
@@ -85,7 +85,7 @@ namespace alfred::log {
     template<typename... Args>
     struct critical {
         explicit critical(std::format_string<Args...> fmt, Args&&... args, const std::source_location& location = std::source_location::current()) {
-            log(Level::Critical, location, std::format(std::move(fmt), std::forward<Args>(args)...));
+            log(Level::Critical, location, std::format(fmt, std::forward<Args>(args)...));
         }
     };
 

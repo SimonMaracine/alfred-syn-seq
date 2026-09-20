@@ -10,7 +10,7 @@
 #include "log.hpp"
 
 namespace alfred::video {
-    static constexpr unsigned long long IMGUI_UPDATE_INTERVAL = 16 * SDL_NS_PER_MS;
+    static constexpr std::uint64_t IMGUI_UPDATE_INTERVAL = 16 * SDL_NS_PER_MS;
 
     Video::Video() {
         if (!SDL_InitSubSystem(SDL_INIT_VIDEO)) {
@@ -93,7 +93,7 @@ namespace alfred::video {
 
             on_late_update();
 
-            unsigned long long current_time {};
+            std::uint64_t current_time {};
 
             current_time = SDL_GetTicksNS();
             m_frame_time = current_time - m_previous_time;
@@ -114,7 +114,7 @@ namespace alfred::video {
         on_stop();
     }
 
-    void Video::desired_frame_time(unsigned long long milliseconds) {
+    void Video::desired_frame_time(std::uint64_t milliseconds) {
         m_desired_frame_time = milliseconds * SDL_NS_PER_MS;
     }
 
