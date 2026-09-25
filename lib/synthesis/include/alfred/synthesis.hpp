@@ -10,7 +10,7 @@
 #include <cmath>
 #include <cstdint>
 
-#include <static_allocator.hpp>
+#include <static_allocator/static_allocator.hpp>
 
 namespace alfred::syn {
     enum NoteName : std::uint32_t {
@@ -119,7 +119,7 @@ namespace alfred::syn {
     }
 
     namespace envelope {
-        using Storage = static_allocator::StaticAllocatorStorage<keyboard::NOTES * 10, 96, 8>;
+        using Storage = static_allocator::StaticAllocatorStorage<keyboard::NOTES * 10, 96, 16>;
 
         // Abstract class representing an envelope
         // Envelopes use a custom allocator; they are usually dynamically allocated
@@ -297,9 +297,9 @@ namespace alfred::syn {
 
     namespace voice {
 #ifdef ALFRED_WINDOWS  // Windows in debug mode is just stupid
-        using Storage = static_allocator::StaticAllocatorStorage<keyboard::NOTES, 88, 8>;
+        using Storage = static_allocator::StaticAllocatorStorage<keyboard::NOTES, 88, 16>;
 #else
-        using Storage = static_allocator::StaticAllocatorStorage<keyboard::NOTES, 72, 8>;
+        using Storage = static_allocator::StaticAllocatorStorage<keyboard::NOTES, 72, 16>;
 #endif
 
         // A voice represents a particular sound made by some instrument at some point in time in the synthesizer
@@ -331,7 +331,7 @@ namespace alfred::syn {
         struct VoiceAdd : Voice, static_allocator::StaticAllocated<VoiceAdd, Storage> {
             // The following vector itself allocates dynamically pointers of envelopes
             // Ensure we avoid those dynamic allocations; an upper bound is probably fine :D
-            using EnvelopesStorage = static_allocator::StaticAllocatorStorage<1024, 8, 8>;
+            using EnvelopesStorage = static_allocator::StaticAllocatorStorage<1024, 8, 16>;
             using PartialEnvelopes = std::vector<envelope::Ptr, static_allocator::StaticAllocator<envelope::Ptr, EnvelopesStorage>>;
 
             // Vector of envelopes corresponding to the vector of partials

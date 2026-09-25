@@ -6,7 +6,7 @@
 #include <optional>
 #include <vector>
 
-#include <hashed_string.hpp>
+#include <hashed_string/hashed_string.hpp>
 
 #include "alfred/synthesis.hpp"
 

@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include <task_manager.hpp>
+#include <task_manager/task_manager.hpp>
 
 namespace alfred::task {
     struct TaskManager : task_manager::TaskManager<std::uint64_t> {
